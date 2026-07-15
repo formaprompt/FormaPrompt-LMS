@@ -1,0 +1,15 @@
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.admin-grant-course]
+verify_jwt = true
+
+[functions.create-travel-fee-checkout]
+verify_jwt = true
+
+[functions.create-course-booking]
+verify_jwt = true
+
+# Stripe signe lui-même les requêtes envoyées à ce point d'entrée.
+[functions.stripe-webhook-ai-act]
+verify_jwt = false

@@ -15,11 +15,13 @@ export default function ResetPassword() {
 
   useEffect(() => {
     // Vérifier si l'utilisateur est bien arrivé ici via le lien de réinitialisation
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event == "PASSWORD_RECOVERY") {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
         console.log("Password recovery intent received.");
       }
     });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleUpdatePassword = async (e) => {

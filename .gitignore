@@ -6,6 +6,8 @@ webapp/dist-ssr/
 # Fichiers d'environnement (Sécurité / RGPD)
 webapp/.env*
 .env*
+!webapp/.env.example
+!webapp/supabase/functions/.env.example
 
 # Logs
 *.log
@@ -22,3 +24,4 @@ webapp/logs/
 Thumbs.db
 .vscode/
 .idea/
+.codex-remote-attachments/

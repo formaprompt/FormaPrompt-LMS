@@ -1,10 +1,12 @@
 import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import CookieConsent from "react-cookie-consent";
 // Lazy‑loaded pages
 const FormationIA = lazy(() => import("./pages/FormationIA"));
+const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
@@ -24,10 +26,16 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
+const AttendanceSheets = lazy(() => import("./pages/AttendanceSheets"));
+const GuideGPT56 = lazy(() => import("./pages/GuideGPT56"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const CourseBooking = lazy(() => import("./pages/CourseBooking"));
+const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
 
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Suspense
         fallback={
           <div
@@ -47,6 +55,7 @@ function App() {
           <Route path="/" element={<Layout/>}>
             <Route index element={<Home />} />
             <Route path="formation-ia-generative" element={<FormationIA />} />
+            <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-organismes" element={<FormationOF />} />
@@ -65,7 +74,12 @@ function App() {
             <Route path="register" element={<Register />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="admin" element={<AdminDashboard />} />
+            <Route path="admin/emargements" element={<AttendanceSheets />} />
             <Route path="course/:id" element={<CoursePlayer />} />
+            <Route path="guide-gpt-5-6-codex" element={<GuideGPT56 />} />
+            <Route path="paiement-reussi" element={<PaymentSuccess />} />
+            <Route path="reservation-formation" element={<CourseBooking />} />
+            <Route path="admin/emargements/:bookingId" element={<AttendanceSheet />} />
           </Route>
         </Routes>
       </Suspense>

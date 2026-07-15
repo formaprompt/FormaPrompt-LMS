@@ -1,14 +1,20 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
 
 export default function Contact() {
-  const [formData, setFormData] = useState({
+  const [searchParams] = useSearchParams();
+  const isAiActRegistration = searchParams.get('formation') === 'ia-act';
+  const initialFormData = {
     name: '',
     email: '',
-    subject: 'Demande de devis',
-    message: ''
-  });
+    subject: isAiActRegistration ? 'Demande de programme' : 'Demande de devis',
+    message: isAiActRegistration
+      ? "Je souhaite recevoir les modalités d'inscription à la formation « IA : acculturation et préparation à la conformité AI Act » au tarif promotionnel de 187 €."
+      : '',
+  };
+  const [formData, setFormData] = useState(initialFormData);
   const [status, setStatus] = useState('idle'); // idle, loading, success, error
 
   const handleSubmit = async (e) => {
@@ -24,7 +30,7 @@ export default function Contact() {
       setStatus('error');
     } else {
       setStatus('success');
-      setFormData({ name: '', email: '', subject: 'Demande de devis', message: '' });
+      setFormData(initialFormData);
     }
   };
 

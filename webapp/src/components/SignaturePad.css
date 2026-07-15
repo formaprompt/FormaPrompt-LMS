@@ -1,0 +1,73 @@
+.signature-pad {
+  display: grid;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.signature-pad__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.signature-pad__heading label {
+  font-weight: 800;
+}
+
+.signature-pad__heading span {
+  padding: 0.25rem 0.55rem;
+  color: #065f46;
+  background: #d1fae5;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.signature-pad p {
+  margin: 0;
+  color: inherit;
+  font-size: 0.88rem;
+  opacity: 0.82;
+}
+
+.signature-pad canvas {
+  display: block;
+  width: 100%;
+  height: clamp(150px, 24vw, 220px);
+  background: #fff;
+  border: 2px solid #64748b;
+  border-radius: 8px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.signature-pad canvas:focus-visible {
+  outline: 3px solid #38bdf8;
+  outline-offset: 3px;
+}
+
+.signature-pad__clear {
+  justify-self: start;
+  padding: 0.5rem 0.75rem;
+  color: #7f1d1d;
+  background: #fff;
+  border: 1px solid #fca5a5;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.signature-pad__clear:disabled,
+.signature-pad--disabled {
+  opacity: 0.65;
+}
+
+@media (max-width: 520px) {
+  .signature-pad__heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}

@@ -1,18 +1,38 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { CalendarClock, CheckCircle2, MessageSquareText } from 'lucide-react';
+import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
+import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
+import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
 const courseNames = {
   'formation-ia': 'Formation IA Générative',
+  'formation-ia-act': 'IA : acculturation et préparation à la conformité AI Act',
+  'formation-prompt-level-1': 'Formation Prompt Engineering – Niveau 1',
+};
+
+const bookingStatusLabels = {
+  pending_distance: 'Distance à vérifier',
+  awaiting_travel_payment: 'Participation au déplacement à régler',
+  confirmed: 'Séances confirmées',
+  rejected: 'Demande à revoir',
+  cancelled: 'Réservation annulée',
+  completed: 'Accompagnement réalisé',
 };
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [purchases, setPurchases] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [bookingLoadError, setBookingLoadError] = useState(false);
+  const [surveyLoadError, setSurveyLoadError] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -21,13 +41,51 @@ export default function Dashboard() {
     }
 
     async function fetchPurchases() {
-      const { data, error } = await supabase
-        .from('purchases')
-        .select('*')
-        .eq('user_id', user.id);
+      setLoadError('');
+      setBookingLoadError(false);
+      setSurveyLoadError(false);
 
-      if (data) {
-        setPurchases(data);
+      const [purchasesResult, bookingResult, surveyResult] = await Promise.all([
+        supabase
+          .from('purchases')
+          .select('id, course_id, purchased_at')
+          .eq('user_id', user.id),
+        supabase
+          .from('course_booking_requests')
+          .select(`
+            id, course_id, status, delivery_mode, schedule_format,
+            course_session_bookings(id, starts_at, ends_at, duration_minutes, status),
+            course_session_attendance(
+              id, session_starts_at, session_ends_at,
+              learner_confirmed_at, learner_signature_sha256
+            )
+          `)
+          .eq('user_id', user.id),
+        supabase
+          .from('satisfaction_surveys')
+          .select('id, booking_request_id, created_at')
+          .eq('user_id', user.id),
+      ]);
+
+      if (purchasesResult.error) {
+        console.error('Erreur lors du chargement des formations :', purchasesResult.error);
+        setLoadError("Impossible de charger vos formations pour le moment. Veuillez réessayer ultérieurement.");
+      } else {
+        setPurchases(purchasesResult.data ?? []);
+      }
+
+      if (bookingResult.error) {
+        console.error('Erreur lors du chargement de la réservation :', bookingResult.error);
+        setBookingLoadError(true);
+      } else {
+        setBookings(bookingResult.data ?? []);
+      }
+
+      if (surveyResult.error) {
+        console.error('Erreur lors du chargement des questionnaires :', surveyResult.error);
+        setSurveyLoadError(true);
+      } else {
+        setSurveys(surveyResult.data ?? []);
       }
       setLoading(false);
     }
@@ -37,6 +95,13 @@ export default function Dashboard() {
 
   if (!user) return null;
 
+  const bookablePurchases = purchases.filter((purchase) => BOOKING_COURSES[purchase.course_id]);
+  const pendingSatisfactionBookings = surveyLoadError ? [] : bookings.filter((booking) => (
+    BOOKING_COURSES[booking.course_id]
+    && hasLearnerSignedLastSession(booking)
+    && !surveys.some((survey) => survey.booking_request_id === booking.id)
+  ));
+
   return (
     <div className="container" style={{ padding: '4rem 1rem', minHeight: '60vh' }}>
       <h1 style={{ marginBottom: '2rem' }}>Mon Espace Élève</h1>
@@ -44,11 +109,15 @@ export default function Dashboard() {
       <div style={{ background: '#1e1e1e', color: '#fff', padding: '2rem', borderRadius: '12px', border: '1px solid #333' }}>
         <h2 style={{ color: '#fff' }}>Bienvenue, {user.email} !</h2>
         <p style={{ color: '#aaa', marginTop: '1rem', marginBottom: '2rem' }}>
-          Vous retrouverez ici toutes les formations que vous avez achetées.
+          Vous retrouverez ici toutes les formations que vous avez achetées ou qui vous ont été attribuées.
         </p>
         
         {loading ? (
           <p>Chargement de vos formations...</p>
+        ) : loadError ? (
+          <div role="alert" style={{ padding: '1rem', border: '1px solid #f87171', borderRadius: '8px', background: '#3f1d24', color: '#fecaca' }}>
+            {loadError}
+          </div>
         ) : purchases.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <h3 style={{ marginBottom: '1rem', color: '#fff', fontSize: '1.5rem' }}>Vous n'avez pas encore de formation</h3>
@@ -74,20 +143,94 @@ export default function Dashboard() {
                 <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1.5rem', flexGrow: 1 }}>Excel, Word, PowerPoint : gagnez en efficacité et en rapidité au quotidien.</p>
                 <Link to="/formation-bureautique" className="btn btn-primary" style={{ textAlign: 'center', background: 'transparent', border: '1px solid #3b82f6', color: '#3b82f6' }}>Découvrir le programme</Link>
               </div>
+
+              <div style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #444', display: 'flex', flexDirection: 'column' }}>
+                <h4 style={{ color: '#fff', marginBottom: '0.5rem', fontSize: '1.1rem' }}>Acculturation IA &amp; AI Act</h4>
+                <p style={{ color: '#aaa', fontSize: '0.9rem', marginBottom: '1.5rem', flexGrow: 1 }}>Un parcours estimé à 4 h 45, dont 4 heures guidées avec le formateur.</p>
+                <Link to="/formation-ia-act-conformite" className="btn btn-primary" style={{ textAlign: 'center', background: 'transparent', border: '1px solid #3b82f6', color: '#3b82f6' }}>Découvrir le programme</Link>
+              </div>
               
             </div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            {purchases.map((purchase) => (
-              <div key={purchase.id} style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #444', display: 'flex', flexDirection: 'column' }}>
-                <h3 style={{ marginBottom: '1rem', color: '#fff' }}>{courseNames[purchase.course_id] || purchase.course_id}</h3>
-                <Link to={`/course/${purchase.course_id}`} className="btn btn-primary" style={{ marginTop: 'auto', textAlign: 'center', background: '#10b981', borderColor: '#10b981' }}>
-                  ▶ Voir la formation
-                </Link>
-              </div>
-            ))}
-          </div>
+          <>
+            {pendingSatisfactionBookings.map((booking) => {
+              const course = BOOKING_COURSES[booking.course_id];
+              return (
+                <section
+                  key={`satisfaction-${booking.id}`}
+                  className="booking-next-step booking-next-step--satisfaction"
+                  aria-live="polite"
+                >
+                  <div className="booking-next-step__icon" aria-hidden="true">
+                    <MessageSquareText />
+                  </div>
+                  <div className="booking-next-step__content">
+                    <p className="booking-next-step__course">{course.title}</p>
+                    <p className="booking-next-step__eyebrow">Fin de formation</p>
+                    <h3>Votre questionnaire de satisfaction est disponible</h3>
+                    <p>
+                      Vous avez signé la dernière séance de « {course.title} ». Merci de compléter
+                      l’évaluation Qualiopi et, si vous le souhaitez, de laisser un avis.
+                    </p>
+                  </div>
+                  <Link to={`/feedback?booking=${encodeURIComponent(booking.id)}`} className="btn booking-next-step__action">
+                    Donner mon avis
+                  </Link>
+                </section>
+              );
+            })}
+
+            {bookablePurchases.map((purchase) => {
+              const course = BOOKING_COURSES[purchase.course_id];
+              const currentBooking = bookings.find((item) => item.course_id === purchase.course_id);
+              const hasActiveBooking = currentBooking && !['cancelled', 'rejected'].includes(currentBooking.status);
+              return (
+                <section
+                  key={`booking-${purchase.course_id}`}
+                  className={`booking-next-step ${hasActiveBooking ? 'booking-next-step--registered' : ''}`}
+                  aria-live="polite"
+                >
+                  <div className="booking-next-step__icon" aria-hidden="true">
+                    {hasActiveBooking ? <CheckCircle2 /> : <CalendarClock />}
+                  </div>
+                  <div className="booking-next-step__content">
+                    <p className="booking-next-step__course">{course.title}</p>
+                    <p className="booking-next-step__eyebrow">
+                      {hasActiveBooking ? 'Réservation enregistrée' : 'Étape suivante'}
+                    </p>
+                    <h3>
+                      {hasActiveBooking ? 'Vos heures avec le formateur sont planifiées' : `Réservez vos ${course.guidedHoursLabel} avec le formateur`}
+                    </h3>
+                    <p>
+                      {hasActiveBooking
+                        ? `État actuel : ${bookingStatusLabels[currentBooking.status] || currentBooking.status}.`
+                        : `Votre accès à « ${course.shortTitle} » est actif. Choisissez maintenant votre modalité et vos horaires.`}
+                    </p>
+                    {bookingLoadError && (
+                      <p className="booking-next-step__warning" role="status">
+                        L’état de votre réservation n’a pas pu être vérifié. Vous pouvez néanmoins ouvrir la page des horaires.
+                      </p>
+                    )}
+                  </div>
+                  <Link to={getBookingUrl(purchase.course_id)} className="btn booking-next-step__action">
+                    {hasActiveBooking ? 'Voir mes séances' : 'Choisir mes horaires'}
+                  </Link>
+                </section>
+              );
+            })}
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+              {purchases.map((purchase) => (
+                <div key={purchase.id} style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #444', display: 'flex', flexDirection: 'column' }}>
+                  <h3 style={{ marginBottom: '1rem', color: '#fff' }}>{courseNames[purchase.course_id] || purchase.course_id}</h3>
+                  <Link to={`/course/${purchase.course_id}`} className="btn btn-primary" style={{ marginTop: 'auto', textAlign: 'center', background: '#10b981', borderColor: '#10b981' }}>
+                    ▶ Voir la formation
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         <button 

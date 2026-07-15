@@ -1,0 +1,144 @@
+.booking-next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+  padding: 1.5rem;
+  color: #172033;
+  background: #fff7db;
+  border: 2px solid #f4bd28;
+  border-radius: 12px;
+}
+
+.booking-next-step--registered {
+  background: #e8fbf4;
+  border-color: #10b981;
+}
+
+.booking-next-step--satisfaction {
+  background: #eef9ff;
+  border-color: #38bdf8;
+}
+
+.booking-next-step__icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  color: #173e49;
+  background: #ffd760;
+  border-radius: 50%;
+}
+
+.booking-next-step--registered .booking-next-step__icon {
+  color: #fff;
+  background: #0b926e;
+}
+
+.booking-next-step--satisfaction .booking-next-step__icon {
+  color: #fff;
+  background: #0369a1;
+}
+
+.booking-next-step__icon svg {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.booking-next-step__content h3,
+.booking-next-step__content p {
+  margin: 0;
+}
+
+.booking-next-step__content .booking-next-step__course {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  color: #0f172a;
+  border-bottom: 2px solid rgba(15, 23, 42, 0.18);
+  font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+  font-weight: 900;
+  line-height: 1.3;
+}
+
+.booking-next-step--satisfaction .booking-next-step__course {
+  color: #075985;
+  border-bottom-color: rgba(3, 105, 161, 0.28);
+}
+
+.booking-next-step--registered .booking-next-step__course {
+  color: #065f46;
+  border-bottom-color: rgba(6, 95, 70, 0.25);
+}
+
+.booking-next-step__content h3 {
+  margin-bottom: 0.4rem;
+  color: #172033;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.booking-next-step__content p {
+  color: #374151;
+  line-height: 1.55;
+}
+
+.booking-next-step__eyebrow {
+  margin-bottom: 0.3rem !important;
+  color: #7c5200 !important;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.booking-next-step--registered .booking-next-step__eyebrow {
+  color: #087153 !important;
+}
+
+.booking-next-step--satisfaction .booking-next-step__eyebrow {
+  color: #075985 !important;
+}
+
+.booking-next-step__warning {
+  margin-top: 0.55rem !important;
+  color: #9a3412 !important;
+  font-weight: 700;
+}
+
+.booking-next-step__action {
+  min-width: 190px;
+  padding: 0.9rem 1.15rem;
+  color: #fff;
+  text-align: center;
+  background: #087f5b;
+  border: 2px solid #087f5b;
+}
+
+.booking-next-step__action:hover,
+.booking-next-step__action:focus-visible {
+  color: #fff;
+  background: #065f46;
+  border-color: #065f46;
+}
+
+@media (max-width: 760px) {
+  .booking-next-step {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .booking-next-step__action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-next-step {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-next-step__icon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}

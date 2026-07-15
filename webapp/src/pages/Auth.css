@@ -140,3 +140,12 @@
   font-size: 0.9rem;
   text-align: center;
 }
+
+.auth-info {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  color: #075985;
+  background: #f0f9ff;
+  border: 1px solid #7dd3fc;
+  border-radius: 8px;
+}

@@ -1,0 +1,461 @@
+.ai-act-page {
+  color: #24323f;
+  background: #fbfdfc;
+}
+
+.ai-act-hero {
+  padding: clamp(3.5rem, 7vw, 6.5rem) 0;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at 88% 15%, rgba(245, 158, 11, 0.2), transparent 26%),
+    linear-gradient(135deg, #0b3b38 0%, #0f766e 58%, #164e63 100%);
+}
+
+.ai-act-hero-grid,
+.ai-act-pricing-grid,
+.ai-act-two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.75fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.ai-act-kicker {
+  margin: 0 0 0.8rem;
+  color: #0f766e;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ai-act-hero .ai-act-kicker,
+.ai-act-pricing-section .ai-act-kicker {
+  color: #fbbf24;
+}
+
+.ai-act-hero h1 {
+  max-width: 830px;
+  margin-bottom: 1.25rem;
+  color: #fff;
+  font-size: clamp(2.35rem, 5vw, 4.7rem);
+  line-height: 1.04;
+}
+
+.ai-act-lead {
+  max-width: 760px;
+  color: #dbeafe;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.65;
+}
+
+.ai-act-key-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.75rem 0;
+}
+
+.ai-act-key-facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.ai-act-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.ai-act-secondary-btn {
+  color: #fff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.ai-act-deadline-card {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  background: rgba(4, 33, 32, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.19);
+  border-radius: 22px;
+  box-shadow: 0 24px 50px rgba(2, 25, 23, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.ai-act-deadline-label {
+  margin: 1rem 0 0;
+  color: #a7f3d0;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ai-act-deadline-date {
+  margin: 0.2rem 0 1rem;
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 900;
+}
+
+.ai-act-deadline-card > p:last-of-type {
+  color: #dbeafe;
+  line-height: 1.65;
+}
+
+.ai-act-already-active {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  color: #fef3c7;
+  border-top: 1px solid rgba(255, 255, 255, 0.17);
+  font-weight: 700;
+}
+
+.ai-act-already-active svg {
+  flex: 0 0 auto;
+}
+
+.ai-act-section {
+  padding-top: clamp(3.5rem, 7vw, 6rem);
+  padding-bottom: clamp(3.5rem, 7vw, 6rem);
+}
+
+.ai-act-section-heading {
+  max-width: 790px;
+  margin-bottom: 2.25rem;
+}
+
+.ai-act-section-heading h2,
+.ai-act-audience-section h2,
+.ai-act-accessibility-card h2,
+.ai-act-pricing-section h2,
+.ai-act-legal-note h2 {
+  color: #123b38;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+}
+
+.ai-act-section-heading > p:last-child {
+  color: #526575;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.ai-act-objectives-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+.ai-act-objectives-grid article {
+  padding: 1.65rem;
+  background: #fff;
+  border: 1px solid #dce9e6;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(18, 59, 56, 0.06);
+}
+
+.ai-act-objectives-grid svg {
+  color: #0f766e;
+}
+
+.ai-act-objectives-grid h3 {
+  margin: 1rem 0 0.5rem;
+  color: #164e63;
+}
+
+.ai-act-objectives-grid p {
+  margin: 0;
+  color: #526575;
+  line-height: 1.65;
+}
+
+.ai-act-audience-section,
+.ai-act-method-section {
+  padding: clamp(3.5rem, 7vw, 5.5rem) 0;
+  background: #eaf5f2;
+}
+
+.ai-act-two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.ai-act-two-columns > div {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: 18px;
+}
+
+.ai-act-two-columns svg {
+  color: #0f766e;
+}
+
+.ai-act-two-columns p,
+.ai-act-check-list {
+  color: #445968;
+  line-height: 1.7;
+}
+
+.ai-act-check-list {
+  padding-left: 1.2rem;
+}
+
+.ai-act-check-list li::marker,
+.ai-act-module-card li::marker {
+  color: #0f766e;
+}
+
+.ai-act-modules {
+  display: grid;
+  gap: 1rem;
+}
+
+.ai-act-module-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: #fff;
+  border: 1px solid #dce9e6;
+  border-radius: 16px;
+}
+
+.ai-act-module-number {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: #fff;
+  background: #0f766e;
+  border-radius: 14px;
+  font-weight: 900;
+}
+
+.ai-act-module-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.ai-act-module-title-row h3 {
+  margin: 0;
+  color: #164e63;
+}
+
+.ai-act-module-title-row span {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.7rem;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.ai-act-module-card ul {
+  margin-bottom: 0;
+  padding-left: 1.15rem;
+  color: #526575;
+  line-height: 1.7;
+}
+
+.ai-act-method-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ai-act-method-grid article {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.4rem;
+  background: #fff;
+  border-radius: 13px;
+}
+
+.ai-act-method-grid strong {
+  color: #0f766e;
+  font-size: 1.05rem;
+}
+
+.ai-act-method-grid span {
+  color: #526575;
+}
+
+.ai-act-accessibility-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  color: #0f766e;
+  background: #fff;
+  border: 2px solid #bde2da;
+  border-radius: 18px;
+}
+
+.ai-act-accessibility-card svg {
+  flex: 0 0 auto;
+}
+
+.ai-act-accessibility-card h2 {
+  margin-top: 0;
+  font-size: 1.65rem;
+}
+
+.ai-act-accessibility-card p {
+  color: #526575;
+}
+
+.ai-act-accessibility-card a,
+.ai-act-legal-note a {
+  color: #0f766e;
+  font-weight: 750;
+}
+
+.ai-act-pricing-section {
+  padding: clamp(3.5rem, 7vw, 5.5rem) 0;
+  color: #e2e8f0;
+  background: #102f35;
+}
+
+.ai-act-pricing-section h2 {
+  color: #fff;
+}
+
+.ai-act-pricing-grid > div:first-child > p:last-child {
+  max-width: 650px;
+  line-height: 1.7;
+}
+
+.ai-act-price-card {
+  padding: 2rem;
+  text-align: center;
+  color: #24323f;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+}
+
+.ai-act-old-price {
+  margin-bottom: 0;
+  color: #64748b;
+}
+
+.ai-act-old-price span {
+  text-decoration: line-through;
+}
+
+.ai-act-price {
+  margin: 0.25rem 0;
+  color: #0f766e;
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ai-act-price-note {
+  margin-bottom: 1.4rem;
+  color: #92400e;
+  font-weight: 800;
+}
+
+.ai-act-price-card .btn {
+  width: 100%;
+}
+
+.ai-act-contact-note {
+  margin: 1rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.ai-act-checkout-error {
+  margin: 1rem 0 0;
+  color: #b42318;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.ai-act-price-card .btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.ai-act-legal-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-top: clamp(3rem, 6vw, 5rem);
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+}
+
+.ai-act-legal-note svg {
+  flex: 0 0 auto;
+}
+
+.ai-act-legal-note h2 {
+  margin-top: 0;
+  color: #78350f;
+  font-size: 1.5rem;
+}
+
+.ai-act-legal-note p,
+.ai-act-legal-note ul {
+  color: #6b4f27;
+  line-height: 1.65;
+}
+
+.ai-act-sources-title {
+  margin-bottom: 0.35rem;
+  font-weight: 800;
+}
+
+.ai-act-legal-note ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+@media (max-width: 860px) {
+  .ai-act-hero-grid,
+  .ai-act-pricing-grid,
+  .ai-act-two-columns,
+  .ai-act-objectives-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-act-method-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .ai-act-hero-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .ai-act-module-card,
+  .ai-act-accessibility-card,
+  .ai-act-legal-note {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .ai-act-module-title-row {
+    flex-direction: column;
+  }
+}

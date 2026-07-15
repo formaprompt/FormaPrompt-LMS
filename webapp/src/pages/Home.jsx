@@ -1,40 +1,42 @@
 import { Link } from 'react-router-dom';
-import { Bot, BookOpen, Monitor, Users, CheckCircle } from 'lucide-react';
+import { Bot, BookOpen, Monitor, CheckCircle, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import './Home.css';
 import SEO from '../components/SEO';
 
+const SUPERPROF_PROFILE_URL = 'https://www.superprof.fr/formez-prompt-engineering-revolutionnez-facon-dinteragir-lia.html';
+
+// Courts extraits de recommandations publiques, avec attribution et lien vers la source.
+const superprofRecommendations = [
+  {
+    id: 'superprof-ivan',
+    student_name: 'Ivan',
+    course_name: 'Recommandation publiée sur Superprof',
+    rating_overall: null,
+    public_testimonial: 'Super sympa et il explique très bien.',
+    source_url: SUPERPROF_PROFILE_URL,
+  },
+  {
+    id: 'superprof-sayed',
+    student_name: 'Sayed',
+    course_name: 'Recommandation publiée sur Superprof',
+    rating_overall: null,
+    public_testimonial: "Très intelligent tant dans l’enseignement que dans les connaissances.",
+    source_url: SUPERPROF_PROFILE_URL,
+  },
+  {
+    id: 'superprof-eugenie',
+    student_name: 'Eugénie',
+    course_name: 'Recommandation publiée sur Superprof',
+    rating_overall: null,
+    public_testimonial: 'À l’écoute et attentionné.',
+    source_url: SUPERPROF_PROFILE_URL,
+  },
+];
+
 export default function Home() {
   const [testimonials, setTestimonials] = useState([]);
-
-  // Faux avis par défaut
-  const defaultTestimonials = [
-    {
-      id: 'fake-1',
-      student_name: 'Sophie L.',
-      course_name: 'Assistante de Direction',
-      rating_overall: 5,
-      public_testimonial: "Formation très claire et structurée. J'avais des a priori sur ChatGPT, mais l'approche par cas d'usage m'a permis de l'intégrer efficacement dans mon travail d'assistante de direction sans me sentir dépassée.",
-      isFake: true
-    },
-    {
-      id: 'fake-2',
-      student_name: 'Marc D.',
-      course_name: 'Gérant PME',
-      rating_overall: 5,
-      public_testimonial: "Thierry est un formateur patient et très pédagogue. Nous avons revu nos process sur Excel et découvert les macros. Gain de temps garanti !",
-      isFake: true
-    },
-    {
-      id: 'fake-3',
-      student_name: 'Émilie T.',
-      course_name: 'Responsable Communication',
-      rating_overall: 5,
-      public_testimonial: "Excellente initiation au Prompt Engineering. On ne nous apprend pas juste à copier-coller des prompts, mais on nous donne une véritable méthode pour communiquer avec l'IA. Essentiel aujourd'hui.",
-      isFake: true
-    }
-  ];
 
   useEffect(() => {
     async function fetchTestimonials() {
@@ -47,10 +49,10 @@ export default function Home() {
         
       let displayTestimonials = data || [];
       
-      // Si on a moins de 3 vrais avis, on complète avec les faux avis pour toujours en avoir 3 à l'écran
+      // Si moins de 3 avis FormaPrompt sont publiés, compléter avec les recommandations publiques sourcées.
       if (displayTestimonials.length < 3) {
         const needed = 3 - displayTestimonials.length;
-        displayTestimonials = [...displayTestimonials, ...defaultTestimonials.slice(0, needed)];
+        displayTestimonials = [...displayTestimonials, ...superprofRecommendations.slice(0, needed)];
       }
       
       setTestimonials(displayTestimonials);
@@ -59,8 +61,7 @@ export default function Home() {
   }, []);
 
   // Fonction pour formater le nom : "Jean Dupont" -> "Jean D."
-  const formatName = (fullName, isFake) => {
-    if (isFake) return fullName; // Déjà formaté
+  const formatName = (fullName) => {
     const parts = fullName.trim().split(' ');
     if (parts.length > 1) {
       const lastName = parts.pop();
@@ -127,7 +128,7 @@ export default function Home() {
               <h2>Nos Domaines de Formation</h2>
               <p style={{color: 'var(--color-text-light)'}}>Des parcours adaptés pour développer vos compétences numériques</p>
             </div>
-            <div className="grid grid-cols-3">
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
               {/* Offer 1 */}
               <div className="card">
                 <Bot size={40} color="var(--color-primary)" className="mb-2" />
@@ -148,6 +149,13 @@ export default function Home() {
                 <h3 className="card-title">Bureautique Pro</h3>
                 <p className="mb-3">Maîtriser Word, Excel, PowerPoint, Outlook et Teams pour gagner en efficacité et en productivité.</p>
                 <Link to="/formation-bureautique" className="link-arrow">En savoir plus &rarr;</Link>
+              </div>
+              {/* Offer 4 */}
+              <div className="card">
+                <ShieldCheck size={40} color="var(--color-primary)" className="mb-2" />
+                <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
+                <p className="mb-3">Comprendre les obligations essentielles et préparer un premier plan d'action avant l'échéance-clé du 2 août 2026.</p>
+                <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>
               </div>
             </div>
           </div>
@@ -215,15 +223,17 @@ export default function Home() {
           <div className="container">
             <div className="text-center mb-8">
               <h2>Ce qu'ils en pensent</h2>
-              <p style={{color: 'var(--color-text-light)'}}>Découvrez les retours des professionnels formés par FormaPrompt</p>
+               <p style={{color: 'var(--color-text-light)'}}>Découvrez des retours d’apprenants et des recommandations publiques sourcées</p>
             </div>
             <div className="grid grid-cols-3">
               {testimonials.map((t, index) => (
                 <div key={t.id} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '1rem', color: '#fbbf24' }}>
-                      {'★'.repeat(t.rating_overall || 5)}{'☆'.repeat(5 - (t.rating_overall || 5))}
-                    </div>
+                    {Number.isFinite(t.rating_overall) && (
+                      <div aria-label={`Note : ${t.rating_overall} sur 5`} style={{ display: 'flex', gap: '4px', marginBottom: '1rem', color: '#fbbf24' }}>
+                        {'★'.repeat(t.rating_overall)}{'☆'.repeat(5 - t.rating_overall)}
+                      </div>
+                    )}
                     <p style={{ fontStyle: 'italic', marginBottom: '1.5rem', color: 'var(--color-text)' }}>
                       "{t.public_testimonial}"
                     </p>
@@ -233,8 +243,19 @@ export default function Home() {
                       {t.student_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <h4 style={{ margin: '0', fontSize: '1rem' }}>{formatName(t.student_name, t.isFake)}</h4>
-                      <p style={{ margin: '0', fontSize: '0.85rem', color: 'var(--color-text-light)' }}>{t.course_name}</p>
+                      <h4 style={{ margin: '0', fontSize: '1rem' }}>{formatName(t.student_name)}</h4>
+                      {t.source_url ? (
+                        <a
+                          href={t.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ fontSize: '0.85rem', color: 'var(--color-text-light)', textDecoration: 'underline' }}
+                        >
+                          {t.course_name}
+                        </a>
+                      ) : (
+                        <p style={{ margin: '0', fontSize: '0.85rem', color: 'var(--color-text-light)' }}>{t.course_name}</p>
+                      )}
                     </div>
                   </div>
                 </div>

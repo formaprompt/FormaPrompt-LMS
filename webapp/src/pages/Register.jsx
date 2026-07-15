@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { getAuthRedirectUrl } from '../lib/authRedirect';
 import './Auth.css';
 
 export default function Register() {
@@ -13,8 +14,6 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const navigate = useNavigate();
-
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,6 +29,9 @@ export default function Register() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: getAuthRedirectUrl('/dashboard'),
+      },
     });
 
     if (error) {

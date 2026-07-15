@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Award, Target, Users, BookOpen, CheckCircle, Lightbulb } from 'lucide-react';
+import { Award, Target, Users, BookOpen, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 
 export default function About() {

@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './AvailabilityCalendar.css';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info, Trash2, Check, Plus } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { isJourFerie } from '../lib/dates';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
+
+function formatDatabaseDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDatabaseDate(value) {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
 
 export default function AvailabilityCalendar() {
   const { role } = useAuth();
@@ -20,26 +32,55 @@ export default function AvailabilityCalendar() {
   const [bookingForm, setBookingForm] = useState({ slot: 'Matin', type: 'option', ofName: '', comments: '' });
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    let isActive = true;
 
-  const fetchBookings = async () => {
-    const { data, error } = await supabase
-      .from('calendar_bookings')
-      .select('*');
-      
-    if (error) {
-      console.error('Erreur lors du chargement des réservations:', error);
-    } else if (data) {
-      // Convert date strings back to Date objects
-      const formattedData = data.map(b => ({
-        ...b,
-        date: new Date(b.date),
-        of: b.of_name // map db column back to local state property
-      }));
-      setBookings(formattedData);
+    async function loadBookings() {
+      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const [ofResult, learnerResult] = await Promise.all([
+        supabase
+          .from('calendar_bookings')
+          .select('*')
+          .gte('date', formatDatabaseDate(monthStart))
+          .lte('date', formatDatabaseDate(monthEnd)),
+        supabase
+          .from('learner_calendar_blocks')
+          .select('booking_date, slot')
+          .gte('booking_date', formatDatabaseDate(monthStart))
+          .lte('booking_date', formatDatabaseDate(monthEnd)),
+      ]);
+
+      if (ofResult.error || learnerResult.error) {
+        console.error('Erreur lors du chargement des réservations:', {
+          organismes: ofResult.error,
+          apprenants: learnerResult.error,
+        });
+      } else if (isActive) {
+        const ofBookings = (ofResult.data || []).map((booking) => ({
+          ...booking,
+          date: parseDatabaseDate(booking.date),
+          of: booking.of_name,
+          source: 'of',
+        }));
+        const learnerBlocks = (learnerResult.data || []).map((block) => ({
+          id: `learner-${block.booking_date}-${block.slot}`,
+          date: parseDatabaseDate(block.booking_date),
+          slot: block.slot,
+          type: 'formation',
+          of: 'Formation apprenant',
+          comments: null,
+          source: 'learner',
+        }));
+        setBookings([...ofBookings, ...learnerBlocks]);
+      }
     }
-  };
+
+    loadBookings();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentDate]);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -64,11 +105,26 @@ export default function AvailabilityCalendar() {
     
     // Only admins can click past days, holidays, or Sundays
     if (!isDisabled || isAdmin) {
+      const dayBookings = getBookingsForDay(day);
+      const isMorningBusy = dayBookings.some((booking) => booking.slot === 'Matin' || booking.slot === 'Journée');
+      const isAfternoonBusy = dayBookings.some((booking) => booking.slot === 'Après-midi' || booking.slot === 'Journée');
+      const isSaturday = clickedDate.getDay() === 6;
+      const availableSlots = [
+        !isMorningBusy ? 'Matin' : null,
+        (!isSaturday || isAdmin) && !isAfternoonBusy ? 'Après-midi' : null,
+        (!isSaturday || isAdmin) && !isMorningBusy && !isAfternoonBusy ? 'Journée' : null,
+      ].filter(Boolean);
+
+      if (availableSlots.length === 0) {
+        alert('Cette journée ne contient plus de période disponible.');
+        return;
+      }
+
       setSelectedDate(clickedDate);
       setIsModalOpen(true);
       // Reset form defaults based on role
       setBookingForm({ 
-        slot: 'Matin', 
+        slot: availableSlots[0],
         type: isAdmin ? 'confirmé' : 'option', 
         ofName: isAdmin ? 'Indisponibilité' : '', 
         comments: '' 
@@ -77,7 +133,7 @@ export default function AvailabilityCalendar() {
   };
 
   const handleBookingClick = (e, booking) => {
-    if (!isAdmin) return; // Only admin can edit existing bookings
+    if (!isAdmin || booking.source === 'learner') return; // Les blocs apprenant ne sont pas modifiables ici.
     e.stopPropagation(); // Prevent trigger date click
     setSelectedBooking(booking);
     setIsAdminEditModalOpen(true);
@@ -87,7 +143,7 @@ export default function AvailabilityCalendar() {
     e.preventDefault();
     
     // Format date properly for Postgres
-    const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+    const dateStr = formatDatabaseDate(selectedDate);
 
     const newBookingData = {
       date: dateStr,
@@ -104,15 +160,18 @@ export default function AvailabilityCalendar() {
       
     if (error) {
       console.error("Erreur lors de l'ajout :", error);
-      alert("Une erreur est survenue lors de la réservation.");
+      alert(error.code === '23505' || error.message?.includes("n'est plus disponible")
+        ? "Cette période vient d'être réservée ou contient déjà une séance apprenant. Choisissez un autre créneau."
+        : "Une erreur est survenue lors de la réservation.");
       return;
     }
     
     if (data && data.length > 0) {
       const addedBooking = {
         ...data[0],
-        date: new Date(data[0].date),
-        of: data[0].of_name
+        date: parseDatabaseDate(data[0].date),
+        of: data[0].of_name,
+        source: 'of',
       };
       setBookings([...bookings, addedBooking]);
     }
@@ -160,6 +219,10 @@ export default function AvailabilityCalendar() {
     });
   };
 
+  const selectedDateBookings = selectedDate ? getBookingsForDay(selectedDate.getDate()) : [];
+  const selectedMorningBusy = selectedDateBookings.some((booking) => booking.slot === 'Matin' || booking.slot === 'Journée');
+  const selectedAfternoonBusy = selectedDateBookings.some((booking) => booking.slot === 'Après-midi' || booking.slot === 'Journée');
+
   const renderDays = () => {
     const days = [];
     const today = new Date();
@@ -200,10 +263,10 @@ export default function AvailabilityCalendar() {
                   <div 
                     className={`slot-badge slot-${dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').type === 'option' ? 'option' : 'booked'}`}
                     onClick={(e) => handleBookingClick(e, dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée'))}
-                    style={{ cursor: isAdmin ? 'pointer' : 'default' }}
-                    title={isAdmin ? "Cliquez pour gérer" : ""}
+                    style={{ cursor: isAdmin && dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source !== 'learner' ? 'pointer' : 'default' }}
+                    title={dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source === 'learner' ? 'Indisponible : séance apprenant' : isAdmin ? "Cliquez pour gérer" : ""}
                   >
-                    Matin ({dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').type})
+                    Matin ({dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source === 'learner' ? 'formation' : dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').type})
                   </div>
                 ) : <div className="slot-badge slot-available">Matin libre</div>}
                 
@@ -211,10 +274,10 @@ export default function AvailabilityCalendar() {
                    <div 
                     className={`slot-badge slot-${dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').type === 'option' ? 'option' : 'booked'}`}
                     onClick={(e) => handleBookingClick(e, dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée'))}
-                    style={{ cursor: isAdmin ? 'pointer' : 'default' }}
-                    title={isAdmin ? "Cliquez pour gérer" : ""}
+                    style={{ cursor: isAdmin && dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source !== 'learner' ? 'pointer' : 'default' }}
+                    title={dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source === 'learner' ? 'Indisponible : séance apprenant' : isAdmin ? "Cliquez pour gérer" : ""}
                    >
-                   A-M ({dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').type})
+                   A-M ({dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source === 'learner' ? 'formation' : dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').type})
                  </div>
                 ) : <div className="slot-badge slot-available">A-M libre</div>}
               </>
@@ -314,11 +377,11 @@ export default function AvailabilityCalendar() {
                   onChange={e => setBookingForm({...bookingForm, slot: e.target.value})}
                   disabled={!isAdmin && selectedDate?.getDay() === 6}
                 >
-                  <option value="Matin">Matin (9h-12h30)</option>
+                  <option value="Matin" disabled={selectedMorningBusy}>Matin (9h-12h30)</option>
                   {(!(!isAdmin && selectedDate?.getDay() === 6)) && (
                     <>
-                      <option value="Après-midi">Après-midi (13h30-17h)</option>
-                      <option value="Journée">Journée complète</option>
+                      <option value="Après-midi" disabled={selectedAfternoonBusy}>Après-midi (13h30-17h)</option>
+                      <option value="Journée" disabled={selectedMorningBusy || selectedAfternoonBusy}>Journée complète</option>
                     </>
                   )}
                 </select>
@@ -337,12 +400,12 @@ export default function AvailabilityCalendar() {
                   onChange={e => setBookingForm({...bookingForm, type: e.target.value})}
                 >
                   <option value="option">Option (Non sûr / À confirmer)</option>
-                  <option value="confirmé">Réservation ferme (Sûr)</option>
+                  {isAdmin && <option value="confirmé">Réservation ferme (Sûr)</option>}
                 </select>
                 {!isAdmin && (
                   <small style={{ color: 'var(--color-text-light)', display: 'block', marginTop: '0.25rem' }}>
                     <Info size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }}/>
-                    Une option est conservée 48h. Une réservation ferme bloque le calendrier.
+                    Votre demande est enregistrée comme option pendant 48 h. FormaPrompt la confirme ensuite avec vous.
                   </small>
                 )}
               </div>

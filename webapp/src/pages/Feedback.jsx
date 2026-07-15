@@ -1,9 +1,35 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
 import { Star } from 'lucide-react';
+import { useAuth } from '../contexts/useAuth';
+import { BOOKING_COURSES } from '../data/bookingCatalog';
+import { getLastBookedSession, hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
+
+function formatParisDateInput(value) {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date(value));
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function splitLearnerName(learnerName = '') {
+  const parts = learnerName.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts.shift() || '',
+    lastName: parts.join(' '),
+  };
+}
 
 export default function Feedback() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const bookingId = searchParams.get('booking');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -21,9 +47,111 @@ export default function Feedback() {
   });
   
   const [status, setStatus] = useState('idle');
+  const [contextStatus, setContextStatus] = useState(bookingId ? 'loading' : 'ready');
+  const [contextMessage, setContextMessage] = useState('');
+  const [linkedBooking, setLinkedBooking] = useState(null);
+
+  useEffect(() => {
+    if (!bookingId) return;
+    if (!user) return;
+
+    let isActive = true;
+
+    async function loadTrainingContext() {
+      setContextStatus('loading');
+      setContextMessage('');
+
+      const { data: booking, error: bookingError } = await supabase
+        .from('course_booking_requests')
+        .select(`
+          id, course_id, status, schedule_format,
+          course_session_bookings(id, starts_at, ends_at, duration_minutes, status),
+          course_session_attendance(
+            id, session_starts_at, session_ends_at,
+            learner_confirmed_at, learner_signature_sha256
+          )
+        `)
+        .eq('id', bookingId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!isActive) return;
+      if (bookingError || !booking) {
+        console.error('Contexte du questionnaire introuvable :', bookingError);
+        setContextStatus('unavailable');
+        setContextMessage('Cette formation ne peut pas être associée à votre compte. Ouvrez le questionnaire depuis « Mon espace ».');
+        return;
+      }
+
+      const [surveyResult, assessmentResult] = await Promise.all([
+        supabase
+          .from('satisfaction_surveys')
+          .select('id, created_at')
+          .eq('user_id', user.id)
+          .eq('booking_request_id', booking.id)
+          .maybeSingle(),
+        supabase
+          .from('course_positioning_assessments')
+          .select('learner_name')
+          .eq('user_id', user.id)
+          .eq('course_id', booking.course_id)
+          .order('submitted_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      if (!isActive) return;
+      if (surveyResult.error) {
+        console.error('Vérification du questionnaire impossible :', surveyResult.error);
+        setContextStatus('unavailable');
+        setContextMessage('Le questionnaire ne peut pas être vérifié pour le moment. Réessayez dans quelques instants.');
+        return;
+      }
+      if (surveyResult.data) {
+        setContextStatus('already_submitted');
+        setContextMessage(`Votre questionnaire a déjà été transmis le ${new Date(surveyResult.data.created_at).toLocaleString('fr-FR')}.`);
+        return;
+      }
+      if (!hasLearnerSignedLastSession(booking)) {
+        setContextStatus('unavailable');
+        setContextMessage('Le questionnaire sera disponible dès que vous aurez signé la feuille de présence de votre dernière séance.');
+        return;
+      }
+
+      const course = BOOKING_COURSES[booking.course_id];
+      const lastSession = getLastBookedSession(booking);
+      if (!course || !lastSession) {
+        setContextStatus('unavailable');
+        setContextMessage('Les informations de fin de formation sont incomplètes. Contactez FormaPrompt.');
+        return;
+      }
+
+      const learnerName = splitLearnerName(assessmentResult.data?.learner_name);
+      setFormData((current) => ({
+        ...current,
+        ...learnerName,
+        student_email: user.email || '',
+        course_name: course.title,
+        training_date: formatParisDateInput(lastSession.ends_at),
+      }));
+      setLinkedBooking(booking);
+      setContextStatus('ready');
+    }
+
+    loadTrainingContext();
+    return () => {
+      isActive = false;
+    };
+  }, [bookingId, user]);
+
+  const displayedContextStatus = bookingId && !user ? 'authentication_required' : contextStatus;
+  const displayedContextMessage = displayedContextStatus === 'authentication_required'
+    ? 'Connectez-vous avec le compte ayant suivi la formation pour ouvrir ce questionnaire.'
+    : contextMessage;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (bookingId && (contextStatus !== 'ready' || !linkedBooking)) return;
     setStatus('loading');
 
     // Concaténer le prénom, nom et entreprise pour la base de données
@@ -43,13 +171,25 @@ export default function Feedback() {
       consent_marketing: formData.consent_marketing
     };
 
+    if (linkedBooking) {
+      dataToSubmit.user_id = user.id;
+      dataToSubmit.booking_request_id = linkedBooking.id;
+      dataToSubmit.course_id = linkedBooking.course_id;
+      dataToSubmit.submission_source = 'learner_dashboard';
+    }
+
     const { error } = await supabase
       .from('satisfaction_surveys')
       .insert([dataToSubmit]);
 
     if (error) {
       console.error(error);
-      setStatus('error');
+      if (error.code === '23505') {
+        setContextStatus('already_submitted');
+        setContextMessage('Votre questionnaire a déjà été transmis. Merci pour votre retour.');
+      } else {
+        setStatus('error');
+      }
     } else {
       setStatus('success');
     }
@@ -64,6 +204,8 @@ export default function Feedback() {
             key={star}
             type="button"
             onClick={() => setFormData({...formData, [field]: star})}
+            aria-label={`${label} : ${star} étoile${star > 1 ? 's' : ''} sur 5`}
+            aria-pressed={star === formData[field]}
             style={{ 
               background: 'none', border: 'none', cursor: 'pointer', padding: '0',
               color: star <= formData[field] ? '#fbbf24' : '#e5e7eb'
@@ -84,19 +226,49 @@ export default function Feedback() {
         url="https://www.formaprompt.com/feedback"
       />
       <div className="container section" style={{maxWidth: '800px'}}>
-        <h1 className="text-center mb-2">Votre avis compte !</h1>
+        <h1 className="text-center mb-2">
+          {bookingId ? 'Questionnaire de satisfaction de fin de formation' : 'Votre avis compte !'}
+        </h1>
         <p className="text-center mb-4 text-large" style={{ color: 'var(--color-text-light)' }}>
           Dans le cadre de l'amélioration continue de nos formations (démarche qualité Qualiopi), nous vous remercions de bien vouloir évaluer la session que vous venez de suivre.
         </p>
         
         <div className="card">
-          {status === 'success' ? (
+          {displayedContextStatus === 'loading' ? (
+            <div role="status" style={{ padding: '2rem', textAlign: 'center' }}>
+              Vérification de votre dernière séance signée…
+            </div>
+          ) : displayedContextStatus === 'authentication_required' ? (
+            <div role="alert" style={{ padding: '2rem', textAlign: 'center' }}>
+              <h3 className="mb-2">Connexion nécessaire</h3>
+              <p>{displayedContextMessage}</p>
+              <Link to="/login" className="btn btn-primary" style={{ marginTop: '1rem' }}>Se connecter</Link>
+            </div>
+          ) : displayedContextStatus === 'unavailable' ? (
+            <div role="alert" style={{ padding: '2rem', textAlign: 'center' }}>
+              <h3 className="mb-2">Questionnaire indisponible</h3>
+              <p>{displayedContextMessage}</p>
+              <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem' }}>Retour à mon espace</Link>
+            </div>
+          ) : displayedContextStatus === 'already_submitted' ? (
+            <div style={{ background: '#10b98120', color: '#10b981', padding: '2rem', borderRadius: '8px', textAlign: 'center' }}>
+              <h3 className="mb-2">Questionnaire déjà transmis</h3>
+              <p>{displayedContextMessage}</p>
+              <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem' }}>Retour à mon espace</Link>
+            </div>
+          ) : status === 'success' ? (
             <div style={{ background: '#10b98120', color: '#10b981', padding: '2rem', borderRadius: '8px', textAlign: 'center' }}>
               <h3 className="mb-2">Merci pour votre retour !</h3>
               <p>Votre évaluation a bien été prise en compte. Nous sommes ravis de vous avoir compté parmi nos stagiaires.</p>
+              {bookingId && <Link to="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem' }}>Retour à mon espace</Link>}
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
+              {linkedBooking && (
+                <div style={{ background: '#e8fbf4', color: '#065f46', padding: '1rem', border: '1px solid #10b981', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <strong>Parcours vérifié :</strong> ce questionnaire est associé à votre compte et à votre dernière séance signée.
+                </div>
+              )}
               <div className="grid grid-cols-2 mb-4">
                 <div className="form-group mb-0">
                   <label className="form-label" htmlFor="firstName">Prénom</label>
@@ -115,24 +287,33 @@ export default function Feedback() {
                 </div>
                 <div className="form-group mb-0">
                   <label className="form-label" htmlFor="student_email">Votre email</label>
-                  <input type="email" id="student_email" required className="form-input" value={formData.student_email} onChange={(e) => setFormData({...formData, student_email: e.target.value})} placeholder="jean.dupont@email.com" />
+                  <input type="email" id="student_email" required readOnly={Boolean(linkedBooking)} className="form-input" value={formData.student_email} onChange={(e) => setFormData({...formData, student_email: e.target.value})} placeholder="jean.dupont@email.com" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 mb-4">
                 <div className="form-group mb-0">
                   <label className="form-label" htmlFor="course_name">Intitulé de la formation suivie</label>
-                  <select id="course_name" required className="form-input" value={formData.course_name} onChange={(e) => setFormData({...formData, course_name: e.target.value})}>
+                  <select id="course_name" required disabled={Boolean(linkedBooking)} className="form-input" value={formData.course_name} onChange={(e) => setFormData({...formData, course_name: e.target.value})}>
                     <option>Acculturation IA</option>
+                    <option>Acculturation IA et préparation à la conformité AI Act</option>
                     <option>Prompt Engineering</option>
                     <option>Bureautique Pro (Excel/Word)</option>
                     <option>Outils Microsoft 365 (Teams)</option>
                     <option>Autre / Sur-mesure</option>
+                    {linkedBooking && ![
+                      'Acculturation IA',
+                      'Acculturation IA et préparation à la conformité AI Act',
+                      'Prompt Engineering',
+                      'Bureautique Pro (Excel/Word)',
+                      'Outils Microsoft 365 (Teams)',
+                      'Autre / Sur-mesure',
+                    ].includes(formData.course_name) && <option>{formData.course_name}</option>}
                   </select>
                 </div>
                 <div className="form-group mb-0">
                   <label className="form-label" htmlFor="training_date">Date de fin de formation</label>
-                  <input type="date" id="training_date" required className="form-input" value={formData.training_date} onChange={(e) => setFormData({...formData, training_date: e.target.value})} />
+                  <input type="date" id="training_date" required disabled={Boolean(linkedBooking)} className="form-input" value={formData.training_date} onChange={(e) => setFormData({...formData, training_date: e.target.value})} />
                 </div>
               </div>
 

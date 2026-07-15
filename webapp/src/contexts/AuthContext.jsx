@@ -1,15 +1,19 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-
-const AuthContext = createContext({});
+import { AuthContext } from './auth-context';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
+    let isActive = true;
+    const deferredTasks = new Set();
+
     const fetchProfile = async (currentUser) => {
+      if (!isActive) return;
       if (!currentUser) {
         setUser(null);
         setRole(null);
@@ -26,31 +30,62 @@ export const AuthProvider = ({ children }) => {
       if (error) {
         console.error("Erreur lors de la récupération du profil :", error);
       }
-      console.log("Données du profil récupérées :", data);
-        
+
+      if (!isActive) return;
       setUser(currentUser);
       setRole(data?.role || 'user');
       setLoading(false);
     };
 
-    // Obtenir la session actuelle
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      fetchProfile(session?.user);
-    });
+    // Vérifie la session auprès du serveur : getSession() seul peut retourner
+    // un ancien jeton encore présent dans le navigateur après une déconnexion.
+    const validateInitialSession = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setSessionExpired(false);
+        await fetchProfile(null);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getUser(sessionData.session.access_token);
+      if (error) {
+        setSessionExpired(true);
+        await supabase.auth.signOut({ scope: 'local' });
+        await fetchProfile(null);
+        return;
+      }
+      setSessionExpired(false);
+      await fetchProfile(data.user);
+    };
+    validateInitialSession();
 
     // Écouter les changements d'état (connexion, déconnexion)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      fetchProfile(session?.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') setSessionExpired(false);
+      const task = window.setTimeout(() => {
+        deferredTasks.delete(task);
+        fetchProfile(session?.user);
+      }, 0);
+      deferredTasks.add(task);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isActive = false;
+      deferredTasks.forEach((task) => window.clearTimeout(task));
+      subscription.unsubscribe();
+    };
   }, []);
 
   const value = {
     user,
     role,
     loading,
-    signOut: () => supabase.auth.signOut(),
+    sessionExpired,
+    signOut: () => {
+      setSessionExpired(false);
+      return supabase.auth.signOut();
+    },
   };
 
   return (
@@ -58,8 +93,4 @@ export const AuthProvider = ({ children }) => {
       {!loading && children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
 };

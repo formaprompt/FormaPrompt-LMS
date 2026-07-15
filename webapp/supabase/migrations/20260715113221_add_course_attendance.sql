@@ -1,0 +1,2 @@
+-- Fichier créé lors d'une première tentative de génération de migration.
+-- La migration complète est définie dans 20260715113258_add_course_attendance.sql.

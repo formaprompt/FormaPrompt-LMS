@@ -121,16 +121,95 @@ CREATE TABLE public.blog_posts (
 -- Sécurité RLS pour les articles de blog
 ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 
--- Tout le monde peut lire les articles de blog
-CREATE POLICY "Tout le monde peut lire les articles de blog" 
-ON public.blog_posts FOR SELECT 
+-- Tout le monde peut lire les articles de blog.
+CREATE POLICY "Lecture publique des articles du blog"
+ON public.blog_posts FOR SELECT
+TO anon, authenticated
 USING (true);
 
--- Seuls les administrateurs peuvent gérer les articles de blog
-CREATE POLICY "Les administrateurs peuvent gérer les articles de blog" 
-ON public.blog_posts FOR ALL 
-USING (
+-- Seuls les administrateurs et employés autorisés peuvent créer un article.
+CREATE POLICY "Le personnel crée les articles du blog"
+ON public.blog_posts FOR INSERT
+TO authenticated
+WITH CHECK (
   EXISTS (
-    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'employee')
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'employee')
   )
 );
+
+CREATE POLICY "Le personnel modifie les articles du blog"
+ON public.blog_posts FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'employee')
+  )
+)
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'employee')
+  )
+);
+
+CREATE POLICY "Le personnel supprime les articles du blog"
+ON public.blog_posts FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'employee')
+  )
+);
+
+REVOKE ALL ON public.blog_posts FROM PUBLIC, anon, authenticated;
+GRANT SELECT ON public.blog_posts TO anon, authenticated;
+GRANT INSERT, UPDATE, DELETE ON public.blog_posts TO authenticated;
+GRANT ALL ON public.blog_posts TO service_role;
+
+-- Table des tests de positionnement préalables aux formations
+CREATE TABLE public.course_positioning_assessments (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid NOT NULL
+    CONSTRAINT course_positioning_assessments_user_id_fkey
+    REFERENCES public.profiles(id) ON DELETE CASCADE,
+  learner_name text NOT NULL CHECK (char_length(learner_name) BETWEEN 2 AND 150),
+  course_id text NOT NULL CHECK (char_length(course_id) BETWEEN 2 AND 100),
+  course_title text NOT NULL CHECK (char_length(course_title) BETWEEN 2 AND 250),
+  answers jsonb NOT NULL CHECK (jsonb_typeof(answers) = 'array'),
+  score integer NOT NULL CHECK (score >= 0),
+  maximum_score integer NOT NULL CHECK (maximum_score > 0 AND score <= maximum_score),
+  level text NOT NULL CHECK (char_length(level) BETWEEN 2 AND 100),
+  submitted_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+CREATE INDEX course_positioning_assessments_user_course_idx
+  ON public.course_positioning_assessments (user_id, course_id, submitted_at DESC);
+
+ALTER TABLE public.course_positioning_assessments ENABLE ROW LEVEL SECURITY;
+
+GRANT SELECT, INSERT ON public.course_positioning_assessments TO authenticated;
+
+-- L'apprenant peut enregistrer et relire uniquement ses propres positionnements.
+CREATE POLICY "Les apprenants créent leur propre positionnement"
+ON public.course_positioning_assessments FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Les apprenants lisent leur propre positionnement"
+ON public.course_positioning_assessments FOR SELECT
+USING (auth.uid() = user_id);
+
+-- Les personnes autorisées peuvent produire les preuves de suivi pédagogique.
+CREATE POLICY "Les administrateurs consultent les positionnements"
+ON public.course_positioning_assessments FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role IN ('admin', 'employee')
+  )
+);
+
+COMMENT ON TABLE public.course_positioning_assessments IS
+  'Positionnements nominatifs réalisés avant le début des formations. Définir et documenter une durée de conservation RGPD.';

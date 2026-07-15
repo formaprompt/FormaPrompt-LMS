@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../contexts/useAuth';
 import './Auth.css';
 
 export default function Login() {
@@ -11,23 +12,39 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/dashboard';
+
+  useEffect(() => {
+    if (user) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [user, navigate, redirectTo]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       setError('Identifiants incorrects. Veuillez réessayer.');
-    } else {
-      navigate('/dashboard'); // Redirection vers l'espace membre
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    if (!data.session) {
+      setError("La connexion n'a pas pu être confirmée. Veuillez réessayer.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +53,9 @@ export default function Login() {
         <h1>Bon retour !</h1>
         <p className="auth-subtitle">Connectez-vous à votre Espace Élève</p>
 
+        {searchParams.get('session') === 'expired' && (
+          <div className="auth-info">Votre session a expiré ou a été fermée dans un autre onglet. Reconnectez-vous pour continuer votre réservation.</div>
+        )}
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleLogin} className="auth-form">

@@ -1,0 +1,177 @@
+.gpt-guide {
+  --gpt-ink: #10233f;
+  --gpt-muted: #5d6b82;
+  --gpt-cream: #fffaf2;
+  background: #fffdf9;
+  color: var(--gpt-ink);
+  overflow: hidden;
+}
+
+.gpt-guide h1,
+.gpt-guide h2,
+.gpt-guide h3,
+.gpt-guide h4 { color: var(--gpt-ink); }
+
+.gpt-hero {
+  position: relative;
+  min-height: 660px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #10233f 0%, #123a4a 48%, #155e63 100%);
+  color: white;
+  isolation: isolate;
+}
+
+.gpt-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .12;
+  background-image: linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.gpt-orb { position: absolute; border-radius: 50%; filter: blur(2px); z-index: -1; }
+.gpt-orb-one { width: 340px; height: 340px; background: rgba(94, 234, 212, .13); right: -80px; top: 40px; }
+.gpt-orb-two { width: 240px; height: 240px; background: rgba(251, 191, 36, .12); left: -80px; bottom: 30px; }
+
+.gpt-hero-inner { padding-top: 5rem; padding-bottom: 5rem; text-align: center; position: relative; }
+.gpt-eyebrow { display: inline-flex; align-items: center; gap: .55rem; padding: .55rem 1rem; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: rgba(255,255,255,.08); font-weight: 700; letter-spacing: .02em; }
+.gpt-hero h1 { max-width: 900px; margin: 1.5rem auto; color: white; font-size: clamp(2.6rem, 6vw, 5rem); letter-spacing: -.055em; }
+.gpt-hero h1 span { color: #5eead4; }
+.gpt-hero-lead { max-width: 720px; margin: 0 auto 2.25rem; color: #d9e8eb; font-size: clamp(1.05rem, 2vw, 1.3rem); }
+
+.gpt-equation { max-width: 850px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 1rem; }
+.gpt-equation > div { min-height: 88px; display: flex; align-items: center; gap: .8rem; padding: 1rem 1.25rem; border-radius: 18px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); text-align: left; }
+.gpt-equation strong { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: #5eead4; color: #10233f; font-size: 1.25rem; }
+.gpt-equation span { font-weight: 700; }
+.gpt-equation .gpt-result { background: #fff; color: var(--gpt-ink); border-color: #fff; }
+.gpt-result svg { color: #059669; }
+.gpt-plus { font-size: 1.5rem; font-weight: 800; }
+.gpt-arrow { opacity: .7; }
+.gpt-scroll-link { display: inline-flex; align-items: center; margin-top: 2rem; gap: .35rem; color: #fff; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,.5); }
+.gpt-scroll-link:hover { color: #5eead4; }
+
+.gpt-section { padding-top: 6rem; padding-bottom: 6rem; }
+.gpt-section-heading { max-width: 760px; margin: 0 auto 3rem; text-align: center; }
+.gpt-step { display: inline-block; margin-bottom: .8rem; color: #0f766e; font-size: .82rem; font-weight: 800; text-transform: uppercase; letter-spacing: .15em; }
+.gpt-section-heading h2 { font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -.04em; }
+.gpt-section-heading p { color: var(--gpt-muted); font-size: 1.1rem; }
+
+.gpt-surfaces-section { padding: 6rem 0; background: linear-gradient(180deg, #f1f9f8 0%, #fffdf9 100%); }
+.gpt-surfaces-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+.gpt-surfaces-grid article { padding: 2rem; border: 1px solid #dbe5e8; border-radius: 22px; background: rgba(255,255,255,.9); box-shadow: 0 14px 38px rgba(26, 43, 70, .07); }
+.gpt-surfaces-grid article.featured { border: 2px solid #14b8a6; box-shadow: 0 18px 46px rgba(13, 148, 136, .15); }
+.gpt-surface-icon { width: 54px; height: 54px; display: grid; place-items: center; margin-bottom: 1.2rem; border-radius: 16px; }
+.gpt-surface-icon.chat { color: #2563eb; background: #dbeafe; }
+.gpt-surface-icon.work { color: #0f766e; background: #ccfbf1; }
+.gpt-surface-icon.api { color: #7c3aed; background: #ede9fe; }
+.gpt-surfaces-grid h3 { margin-bottom: .25rem; font-size: 1.3rem; }
+.gpt-surface-where { margin-bottom: 1.1rem; color: #0f766e; font-size: .82rem; font-weight: 800; }
+.gpt-surfaces-grid article > p:not(.gpt-surface-where) { color: var(--gpt-muted); }
+.gpt-surface-note { display: inline-block; margin-top: 1.25rem; padding: .4rem .65rem; border-radius: 8px; background: #f1f5f9; color: #475569; font-size: .75rem; font-weight: 700; }
+.gpt-surface-summary { max-width: 900px; margin: 2rem auto 0; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 1.4rem; border-radius: 16px; color: #134e4a; background: #ccfbf1; border: 1px solid #99f6e4; }
+.gpt-surface-summary svg { flex: 0 0 auto; color: #0f766e; }
+
+.gpt-model-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; align-items: stretch; }
+.gpt-model-card { position: relative; padding: 2rem; border-radius: 24px; background: white; border: 1px solid #e8ebf0; box-shadow: 0 16px 45px rgba(26, 43, 70, .08); }
+.gpt-model-card.teal { transform: translateY(-12px); border: 2px solid #14b8a6; box-shadow: 0 20px 55px rgba(13, 148, 136, .18); }
+.gpt-model-icon { width: 58px; height: 58px; display: grid; place-items: center; border-radius: 17px; margin-bottom: 1.25rem; }
+.violet .gpt-model-icon { color: #7c3aed; background: #ede9fe; }
+.teal .gpt-model-icon { color: #0f766e; background: #ccfbf1; }
+.orange .gpt-model-icon { color: #c2410c; background: #ffedd5; }
+.gpt-model-family { color: var(--gpt-muted); font-size: .85rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.gpt-model-card h3 { margin: .15rem 0 0; font-size: 2.3rem; }
+.gpt-model-label { margin-bottom: 1.25rem; color: #0f766e; font-weight: 800; }
+.gpt-model-summary { min-height: 78px; color: var(--gpt-muted); }
+.gpt-model-card h4 { margin: 1.5rem 0 .7rem; font-size: .9rem; text-transform: uppercase; letter-spacing: .07em; }
+.gpt-model-card ul { list-style: none; display: grid; gap: .55rem; }
+.gpt-model-card li { display: flex; align-items: center; gap: .5rem; }
+.gpt-model-card li svg { flex: 0 0 auto; color: #059669; }
+.gpt-caution { margin-top: 1.5rem; padding: 1rem; border-radius: 13px; background: #f8fafc; color: var(--gpt-muted); font-size: .9rem; }
+.gpt-caution strong { color: var(--gpt-ink); }
+.gpt-badge { position: absolute; right: 1.2rem; top: 1.2rem; padding: .35rem .65rem; border-radius: 999px; color: #115e59; background: #ccfbf1; font-size: .72rem; font-weight: 800; text-transform: uppercase; }
+
+.gpt-memory-tip { max-width: 780px; margin: 3rem auto 0; display: flex; align-items: center; gap: 1.2rem; padding: 1.3rem 1.5rem; border-radius: 18px; background: #fff6d9; border: 1px solid #fde68a; }
+.gpt-memory-tip > svg { flex: 0 0 auto; color: #b45309; }
+.gpt-memory-tip p { color: #695631; }
+
+.gpt-effort-section { padding: 6rem 0; background: #10233f; color: white; }
+.gpt-section-heading.light h2 { color: white; }
+.gpt-section-heading.light p { color: #b9c8da; }
+.gpt-section-heading.light .gpt-step { color: #5eead4; }
+.gpt-analogy { max-width: 850px; margin: 0 auto 2rem; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 1.5rem; border-radius: 16px; color: #e9f3f5; background: rgba(94, 234, 212, .08); border: 1px solid rgba(94, 234, 212, .25); }
+.gpt-analogy svg { flex: 0 0 auto; color: #5eead4; }
+.gpt-effort-list { max-width: 980px; margin: auto; display: grid; gap: .75rem; }
+.gpt-effort-row { position: relative; display: grid; grid-template-columns: 50px 150px 1fr 1.25fr; align-items: center; gap: 1.2rem; padding: 1.25rem; border-radius: 16px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+.gpt-effort-row:nth-child(3) { background: rgba(94, 234, 212, .12); border-color: rgba(94, 234, 212, .45); }
+.gpt-effort-number { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.1); color: #5eead4; font-weight: 800; }
+.gpt-effort-name h3 { color: white; margin: 0 0 .25rem; font-size: 1.15rem; }
+.gpt-effort-name span { display: flex; align-items: center; gap: .3rem; color: #9fb2c8; font-size: .78rem; }
+.gpt-effort-row > p { color: #d5dfeb; }
+.gpt-effort-example { padding-left: 1.2rem; border-left: 1px solid rgba(255,255,255,.16); font-size: .9rem; }
+.gpt-effort-default { position: absolute; right: 1rem; top: -.6rem; padding: .25rem .6rem; color: #10233f; background: #5eead4; border-radius: 999px; font-size: .72rem; font-weight: 800; }
+
+.gpt-chooser { max-width: 1080px; margin: auto; display: grid; grid-template-columns: 1.05fr .95fr; border-radius: 26px; overflow: hidden; box-shadow: 0 22px 65px rgba(26, 43, 70, .13); }
+.gpt-choices { display: grid; gap: .6rem; padding: 1.5rem; background: #f1f5f9; }
+.gpt-choices button { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.1rem 1.2rem; border: 0; border-radius: 13px; background: transparent; color: var(--gpt-ink); font: inherit; font-weight: 700; text-align: left; cursor: pointer; }
+.gpt-choices button > span { display: grid; gap: .15rem; }
+.gpt-choices button strong { font-size: .96rem; }
+.gpt-choices button small { color: var(--gpt-muted); font-size: .76rem; font-weight: 500; line-height: 1.35; }
+.gpt-choices button > svg { flex: 0 0 auto; }
+.gpt-choices button:hover { background: white; }
+.gpt-choices button.active { background: white; color: #0f766e; box-shadow: 0 5px 18px rgba(26, 43, 70, .08); }
+.gpt-choices button.active small { color: #45736f; }
+.gpt-recommendation { padding: 2.5rem; background: linear-gradient(145deg, #0f766e, #115e59); color: white; }
+.gpt-reco-label { display: flex; align-items: center; gap: .5rem; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 800; color: #99f6e4; }
+.gpt-reco-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.2rem 0; }
+.gpt-reco-pills span { padding: .55rem .85rem; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); }
+.gpt-recommendation blockquote { margin: 1.5rem 0; padding: 1rem 1.2rem; border-left: 4px solid #5eead4; background: rgba(0,0,0,.08); border-radius: 0 12px 12px 0; font-size: 1.1rem; font-weight: 700; }
+.gpt-recommendation > p:last-child { color: #d5f5ef; }
+
+.gpt-rules { max-width: none; background: var(--gpt-cream); }
+.gpt-rules-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.gpt-rules-grid article { padding: 1.5rem; border-top: 4px solid #14b8a6; background: white; border-radius: 0 0 18px 18px; }
+.gpt-rules-grid span { color: #14b8a6; font-weight: 900; font-size: 1.8rem; }
+.gpt-rules-grid h3 { margin: .5rem 0; font-size: 1.15rem; }
+.gpt-rules-grid p { color: var(--gpt-muted); font-size: .92rem; }
+
+.gpt-sources { margin-top: 5rem; margin-bottom: 5rem; padding-top: 2rem; padding-bottom: 2rem; display: flex; gap: 1.2rem; border: 1px solid #d9e0e8; border-radius: 18px; background: white; }
+.gpt-sources > svg { flex: 0 0 auto; color: #0f766e; }
+.gpt-sources h2 { margin-bottom: .5rem; font-size: 1.25rem; }
+.gpt-sources p { color: var(--gpt-muted); }
+.gpt-source-links { margin-top: .7rem; font-size: .84rem; }
+.gpt-source-links a { text-decoration: underline; text-underline-offset: 2px; }
+
+@media (max-width: 900px) {
+  .gpt-surfaces-grid { grid-template-columns: 1fr; }
+  .gpt-model-grid { grid-template-columns: 1fr; }
+  .gpt-model-card.teal { transform: none; }
+  .gpt-model-summary { min-height: 0; }
+  .gpt-effort-row { grid-template-columns: 48px 130px 1fr; }
+  .gpt-effort-example { grid-column: 2 / -1; padding-left: 0; border-left: 0; }
+  .gpt-rules-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .gpt-hero { min-height: auto; }
+  .gpt-hero-inner { padding-top: 4rem; padding-bottom: 4rem; }
+  .gpt-hero h1 br { display: none; }
+  .gpt-equation { flex-direction: column; }
+  .gpt-equation > div { width: min(100%, 320px); }
+  .gpt-plus { line-height: .5; }
+  .gpt-arrow { transform: rotate(90deg); }
+  .gpt-section, .gpt-effort-section { padding-top: 4rem; padding-bottom: 4rem; }
+  .gpt-effort-row { grid-template-columns: 45px 1fr; align-items: start; }
+  .gpt-effort-row > p { grid-column: 2; }
+  .gpt-chooser { grid-template-columns: 1fr; }
+  .gpt-recommendation { padding: 2rem 1.5rem; }
+  .gpt-rules-grid { grid-template-columns: 1fr; }
+  .gpt-sources { margin-left: 1rem; margin-right: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gpt-guide *, .gpt-guide *::before, .gpt-guide *::after { scroll-behavior: auto !important; transition: none !important; }
+}

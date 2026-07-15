@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { useEffect, useState } from 'react';
 import SEO from '../components/SEO';
