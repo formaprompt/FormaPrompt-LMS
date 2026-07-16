@@ -1,0 +1,454 @@
+.attestation-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  color: #17202b;
+}
+
+.attestation-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.attestation-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.attestation-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.attestation-back-button {
+  color: #243443;
+  background: #fff;
+  border: 1px solid #94a3b8;
+}
+
+.attestation-error,
+.attestation-warning {
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.attestation-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.attestation-warning {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+  color: #854d0e;
+  background: #fefce8;
+  border: 1px solid #facc15;
+}
+
+.attestation-paper {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+.attestation-paper.is-draft {
+  border-color: #eab308;
+}
+
+.attestation-watermark {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  z-index: 1;
+  color: rgb(180 83 9 / 10%);
+  font-size: clamp(5rem, 17vw, 10rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-28deg);
+}
+
+.attestation-paper > *:not(.attestation-watermark) {
+  position: relative;
+  z-index: 2;
+}
+
+.attestation-paper__header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 3px solid #089b73;
+}
+
+.attestation-paper__header img {
+  width: 130px;
+  height: auto;
+}
+
+.attestation-paper__header p,
+.attestation-paper__header span {
+  display: block;
+  margin: 0;
+}
+
+.attestation-paper__header p {
+  color: #17383b;
+  font-weight: 900;
+}
+
+.attestation-paper__header span {
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.attestation-paper__header dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  text-align: right;
+}
+
+.attestation-paper__header dt {
+  color: #08745b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.attestation-paper__header dd {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.attestation-paper__title {
+  padding: 2rem 0 1.25rem;
+  text-align: center;
+}
+
+.attestation-paper__title p,
+.attestation-paper__title h1 {
+  margin: 0;
+}
+
+.attestation-paper__title p {
+  color: #08745b;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.attestation-paper__title h1 {
+  margin-top: 0.35rem;
+  color: #17383b;
+  font-size: clamp(1.8rem, 5vw, 2.65rem);
+}
+
+.attestation-paper__title span {
+  display: inline-block;
+  margin-top: 0.55rem;
+  padding: 0.3rem 0.65rem;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.attestation-paper__statement {
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+.attestation-paper__identity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.attestation-paper__identity > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.8rem;
+  background: #f1f5f9;
+  border-radius: 7px;
+}
+
+.attestation-paper__identity strong {
+  color: #08745b;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.attestation-paper__identity span {
+  overflow-wrap: anywhere;
+}
+
+.attestation-paper__section,
+.attestation-paper__result {
+  margin-top: 1.35rem;
+}
+
+.attestation-paper__section h2,
+.attestation-paper__result h2 {
+  margin: 0 0 0.7rem;
+  color: #17383b;
+  font-size: 1.1rem;
+}
+
+.attestation-paper__section ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1.5rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.45;
+}
+
+.attestation-paper__result {
+  padding: 1rem;
+  color: #134e4a;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  border-radius: 8px;
+}
+
+.attestation-paper__result p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.attestation-paper__evaluation-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.attestation-paper__evaluation-heading strong {
+  color: #065f46;
+  text-align: right;
+}
+
+.attestation-paper__evaluation table {
+  width: 100%;
+  margin-top: 0.25rem;
+  border-collapse: collapse;
+}
+
+.attestation-paper__evaluation th,
+.attestation-paper__evaluation td {
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  border: 1px solid #cbd5e1;
+}
+
+.attestation-paper__evaluation th {
+  color: #fff;
+  background: #17383b;
+}
+
+.attestation-paper__evaluation td:last-child {
+  width: 28%;
+  font-weight: 800;
+}
+
+.attestation-paper__feedback {
+  margin-top: 0.8rem;
+  padding: 0.8rem;
+  background: #f8fafc;
+  border-left: 4px solid #089b73;
+}
+
+.attestation-paper__feedback p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.attestation-paper__feedback p + p {
+  margin-top: 0.5rem;
+}
+
+.attestation-paper__non-certifying {
+  margin: 0.8rem 0 0;
+  color: #475569;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.attestation-paper__signature {
+  display: grid;
+  grid-template-columns: 1fr 190px;
+  gap: 2rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #cbd5e1;
+}
+
+.attestation-paper__signature span,
+.attestation-paper__signature strong,
+.attestation-paper__signature small {
+  display: block;
+}
+
+.attestation-paper__signature strong {
+  margin-top: 0.75rem;
+  color: #17383b;
+}
+
+.attestation-paper__signature small {
+  color: #64748b;
+}
+
+.attestation-paper__signature-box {
+  min-height: 78px;
+  padding: 0.6rem;
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
+}
+
+.attestation-paper__signature-box span {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.attestation-paper__footer {
+  margin-top: 1.25rem;
+  padding-top: 0.8rem;
+  color: #64748b;
+  border-top: 1px solid #cbd5e1;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.attestation-paper__footer p {
+  margin: 0;
+}
+
+.attestation-paper__footer p + p {
+  margin-top: 0.25rem;
+}
+
+.attestation-paper__footer details {
+  margin-top: 0.6rem;
+}
+
+.attestation-paper__footer summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.attestation-paper__footer details span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 650px) {
+  .attestation-actions .btn,
+  .attestation-paper__identity {
+    width: 100%;
+  }
+
+  .attestation-paper__header,
+  .attestation-paper__identity,
+  .attestation-paper__section ul,
+  .attestation-paper__signature {
+    grid-template-columns: 1fr;
+  }
+
+  .attestation-paper__header {
+    align-items: start;
+  }
+
+  .attestation-paper__header dl {
+    text-align: left;
+  }
+
+  .attestation-paper__evaluation-heading {
+    flex-direction: column;
+  }
+
+  .attestation-paper__evaluation-heading strong {
+    text-align: left;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 11mm;
+  }
+
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .header,
+  body > #root footer,
+  .skip-link,
+  .attestation-actions,
+  .attestation-warning {
+    display: none !important;
+  }
+
+  .attestation-page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .attestation-paper {
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 9.5pt;
+  }
+
+  .attestation-paper.is-draft {
+    display: none;
+  }
+
+  .attestation-paper__header img {
+    width: 105px;
+  }
+
+  .attestation-paper__title {
+    padding: 10mm 0 6mm;
+  }
+
+  .attestation-paper__title h1 {
+    font-size: 22pt;
+  }
+
+  .attestation-paper__identity,
+  .attestation-paper__section,
+  .attestation-paper__result,
+  .attestation-paper__evaluation,
+  .attestation-paper__signature {
+    break-inside: avoid;
+  }
+
+  .attestation-paper__section ul {
+    gap: 2mm 8mm;
+  }
+
+  .attestation-paper__footer details[open] span {
+    display: block;
+  }
+}

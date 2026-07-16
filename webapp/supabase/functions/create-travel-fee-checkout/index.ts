@@ -56,7 +56,7 @@ Deno.serve(async (request) => {
     if (booking.travel_fee_status === 'paid') return jsonResponse({ alreadyPaid: true });
     if (
       booking.delivery_mode !== 'in_person'
-      || !['two_2h', 'two_3h30'].includes(booking.schedule_format)
+      || !['two_2h', 'two_3h30', 'two_5h'].includes(booking.schedule_format)
       || booking.status !== 'awaiting_travel_payment'
       || booking.distance_status !== 'approved'
       || booking.travel_fee_amount !== IN_PERSON_TRAVEL_FEE.amountTotal
@@ -75,9 +75,11 @@ Deno.serve(async (request) => {
           currency: IN_PERSON_TRAVEL_FEE.currency,
           unit_amount: IN_PERSON_TRAVEL_FEE.amountTotal,
           product_data: {
-            name: booking.schedule_format === 'two_3h30'
-              ? 'Participation déplacement – Présentiel 2 × 3 h 30'
-              : 'Participation déplacement – Présentiel 2 × 2 h',
+            name: booking.schedule_format === 'two_5h'
+              ? 'Participation déplacement – Présentiel 2 × 5 h'
+              : booking.schedule_format === 'two_3h30'
+                ? 'Participation déplacement – Présentiel 2 × 3 h 30'
+                : 'Participation déplacement – Présentiel 2 × 2 h',
             description: 'Participation unique aux deux déplacements du formateur dans un rayon validé de 100 km autour de Calais.',
           },
         },

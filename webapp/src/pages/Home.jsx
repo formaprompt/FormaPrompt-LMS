@@ -132,9 +132,9 @@ export default function Home() {
               {/* Offer 1 */}
               <div className="card">
                 <Bot size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">Acculturation IA Générative</h3>
-                <p className="mb-3">Comprendre les usages, les limites, les risques et les bonnes pratiques pour intégrer l'IA dans votre quotidien professionnel.</p>
-                <Link to="/formation-ia-generative" className="link-arrow">En savoir plus &rarr;</Link>
+                <h3 className="card-title">IA générative</h3>
+                <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
+                <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
               </div>
               {/* Offer 2 */}
               <div className="card">

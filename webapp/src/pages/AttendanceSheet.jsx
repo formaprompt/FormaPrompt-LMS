@@ -8,6 +8,7 @@ import { byteaToPngDataUrl, shortSignatureHash } from '../lib/signatureImage';
 import './AttendanceSheet.css';
 
 const COURSE_LABELS = {
+  'formation-ia': 'Formation IA générative',
   'formation-ia-act': 'IA Act – acculturation et conformité',
   'formation-prompt-level-1': 'Prompt Engineering – Niveau 1',
 };

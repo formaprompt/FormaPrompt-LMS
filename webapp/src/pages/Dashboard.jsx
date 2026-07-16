@@ -3,8 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { CalendarClock, CheckCircle2, MessageSquareText } from 'lucide-react';
+import CourseProgress from '../components/CourseProgress';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
+import { courseCatalog } from '../data/courseCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
+import { calculateCourseProgress } from '../lib/courseProgress';
 import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
@@ -33,6 +36,9 @@ export default function Dashboard() {
   const [loadError, setLoadError] = useState('');
   const [bookingLoadError, setBookingLoadError] = useState(false);
   const [surveyLoadError, setSurveyLoadError] = useState(false);
+  const [exerciseResponses, setExerciseResponses] = useState([]);
+  const [exerciseReviews, setExerciseReviews] = useState([]);
+  const [progressAvailable, setProgressAvailable] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -44,8 +50,9 @@ export default function Dashboard() {
       setLoadError('');
       setBookingLoadError(false);
       setSurveyLoadError(false);
+      setProgressAvailable(true);
 
-      const [purchasesResult, bookingResult, surveyResult] = await Promise.all([
+      const [purchasesResult, bookingResult, surveyResult, exerciseResponsesResult, exerciseReviewsResult] = await Promise.all([
         supabase
           .from('purchases')
           .select('id, course_id, purchased_at')
@@ -64,6 +71,14 @@ export default function Dashboard() {
         supabase
           .from('satisfaction_surveys')
           .select('id, booking_request_id, created_at')
+          .eq('user_id', user.id),
+        supabase
+          .from('course_exercise_latest_responses')
+          .select('course_id, exercise_id, status')
+          .eq('user_id', user.id),
+        supabase
+          .from('course_exercise_latest_reviews')
+          .select('course_id, exercise_id, review_status')
           .eq('user_id', user.id),
       ]);
 
@@ -87,6 +102,17 @@ export default function Dashboard() {
       } else {
         setSurveys(surveyResult.data ?? []);
       }
+
+      if (exerciseResponsesResult.error || exerciseReviewsResult.error) {
+        const progressError = exerciseResponsesResult.error || exerciseReviewsResult.error;
+        if (!['42P01', 'PGRST205'].includes(progressError.code)) {
+          console.error('Erreur lors du chargement de la progression :', progressError);
+        }
+        setProgressAvailable(false);
+      } else {
+        setExerciseResponses(exerciseResponsesResult.data ?? []);
+        setExerciseReviews(exerciseReviewsResult.data ?? []);
+      }
       setLoading(false);
     }
 
@@ -103,8 +129,8 @@ export default function Dashboard() {
   ));
 
   return (
-    <div className="container" style={{ padding: '4rem 1rem', minHeight: '60vh' }}>
-      <h1 style={{ marginBottom: '2rem' }}>Mon Espace Élève</h1>
+    <div className="container learner-dashboard" style={{ padding: '4rem 1rem', minHeight: '60vh' }}>
+      <h1 style={{ marginBottom: '2rem' }}>Mon espace apprenant</h1>
       
       <div style={{ background: '#1e1e1e', color: '#fff', padding: '2rem', borderRadius: '12px', border: '1px solid #333' }}>
         <h2 style={{ color: '#fff' }}>Bienvenue, {user.email} !</h2>
@@ -220,15 +246,27 @@ export default function Dashboard() {
               );
             })}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {purchases.map((purchase) => (
-                <div key={purchase.id} style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #444', display: 'flex', flexDirection: 'column' }}>
-                  <h3 style={{ marginBottom: '1rem', color: '#fff' }}>{courseNames[purchase.course_id] || purchase.course_id}</h3>
-                  <Link to={`/course/${purchase.course_id}`} className="btn btn-primary" style={{ marginTop: 'auto', textAlign: 'center', background: '#10b981', borderColor: '#10b981' }}>
-                    ▶ Voir la formation
-                  </Link>
-                </div>
-              ))}
+            <div className="learner-course-grid">
+              {purchases.map((purchase) => {
+                const purchasedCourse = courseCatalog[purchase.course_id];
+                const progress = calculateCourseProgress(
+                  purchasedCourse?.exercises,
+                  exerciseResponses.filter((response) => response.course_id === purchase.course_id),
+                  exerciseReviews.filter((review) => review.course_id === purchase.course_id),
+                );
+
+                return (
+                  <article key={purchase.id} className="learner-course-card">
+                    <h3>{courseNames[purchase.course_id] || purchase.course_id}</h3>
+                    {progressAvailable && (
+                      <CourseProgress progress={progress} compact headingLevel={4} />
+                    )}
+                    <Link to={`/course/${purchase.course_id}`} className="btn btn-primary learner-course-card__action">
+                      ▶ Voir la formation
+                    </Link>
+                  </article>
+                );
+              })}
             </div>
           </>
         )}

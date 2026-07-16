@@ -1,10 +1,154 @@
 # Suivi du projet FormaPrompt
 
-Dernière mise à jour : 15 juillet 2026
+Dernière mise à jour : 16 juillet 2026
 
 ## Objectif général
 
-Construire et fiabiliser FormaPrompt comme site de formation et LMS professionnel : accès apprenants, formations, paiements, réservations, positionnements, émargements et suivi Qualiopi.
+Construire et fiabiliser FormaPrompt comme site de formation et espace apprenant professionnel : accès apprenants, formations, paiements, réservations, positionnements, émargements et suivi Qualiopi.
+
+## Chantier en cours : finalisation de la formation IA générative
+
+### Offre pédagogique retenue
+
+- Intitulé : « IA générative : comprendre, pratiquer et sécuriser ses usages ».
+- Identifiant technique conservé : `formation-ia`.
+- Durée : 10 heures accompagnées, complétées par les ressources et exercices disponibles dans l'espace apprenant.
+- Présentiel : 2 séances de 5 heures.
+- Classe virtuelle : 4 séances de 2 h 30 ou 3 séances réparties en 4 h + 4 h + 2 h.
+- Tarif individuel maintenu : 497 EUR par apprenant.
+- Présentiel proposé dans un rayon maximal de 100 km autour de Calais, sous réserve de validation de la distance.
+- Une participation unique de 30 EUR est prévue pour le second déplacement lorsque la formation est organisée en présentiel sur deux séances.
+- Au-delà de 100 km, la formation est proposée à distance ou sur devis.
+
+La formation est positionnée comme un parcours d'acculturation et de mise en pratique professionnelle. Elle ne doit pas dupliquer la formation Prompt Engineering, plus approfondie sur la conception de prompts, ni la formation AI Act, centrée sur la réglementation et la conformité.
+
+### Public visé
+
+- Salariés, indépendants, dirigeants et fonctions support souhaitant utiliser l'IA générative dans leur activité.
+- Formateurs, responsables pédagogiques et professionnels de l'accompagnement.
+- Adultes en reconversion ou en évolution professionnelle souhaitant développer des usages numériques actuels.
+
+### Prérequis
+
+- Savoir utiliser un ordinateur, un navigateur et des outils numériques courants.
+- Disposer d'une adresse électronique et, pour la classe virtuelle, d'un ordinateur connecté avec microphone.
+- Aucun prérequis technique en intelligence artificielle n'est exigé.
+- Le questionnaire de positionnement initial permet d'adapter les exemples et l'accompagnement au niveau du participant.
+
+### Objectifs pédagogiques
+
+À l'issue de la formation, le participant sera capable de :
+
+1. expliquer simplement le fonctionnement général et les limites d'une IA générative ;
+2. identifier des usages pertinents dans son contexte professionnel ;
+3. formuler une demande structurée et améliorer progressivement un résultat ;
+4. produire, reformuler, synthétiser et organiser des contenus avec une validation humaine ;
+5. vérifier les réponses et protéger les données personnelles, sensibles ou confidentielles ;
+6. construire un plan d'utilisation responsable adapté à son activité.
+
+### Programme de 10 heures
+
+1. **Comprendre l'IA générative et ses usages — 2 h** : définitions, principaux outils, différences avec un moteur de recherche, possibilités, limites et identification des besoins professionnels.
+2. **Dialoguer avec une IA et structurer ses demandes — 2 h** : objectif, contexte, public, contraintes, format attendu, exemples, questions de clarification et amélioration progressive.
+3. **Produire des contenus professionnels — 2 h** : rédaction, reformulation, synthèse, préparation de supports, comparaison de résultats et adaptation à différents destinataires.
+4. **Vérifier, sécuriser et utiliser l'IA de façon responsable — 2 h** : hallucinations, biais, sources, confidentialité, données personnelles, propriété intellectuelle et validation humaine.
+5. **Mettre en pratique et préparer son plan d'utilisation — 2 h** : cas pratique contextualisé, restitution, évaluation finale et construction d'un plan d'action individuel.
+
+### Méthodes, évaluation et accessibilité
+
+- Méthodes : apports courts, démonstrations, essais guidés, analyse de réponses, exercices progressifs et cas pratique final.
+- Évaluation : positionnement initial, observations pendant les activités, exercices par module, cas pratique final et restitution.
+- Livrables : aide-mémoire, guide de structuration d'une demande, grille de vérification, exercices et ressources de l'espace apprenant.
+- Accessibilité : les besoins d'adaptation sont étudiés avant l'inscription afin d'ajuster les supports, le rythme ou les modalités lorsque cela est possible.
+- Suivi Qualiopi : conserver le positionnement initial, les réservations, les émargements, les évaluations et la satisfaction sans supprimer les données historiques.
+
+### Avancement du chantier
+
+- Étape 1 terminée : offre pédagogique, durée, modalités, public, prérequis, objectifs et programme définis.
+- Étape 2 terminée : page publique reconstruite avec une présentation complète, accessible et responsive ; durée ajoutée sur la page d'accueil.
+- Étape 3 terminée : espace apprenant structuré en cinq modules ; positionnement porté à dix questions pour les nouveaux apprenants ; cinq exercices progressifs, cas pratique final et lexique enrichi.
+- Étape 4 réalisée : ancien lien Stripe de test supprimé ; paiement sécurisé à 497 EUR relié au parcours commun ; réservation ajoutée en 2 séances de 5 h en présentiel, ou en 4 séances de 2 h 30 ou 3 séances de 4 h + 4 h + 2 h en classe virtuelle.
+- Les contrôles de réservation, de participation au déplacement, d'administration et d'émargement prennent en charge ces rythmes.
+- La migration `20260716111228_add_generative_ai_remote_4_4_2.sql` ajoute le rythme distant 4 h + 4 h + 2 h sans modifier les réservations existantes. Elle a été appliquée au projet Supabase FormaPrompt le 16 juillet 2026.
+- Après cet ajout, `npm run lint`, `npm run build` et les 13 tests de réservation ont réussi.
+- La migration `20260716081042_add_generative_ai_booking.sql` élargit les contraintes et les règles d'accès sans modifier les données historiques. Elle a été appliquée au projet Supabase FormaPrompt le 16 juillet 2026.
+- Vérifications réussies : `npm run lint`, `npm run build`, 10 tests Stripe et 15 tests de réservation. La page publique et la redirection sécurisée vers la connexion ont été contrôlées sur le serveur local.
+- Les positionnements initiaux déjà enregistrés restent valides et ne sont pas redemandés. Aucune donnée historique Qualiopi n'a été modifiée.
+- Le produit Stripe de test « Formation IA générative – 10 heures » et son tarif ponctuel de 497 EUR ont été créés le 16 juillet 2026. Ils restent isolés dans l'environnement de test Stripe.
+- Le produit réel « Formation IA générative », déjà présent dans Stripe avec un tarif ponctuel de 497 EUR, a été identifié. La variable serveur Supabase `STRIPE_GENERATIVE_AI_PRICE_ID` utilise désormais ce tarif réel, cohérent avec la clé Stripe réelle déjà configurée.
+- L'ouverture de Stripe Checkout à 497 EUR a été contrôlée avec un compte authentifié ne possédant pas la formation. Le formulaire de paiement s'est affiché correctement et aucun paiement n'a été effectué.
+- Les fonctions Supabase `create-checkout`, `stripe-webhook-ai-act`, `create-course-booking` et `create-travel-fee-checkout` ont été déployées avec leurs contrôles d'authentification et de signature conservés.
+- La version web complète a été déployée sur l'hébergement IONOS le 16 juillet 2026 après validation du lint, du build et des 13 tests de réservation. Le transfert SFTP a envoyé 93 fichiers sans échec.
+- Le site public affiche désormais la réservation de la formation IA générative dans l'espace apprenant. Le compte de contrôle `thierry@formaprompt.com` présente bien ses trois séances distantes de 4 h, 4 h et 2 h.
+- Étape 5 pédagogique démarrée : une checklist réutilisable pour toutes les formations a été créée dans `todo-pedagogie-formations.md`.
+- Le module 1 de la formation IA générative a été enrichi pour un grand débutant : explications simples, distinctions essentielles, méthode en cinq étapes, démonstration professionnelle, exemple commenté, erreurs fréquentes et synthèse.
+- Le module 1 conduit maintenant directement à l'exercice pratique correspondant. Cette structure sert de modèle aux modules 2 à 5.
+- Après cet enrichissement, `npm run lint`, `npm run build` et la vérification locale du parcours module 1 vers exercice 1 ont réussi.
+- Le module 2 explique désormais comment structurer une demande : objectif, contexte utile, informations autorisées, format, critères de réussite et amélioration progressive. Il comprend une démonstration professionnelle, un exemple commenté, les erreurs fréquentes et une synthèse.
+- Le passage direct du module 2 vers l'exercice 2 a été vérifié localement. `npm run lint` et `npm run build` ont réussi après cet enrichissement.
+- Le module 3 présente désormais une méthode complète pour produire un contenu professionnel : préparer les informations de référence, définir le destinataire, produire deux versions, les comparer avec une grille puis construire un livrable final vérifié.
+- Le passage direct du module 3 vers l'exercice 3 a été vérifié localement. `npm run lint` et `npm run build` ont réussi après cet enrichissement.
+- Le module 4 apprend désormais à suspendre la diffusion, repérer les éléments à contrôler, vérifier les sources, examiner les données et les droits, puis décider d'utiliser, corriger ou rejeter le résultat en conservant une validation humaine.
+- Le passage direct du module 4 vers l'exercice 4 a été vérifié localement. `npm run lint` et `npm run build` ont réussi après cet enrichissement.
+- Le module 5 guide désormais l'apprenant dans le choix d'un cas maîtrisable, la conservation des preuves, la présentation des contrôles et la préparation d'une expérimentation réaliste sous 30 jours.
+- Les cinq modules comportent maintenant une explication pour débuter, une méthode guidée, une démonstration professionnelle, un exemple commenté, les erreurs fréquentes, une synthèse et un accès direct à leur exercice respectif.
+- Le passage du module 5 vers l'exercice 5 et la présence du cas pratique final ont été vérifiés localement. `npm run lint` et `npm run build` ont réussi après cet enrichissement.
+- La restitution du questionnaire de positionnement présente désormais trois domaines : usages, formulation, vérification et sécurité. Chaque carte affiche un score normalisé, un niveau et un conseil orientant l'apprenant vers les modules utiles.
+- Les nouvelles réponses enregistrent l'identifiant du domaine dans le JSON déjà existant. Aucun schéma Supabase, aucune migration et aucun positionnement historique n'ont été modifiés.
+- Les deux tests du calcul par domaine, `npm run lint` et `npm run build` ont réussi.
+- La grille de vérification annoncée dans la formation existe désormais sous la forme d'un PDF FormaPrompt de cinq pages. Elle comprend l'identification du cas, le cadrage du risque, le contrôle des sources et données, les biais, les droits, la décision finale et la validation du formateur.
+- La grille est téléchargeable directement depuis le module 4, le cas pratique final et l'onglet « Supports et liens ». Le rendu des cinq pages, les trois liens locaux, `npm run lint` et `npm run build` ont été vérifiés.
+- Les cinq exercices comportent désormais un mode d'emploi en quatre étapes et quatre critères d'autoévaluation observables. Le modèle à personnaliser reste clairement séparé des consignes pédagogiques.
+- L'exercice 4 propose directement la grille de vérification. Les cinq cartes, les vingt étapes, les vingt critères, `npm run lint` et `npm run build` ont été vérifiés localement.
+- Chaque exercice possède désormais un espace de réponse personnel avec deux actions explicites : enregistrer un brouillon ou déclarer la réponse terminée. La dernière version retrouvée, sa nature et sa date sont affichées à l'apprenant.
+- La migration `20260716142844_add_course_exercise_responses.sql` crée un historique append-only : une sauvegarde ajoute une version et aucun droit de modification ou de suppression n'est accordé aux apprenants. Les règles RLS limitent la lecture au propriétaire et au personnel autorisé.
+- Cette migration a été appliquée séparément au projet Supabase FormaPrompt le 16 juillet 2026, puis enregistrée avec le même numéro dans l'historique distant. Aucun `supabase db push` global n'a été utilisé.
+- Un test transactionnel a confirmé que le propriétaire retrouve sa réponse, qu'un autre utilisateur ne peut pas la consulter et qu'aucune réponse d'essai n'est conservée après l'annulation. La table refuse l'accès anonyme et n'accorde aucun droit de modification ou de suppression aux apprenants.
+- `npm run lint` et `npm run build` ont réussi. La structure accessible et l'affichage de la zone de réponse ont été contrôlés localement sur ordinateur et sur un écran de 390 px de large.
+- Un nouvel onglet d'administration « Corrections » est prêt localement : il présente les dernières réponses terminées, le compte apprenant, la formation, l'exercice et l'historique des appréciations.
+- Le formateur peut préparer une appréciation, valider l'exercice ou demander une reprise. Une nouvelle correction est ajoutée à l'historique au lieu de remplacer la précédente.
+- L'apprenant retrouve le dernier retour sous l'exercice concerné, avec la date et la version de sa réponse qui a été évaluée. Une nouvelle version reste identifiable après le retour du formateur.
+- La migration `20260716150459_add_course_exercise_reviews.sql` crée la table append-only, les vues de dernière soumission et d'historique, les droits minimaux et les règles RLS. Elle a été appliquée séparément au projet Supabase le 16 juillet 2026 et enregistrée avec le même numéro dans l'historique distant.
+- Un test transactionnel annulé a confirmé que le personnel autorisé peut créer et relire une correction, que l'apprenant propriétaire la retrouve, qu'un autre apprenant ne la voit pas et qu'une correction existante ne peut pas être modifiée. Zéro donnée temporaire a été conservée.
+- Les contrôles Supabase ne signalent aucune alerte de performance liée à cette migration. L'unique avertissement de sécurité reste la protection contre les mots de passe compromis, déjà identifiée et indépendante de cette fonctionnalité.
+- `npm run lint`, `npm run build` et `git diff --check` ont réussi après cette étape. La page publique de connexion reste fonctionnelle.
+- Le parcours visuel a ensuite été vérifié localement dans Chrome avec le compte réel déjà connecté : l'administration présente une réponse terminée, son statut « Validé », l'appréciation « Bon travail ! » et l'historique ; l'espace apprenant présente le même retour et les dates correspondantes.
+- Sur un écran simulé de 390 px, la carte de retour apprenant reste lisible et passe correctement en colonne. Le titre « Panneau d'Administration » a été rendu responsive : il se répartit sur deux lignes et ne provoque plus aucun débordement horizontal. L'affichage ordinateur reste sur une seule ligne.
+- Les seules erreurs relevées dans la console correspondent au canal de l'extension de contrôle Chrome fermé pendant la navigation ; aucune erreur Supabase ou erreur applicative liée aux corrections n'a été observée à l'écran.
+- Un indicateur de progression simple et réutilisable est désormais affiché dans la formation et sur chaque carte de l'espace apprenant. Il distingue les exercices commencés, terminés et validés par le formateur ; le pourcentage repose uniquement sur les exercices déclarés terminés.
+- L'indicateur utilise les vues Supabase existantes et leurs règles RLS. Aucune migration, aucune nouvelle donnée personnelle et aucune modification de l'historique Qualiopi n'ont été nécessaires.
+- Le compte de contrôle affiche 2 exercices terminés sur 5, soit 40 %, et 2 validations du formateur. Le test du calcul, `npm run lint` et `npm run build` ont réussi.
+- L'affichage a été vérifié dans Chrome sur ordinateur et à 390 px. L'indicateur ne déborde pas ; l'ancien débordement de l'adresse e-mail du titre de bienvenue a également été corrigé.
+- La première étape de l'évaluation finale est terminée localement : les quatre critères du cas pratique possèdent maintenant quatre niveaux observables — « Non acquis », « En cours d'acquisition », « Acquis » et « Maîtrisé ».
+- L'apprenant dispose d'une explication simple de ce qui est attendu et peut s'autoévaluer avant la remise. La validation exige au minimum le niveau « Acquis » sur les quatre critères ; « Maîtrisé » valorise l'autonomie sans être obligatoire.
+- La grille conserve une structure de tableau accessible sur ordinateur et devient quatre fiches verticales par critère sur téléphone. Le rendu a été contrôlé dans Chrome à 390 px sans débordement horizontal.
+- `npm run lint`, `npm run build` et `git diff --check` ont réussi. Cette étape est uniquement pédagogique et n'a créé ni migration ni nouvelle donnée Supabase.
+- L'identification des quatre livrables est prête localement dans l'évaluation finale : description ou lien sécurisé, brouillon, remise au formateur, compteur de complétude et message facultatif.
+- L'interface rappelle les précautions RGPD et n'impose aucun téléversement de fichier vers un service externe. Les champs sont maintenant reliés à Supabase pour les apprenants possédant la formation.
+- La migration locale `20260716161334_add_course_final_project_submissions.sql` crée un historique append-only, des contraintes de longueur et de complétude, des droits minimaux, des règles RLS et des vues `security_invoker` pour la dernière version et la dernière remise terminée.
+- Cette migration a été appliquée séparément au projet Supabase FormaPrompt le 16 juillet 2026 et enregistrée sous le numéro `20260716161334`, sans synchronisation globale des anciennes migrations divergentes.
+- Un test transactionnel annulé a confirmé que le propriétaire peut enregistrer et relire sa remise, qu'un autre apprenant ne la voit pas, qu'un compte sans achat ne peut pas enregistrer de remise et que le personnel autorisé peut la consulter. Les droits de modification et de suppression sont refusés, les deux vues utilisent `security_invoker` et zéro donnée d'essai a été conservée.
+- Les contrôles Supabase ne signalent aucune alerte de performance liée à cette migration. L'avertissement général sur la protection contre les mots de passe compromis reste indépendant de cette fonctionnalité.
+- Le poste d'évaluation finale du formateur est prêt localement dans l'onglet « Corrections & évaluations ». Il affiche la dernière remise, les quatre livrables, la note de l'apprenant, les quatre critères et leurs descriptions observables.
+- La décision « Évaluation validée » est calculée uniquement lorsque les quatre critères atteignent « Acquis » ou « Maîtrisé ». Le formateur doit aussi renseigner une appréciation et des axes de progrès ; une nouvelle évaluation s'ajoute à l'historique sans remplacer la précédente.
+- L'apprenant retrouvera dans sa formation les quatre niveaux obtenus, l'appréciation, les axes de progrès, les dates et une consigne de nouvelle remise si nécessaire. Une remise plus récente reste clairement signalée comme en attente d'évaluation.
+- La migration `20260716163910_add_course_final_project_reviews.sql` crée la table append-only, les contraintes de cohérence, les droits minimaux, les règles RLS et deux vues `security_invoker`. Elle a été appliquée séparément au projet Supabase FormaPrompt le 16 juillet 2026 et enregistrée sous le même numéro, sans synchronisation globale des anciennes migrations divergentes.
+- Le test transactionnel a confirmé que seul le personnel peut créer une évaluation, que le propriétaire la consulte, qu'un autre apprenant ne la voit pas, qu'une validation incohérente avec les niveaux est refusée et qu'aucune évaluation ne peut être modifiée ou supprimée. Aucune donnée d'essai n'a été conservée.
+- Le même scénario a été rejoué après activation puis annulé. Les deux vues utilisent `security_invoker`, la table force la RLS, les droits d'insertion sont limités aux neuf colonnes utiles et l'analyse Supabase ne relève aucune alerte de performance.
+- Le poste « Évaluations finales » se charge maintenant dans l'administration sans message d'activation. Une remise réelle et sa correction ont été testées avec succès par l'utilisateur le 16 juillet 2026 ; la restitution apprenant fonctionne également.
+- Les trois tests du calcul de décision, `npm run lint`, `npm run build` et les affichages ordinateur et téléphone sans débordement horizontal ont réussi.
+- Le dossier d'attestation est maintenant préparé localement dans chaque évaluation finale. Il réutilise les données Supabase déjà protégées : identité du positionnement, réservation, séances, émargements et évaluation exacte de la dernière remise.
+- L'attestation de réalisation n'est déclarée prête que si le nom complet est disponible, si la réservation est confirmée ou terminée et si chaque séance possède les signatures apprenant et formateur avec une présence validée. La durée réellement suivie est calculée ; un départ anticipé ne produit donc pas artificiellement la durée planifiée.
+- L'attestation de compétences exige en plus que les quatre critères du cas pratique final soient validés. Le panneau indique les éléments manquants et rassemble les références de preuve, sans générer ni envoyer automatiquement de document.
+- Le dossier réel contrôlé retrouve quatre séances et 10 heures planifiées. Il reste correctement signalé comme incomplet car les émargements ne sont pas finalisés et la dernière évaluation demande une reprise. Les cinq tests du calcul, `npm run lint`, `npm run build` et le contrôle à 390 px sans débordement ont réussi. Aucune donnée Supabase n'a été créée ou modifiée pendant cette étape.
+- Deux aperçus imprimables sont maintenant disponibles depuis ce dossier : attestation de réalisation et attestation de compétences. Ils sont réservés au personnel, utilisent les données déjà protégées par les règles Supabase et n'ajoutent aucune écriture en base.
+- Les modèles centralisent les mentions de FormaPrompt, l'identité du formateur, le participant, la période, la modalité, la durée réellement suivie, les objectifs et les résultats pertinents. La référence et la date de délivrance sont stables et déduites des preuves validées.
+- Tant que les conditions propres au document ne sont pas remplies, l'aperçu affiche « BROUILLON », indique les preuves manquantes, désactive le bouton d'impression et masque la feuille lors d'une tentative d'impression. Le dossier réel a permis de vérifier séparément ces blocages pour les émargements et pour l'évaluation finale.
+- L'attestation de compétences indique explicitement qu'elle décrit une évaluation interne et ne constitue ni un diplôme, ni un titre professionnel, ni une certification RNCP ou RS.
+- Les 13 tests ciblés, `npm run lint`, `npm run build` et les contrôles visuels sur ordinateur et téléphone ont réussi. `git diff --check` ne relève aucune erreur ; seuls les avertissements habituels de conversion LF vers CRLF apparaissent sous Windows.
+- La version complète a été redéployée sur IONOS le 16 juillet 2026 après réussite des 35 tests applicatifs, des 10 tests Stripe, du lint et du build. Les 102 fichiers du build ont été transférés et leurs tailles vérifiées sur le serveur. L'index public correspond exactement au build local ; le script principal, la feuille de style et la route `/formation-ia-generative` répondent correctement.
+- Un accès SFTP dédié aux futurs déploiements est conservé à la demande de l'utilisateur. Son mot de passe est stocké chiffré par Windows dans le profil local, hors du projet et hors de Git. Ne révoquer cet accès que sur demande explicite de Thierry.
+- Convention de travail demandée par Thierry : pour FormaPrompt, une demande de « commit » comprend également le `push`, sauf indication contraire explicite.
 
 ## État de la dernière correction
 
@@ -42,11 +186,17 @@ Construire et fiabiliser FormaPrompt comme site de formation et LMS professionne
 ## Problèmes encore ouverts
 
 - Aucun défaut confirmé sur la dernière correction.
+- La pile Supabase locale n'était pas démarrée. La migration a été appliquée de façon isolée à la base distante dans une transaction, puis vérifiée par des requêtes de contrôle.
+- Le produit Stripe réel est maintenant nommé « Formation IA générative – 10 heures ». Son descriptif présente le présentiel en 2 × 5 h et la classe virtuelle en 4 × 2 h 30 ou 4 h + 4 h + 2 h. L'affichage a été vérifié dans Stripe Checkout à 497 EUR sans effectuer de paiement.
+- Aucun paiement n'a été finalisé pendant cette configuration.
+- L'historique de plusieurs anciennes migrations locales et distantes utilise des numéros différents. Ne pas lancer un `supabase db push` global avant d'avoir réconcilié cet historique ; la migration IA générative a été enregistrée séparément comme appliquée.
+- L'analyse Supabase signale que la protection contre les mots de passe compromis est désactivée. Ce réglage Auth, indépendant de la formation, reste à étudier avant la mise en production.
 - Un test fonctionnel complet avec plusieurs comptes apprenants reste conseillé avant la mise en production.
+- La sauvegarde des réponses et la correction formateur sont actives dans Supabase. Les tests RLS, le parcours visuel réel et l'affichage mobile de l'administration sont réussis.
 
 ## Prochaine action recommandée
 
-Effectuer les tests fonctionnels ci-dessus, puis poursuivre les améliorations du LMS à partir des éventuels problèmes constatés.
+Après validation juridique et pédagogique du modèle, créer si nécessaire un registre Supabase append-only des attestations réellement délivrées afin de conserver leur référence, leur contenu figé, leur auteur et leur date d'émission, puis prévoir leur mise à disposition dans l'espace apprenant. Les tests fonctionnels complets du paiement, des trois formats de réservation, du déplacement et de l'émargement restent à réaliser séparément avec plusieurs comptes apprenants.
 
 ## Commandes utiles
 

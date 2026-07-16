@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CheckCircle, ClipboardCheck } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import { calculatePositioningDomainResults } from '../lib/positioningResults';
 
 export default function PrerequisiteQuiz({
   courseId,
@@ -9,6 +10,7 @@ export default function PrerequisiteQuiz({
   userId,
   learnerEmail,
   positioningLevels,
+  positioningDomains,
   onComplete,
 }) {
   const [learnerName, setLearnerName] = useState('');
@@ -49,9 +51,15 @@ export default function PrerequisiteQuiz({
         question: question.question,
         answer: selectedAnswer.label,
         score: selectedAnswer.score,
+        domain_id: question.domain || null,
       };
     });
     const score = recordedAnswers.reduce((total, answer) => total + answer.score, 0);
+    const domainResults = calculatePositioningDomainResults(
+      questions,
+      recordedAnswers,
+      positioningDomains,
+    );
 
     const ratio = maximumScore === 0 ? 0 : score / maximumScore;
     const level = positioningLevels
@@ -92,7 +100,14 @@ export default function PrerequisiteQuiz({
         );
       }
     } else {
-      setResult({ score, maximumScore, level, assessmentId: data.id, submittedAt: data.submitted_at });
+      setResult({
+        score,
+        maximumScore,
+        level,
+        domainResults,
+        assessmentId: data.id,
+        submittedAt: data.submitted_at,
+      });
     }
 
     setSubmitting(false);
@@ -108,6 +123,25 @@ export default function PrerequisiteQuiz({
           Résultat indicatif : {result.score}/{result.maximumScore}. Ce diagnostic ne constitue ni une note,
           ni une validation de conformité. Il sert à adapter votre attention pendant le parcours.
         </p>
+        {result.domainResults.length > 0 && (
+          <div className="quiz-domain-results" aria-label="Résultats du positionnement par domaine">
+            {result.domainResults.map((domain) => (
+              <article key={domain.id} className="quiz-domain-card">
+                <div className="quiz-domain-heading">
+                  <h3>{domain.label}</h3>
+                  <span>{domain.score}/{domain.maximumScore}</span>
+                </div>
+                <progress
+                  value={domain.score}
+                  max={domain.maximumScore}
+                  aria-label={`${domain.label} : ${domain.percentage} %`}
+                />
+                <p className="quiz-domain-level">{domain.level} · {domain.percentage} %</p>
+                <p>{domain.advice}</p>
+              </article>
+            ))}
+          </div>
+        )}
         <p className="quiz-proof-reference">
           Positionnement nominatif enregistré le {new Date(result.submittedAt).toLocaleString('fr-FR')}
           {' '}– Référence {result.assessmentId.slice(0, 8).toUpperCase()}.

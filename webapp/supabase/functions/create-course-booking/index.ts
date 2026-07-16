@@ -27,6 +27,7 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     const allowedSlotCounts: Record<string, number> = {
+      'formation-ia': 20,
       'formation-ia-act': 8,
       'formation-prompt-level-1': 14,
     };

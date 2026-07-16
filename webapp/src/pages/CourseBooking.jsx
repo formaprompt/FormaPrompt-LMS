@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient'
 import {
   createBookingCandidates,
   createSplitDayBookingCandidates,
+  createVariableSessionBookingCandidates,
   flattenSelectedSlotIds,
   groupBookedSessions,
 } from '../lib/courseBookingSlots'
@@ -30,7 +31,10 @@ function formatSlot(slot) {
 }
 
 function formatCandidate(candidate) {
-  if (!candidate.segments) return formatSlot(candidate)
+  const sessionPrefix = Number.isInteger(candidate.sessionIndex)
+    ? `Séance ${candidate.sessionIndex + 1} (${candidate.sessionDuration / 60} h) — `
+    : ''
+  if (!candidate.segments) return `${sessionPrefix}${formatSlot(candidate)}`
   const [morning, afternoon] = candidate.segments
   return `${formatSlot(morning)}, puis de ${new Date(afternoon.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${new Date(afternoon.ends_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
 }
@@ -152,6 +156,11 @@ export default function CourseBooking() {
         afternoonDuration: selectedFormat.segmentDurations[1],
         lunchMinutes: selectedFormat.lunchMinutes,
       })
+      : selectedFormat.type === 'variable_sessions'
+        ? createVariableSessionBookingCandidates(slots, {
+          deliveryMode,
+          sessionDurations: selectedFormat.sessionDurations,
+        })
       : createBookingCandidates(slots, { duration: selectedFormat.durationMinutes, deliveryMode })
   ), [slots, selectedFormat, deliveryMode])
 
@@ -191,12 +200,21 @@ export default function CourseBooking() {
   const toggleCandidate = (candidate) => {
     setSelectedCandidateIds((current) => {
       if (current.includes(candidate.id)) return current.filter((id) => id !== candidate.id)
-      if (current.length >= selectedFormat.sessionCount) return current
-      const usedSlotIds = new Set(compatibleCandidates
-        .filter((item) => current.includes(item.id))
+      const currentCandidates = compatibleCandidates.filter((item) => current.includes(item.id))
+      const candidatesToKeep = Number.isInteger(candidate.sessionIndex)
+        ? currentCandidates.filter((item) => item.sessionIndex !== candidate.sessionIndex)
+        : currentCandidates
+      if (candidatesToKeep.length >= selectedFormat.sessionCount) return current
+      const usedSlotIds = new Set(candidatesToKeep
         .flatMap((item) => item.slotIds))
       if (candidate.slotIds.some((id) => usedSlotIds.has(id))) return current
-      return [...current, candidate.id]
+      const orderingConflict = Number.isInteger(candidate.sessionIndex) && candidatesToKeep.some((item) => (
+        item.sessionIndex < candidate.sessionIndex
+          ? new Date(item.ends_at) > new Date(candidate.starts_at)
+          : new Date(candidate.ends_at) > new Date(item.starts_at)
+      ))
+      if (orderingConflict) return current
+      return [...candidatesToKeep.map((item) => item.id), candidate.id]
     })
   }
 
@@ -418,7 +436,7 @@ export default function CourseBooking() {
 
             <fieldset>
               <legend>{deliveryMode === 'in_person' ? '4' : '3'}. Choisissez {selectedFormat.sessionCount} proposition{selectedFormat.sessionCount > 1 ? 's' : ''}</legend>
-              <p>{selectedCandidateIds.length} sur {selectedFormat.sessionCount} sélectionnée{selectedCandidateIds.length > 1 ? 's' : ''}. Le site assemble automatiquement les créneaux de 30 minutes et conserve une heure pour déjeuner.</p>
+              <p>{selectedCandidateIds.length} sur {selectedFormat.sessionCount} sélectionnée{selectedCandidateIds.length > 1 ? 's' : ''}. {selectedFormat.selectionHint || (selectedFormat.type === 'split_day' ? 'Le site assemble automatiquement les créneaux de 30 minutes et conserve une heure pour déjeuner.' : 'Le site assemble automatiquement les créneaux de 30 minutes.')}</p>
               <div className="booking-slots">
                 {compatibleCandidates.length === 0 ? (
                   <div className="booking-notice">
@@ -428,11 +446,19 @@ export default function CourseBooking() {
                   </div>
                 ) : compatibleCandidates.map((candidate) => {
                   const isSelected = selectedCandidateIds.includes(candidate.id)
-                  const selectedSlots = new Set(selectedCandidates.flatMap((item) => item.slotIds))
+                  const comparisonCandidates = Number.isInteger(candidate.sessionIndex)
+                    ? selectedCandidates.filter((item) => item.sessionIndex !== candidate.sessionIndex)
+                    : selectedCandidates
+                  const selectedSlots = new Set(comparisonCandidates.flatMap((item) => item.slotIds))
                   const overlapsSelection = !isSelected && candidate.slotIds.some((id) => selectedSlots.has(id))
+                  const orderingConflict = !isSelected && Number.isInteger(candidate.sessionIndex) && comparisonCandidates.some((item) => (
+                    item.sessionIndex < candidate.sessionIndex
+                      ? new Date(item.ends_at) > new Date(candidate.starts_at)
+                      : new Date(candidate.ends_at) > new Date(item.starts_at)
+                  ))
                   return (
-                    <label key={candidate.id} className={`${isSelected ? 'selected' : ''}${overlapsSelection ? ' unavailable' : ''}`}>
-                      <input type="checkbox" checked={isSelected} disabled={overlapsSelection} onChange={() => toggleCandidate(candidate)} />
+                    <label key={candidate.id} className={`${isSelected ? 'selected' : ''}${overlapsSelection || orderingConflict ? ' unavailable' : ''}`}>
+                      <input type="checkbox" checked={isSelected} disabled={overlapsSelection || orderingConflict} onChange={() => toggleCandidate(candidate)} />
                       <span>{formatCandidate(candidate)}</span>
                     </label>
                   )

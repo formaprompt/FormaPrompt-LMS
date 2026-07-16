@@ -85,7 +85,7 @@ Deno.serve(async (request) => {
 
       if (bookingError) throw bookingError;
       if (!booking) return new Response('Réservation présentielle introuvable.', { status: 400 });
-      if (!['two_2h', 'two_3h30'].includes(booking.schedule_format)) {
+      if (!['two_2h', 'two_3h30', 'two_5h'].includes(booking.schedule_format)) {
         return new Response('Format de réservation incompatible avec cette participation.', { status: 400 });
       }
 

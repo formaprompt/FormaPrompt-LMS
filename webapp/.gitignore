@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# État local généré par la CLI Supabase lors de la liaison au projet distant.
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

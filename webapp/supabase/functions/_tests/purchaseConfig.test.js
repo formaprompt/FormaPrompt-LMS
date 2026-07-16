@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   AI_ACT_PURCHASE,
+  COURSE_PURCHASES,
+  GENERATIVE_AI_PURCHASE,
   IN_PERSON_TRAVEL_FEE,
   PROMPT_LEVEL_ONE_PURCHASE,
   validateCompletedCourseSession,
@@ -69,6 +71,26 @@ test('accepte le paiement ponctuel de 343 EUR pour Prompt Engineering Niveau 1',
     },
   };
   assert.equal(validateCompletedCourseSession(session, PROMPT_LEVEL_ONE_PURCHASE, promptPriceId), null);
+});
+
+test('accepte le paiement ponctuel de 497 EUR pour la formation IA générative', () => {
+  const generativeAiPriceId = 'price_test_generative_ai';
+  const session = {
+    ...validSession(),
+    amount_total: GENERATIVE_AI_PURCHASE.amountTotal,
+    currency: GENERATIVE_AI_PURCHASE.currency,
+    metadata: {
+      user_id: userId,
+      course_id: GENERATIVE_AI_PURCHASE.courseId,
+      price_id: generativeAiPriceId,
+    },
+  };
+
+  assert.equal(
+    validateCompletedCourseSession(session, GENERATIVE_AI_PURCHASE, generativeAiPriceId),
+    null,
+  );
+  assert.equal(COURSE_PURCHASES['formation-ia'], GENERATIVE_AI_PURCHASE);
 });
 
 function validTravelFeeSession() {

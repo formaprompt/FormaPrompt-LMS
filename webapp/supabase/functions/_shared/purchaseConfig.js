@@ -16,9 +16,19 @@ export const PROMPT_LEVEL_ONE_PURCHASE = Object.freeze({
   label: 'formation Prompt Engineering – Niveau 1',
 });
 
+export const GENERATIVE_AI_PURCHASE = Object.freeze({
+  courseId: 'formation-ia',
+  amountTotal: 49_700,
+  currency: 'eur',
+  priceEnvName: 'STRIPE_GENERATIVE_AI_PRICE_ID',
+  landingPath: '/formation-ia-generative#inscription',
+  label: 'formation IA générative',
+});
+
 export const COURSE_PURCHASES = Object.freeze({
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
+  [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
 });
 
 export function getPurchaseConfig(courseId) {

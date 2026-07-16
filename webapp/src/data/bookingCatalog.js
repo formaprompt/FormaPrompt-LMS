@@ -1,4 +1,36 @@
 export const BOOKING_COURSES = {
+  'formation-ia': {
+    id: 'formation-ia',
+    title: 'IA générative : comprendre, pratiquer et sécuriser ses usages',
+    shortTitle: 'Formation IA générative',
+    guidedHoursLabel: '10 heures',
+    landingPath: '/formation-ia-generative#inscription',
+    coursePath: '/course/formation-ia',
+    defaultFormat: 'four_2h30',
+    formats: {
+      two_5h: {
+        label: '2 séances de 5 h',
+        sessionCount: 2,
+        durationMinutes: 300,
+        inPersonOnly: true,
+        travelFeeInPerson: true,
+      },
+      four_2h30: {
+        label: '4 séances de 2 h 30',
+        sessionCount: 4,
+        durationMinutes: 150,
+        remoteOnly: true,
+      },
+      three_4h_4h_2h: {
+        label: '3 séances : 4 h + 4 h + 2 h',
+        sessionCount: 3,
+        type: 'variable_sessions',
+        sessionDurations: [240, 240, 120],
+        remoteOnly: true,
+        selectionHint: 'Choisissez deux séances de 4 h puis une séance de 2 h, dans cet ordre chronologique.',
+      },
+    },
+  },
   'formation-ia-act': {
     id: 'formation-ia-act',
     title: 'IA : acculturation et préparation à la conformité AI Act',

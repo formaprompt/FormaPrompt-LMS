@@ -1,3 +1,20 @@
+.admin-dashboard__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-dashboard__title-icon {
+  flex: 0 0 auto;
+  font-size: 2rem;
+}
+
+.admin-dashboard__title-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .admin-dashboard__panel {
   color: #e5e7eb;
 }
@@ -786,7 +803,657 @@
   min-width: 220px;
 }
 
+.exercise-corrections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.exercise-corrections-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.exercise-corrections-heading h2,
+.exercise-corrections-heading p {
+  margin: 0;
+}
+
+.exercise-corrections-heading p {
+  max-width: 760px;
+  margin-top: 0.45rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.exercise-corrections-heading > span {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.8rem;
+  color: #d1fae5;
+  background: #064e3b;
+  border: 1px solid #34d399;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.exercise-corrections-notice,
+.exercise-corrections-empty {
+  padding: 1.25rem;
+  color: #fef3c7;
+  background: #422006;
+  border: 1px solid #f59e0b;
+  border-radius: 10px;
+}
+
+.exercise-corrections-notice.is-error {
+  color: #fecaca;
+  background: #3f1d24;
+  border-color: #f87171;
+}
+
+.exercise-corrections-empty h3,
+.exercise-corrections-empty p {
+  margin: 0;
+}
+
+.exercise-corrections-empty p {
+  margin-top: 0.4rem;
+}
+
+.exercise-corrections-list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.exercise-correction-card {
+  overflow: hidden;
+  background: #262626;
+  border: 1px solid #52525b;
+  border-radius: 12px;
+}
+
+.exercise-correction-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #18181b;
+  border-bottom: 1px solid #3f3f46;
+}
+
+.exercise-correction-card__header h3,
+.exercise-correction-card__header p {
+  margin: 0;
+}
+
+.exercise-correction-card__header h3 {
+  margin: 0.25rem 0;
+}
+
+.exercise-correction-card__learner {
+  color: #99f6e4;
+  font-weight: 800;
+}
+
+.exercise-correction-card__status {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+  text-align: right;
+}
+
+.exercise-correction-card__status span {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.exercise-correction-card__status .is-validated {
+  color: #d1fae5;
+  background: #064e3b;
+  border-color: #34d399;
+}
+
+.exercise-correction-card__status .is-needs_revision,
+.exercise-correction-card__status .is-pending {
+  color: #fef3c7;
+  background: #422006;
+  border-color: #f59e0b;
+}
+
+.exercise-correction-card__status small,
+.exercise-correction-latest small {
+  color: #cbd5e1;
+}
+
+.exercise-correction-response,
+.exercise-correction-latest,
+.exercise-correction-form {
+  margin: 1.25rem;
+  padding: 1.1rem;
+  border-radius: 9px;
+}
+
+.exercise-correction-response {
+  color: #e2e8f0;
+  background: #111827;
+  border: 1px solid #475569;
+}
+
+.exercise-correction-latest {
+  color: #d1fae5;
+  background: #052e2b;
+  border: 1px solid #2dd4bf;
+}
+
+.exercise-correction-response h4,
+.exercise-correction-response p,
+.exercise-correction-latest h4,
+.exercise-correction-latest p {
+  margin: 0;
+}
+
+.exercise-correction-response p,
+.exercise-correction-latest p {
+  margin-top: 0.65rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.exercise-correction-latest small {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.exercise-correction-form {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  background: #18181b;
+  border: 1px solid #52525b;
+}
+
+.exercise-correction-form label {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.exercise-correction-form select,
+.exercise-correction-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #64748b;
+  border-radius: 7px;
+  font: inherit;
+}
+
+.exercise-correction-form textarea {
+  resize: vertical;
+}
+
+.exercise-correction-form__footer {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.exercise-correction-form__footer small {
+  max-width: 680px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.exercise-correction-feedback {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-weight: 800;
+}
+
+.exercise-correction-feedback.is-pending {
+  color: #fde68a;
+}
+
+.exercise-correction-feedback.is-success {
+  color: #6ee7b7;
+}
+
+.exercise-correction-feedback.is-error {
+  color: #fca5a5;
+}
+
+.exercise-correction-history {
+  margin: 1.25rem;
+  color: #e2e8f0;
+  background: #18181b;
+  border: 1px solid #52525b;
+  border-radius: 9px;
+}
+
+.exercise-correction-history summary {
+  padding: 1rem;
+  color: #f8fafc;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.exercise-correction-history ol {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0 1rem 1rem 2.5rem;
+}
+
+.exercise-correction-history li {
+  padding: 0.9rem;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 7px;
+}
+
+.exercise-correction-history li > span,
+.exercise-correction-history li > small {
+  margin-left: 0.6rem;
+  color: #cbd5e1;
+}
+
+.exercise-correction-history li p {
+  margin: 0.6rem 0;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.exercise-corrections-rgpd-note {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.final-project-evaluations {
+  display: grid;
+  gap: 1.25rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid #3f3f46;
+}
+
+.final-project-evaluation-list {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.final-project-evaluation-card {
+  overflow: hidden;
+  background: #262626;
+  border: 1px solid #52525b;
+  border-radius: 12px;
+}
+
+.final-project-evaluation-deliverables,
+.final-project-evaluation-latest,
+.final-project-evaluation-form,
+.final-project-evaluation-new-version,
+.attestation-dossier {
+  margin: 1.25rem;
+  padding: 1.1rem;
+  border-radius: 9px;
+}
+
+.final-project-evaluation-deliverables {
+  color: #e2e8f0;
+  background: #111827;
+  border: 1px solid #475569;
+}
+
+.final-project-evaluation-deliverables h4,
+.final-project-evaluation-deliverables dl,
+.final-project-evaluation-deliverables p,
+.final-project-evaluation-latest h4,
+.final-project-evaluation-latest p {
+  margin: 0;
+}
+
+.final-project-evaluation-deliverables dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+.final-project-evaluation-deliverables dl > div {
+  min-width: 0;
+  padding: 0.9rem;
+  background: #1e293b;
+  border: 1px solid #475569;
+  border-radius: 7px;
+}
+
+.final-project-evaluation-deliverables dt {
+  color: #99f6e4;
+  font-weight: 800;
+}
+
+.final-project-evaluation-deliverables dd {
+  margin: 0.55rem 0 0;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.final-project-evaluation-deliverables aside {
+  margin-top: 0.9rem;
+  padding: 0.9rem;
+  color: #fef3c7;
+  background: #422006;
+  border: 1px solid #a16207;
+  border-radius: 7px;
+}
+
+.final-project-evaluation-deliverables aside p {
+  margin-top: 0.45rem;
+  white-space: pre-wrap;
+}
+
+.final-project-evaluation-latest {
+  color: #d1fae5;
+  background: #052e2b;
+  border: 1px solid #2dd4bf;
+}
+
+.final-project-evaluation-latest p {
+  margin: 0.55rem 0 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.final-project-evaluation-latest small {
+  color: #cbd5e1;
+}
+
+.attestation-dossier {
+  display: grid;
+  gap: 1rem;
+  color: #e2e8f0;
+  background: #172554;
+  border: 1px solid #60a5fa;
+}
+
+.attestation-dossier > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.attestation-dossier > header h4,
+.attestation-dossier > header p,
+.attestation-dossier__documents h5,
+.attestation-dossier__documents p,
+.attestation-dossier__identity,
+.attestation-dossier__missing {
+  margin: 0;
+}
+
+.attestation-dossier > header h4 {
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.attestation-dossier > header p:not(.attestation-dossier__eyebrow) {
+  max-width: 70ch;
+  margin-top: 0.35rem;
+  color: #bfdbfe;
+  line-height: 1.55;
+}
+
+.attestation-dossier__eyebrow {
+  color: #93c5fd;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.attestation-dossier__status,
+.attestation-dossier__documents span {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.attestation-dossier .is-ready {
+  color: #d1fae5;
+  background: #065f46;
+  border: 1px solid #34d399;
+}
+
+.attestation-dossier .is-incomplete {
+  color: #fef3c7;
+  background: #78350f;
+  border: 1px solid #f59e0b;
+}
+
+.attestation-dossier__documents {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.attestation-dossier__documents article {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.95rem;
+  background: #0f172a;
+  border: 1px solid #3b82f6;
+  border-radius: 8px;
+}
+
+.attestation-dossier__documents article > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.attestation-dossier__documents h5 {
+  color: #f8fafc;
+  font-size: 1rem;
+}
+
+.attestation-dossier__documents p,
+.attestation-dossier__documents small {
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.attestation-dossier__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 44px;
+  margin-top: auto;
+  padding: 0.65rem 0.85rem;
+  color: #fff;
+  background: #08745b;
+  border: 1px solid #2dd4bf;
+  border-radius: 7px;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.attestation-dossier__link:hover,
+.attestation-dossier__link:focus-visible {
+  background: #065f46;
+}
+
+.attestation-dossier__identity {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.attestation-dossier__identity > div {
+  min-width: 0;
+  padding: 0.8rem;
+  background: rgb(15 23 42 / 72%);
+  border-radius: 7px;
+}
+
+.attestation-dossier__identity dt {
+  color: #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.attestation-dossier__identity dd {
+  margin: 0.3rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.attestation-dossier__missing {
+  padding: 0.8rem;
+  color: #fef3c7;
+  background: #422006;
+  border: 1px solid #d97706;
+  border-radius: 7px;
+  line-height: 1.55;
+}
+
+.attestation-dossier__proofs {
+  border-top: 1px solid #3b82f6;
+}
+
+.attestation-dossier__proofs summary {
+  padding-top: 0.85rem;
+  color: #bfdbfe;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.attestation-dossier__proofs ul {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0.8rem 0 0;
+  padding-left: 1.25rem;
+  color: #cbd5e1;
+  overflow-wrap: anywhere;
+}
+
+.final-project-evaluation-new-version {
+  color: #fef3c7;
+  background: #422006;
+  border: 1px solid #f59e0b;
+}
+
+.final-project-evaluation-form {
+  display: grid;
+  gap: 1rem;
+  background: #18181b;
+  border: 1px solid #52525b;
+}
+
+.final-project-evaluation-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.final-project-evaluation-form legend {
+  margin-bottom: 0.8rem;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.final-project-evaluation-criteria {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.final-project-evaluation-criteria label,
+.final-project-evaluation-form > label {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.final-project-evaluation-criteria label {
+  padding: 0.9rem;
+  background: #27272a;
+  border: 1px solid #3f3f46;
+  border-radius: 7px;
+}
+
+.final-project-evaluation-criteria select,
+.final-project-evaluation-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #64748b;
+  border-radius: 7px;
+  font: inherit;
+}
+
+.final-project-evaluation-criteria small {
+  color: #cbd5e1;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.final-project-evaluation-form textarea {
+  resize: vertical;
+}
+
+.final-project-evaluation-decision {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  color: #e2e8f0;
+  background: #27272a;
+  border: 1px solid #52525b;
+  border-radius: 7px;
+  font-weight: 800;
+}
+
+.final-project-evaluation-decision.is-validated {
+  color: #d1fae5;
+  background: #064e3b;
+  border-color: #34d399;
+}
+
+.final-project-evaluation-decision.is-needs_revision {
+  color: #fef3c7;
+  background: #422006;
+  border-color: #f59e0b;
+}
+
 @media (max-width: 640px) {
+  .admin-dashboard__title {
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
   .booking-workspace-tabs {
     grid-template-columns: 1fr;
   }
@@ -843,5 +1510,46 @@
   .meeting-link-editor .btn,
   .attendance-validation-details form > .btn {
     width: 100%;
+  }
+
+  .exercise-corrections-heading,
+  .exercise-correction-card__header,
+  .exercise-correction-form__footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exercise-corrections-heading > span {
+    align-self: flex-start;
+  }
+
+  .exercise-correction-card__status {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .exercise-correction-form {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-correction-form__footer {
+    grid-column: auto;
+  }
+
+  .exercise-correction-form__footer .btn {
+    width: 100%;
+  }
+
+  .final-project-evaluation-deliverables dl,
+  .final-project-evaluation-criteria,
+  .attestation-dossier__documents,
+  .attestation-dossier__identity {
+    grid-template-columns: 1fr;
+  }
+
+  .attestation-dossier > header,
+  .attestation-dossier__documents article > div {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

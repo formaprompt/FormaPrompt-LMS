@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createBookingCandidates,
   createSplitDayBookingCandidates,
+  createVariableSessionBookingCandidates,
   flattenSelectedSlotIds,
   getLastBookedSession,
   groupBookedSessions,
@@ -71,6 +72,20 @@ function halfHourSlots(day = '2026-07-20') {
   return slots;
 }
 
+function continuousHalfHourSlots(day, count, startMinutes = 8 * 60) {
+  return Array.from({ length: count }, (_, index) => {
+    const start = startMinutes + index * 30;
+    const end = start + 30;
+    const time = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+    return {
+      id: `${day}-${time(start)}`,
+      starts_at: `${day}T${time(start)}:00+02:00`,
+      ends_at: `${day}T${time(end)}:00+02:00`,
+      delivery_modes: ['remote', 'in_person'],
+    };
+  });
+}
+
 test('compose une demi-journée de 3 h 30 à partir des demi-heures', () => {
   const candidates = createBookingCandidates(halfHourSlots(), { duration: 210, deliveryMode: 'remote' });
   assert.equal(candidates.length, 2);
@@ -96,6 +111,49 @@ test('regroupe quatorze demi-heures en deux séances de 3 h 30', () => {
   const grouped = groupBookedSessions(sessions, 'two_3h30');
   assert.equal(grouped.length, 2);
   assert.ok(grouped.every((session) => session.duration_minutes === 210));
+});
+
+test('compose et regroupe les deux séances présentielles de 5 h', () => {
+  const firstDay = continuousHalfHourSlots('2026-07-20', 10);
+  const secondDay = continuousHalfHourSlots('2026-07-21', 10);
+  const sessions = firstDay.concat(secondDay)
+    .map((item) => ({ ...item, duration_minutes: 30, status: 'confirmed' }));
+
+  const grouped = groupBookedSessions(sessions, 'two_5h');
+  assert.equal(grouped.length, 2);
+  assert.ok(grouped.every((session) => session.duration_minutes === 300));
+});
+
+test('regroupe vingt demi-heures en quatre séances distantes de 2 h 30', () => {
+  const sessions = ['20', '21', '22', '23'].flatMap((day) => (
+    halfHourSlots(`2026-07-${day}`).slice(0, 5)
+  )).map((item) => ({ ...item, duration_minutes: 30, status: 'confirmed' }));
+
+  const grouped = groupBookedSessions(sessions, 'four_2h30');
+  assert.equal(grouped.length, 4);
+  assert.ok(grouped.every((session) => session.duration_minutes === 150));
+});
+
+test('compose les choix distants de 4 h, 4 h puis 2 h', () => {
+  const candidates = createVariableSessionBookingCandidates(halfHourSlots(), {
+    deliveryMode: 'remote',
+    sessionDurations: [240, 240, 120],
+  });
+
+  assert.deepEqual([...new Set(candidates.map((candidate) => candidate.sessionIndex))], [0, 1, 2]);
+  assert.ok(candidates.filter((candidate) => candidate.sessionIndex < 2).every((candidate) => candidate.slotIds.length === 8));
+  assert.ok(candidates.filter((candidate) => candidate.sessionIndex === 2).every((candidate) => candidate.slotIds.length === 4));
+});
+
+test('regroupe les trois séances distantes de 4 h, 4 h et 2 h', () => {
+  const sessions = [
+    ...continuousHalfHourSlots('2026-07-20', 8),
+    ...continuousHalfHourSlots('2026-07-21', 8),
+    ...continuousHalfHourSlots('2026-07-22', 4),
+  ].map((item) => ({ ...item, duration_minutes: 30, status: 'confirmed' }));
+
+  const grouped = groupBookedSessions(sessions, 'three_4h_4h_2h');
+  assert.deepEqual(grouped.map((session) => session.duration_minutes), [240, 240, 120]);
 });
 
 test('identifie la dernière séance et sa signature apprenant', () => {

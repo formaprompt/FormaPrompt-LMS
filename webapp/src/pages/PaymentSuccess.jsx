@@ -73,12 +73,12 @@ export default function PaymentSuccess() {
     pending: {
       icon: <Clock3 size={42} aria-hidden="true" />,
       title: 'Activation encore en cours',
-      text: "La confirmation prend plus de temps que prévu. Aucun nouveau paiement n'est nécessaire : consultez votre espace élève dans quelques instants.",
+      text: "La confirmation prend plus de temps que prévu. Aucun nouveau paiement n'est nécessaire : consultez votre espace apprenant dans quelques instants.",
     },
     error: {
       icon: <TriangleAlert size={42} aria-hidden="true" />,
       title: "Vérification temporairement indisponible",
-      text: "Votre paiement test n'est pas perdu. Consultez votre espace élève ou contactez FormaPrompt si l'accès n'apparaît pas.",
+      text: "Votre paiement test n'est pas perdu. Consultez votre espace apprenant ou contactez FormaPrompt si l'accès n'apparaît pas.",
     },
     'login-required': {
       icon: <TriangleAlert size={42} aria-hidden="true" />,
@@ -114,7 +114,7 @@ export default function PaymentSuccess() {
             <Link to="/login" className="btn btn-primary">Se connecter</Link>
           )}
           {['checking', 'pending', 'error'].includes(status) && (
-            <Link to="/dashboard" className="btn btn-primary">Consulter mon espace élève</Link>
+            <Link to="/dashboard" className="btn btn-primary">Consulter mon espace apprenant</Link>
           )}
         </section>
       </main>

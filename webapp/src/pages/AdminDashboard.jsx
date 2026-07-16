@@ -2,8 +2,14 @@ import { useAuth } from '../contexts/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { courseCatalog } from '../data/courseCatalog';
 import { createAvailabilitySlots, createInitialAvailabilityForm, formatDateInput } from '../lib/availabilitySlots';
 import { groupBookedSessions } from '../lib/courseBookingSlots';
+import {
+  calculateFinalProjectReviewStatus,
+  FINAL_PROJECT_REVIEW_FIELDS,
+} from '../lib/finalProjectEvaluation';
+import { buildAttestationDossier, formatAttestationDuration } from '../lib/attestationDossier';
 import SignaturePad from '../components/SignaturePad';
 import './AdminDashboard.css';
 
@@ -22,6 +28,16 @@ const COURSE_LABELS = {
 
 const COURSE_OPTIONS = Object.entries(COURSE_LABELS).map(([id, label]) => ({ id, label }));
 
+const EXERCISE_REVIEW_STATUS_LABELS = {
+  needs_revision: 'À reprendre',
+  validated: 'Validé',
+};
+
+const FINAL_PROJECT_REVIEW_STATUS_LABELS = {
+  needs_revision: 'Nouvelle remise attendue',
+  validated: 'Évaluation validée',
+};
+
 const BOOKING_STATUS_LABELS = {
   pending_distance: 'Distance à vérifier',
   awaiting_travel_payment: 'Participation de 30 € attendue',
@@ -37,6 +53,9 @@ const BOOKING_FORMAT_LABELS = {
   four_1h: '4 × 1 h',
   one_day_7h: '1 journée : 4 h + 3 h',
   two_3h30: '2 × 3 h 30',
+  two_5h: '2 × 5 h',
+  four_2h30: '4 × 2 h 30',
+  three_4h_4h_2h: '4 h + 4 h + 2 h',
 };
 
 const ATTENDANCE_STATUS_LABELS = {
@@ -496,7 +515,7 @@ function BookingRequestsSection({
                 </div>
               </details>
 
-              {booking.delivery_mode === 'in_person' && ['two_2h', 'two_3h30'].includes(booking.schedule_format) && (
+              {booking.delivery_mode === 'in_person' && ['two_2h', 'two_3h30', 'two_5h'].includes(booking.schedule_format) && (
                 <p style={{ color: '#fbbf24' }}>
                   Participation déplacement : {booking.travel_fee_status === 'paid' ? '30 € réglés' : '30 € non réglés'}
                 </p>
@@ -536,7 +555,9 @@ export default function AdminDashboard() {
   const [searchParams] = useSearchParams();
   
   const requestedTab = searchParams.get('onglet');
-  const [activeTab, setActiveTab] = useState(requestedTab === 'bookings' ? 'bookings' : 'overview');
+  const [activeTab, setActiveTab] = useState(
+    ['bookings', 'corrections'].includes(requestedTab) ? requestedTab : 'overview',
+  );
   const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState('sessions');
   const [users, setUsers] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -544,6 +565,20 @@ export default function AdminDashboard() {
   const [surveys, setSurveys] = useState([]);
   const [positioningAssessments, setPositioningAssessments] = useState([]);
   const [positioningError, setPositioningError] = useState('');
+  const [exerciseSubmissions, setExerciseSubmissions] = useState([]);
+  const [exerciseReviewHistory, setExerciseReviewHistory] = useState([]);
+  const [correctionDrafts, setCorrectionDrafts] = useState({});
+  const [correctionFeedbacks, setCorrectionFeedbacks] = useState({});
+  const [correctionSaving, setCorrectionSaving] = useState('');
+  const [correctionsAvailable, setCorrectionsAvailable] = useState(true);
+  const [correctionsError, setCorrectionsError] = useState('');
+  const [finalProjectSubmissions, setFinalProjectSubmissions] = useState([]);
+  const [finalProjectReviewHistory, setFinalProjectReviewHistory] = useState([]);
+  const [finalProjectReviewDrafts, setFinalProjectReviewDrafts] = useState({});
+  const [finalProjectReviewFeedbacks, setFinalProjectReviewFeedbacks] = useState({});
+  const [finalProjectReviewSaving, setFinalProjectReviewSaving] = useState('');
+  const [finalProjectReviewsAvailable, setFinalProjectReviewsAvailable] = useState(true);
+  const [finalProjectReviewsError, setFinalProjectReviewsError] = useState('');
   const [purchases, setPurchases] = useState([]);
   const [purchasesError, setPurchasesError] = useState('');
   const [selectedCourseByUser, setSelectedCourseByUser] = useState({});
@@ -622,6 +657,76 @@ export default function AdminDashboard() {
     setBookingError('');
   }, []);
 
+  const fetchCourseCorrections = useCallback(async () => {
+    const [submissionsResult, historyResult] = await Promise.all([
+      supabase
+        .from('course_exercise_latest_submissions')
+        .select('id, user_id, course_id, exercise_id, response_text, saved_at')
+        .order('saved_at', { ascending: false }),
+      supabase
+        .from('course_exercise_review_history')
+        .select('id, response_id, user_id, course_id, exercise_id, response_saved_at, feedback_text, review_status, created_at')
+        .order('created_at', { ascending: false }),
+    ]);
+
+    const loadError = submissionsResult.error || historyResult.error;
+    if (loadError) {
+      if (['42P01', 'PGRST205'].includes(loadError.code)) {
+        setCorrectionsAvailable(false);
+        setCorrectionsError('');
+      } else {
+        console.error('Chargement des corrections pédagogiques impossible :', loadError);
+        setCorrectionsAvailable(true);
+        setCorrectionsError("Les réponses terminées ne peuvent pas être chargées pour le moment.");
+      }
+      return;
+    }
+
+    setExerciseSubmissions(submissionsResult.data || []);
+    setExerciseReviewHistory(historyResult.data || []);
+    setCorrectionsAvailable(true);
+    setCorrectionsError('');
+  }, []);
+
+  const fetchFinalProjectReviews = useCallback(async () => {
+    const [submissionsResult, historyResult] = await Promise.all([
+      supabase
+        .from('course_final_project_latest_submissions')
+        .select(`
+          id, user_id, course_id, prompt_and_iterations, final_output,
+          verification_grid_reference, action_plan, learner_note, saved_at
+        `)
+        .order('saved_at', { ascending: false }),
+      supabase
+        .from('course_final_project_review_history')
+        .select(`
+          id, submission_id, user_id, course_id, submission_saved_at,
+          need_and_audience_level, prompt_and_success_criteria_level,
+          checks_and_risks_level, choices_and_limits_level,
+          appreciation, improvement_areas, review_status, created_at
+        `)
+        .order('created_at', { ascending: false }),
+    ]);
+
+    const loadError = submissionsResult.error || historyResult.error;
+    if (loadError) {
+      if (['42P01', 'PGRST205'].includes(loadError.code)) {
+        setFinalProjectReviewsAvailable(false);
+        setFinalProjectReviewsError('');
+      } else {
+        console.error('Chargement des évaluations finales impossible :', loadError);
+        setFinalProjectReviewsAvailable(true);
+        setFinalProjectReviewsError("Les remises finales ne peuvent pas être chargées pour le moment.");
+      }
+      return;
+    }
+
+    setFinalProjectSubmissions(submissionsResult.data || []);
+    setFinalProjectReviewHistory(historyResult.data || []);
+    setFinalProjectReviewsAvailable(true);
+    setFinalProjectReviewsError('');
+  }, []);
+
   useEffect(() => {
     if (!user || (role !== 'admin' && role !== 'employee')) {
       navigate('/dashboard');
@@ -687,13 +792,13 @@ export default function AdminDashboard() {
         setPositioningAssessments(positioningData || []);
       }
 
-      await fetchBookingManagement();
+      await Promise.all([fetchBookingManagement(), fetchCourseCorrections(), fetchFinalProjectReviews()]);
 
       setLoading(false);
     }
 
     fetchData();
-  }, [user, role, navigate, fetchBookingManagement]);
+  }, [user, role, navigate, fetchBookingManagement, fetchCourseCorrections, fetchFinalProjectReviews]);
 
   const availabilityPreview = useMemo(() => {
     try {
@@ -712,6 +817,79 @@ export default function AdminDashboard() {
       return { slots: [], includedDays: 0, skippedPastSlots: 0, blockedByReservation: 0, error: error.message };
     }
   }, [slotForm, user, availabilitySlots]);
+
+  const exerciseCorrections = useMemo(() => exerciseSubmissions.map((submission) => {
+    const course = courseCatalog[submission.course_id];
+    const exercise = course?.exercises?.find(
+      (item) => String(item.id) === String(submission.exercise_id),
+    );
+    const history = exerciseReviewHistory.filter((review) => (
+      review.user_id === submission.user_id
+      && review.course_id === submission.course_id
+      && String(review.exercise_id) === String(submission.exercise_id)
+    ));
+
+    return {
+      ...submission,
+      learnerEmail: users.find((profile) => profile.id === submission.user_id)?.email || submission.user_id,
+      courseTitle: course?.title || COURSE_LABELS[submission.course_id] || submission.course_id,
+      exerciseTitle: exercise?.title || `Exercice ${submission.exercise_id}`,
+      history,
+      latestReview: history[0] || null,
+    };
+  }), [exerciseReviewHistory, exerciseSubmissions, users]);
+
+  const finalProjectEvaluations = useMemo(() => finalProjectSubmissions.map((submission) => {
+    const course = courseCatalog[submission.course_id];
+    const learnerProfile = users.find((profile) => profile.id === submission.user_id);
+    const positioning = positioningAssessments.find((assessment) => (
+      assessment.user_id === submission.user_id && assessment.course_id === submission.course_id
+    ));
+    const booking = bookingRequests.find((request) => (
+      request.user_id === submission.user_id && request.course_id === submission.course_id
+    ));
+    const sessions = booking ? getBookingSessions(booking) : [];
+    const history = finalProjectReviewHistory.filter((review) => (
+      review.user_id === submission.user_id && review.course_id === submission.course_id
+    ));
+    const latestReview = history[0] || null;
+    const currentSubmissionReview = history.find((review) => review.submission_id === submission.id) || null;
+    const learnerEmail = learnerProfile?.email || submission.user_id;
+    const learnerName = positioning?.learner_name || learnerEmail;
+
+    return {
+      ...submission,
+      learnerName,
+      learnerEmail,
+      courseTitle: course?.title || COURSE_LABELS[submission.course_id] || submission.course_id,
+      rubric: course?.finalProject?.rubric || [],
+      rubricLevels: course?.finalProject?.rubricLevels || [],
+      deliverables: (course?.finalProject?.submissionFields || []).map((field) => ({
+        id: field.id,
+        label: field.label,
+        value: submission[field.id],
+      })),
+      history,
+      latestReview,
+      currentSubmissionReview,
+      booking,
+      attestationDossier: buildAttestationDossier({
+        learnerName,
+        learnerEmail,
+        booking,
+        sessions,
+        attendanceRecords,
+        finalReview: currentSubmissionReview,
+      }),
+    };
+  }), [
+    attendanceRecords,
+    bookingRequests,
+    finalProjectReviewHistory,
+    finalProjectSubmissions,
+    positioningAssessments,
+    users,
+  ]);
 
   if (!user || (role !== 'admin' && role !== 'employee')) return null;
 
@@ -829,7 +1007,7 @@ export default function AdminDashboard() {
     const changes = {};
     if (action === 'approve') {
       changes.distance_status = 'approved';
-      changes.status = ['two_2h', 'two_3h30'].includes(booking.schedule_format) ? 'awaiting_travel_payment' : 'confirmed';
+      changes.status = ['two_2h', 'two_3h30', 'two_5h'].includes(booking.schedule_format) ? 'awaiting_travel_payment' : 'confirmed';
     } else if (action === 'reject') {
       changes.distance_status = 'rejected';
       changes.status = 'rejected';
@@ -842,7 +1020,7 @@ export default function AdminDashboard() {
     }
 
     const confirmationMessages = {
-      approve: ['two_2h', 'two_3h30'].includes(booking.schedule_format)
+      approve: ['two_2h', 'two_3h30', 'two_5h'].includes(booking.schedule_format)
         ? "Valider la distance et demander la participation unique de 30 € ?"
         : 'Valider la distance et confirmer la séance ?',
       reject: 'Refuser cette demande et libérer les créneaux ?',
@@ -971,6 +1149,140 @@ export default function AdminDashboard() {
     }
 
     setBookingAction('');
+  };
+
+  const handleCorrectionDraftChange = (responseId, field, value) => {
+    setCorrectionDrafts((current) => ({
+      ...current,
+      [responseId]: {
+        feedbackText: '',
+        reviewStatus: 'validated',
+        ...current[responseId],
+        [field]: value,
+      },
+    }));
+    setCorrectionFeedbacks((current) => ({ ...current, [responseId]: null }));
+  };
+
+  const handleSaveExerciseCorrection = async (submission) => {
+    const draft = correctionDrafts[submission.id] || {};
+    const feedbackText = draft.feedbackText?.trim() || '';
+    const reviewStatus = draft.reviewStatus || submission.latestReview?.review_status || 'validated';
+    if (!feedbackText || !user || !correctionsAvailable) return;
+
+    setCorrectionSaving(String(submission.id));
+    setCorrectionFeedbacks((current) => ({
+      ...current,
+      [submission.id]: { type: 'pending', message: 'Enregistrement de la correction…' },
+    }));
+
+    const { error } = await supabase
+      .from('course_exercise_reviews')
+      .insert({
+        response_id: submission.id,
+        reviewer_id: user.id,
+        feedback_text: feedbackText,
+        review_status: reviewStatus,
+      });
+
+    if (error) {
+      console.error("Enregistrement de la correction impossible :", error);
+      setCorrectionFeedbacks((current) => ({
+        ...current,
+        [submission.id]: {
+          type: 'error',
+          message: "La correction n'a pas été enregistrée. Réessayez dans quelques instants.",
+        },
+      }));
+      setCorrectionSaving('');
+      return;
+    }
+
+    await fetchCourseCorrections();
+    setCorrectionDrafts((current) => ({
+      ...current,
+      [submission.id]: { feedbackText: '', reviewStatus },
+    }));
+    setCorrectionFeedbacks((current) => ({
+      ...current,
+      [submission.id]: {
+        type: 'success',
+        message: 'Correction enregistrée. Elle est maintenant visible par l’apprenant.',
+      },
+    }));
+    setCorrectionSaving('');
+  };
+
+  const handleFinalProjectReviewDraftChange = (submissionId, field, value) => {
+    setFinalProjectReviewDrafts((current) => ({
+      ...current,
+      [submissionId]: {
+        appreciation: '',
+        improvement_areas: '',
+        ...current[submissionId],
+        [field]: value,
+      },
+    }));
+    setFinalProjectReviewFeedbacks((current) => ({ ...current, [submissionId]: null }));
+  };
+
+  const handleSaveFinalProjectReview = async (submission) => {
+    const draft = finalProjectReviewDrafts[submission.id] || {};
+    const levelValues = FINAL_PROJECT_REVIEW_FIELDS.map(({ column }) => (
+      draft[column] || submission.currentSubmissionReview?.[column] || ''
+    ));
+    const reviewStatus = calculateFinalProjectReviewStatus(levelValues);
+    const appreciation = draft.appreciation?.trim() || '';
+    const improvementAreas = draft.improvement_areas?.trim() || '';
+
+    if (!reviewStatus || !appreciation || !improvementAreas || !user || !finalProjectReviewsAvailable) return;
+
+    setFinalProjectReviewSaving(String(submission.id));
+    setFinalProjectReviewFeedbacks((current) => ({
+      ...current,
+      [submission.id]: { type: 'pending', message: 'Enregistrement de l’évaluation finale…' },
+    }));
+
+    const levels = Object.fromEntries(
+      FINAL_PROJECT_REVIEW_FIELDS.map(({ column }, index) => [column, levelValues[index]]),
+    );
+    const { error } = await supabase
+      .from('course_final_project_reviews')
+      .insert({
+        submission_id: submission.id,
+        reviewer_id: user.id,
+        ...levels,
+        appreciation,
+        improvement_areas: improvementAreas,
+        review_status: reviewStatus,
+      });
+
+    if (error) {
+      console.error("Enregistrement de l'évaluation finale impossible :", error);
+      setFinalProjectReviewFeedbacks((current) => ({
+        ...current,
+        [submission.id]: {
+          type: 'error',
+          message: "L’évaluation n'a pas été enregistrée. Réessayez dans quelques instants.",
+        },
+      }));
+      setFinalProjectReviewSaving('');
+      return;
+    }
+
+    await fetchFinalProjectReviews();
+    setFinalProjectReviewDrafts((current) => ({
+      ...current,
+      [submission.id]: { appreciation: '', improvement_areas: '' },
+    }));
+    setFinalProjectReviewFeedbacks((current) => ({
+      ...current,
+      [submission.id]: {
+        type: 'success',
+        message: 'Évaluation enregistrée. Le résultat est maintenant visible par l’apprenant.',
+      },
+    }));
+    setFinalProjectReviewSaving('');
   };
 
   const handleTogglePublishSurvey = async (id, currentStatus) => {
@@ -1102,8 +1414,9 @@ export default function AdminDashboard() {
 
   return (
     <div className="container admin-dashboard" style={{ padding: '4rem 1rem', minHeight: '80vh' }}>
-      <h1 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <span style={{ fontSize: '2rem' }}>⚙️</span> Panneau d'Administration
+      <h1 className="admin-dashboard__title">
+        <span className="admin-dashboard__title-icon" aria-hidden="true">⚙️</span>
+        <span className="admin-dashboard__title-text">Panneau d'Administration</span>
       </h1>
 
       <div style={{ marginBottom: '1rem' }}>
@@ -1166,6 +1479,16 @@ export default function AdminDashboard() {
           style={activeTab !== 'positioning' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Positionnements
+        </button>
+        <button
+          onClick={() => setActiveTab('corrections')}
+          className={`btn ${activeTab === 'corrections' ? 'btn-primary' : ''}`}
+          style={activeTab !== 'corrections' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
+        >
+          Corrections & évaluations
+          {(exerciseCorrections.length + finalProjectEvaluations.length) > 0
+            ? ` (${exerciseCorrections.length + finalProjectEvaluations.length})`
+            : ''}
         </button>
         <button 
           onClick={() => setActiveTab('feedback')} 
@@ -1666,6 +1989,517 @@ export default function AdminDashboard() {
                 )}
 
               </div>
+            )}
+
+            {activeTab === 'corrections' && (
+              <section className="exercise-corrections" aria-labelledby="exercise-corrections-title">
+                <section className="final-project-evaluations" aria-labelledby="final-project-evaluations-title">
+                  <div className="exercise-corrections-heading">
+                    <div>
+                      <h2 id="final-project-evaluations-title">Évaluations finales</h2>
+                      <p>
+                        Évaluez la dernière remise avec la grille présentée à l’apprenant. La décision est calculée
+                        automatiquement : les quatre critères doivent atteindre au minimum « Acquis ».
+                      </p>
+                    </div>
+                    <span>{finalProjectEvaluations.length} remise{finalProjectEvaluations.length > 1 ? 's' : ''} à suivre</span>
+                  </div>
+
+                  {!finalProjectReviewsAvailable ? (
+                    <div className="exercise-corrections-notice" role="status">
+                      Le poste d’évaluation finale est prêt dans le site. Il sera utilisable après l’activation de la
+                      migration Supabase dédiée.
+                    </div>
+                  ) : finalProjectReviewsError ? (
+                    <div className="exercise-corrections-notice is-error" role="alert">{finalProjectReviewsError}</div>
+                  ) : finalProjectEvaluations.length === 0 ? (
+                    <div className="exercise-corrections-empty">
+                      <h3>Aucune remise finale à évaluer</h3>
+                      <p>Une remise apparaît ici lorsque l’apprenant transmet ses quatre livrables au formateur.</p>
+                    </div>
+                  ) : (
+                    <div className="final-project-evaluation-list">
+                      {finalProjectEvaluations.map((submission) => {
+                        const draft = finalProjectReviewDrafts[submission.id] || {};
+                        const feedback = finalProjectReviewFeedbacks[submission.id];
+                        const isSaving = finalProjectReviewSaving === String(submission.id);
+                        const selectedLevels = FINAL_PROJECT_REVIEW_FIELDS.map(({ column }) => (
+                          draft[column] || submission.currentSubmissionReview?.[column] || ''
+                        ));
+                        const calculatedStatus = calculateFinalProjectReviewStatus(selectedLevels);
+
+                        return (
+                          <article key={submission.id} className="final-project-evaluation-card">
+                            <header className="exercise-correction-card__header">
+                              <div>
+                                <p className="exercise-correction-card__learner">{submission.learnerEmail}</p>
+                                <h3>{submission.courseTitle}</h3>
+                                <p>Cas pratique final</p>
+                              </div>
+                              <div className="exercise-correction-card__status">
+                                {submission.currentSubmissionReview ? (
+                                  <span className={`is-${submission.currentSubmissionReview.review_status}`}>
+                                    {FINAL_PROJECT_REVIEW_STATUS_LABELS[submission.currentSubmissionReview.review_status]}
+                                  </span>
+                                ) : (
+                                  <span className="is-pending">À évaluer</span>
+                                )}
+                                <small>Remise du {new Date(submission.saved_at).toLocaleString('fr-FR')}</small>
+                              </div>
+                            </header>
+
+                            <section className="final-project-evaluation-deliverables" aria-label="Livrables remis par l’apprenant">
+                              <h4>Livrables remis</h4>
+                              <dl>
+                                {submission.deliverables.map((deliverable) => (
+                                  <div key={deliverable.id}>
+                                    <dt>{deliverable.label}</dt>
+                                    <dd>{deliverable.value}</dd>
+                                  </div>
+                                ))}
+                              </dl>
+                              {submission.learner_note && (
+                                <aside>
+                                  <strong>Message de l’apprenant</strong>
+                                  <p>{submission.learner_note}</p>
+                                </aside>
+                              )}
+                            </section>
+
+                            {submission.currentSubmissionReview && (
+                              <section className="final-project-evaluation-latest" aria-label="Dernière évaluation de cette remise">
+                                <h4>Dernière évaluation de cette remise</h4>
+                                <p>{submission.currentSubmissionReview.appreciation}</p>
+                                <strong>Axes de progrès</strong>
+                                <p>{submission.currentSubmissionReview.improvement_areas}</p>
+                                <small>
+                                  {FINAL_PROJECT_REVIEW_STATUS_LABELS[submission.currentSubmissionReview.review_status]} le{' '}
+                                  {new Date(submission.currentSubmissionReview.created_at).toLocaleString('fr-FR')}
+                                </small>
+                              </section>
+                            )}
+
+                            {!submission.currentSubmissionReview && submission.latestReview && (
+                              <p className="final-project-evaluation-new-version" role="status">
+                                Une remise plus récente attend une nouvelle évaluation. Le retour précédent reste dans
+                                l’historique et n’est pas remplacé.
+                              </p>
+                            )}
+
+                            <section
+                              className="attestation-dossier"
+                              aria-labelledby={`attestation-dossier-title-${submission.id}`}
+                            >
+                              <header>
+                                <div>
+                                  <p className="attestation-dossier__eyebrow">Suivi Qualiopi</p>
+                                  <h4 id={`attestation-dossier-title-${submission.id}`}>Dossier d’attestation</h4>
+                                  <p>
+                                    Contrôlez les preuves avant de préparer un document. Aucune attestation n’est
+                                    générée automatiquement à cette étape.
+                                  </p>
+                                </div>
+                                <span className={`attestation-dossier__status ${submission.attestationDossier.competencyReady ? 'is-ready' : 'is-incomplete'}`}>
+                                  {submission.attestationDossier.competencyReady
+                                    ? 'Dossier compétences prêt'
+                                    : 'Dossier à compléter'}
+                                </span>
+                              </header>
+
+                              <div className="attestation-dossier__documents">
+                                <article>
+                                  <div>
+                                    <h5>Attestation de réalisation</h5>
+                                    <span className={submission.attestationDossier.realizationReady ? 'is-ready' : 'is-incomplete'}>
+                                      {submission.attestationDossier.realizationReady ? 'Prête à préparer' : 'Preuves incomplètes'}
+                                    </span>
+                                  </div>
+                                  <p>
+                                    {submission.attestationDossier.completedSessionCount} séance{submission.attestationDossier.completedSessionCount !== 1 ? 's' : ''}
+                                    {' '}sur {submission.attestationDossier.sessionCount} signée{submission.attestationDossier.sessionCount > 1 ? 's' : ''} et validée{submission.attestationDossier.sessionCount > 1 ? 's' : ''}.
+                                  </p>
+                                  <strong>
+                                    Durée réellement suivie : {formatAttestationDuration(submission.attestationDossier.attendedMinutes)}
+                                  </strong>
+                                  {submission.attestationDossier.plannedMinutes > 0 && (
+                                    <small>
+                                      Durée planifiée : {formatAttestationDuration(submission.attestationDossier.plannedMinutes)}.
+                                    </small>
+                                  )}
+                                  <Link
+                                    className="attestation-dossier__link"
+                                    to={`/admin/attestations/${submission.id}/realisation`}
+                                  >
+                                    {submission.attestationDossier.realizationReady
+                                      ? 'Ouvrir l’attestation de réalisation'
+                                      : 'Voir le modèle incomplet'}
+                                  </Link>
+                                </article>
+
+                                <article>
+                                  <div>
+                                    <h5>Attestation de compétences</h5>
+                                    <span className={submission.attestationDossier.competencyReady ? 'is-ready' : 'is-incomplete'}>
+                                      {submission.attestationDossier.competencyReady ? 'Prête à préparer' : 'Validation attendue'}
+                                    </span>
+                                  </div>
+                                  <p>
+                                    {submission.currentSubmissionReview
+                                      ? FINAL_PROJECT_REVIEW_STATUS_LABELS[submission.currentSubmissionReview.review_status]
+                                      : 'Le cas pratique final n’est pas encore évalué.'}
+                                  </p>
+                                  <strong>Les quatre critères doivent atteindre au moins « Acquis ».</strong>
+                                  <Link
+                                    className="attestation-dossier__link"
+                                    to={`/admin/attestations/${submission.id}/competences`}
+                                  >
+                                    {submission.attestationDossier.competencyReady
+                                      ? 'Ouvrir l’attestation de compétences'
+                                      : 'Voir le modèle incomplet'}
+                                  </Link>
+                                </article>
+                              </div>
+
+                              <dl className="attestation-dossier__identity">
+                                <div>
+                                  <dt>Apprenant</dt>
+                                  <dd>{submission.learnerName}</dd>
+                                </div>
+                                <div>
+                                  <dt>Adresse du compte</dt>
+                                  <dd>{submission.learnerEmail}</dd>
+                                </div>
+                                <div>
+                                  <dt>Modalité</dt>
+                                  <dd>
+                                    {submission.booking
+                                      ? `${submission.booking.delivery_mode === 'remote' ? 'Distanciel synchrone' : 'Présentiel'} · ${BOOKING_FORMAT_LABELS[submission.booking.schedule_format] || submission.booking.schedule_format}`
+                                      : 'Réservation à retrouver'}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt>Formation</dt>
+                                  <dd>{submission.courseTitle}</dd>
+                                </div>
+                              </dl>
+
+                              {submission.attestationDossier.missingRequirements.length > 0 && (
+                                <p className="attestation-dossier__missing" role="status">
+                                  <strong>À compléter :</strong>{' '}
+                                  {submission.attestationDossier.missingRequirements.join(' · ')}.
+                                </p>
+                              )}
+
+                              <details className="attestation-dossier__proofs">
+                                <summary>Voir les références des preuves</summary>
+                                <ul>
+                                  <li>Référence de la remise finale : {submission.id}</li>
+                                  <li>
+                                    Référence de l’évaluation : {submission.currentSubmissionReview?.id || 'en attente'}
+                                  </li>
+                                  <li>Référence de la réservation : {submission.booking?.id || 'en attente'}</li>
+                                  {submission.attestationDossier.sessionProofs.map((proof, index) => (
+                                    <li key={`${proof.startsAt}-${proof.endsAt}`}>
+                                      Séance {index + 1}, le {new Date(proof.startsAt).toLocaleDateString('fr-FR')} :{' '}
+                                      {proof.proofComplete
+                                        ? `preuve ${proof.attendanceId} · ${formatAttestationDuration(proof.attendedMinutes)} suivie${proof.attendedMinutes > 60 ? 's' : ''}`
+                                        : ATTENDANCE_STATUS_LABELS[proof.trainerStatus] || 'preuve incomplète'}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </details>
+                            </section>
+
+                            <form
+                              className="final-project-evaluation-form"
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                handleSaveFinalProjectReview(submission);
+                              }}
+                            >
+                              <fieldset disabled={isSaving}>
+                                <legend>Niveau observé pour chaque critère</legend>
+                                <div className="final-project-evaluation-criteria">
+                                  {submission.rubric.map((criterion) => {
+                                    const field = FINAL_PROJECT_REVIEW_FIELDS.find(
+                                      (candidate) => candidate.rubricId === criterion.id,
+                                    );
+                                    if (!field) return null;
+                                    const selectedLevel = draft[field.column]
+                                      || submission.currentSubmissionReview?.[field.column]
+                                      || '';
+
+                                    return (
+                                      <label key={criterion.id} htmlFor={`final-review-${submission.id}-${criterion.id}`}>
+                                        <span>{criterion.criterion}</span>
+                                        <select
+                                          id={`final-review-${submission.id}-${criterion.id}`}
+                                          value={selectedLevel}
+                                          onChange={(event) => handleFinalProjectReviewDraftChange(
+                                            submission.id,
+                                            field.column,
+                                            event.target.value,
+                                          )}
+                                          required
+                                        >
+                                          <option value="">Choisir un niveau</option>
+                                          {submission.rubricLevels.map((level) => (
+                                            <option key={level.id} value={level.id}>{level.label}</option>
+                                          ))}
+                                        </select>
+                                        {selectedLevel && (
+                                          <small>{criterion.descriptors[selectedLevel]}</small>
+                                        )}
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </fieldset>
+
+                              <p className={`final-project-evaluation-decision ${calculatedStatus ? `is-${calculatedStatus}` : ''}`} role="status">
+                                {calculatedStatus
+                                  ? `Décision calculée : ${FINAL_PROJECT_REVIEW_STATUS_LABELS[calculatedStatus]}.`
+                                  : 'Sélectionnez les quatre niveaux pour obtenir la décision pédagogique.'}
+                              </p>
+
+                              <label htmlFor={`final-review-appreciation-${submission.id}`}>
+                                Appréciation générale
+                                <textarea
+                                  id={`final-review-appreciation-${submission.id}`}
+                                  value={draft.appreciation || ''}
+                                  onChange={(event) => handleFinalProjectReviewDraftChange(
+                                    submission.id,
+                                    'appreciation',
+                                    event.target.value,
+                                  )}
+                                  placeholder="Présentez les points réussis et expliquez la décision de façon concrète."
+                                  rows="5"
+                                  maxLength="10000"
+                                  disabled={isSaving}
+                                  required
+                                />
+                              </label>
+
+                              <label htmlFor={`final-review-improvement-${submission.id}`}>
+                                Axes de progrès ou prochaine étape
+                                <textarea
+                                  id={`final-review-improvement-${submission.id}`}
+                                  value={draft.improvement_areas || ''}
+                                  onChange={(event) => handleFinalProjectReviewDraftChange(
+                                    submission.id,
+                                    'improvement_areas',
+                                    event.target.value,
+                                  )}
+                                  placeholder="Indiquez ce qui doit être repris ou, si le travail est validé, comment poursuivre la progression."
+                                  rows="5"
+                                  maxLength="10000"
+                                  disabled={isSaving}
+                                  required
+                                />
+                              </label>
+
+                              <div className="exercise-correction-form__footer">
+                                <small>
+                                  Cette nouvelle évaluation sera datée et ajoutée à l’historique sans remplacer les précédentes.
+                                </small>
+                                <button
+                                  type="submit"
+                                  className="btn btn-primary"
+                                  disabled={
+                                    isSaving
+                                    || !calculatedStatus
+                                    || !draft.appreciation?.trim()
+                                    || !draft.improvement_areas?.trim()
+                                  }
+                                >
+                                  {isSaving ? 'Enregistrement…' : 'Envoyer l’évaluation'}
+                                </button>
+                              </div>
+
+                              {feedback && (
+                                <p className={`exercise-correction-feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>
+                                  {feedback.message}
+                                </p>
+                              )}
+                            </form>
+
+                            {submission.history.length > 0 && (
+                              <details className="exercise-correction-history">
+                                <summary>Historique des évaluations ({submission.history.length})</summary>
+                                <ol>
+                                  {submission.history.map((review) => (
+                                    <li key={review.id}>
+                                      <strong>{FINAL_PROJECT_REVIEW_STATUS_LABELS[review.review_status]}</strong>
+                                      <span>{new Date(review.created_at).toLocaleString('fr-FR')}</span>
+                                      <p>{review.appreciation}</p>
+                                      <small>Axes de progrès : {review.improvement_areas}</small>
+                                      <small>
+                                        Remise évaluée du {new Date(review.submission_saved_at).toLocaleString('fr-FR')}
+                                      </small>
+                                    </li>
+                                  ))}
+                                </ol>
+                              </details>
+                            )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <p className="exercise-corrections-rgpd-note">
+                    Les livrables et évaluations servent uniquement au suivi pédagogique et aux preuves Qualiopi.
+                    N’ouvrez que les liens volontairement transmis et ne recopiez aucune donnée sensible inutile.
+                  </p>
+                </section>
+
+                <div className="exercise-corrections-heading">
+                  <div>
+                    <h2 id="exercise-corrections-title">Corrections des exercices terminés</h2>
+                    <p>
+                      Relisez la dernière version déclarée terminée, indiquez les points réussis et les améliorations
+                      attendues, puis validez l’exercice ou demandez une reprise.
+                    </p>
+                  </div>
+                  <span>{exerciseCorrections.length} réponse{exerciseCorrections.length > 1 ? 's' : ''} à suivre</span>
+                </div>
+
+                {!correctionsAvailable ? (
+                  <div className="exercise-corrections-notice" role="status">
+                    Le poste de correction est prêt dans le site. Il sera utilisable après l’activation de la migration
+                    Supabase dédiée.
+                  </div>
+                ) : correctionsError ? (
+                  <div className="exercise-corrections-notice is-error" role="alert">{correctionsError}</div>
+                ) : exerciseCorrections.length === 0 ? (
+                  <div className="exercise-corrections-empty">
+                    <h3>Aucune réponse terminée à corriger</h3>
+                    <p>Les brouillons restent privés. Une réponse apparaît ici lorsque l’apprenant la déclare terminée.</p>
+                  </div>
+                ) : (
+                  <div className="exercise-corrections-list">
+                    {exerciseCorrections.map((submission) => {
+                      const draft = correctionDrafts[submission.id] || {};
+                      const feedback = correctionFeedbacks[submission.id];
+                      const isSaving = correctionSaving === String(submission.id);
+
+                      return (
+                        <article key={submission.id} className="exercise-correction-card">
+                          <header className="exercise-correction-card__header">
+                            <div>
+                              <p className="exercise-correction-card__learner">{submission.learnerEmail}</p>
+                              <h3>{submission.exerciseTitle}</h3>
+                              <p>{submission.courseTitle}</p>
+                            </div>
+                            <div className="exercise-correction-card__status">
+                              {submission.latestReview ? (
+                                <span className={`is-${submission.latestReview.review_status}`}>
+                                  {EXERCISE_REVIEW_STATUS_LABELS[submission.latestReview.review_status]}
+                                </span>
+                              ) : (
+                                <span className="is-pending">À corriger</span>
+                              )}
+                              <small>Réponse du {new Date(submission.saved_at).toLocaleString('fr-FR')}</small>
+                            </div>
+                          </header>
+
+                          <section className="exercise-correction-response" aria-label="Réponse de l’apprenant">
+                            <h4>Réponse terminée de l’apprenant</h4>
+                            <p>{submission.response_text}</p>
+                          </section>
+
+                          {submission.latestReview && (
+                            <section className="exercise-correction-latest" aria-label="Dernière correction enregistrée">
+                              <h4>Dernier retour envoyé</h4>
+                              <p>{submission.latestReview.feedback_text}</p>
+                              <small>
+                                {EXERCISE_REVIEW_STATUS_LABELS[submission.latestReview.review_status]} le{' '}
+                                {new Date(submission.latestReview.created_at).toLocaleString('fr-FR')}
+                              </small>
+                            </section>
+                          )}
+
+                          <form
+                            className="exercise-correction-form"
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              handleSaveExerciseCorrection(submission);
+                            }}
+                          >
+                            <label htmlFor={`exercise-correction-status-${submission.id}`}>
+                              Décision pédagogique
+                              <select
+                                id={`exercise-correction-status-${submission.id}`}
+                                value={draft.reviewStatus || submission.latestReview?.review_status || 'validated'}
+                                onChange={(event) => handleCorrectionDraftChange(submission.id, 'reviewStatus', event.target.value)}
+                                disabled={isSaving}
+                              >
+                                <option value="validated">Exercice validé</option>
+                                <option value="needs_revision">Réponse à reprendre</option>
+                              </select>
+                            </label>
+                            <label htmlFor={`exercise-correction-feedback-${submission.id}`}>
+                              Appréciation et conseils
+                              <textarea
+                                id={`exercise-correction-feedback-${submission.id}`}
+                                value={draft.feedbackText || ''}
+                                onChange={(event) => handleCorrectionDraftChange(submission.id, 'feedbackText', event.target.value)}
+                                placeholder="Commencez par les points réussis, puis indiquez précisément ce qui doit être corrigé et comment s’y prendre."
+                                rows="6"
+                                maxLength="10000"
+                                disabled={isSaving}
+                                required
+                              />
+                            </label>
+                            <div className="exercise-correction-form__footer">
+                              <small>
+                                Cette appréciation sera visible par l’apprenant et ajoutée à l’historique sans remplacer les précédentes.
+                              </small>
+                              <button
+                                type="submit"
+                                className="btn btn-primary"
+                                disabled={isSaving || !draft.feedbackText?.trim()}
+                              >
+                                {isSaving ? 'Enregistrement…' : 'Envoyer le retour'}
+                              </button>
+                            </div>
+                            {feedback && (
+                              <p className={`exercise-correction-feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>
+                                {feedback.message}
+                              </p>
+                            )}
+                          </form>
+
+                          {submission.history.length > 0 && (
+                            <details className="exercise-correction-history">
+                              <summary>
+                                Historique des appréciations ({submission.history.length})
+                              </summary>
+                              <ol>
+                                {submission.history.map((review) => (
+                                  <li key={review.id}>
+                                    <strong>{EXERCISE_REVIEW_STATUS_LABELS[review.review_status]}</strong>
+                                    <span>{new Date(review.created_at).toLocaleString('fr-FR')}</span>
+                                    <p>{review.feedback_text}</p>
+                                    <small>
+                                      Version apprenant du {new Date(review.response_saved_at).toLocaleString('fr-FR')}
+                                    </small>
+                                  </li>
+                                ))}
+                              </ol>
+                            </details>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <p className="exercise-corrections-rgpd-note">
+                  Ces réponses et appréciations servent exclusivement au suivi pédagogique. Elles doivent être conservées
+                  pendant la durée définie par FormaPrompt, puis supprimées ou anonymisées lorsqu’elles ne sont plus utiles.
+                </p>
+              </section>
             )}
 
             {activeTab === 'positioning' && (

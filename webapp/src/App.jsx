@@ -31,6 +31,7 @@ const GuideGPT56 = lazy(() => import("./pages/GuideGPT56"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const CourseBooking = lazy(() => import("./pages/CourseBooking"));
 const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
+const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 
 function App() {
   return (
@@ -80,6 +81,7 @@ function App() {
             <Route path="paiement-reussi" element={<PaymentSuccess />} />
             <Route path="reservation-formation" element={<CourseBooking />} />
             <Route path="admin/emargements/:bookingId" element={<AttendanceSheet />} />
+            <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
           </Route>
         </Routes>
       </Suspense>

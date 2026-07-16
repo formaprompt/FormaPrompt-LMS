@@ -6,6 +6,9 @@ const SESSION_GROUP_MINUTES = {
   four_1h: [60, 60, 60, 60],
   one_day_7h: [240, 180],
   two_3h30: [210, 210],
+  two_5h: [300, 300],
+  four_2h30: [150, 150, 150, 150],
+  three_4h_4h_2h: [240, 240, 120],
 }
 
 function durationMinutes(slot) {
@@ -86,6 +89,17 @@ export function createSplitDayBookingCandidates(slots, {
       segments: [morning, afternoon],
     }]
   })
+}
+
+export function createVariableSessionBookingCandidates(slots, { deliveryMode, sessionDurations }) {
+  return sessionDurations.flatMap((duration, sessionIndex) => (
+    createBookingCandidates(slots, { duration, deliveryMode }).map((candidate) => ({
+      ...candidate,
+      id: `${sessionIndex}:${candidate.id}`,
+      sessionIndex,
+      sessionDuration: duration,
+    }))
+  ))
 }
 
 export function flattenSelectedSlotIds(candidates, selectedCandidateIds) {

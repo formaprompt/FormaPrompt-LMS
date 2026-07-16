@@ -51,7 +51,7 @@ export default function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <h1>Bon retour !</h1>
-        <p className="auth-subtitle">Connectez-vous à votre Espace Élève</p>
+        <p className="auth-subtitle">Connectez-vous à votre espace apprenant</p>
 
         {searchParams.get('session') === 'expired' && (
           <div className="auth-info">Votre session a expiré ou a été fermée dans un autre onglet. Reconnectez-vous pour continuer votre réservation.</div>
