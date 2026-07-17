@@ -178,6 +178,10 @@ La formation est positionnée comme un parcours d'acculturation et de mise en pr
 - Le guide statique ne contient aucune donnée personnelle ou confidentielle. Comme les autres fichiers publics du site, il reste toutefois accessible à une personne connaissant son adresse directe ; les preuves pédagogiques réelles ne doivent jamais être ajoutées dans ce PDF.
 - Cette étape ne modifie aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi.
 - La version comprenant les six modules enrichis, leurs exercices, le cas pratique final, le lexique, les trois supports apprenant, le guide formateur et l'onglet unique « Guides formateur » a été déployée sur IONOS le 17 juillet 2026. Les 37 tests applicatifs, les 10 tests Stripe, le lint, le build et la compilation des quatre générateurs PDF ont réussi. Les 113 fichiers du build, soit 136 794 210 octets, ont été transférés puis comparés intégralement au serveur. L'accueil, la page Prompt Engineering, l'administration et les quatre nouveaux PDF répondent en production ; l'index et les PDF contrôlés par HTTP correspondent exactement au build local.
+- Le contrôle pédagogique final croisé du 17 juillet 2026 confirme que la formation répond aux besoins d'un grand débutant, du formateur et de l'organisme de formation. Le parcours publié contient les six modules et leurs exercices liés, les démonstrations, exemples professionnels, réponses attendues, corrections, l'évaluation finale, les supports, le lexique, les ressources, les preuves de progression et le guide formateur.
+- Quatre ajustements ciblés ont été réalisés localement après ce contrôle : affichage de la durée « 7 heures accompagnées » dans l'espace apprenant, ajout d'un guide de démarrage en cinq étapes, restitution du positionnement selon trois domaines et activation du menu mobile de l'en-tête jusqu'à 960 px pour supprimer le débordement sur tablette.
+- Les parcours formation, exercices et lexique ont été contrôlés localement à 900 px, 768 px et 390 px sans débordement de page. `npm run lint`, les 37 tests applicatifs, les 10 tests Stripe et `npm run build` ont réussi. Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié.
+- La formation « Prompt Engineering — Niveau 1 » est considérée comme pédagogiquement finalisée. Les quatre ajustements issus du contrôle final ont été déployés sur IONOS le 17 juillet 2026. Les 113 fichiers du build, soit 136 798 045 octets, ont été comparés par SHA-256 ; 52 fichiers ont été transférés et 61 étaient déjà identiques. L'accueil, la route Prompt Engineering, le script principal, la feuille de style et le catalogue répondent en HTTPS avec un contenu identique au build local.
 
 ## État de la dernière correction
 
@@ -226,7 +230,7 @@ La formation est positionnée comme un parcours d'acculturation et de mise en pr
 
 ## Prochaine action recommandée
 
-Réaliser le contrôle pédagogique final croisé de « Prompt Engineering — Niveau 1 » comme grand débutant, formateur et organisme de formation, puis corriger uniquement les derniers écarts constatés avant de déclarer la formation pédagogiquement finalisée. Les six modules, leurs exercices, le cahier d'activités, le cas pratique final, son modèle imprimable, le lexique, la bibliothèque Notion, le guide pratique et le guide formateur sont désormais publiés. Les tests complets du paiement, des réservations, du déplacement, de l'émargement et de la délivrance d'attestations restent à réaliser séparément avec plusieurs comptes apprenants.
+Thierry prévoit le contrôle réel du parcours Prompt Engineering avec les comptes concernés le 18 juillet 2026 au matin. La prochaine formation pédagogique à traiter sera ensuite « IA Act — acculturation et conformité ». Les tests complets du paiement, des réservations, du déplacement, de l'émargement et de la délivrance d'attestations restent à réaliser séparément avec plusieurs comptes apprenants.
 
 ## Commandes utiles
 

@@ -2476,6 +2476,7 @@ const promptLevelOneGlossary = [
 const promptLevelOneQuiz = [
   {
     id: 'definition',
+    domain: 'structure',
     question: 'Quel énoncé décrit le mieux un prompt professionnel ?',
     answers: [
       { label: 'Une question très courte suffit toujours', score: 0 },
@@ -2485,6 +2486,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'context',
+    domain: 'structure',
     question: 'Pourquoi préciser le contexte dans une demande adressée à une IA ?',
     answers: [
       { label: 'Ce n’est généralement pas nécessaire', score: 0 },
@@ -2494,6 +2496,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'format',
+    domain: 'structure',
     question: 'Comment demander un résultat directement exploitable ?',
     answers: [
       { label: 'En laissant l’IA choisir entièrement la présentation', score: 0 },
@@ -2503,6 +2506,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'confidentiality',
+    domain: 'verification',
     question: 'Que faire avec une information personnelle ou confidentielle ?',
     answers: [
       { label: 'La copier dans n’importe quel outil si le prompt est bien écrit', score: 0 },
@@ -2512,6 +2516,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'clarification',
+    domain: 'structure',
     question: 'Une demande contient des informations importantes manquantes. Quelle pratique est la plus adaptée ?',
     answers: [
       { label: 'Laisser l’IA inventer les éléments manquants', score: 0 },
@@ -2521,6 +2526,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'examples',
+    domain: 'structure',
     question: 'Quand un exemple de résultat est-il utile dans un prompt ?',
     answers: [
       { label: 'Jamais, car il limite toujours la créativité', score: 0 },
@@ -2530,6 +2536,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'verification',
+    domain: 'verification',
     question: 'Comment vérifier une réponse contenant des faits importants ?',
     answers: [
       { label: 'Se fier au ton assuré de la réponse', score: 0 },
@@ -2539,6 +2546,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'iteration',
+    domain: 'verification',
     question: 'Un premier résultat ne respecte pas deux contraintes. Que faire ?',
     answers: [
       { label: 'Tout recommencer avec une demande différente sans analyser le résultat', score: 0 },
@@ -2548,6 +2556,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'variables',
+    domain: 'reuse',
     question: 'À quoi servent les variables comme [public] ou [objectif] dans un modèle de prompt ?',
     answers: [
       { label: 'À rendre le prompt plus technique sans autre intérêt', score: 0 },
@@ -2557,6 +2566,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'workflow',
+    domain: 'reuse',
     question: 'Pourquoi décomposer une tâche complexe en plusieurs prompts ?',
     answers: [
       { label: 'Pour éviter toute vérification entre les étapes', score: 0 },
@@ -2566,6 +2576,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'success-criteria',
+    domain: 'structure',
     question: 'Quel est le rôle des critères de réussite ?',
     answers: [
       { label: 'Ils servent uniquement à noter la longueur de la réponse', score: 0 },
@@ -2575,6 +2586,7 @@ const promptLevelOneQuiz = [
   },
   {
     id: 'transfer',
+    domain: 'reuse',
     question: 'Comment rendre une méthode de prompting utilisable avec plusieurs assistants IA ?',
     answers: [
       { label: 'Mémoriser uniquement les commandes propres à un seul modèle', score: 0 },
@@ -2759,13 +2771,110 @@ export const courseCatalog = {
   'formation-prompt-level-1': {
     title: 'Formation Prompt Engineering – Niveau 1',
     landingPath: '/formation-prompt-engineering',
+    durationLabel: '7 heures accompagnées',
     moduleTitle: 'Parcours guidé : construire, tester et améliorer ses prompts',
+    onboarding: {
+      title: 'Comment suivre cette formation ?',
+      introduction: "Avancez avec le formateur, un module après l’autre. Chaque module explique une méthode, montre un exemple professionnel puis vous conduit vers un exercice directement lié.",
+      steps: [
+        {
+          title: 'Relisez votre positionnement initial',
+          description: "Le quiz préalable indique les points auxquels accorder le plus d’attention. Il sert à adapter l’accompagnement et ne constitue pas une évaluation des acquis.",
+        },
+        {
+          title: 'Ouvrez le module prévu pour la séance',
+          description: 'Commencez par les explications, suivez la méthode guidée et observez la démonstration avant de personnaliser le modèle proposé.',
+        },
+        {
+          title: 'Réalisez l’exercice du module',
+          description: 'Enregistrez un brouillon si nécessaire, puis déclarez votre réponse terminée lorsqu’elle respecte les quatre critères indiqués.',
+        },
+        {
+          title: 'Utilisez le retour du formateur',
+          description: 'Une réponse peut être validée ou demandée en reprise. Les versions et commentaires restent visibles pour documenter votre progression.',
+        },
+        {
+          title: 'Terminez par le cas pratique final',
+          description: "Les quatre livrables permettent d’évaluer vos acquis. Le questionnaire de satisfaction, distinct de cette évaluation, s’ouvre dans votre espace apprenant après la dernière séance signée.",
+        },
+      ],
+      reminders: [
+        'Le positionnement initial adapte le parcours ; il ne valide aucune compétence.',
+        'Les exercices et le cas pratique final constituent les évaluations pédagogiques de vos acquis.',
+        'Les onglets Supports et liens, Exercices pratiques et Lexique restent disponibles en bas de la page.',
+      ],
+    },
     videoUrl: promptEngineeringIntroVideoUrl,
     quiz: promptLevelOneQuiz,
     positioningLevels: [
       { maximumRatio: 0.34, label: 'Niveau découverte' },
       { maximumRatio: 0.7, label: 'Niveau intermédiaire' },
       { maximumRatio: 1, label: 'Niveau autonome ou avancé' },
+    ],
+    positioningDomains: [
+      {
+        id: 'structure',
+        label: 'Structuration du prompt',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Méthode à découvrir',
+            advice: 'Commencez par le module 1 pour définir le besoin, le public, le format et des critères de réussite observables.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Méthode à consolider',
+            advice: 'Utilisez les modules 1 à 3 pour mieux cadrer les informations, poser des questions et adapter le résultat sans perdre le sens.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Base déjà structurée',
+            advice: 'Votre cadrage est solide. Concentrez-vous sur les critères, les comparaisons et la justification des améliorations réalisées.',
+          },
+        ],
+      },
+      {
+        id: 'verification',
+        label: 'Vérification et sécurité',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Vigilance à développer',
+            advice: 'Accordez une attention particulière au module 2 : sources autorisées, informations absentes, protection des données et contrôle humain.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Contrôles à systématiser',
+            advice: 'Vous avez de bons réflexes. Formalisez vos vérifications, conservez les écarts observés et corrigez uniquement les points nécessaires.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Réflexes déjà établis',
+            advice: 'Vos contrôles sont solides. Travaillez surtout leur traçabilité, les conditions d’arrêt et la décision d’usage du résultat.',
+          },
+        ],
+      },
+      {
+        id: 'reuse',
+        label: 'Réutilisation et processus',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Repères à construire',
+            advice: 'Les modules 5 et 6 vous aideront à utiliser des variables, séparer les étapes et conserver une validation humaine avant toute action.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Pratique à organiser',
+            advice: 'Transformez vos prompts en modèles et testez chaque étape séparément avant de réutiliser le processus dans une situation proche.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Pratique déjà transférable',
+            advice: 'Votre méthode est réutilisable. Concentrez-vous sur les limites, les variables minimales et les cas dans lesquels le processus doit s’arrêter.',
+          },
+        ],
+      },
     ],
     modules: promptLevelOneModules,
     exercises: promptLevelOneExercises,

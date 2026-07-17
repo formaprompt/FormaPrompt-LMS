@@ -6,16 +6,16 @@ Cette checklist sert de feuille de route pour finaliser la formation IA généra
 
 ## Principes communs à toutes les formations
 
-- [x] Prévoir un écran « Comment suivre cette formation ? » adapté aux grands débutants. **Ajouté à la formation IA générative le 17 juillet 2026**
+- [x] Prévoir un écran « Comment suivre cette formation ? » adapté aux grands débutants. **Ajouté aux formations IA générative et Prompt Engineering — Niveau 1 le 17 juillet 2026**
 - [x] Structurer le parcours en modules avec objectifs, durée, explication, démonstration, exemple, exercice et synthèse.
 - [x] Relier chaque exercice au module correspondant.
 - [x] Permettre à l'apprenant d'enregistrer son travail et de retrouver sa progression. **Enregistrement et indicateur activés et vérifiés le 16 juillet 2026**
 - [x] Prévoir des critères de réussite observables pour chaque activité importante.
 - [x] Conserver la correction, l'appréciation et la validation du formateur. **Activé et vérifié avec Supabase le 16 juillet 2026**
-- [ ] Distinguer le positionnement initial, l'évaluation des acquis et la satisfaction.
+- [x] Distinguer le positionnement initial, l'évaluation des acquis et la satisfaction. **Distinction explicitée et contrôlée dans les parcours IA générative et Prompt Engineering — Niveau 1 le 17 juillet 2026**
 - [x] Conserver les preuves nécessaires au suivi pédagogique et Qualiopi sans supprimer l'historique. **Historiques append-only des réponses, corrections, remises, évaluations et attestations activés pour la formation IA générative**
-- [ ] Fournir des ressources lisibles, accessibles, téléchargeables et cohérentes avec tous les modules.
-- [ ] Vérifier l'expérience sur ordinateur, tablette et téléphone. **Parcours de correction vérifié sur ordinateur et sur mobile à 390 px, sans débordement**
+- [x] Fournir des ressources lisibles, accessibles, téléchargeables et cohérentes avec tous les modules. **Guides, cahiers d'activités, modèles, lexiques et ressources contrôlés le 17 juillet 2026**
+- [x] Vérifier l'expérience sur ordinateur, tablette et téléphone. **Parcours Prompt Engineering contrôlé à 900 px, 768 px et 390 px sans débordement de page le 17 juillet 2026**
 
 ## Formation IA générative — 10 heures
 
@@ -79,7 +79,7 @@ Cette checklist sert de feuille de route pour finaliser la formation IA généra
 
 Après la finalisation de la formation IA générative, appliquer la checklist commune à :
 
-- [ ] Formation Prompt Engineering — Niveau 1.
+- [x] Formation Prompt Engineering — Niveau 1. **Contrôle pédagogique final croisé terminé localement le 17 juillet 2026**
 - [ ] Formation IA Act — acculturation et conformité.
 - [ ] Formations bureautiques.
 - [ ] Formations destinées aux organismes de formation.
@@ -124,3 +124,4 @@ Pour chaque formation, commencer par un seul module modèle validé avant de gé
 - 17 juillet 2026 : un modèle imprimable de 12 pages accompagne le cas pratique final et le plan d'action individuel de « Prompt Engineering — Niveau 1 ». Il prépare les quatre livrables en ligne, rend visibles le prompt initial, l'écart et la correction ciblée, documente la décision d'usage, transforme le prompt final en modèle à variables et planifie un prochain test sous 30 jours. Les deux dernières pages reproduisent les quatre critères et niveaux de la correction formateur. Le document contient 23 211 caractères extractibles et 19 signets ; il ne remplace pas l'historique officiel de l'espace apprenant.
 - 17 juillet 2026 : un guide formateur interne de 16 pages couvre les deux formats de 7 heures de « Prompt Engineering — Niveau 1 » : une journée de 4 h + 3 h et deux séances de 3 h 30. Il fournit la matrice des six modules, les déroulés minutés, le point de reprise, six démonstrations, les réponses attendues, les règles de correction, les relances pour grands débutants, la grille du cas final, les preuves Qualiopi et la conduite en cas d'aléa. Ses 28 034 caractères sont extractibles et ses 31 signets facilitent la navigation. Il est regroupé avec le guide IA générative dans l'onglet unique « Guides formateur » du panneau d'administration et le PDF ne contient aucune preuve personnelle.
 - 17 juillet 2026 : la version enrichie de « Prompt Engineering — Niveau 1 » a été déployée sur IONOS. Les 37 tests applicatifs, les 10 tests Stripe, le lint, le build et les quatre générateurs PDF ont réussi. Les 113 fichiers du build ont été transférés et comparés intégralement au serveur ; l'accueil, la page de formation, l'administration et les quatre nouveaux PDF répondent en production avec un contenu identique au build local. Aucun schéma ni aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié pendant la publication.
+- 17 juillet 2026 : le contrôle pédagogique final croisé de « Prompt Engineering — Niveau 1 » est terminé selon les points de vue du grand débutant, du formateur et de l'organisme de formation. La durée de 7 heures est maintenant visible dans l'espace apprenant, un guide de démarrage distingue le positionnement initial, l'évaluation des acquis et la satisfaction, et le résultat du positionnement est structuré en trois domaines. Le seuil responsive de l'en-tête a été adapté aux tablettes. Les six modules et exercices, l'évaluation finale, les 36 notions du lexique, les supports, les corrections, les guides formateur et les preuves de suivi ont été contrôlés. Le parcours ne présente aucun débordement de page à 900 px, 768 px et 390 px. Les 37 tests applicatifs, les 10 tests Stripe, le lint et le build ont réussi. Les ajustements ont été déployés sur IONOS : les 113 fichiers du build ont été comparés par SHA-256 et les routes publiques ainsi que les nouveaux fichiers principaux correspondent au build local.
