@@ -1,19 +1,19 @@
 # Checklist pédagogique FormaPrompt
 
-Dernière mise à jour : 16 juillet 2026
+Dernière mise à jour : 17 juillet 2026
 
 Cette checklist sert de feuille de route pour finaliser la formation IA générative, puis contrôler les autres formations avec les mêmes exigences. Elle complète `suivi-formaprompt.md` sans remplacer le suivi technique du projet.
 
 ## Principes communs à toutes les formations
 
-- [ ] Prévoir un écran « Comment suivre cette formation ? » adapté aux grands débutants.
+- [x] Prévoir un écran « Comment suivre cette formation ? » adapté aux grands débutants. **Ajouté à la formation IA générative le 17 juillet 2026**
 - [x] Structurer le parcours en modules avec objectifs, durée, explication, démonstration, exemple, exercice et synthèse.
 - [x] Relier chaque exercice au module correspondant.
 - [x] Permettre à l'apprenant d'enregistrer son travail et de retrouver sa progression. **Enregistrement et indicateur activés et vérifiés le 16 juillet 2026**
 - [x] Prévoir des critères de réussite observables pour chaque activité importante.
 - [x] Conserver la correction, l'appréciation et la validation du formateur. **Activé et vérifié avec Supabase le 16 juillet 2026**
 - [ ] Distinguer le positionnement initial, l'évaluation des acquis et la satisfaction.
-- [ ] Conserver les preuves nécessaires au suivi pédagogique et Qualiopi sans supprimer l'historique.
+- [x] Conserver les preuves nécessaires au suivi pédagogique et Qualiopi sans supprimer l'historique. **Historiques append-only des réponses, corrections, remises, évaluations et attestations activés pour la formation IA générative**
 - [ ] Fournir des ressources lisibles, accessibles, téléchargeables et cohérentes avec tous les modules.
 - [ ] Vérifier l'expérience sur ordinateur, tablette et téléphone. **Parcours de correction vérifié sur ordinateur et sur mobile à 390 px, sans débordement**
 
@@ -56,23 +56,24 @@ Cette checklist sert de feuille de route pour finaliser la formation IA généra
 - [x] Afficher à l'apprenant son résultat et ses axes de progrès. **Vue sécurisée et restitution activées le 16 juillet 2026**
 - [x] Préparer les données nécessaires à une attestation de réalisation ou de compétences. **Dossier de preuves formateur prêt localement le 16 juillet 2026**
 - [x] Créer les modèles imprimables d'attestation de réalisation et de compétences. **Aperçus sécurisés prêts localement le 16 juillet 2026**
+- [x] Enregistrer chaque attestation réellement délivrée et la rendre accessible à l'apprenant. **Registre Supabase append-only et rubrique « Mes attestations » activés le 17 juillet 2026**
 
 ### E. Ressources
 
 - [x] Fournir un aide-mémoire de prompt engineering.
-- [ ] Remplacer le guide PDF ancien par une version accessible et lisible.
-- [ ] Créer un cahier d'activités regroupant les cinq exercices.
+- [x] Remplacer le guide PDF ancien par une version accessible et lisible. **Nouveau guide textuel de 14 pages relié à la formation le 17 juillet 2026**
+- [x] Créer un cahier d'activités regroupant les cinq exercices. **Cahier textuel et imprimable de 18 pages relié à la formation le 17 juillet 2026**
 - [x] Ajouter une grille de vérification téléchargeable. **Terminé localement le 16 juillet 2026**
-- [ ] Ajouter le modèle du cas final et le plan d'action individuel.
-- [ ] Compléter le lexique avec les notions indispensables aux débutants.
+- [x] Ajouter le modèle du cas final et le plan d'action individuel. **Dossier imprimable de 12 pages relié à la formation le 17 juillet 2026**
+- [x] Compléter le lexique avec les notions indispensables aux débutants. **37 notions illustrées et recherche enrichie le 17 juillet 2026**
 
 ### F. Guide formateur
 
-- [ ] Préparer le déroulé en 2 séances de 5 heures.
-- [ ] Préparer le déroulé en 4 séances de 2 h 30.
-- [ ] Préparer le déroulé en 3 séances de 4 h + 4 h + 2 h.
-- [ ] Ajouter les démonstrations, réponses attendues, relances et adaptations possibles.
-- [ ] Prévoir les preuves à conserver après chaque séance.
+- [x] Préparer le déroulé en 2 séances de 5 heures. **Déroulé minuté et preuves par séance dans le guide formateur le 17 juillet 2026**
+- [x] Préparer le déroulé en 4 séances de 2 h 30. **Déroulé minuté et points de reprise dans le guide formateur le 17 juillet 2026**
+- [x] Préparer le déroulé en 3 séances de 4 h + 4 h + 2 h. **Déroulé minuté et points d'étape dans le guide formateur le 17 juillet 2026**
+- [x] Ajouter les démonstrations, réponses attendues, relances et adaptations possibles. **Repères communs et accompagnement des grands débutants ajoutés le 17 juillet 2026**
+- [x] Prévoir les preuves à conserver après chaque séance. **Présence, progression, reprises, adaptations et évaluation détaillées le 17 juillet 2026**
 
 ## Contrôle des autres formations
 
@@ -109,3 +110,11 @@ Pour chaque formation, commencer par un seul module modèle validé avant de gé
 - 16 juillet 2026 : le dossier d'attestation est prêt localement dans l'administration. Il distingue l'attestation de réalisation, fondée sur les séances réellement signées et validées, de l'attestation de compétences, qui exige en plus une évaluation finale validée. Il calcule la durée réellement suivie, y compris en cas de départ anticipé, et rassemble l'identité, la modalité, le format, les références de réservation, de remise, d'évaluation et d'émargement. Le dossier réel contrôlé affiche correctement 10 heures planifiées mais reste incomplet tant que les quatre émargements et la validation finale manquent. Les cinq tests du calcul, le lint, le build et l'affichage à 390 px sans débordement ont réussi. Aucune donnée Supabase n'a été ajoutée ou modifiée.
 - 16 juillet 2026 : les modèles imprimables d'attestation de réalisation et de compétences sont prêts localement. Ils reprennent l'identité de l'organisme, le formateur, le participant, les dates, la modalité, la durée réellement suivie, les objectifs et les résultats utiles, avec une référence stable et une date de délivrance fondées sur les preuves du dossier. Un document incomplet reste marqué « BROUILLON », son bouton d'impression est désactivé et la feuille est masquée par les règles d'impression. Le modèle de compétences précise qu'il ne constitue ni un diplôme, ni un titre professionnel, ni une certification RNCP ou RS. Les 13 tests ciblés, le lint, le build et les contrôles visuels sur ordinateur et téléphone ont réussi. Les accès restent réservés au personnel autorisé et aucune donnée Supabase n'a été ajoutée ou modifiée.
 - 16 juillet 2026 : la version complète de la formation IA générative, de son suivi formateur et des modèles d'attestation a été déployée sur IONOS. Les 35 tests applicatifs, les 10 tests Stripe, le lint et le build ont réussi avant publication. Les 102 fichiers transférés ont été contrôlés sur le serveur et la route publique de la formation répond correctement.
+- 17 juillet 2026 : le registre des attestations délivrées a été activé séparément dans Supabase sous le numéro `20260717070129`. Une délivrance crée désormais une ligne immuable avec sa référence, sa date réelle d'émission, son auteur, ses sources de preuve et une copie minimisée du contenu, sans adresse e-mail ni image de signature. Les règles RLS réservent la lecture à l'apprenant concerné et au personnel autorisé ; l'accès anonyme est refusé. L'espace apprenant possède une rubrique « Mes attestations » et un document délivré peut être consulté puis imprimé. Les 12 tests ciblés, le lint, le build, `git diff --check` et le contrôle de schéma Supabase ont réussi. Le parcours avec un compte connecté reste à vérifier visuellement sans créer de document fictif.
+- 17 juillet 2026 : un écran « Comment suivre cette formation ? » guide désormais le grand débutant avant le module 1. Il explique les cinq étapes du parcours, l'usage des brouillons, le moment où déclarer un exercice terminé, le retour du formateur, le cas pratique final et les conditions d'accès aux attestations. Trois repères rappellent où trouver les supports, les exercices et le lexique. La présentation passe de cinq cartes à deux colonnes, puis une colonne sur téléphone. Le lint, le build et `git diff --check` ont réussi.
+- 17 juillet 2026 : l'ancien guide de prompt engineering constitué uniquement d'images a été remplacé dans la formation IA générative par un guide pratique FormaPrompt de 14 pages. Le document suit les cinq modules, accompagne le grand débutant, contient deux fiches imprimables, quatre modèles de prompts, la méthode d'itération, le cas final, le lexique et la checklist de diffusion. Son texte est sélectionnable et extractible, les contrastes sont renforcés, les titres sont hiérarchisés et 26 signets facilitent la navigation. L'ancien fichier reste conservé sans être écrasé.
+- 17 juillet 2026 : un cahier d'activités FormaPrompt de 18 pages regroupe désormais les cinq exercices de la formation IA générative. Chaque exercice dispose de trois pages distinctes pour préparer le cas, réaliser l'activité, analyser le résultat, s'autoévaluer et conserver un retour formateur. Le cahier comprend aussi le mode d'emploi, les règles de protection des données et un tableau personnel d'avancement. Il complète l'enregistrement append-only dans l'espace apprenant sans créer de nouvelle donnée Supabase.
+- 17 juillet 2026 : un modèle imprimable de 12 pages accompagne désormais le cas pratique final et le plan d'action individuel. Il reprend les quatre livrables enregistrés dans l'espace apprenant, guide le cadrage, la première consigne, les itérations, le livrable, la synthèse de la grille de vérification, l'expérimentation à 30 jours et les indicateurs. Les deux dernières pages reproduisent les quatre critères et les quatre niveaux de la correction formateur. Le document ne remplace pas la remise append-only ni l'évaluation enregistrée dans Supabase.
+- 17 juillet 2026 : le lexique de la formation IA générative passe de 13 à 37 notions classées automatiquement par ordre alphabétique. Chaque définition possède un exemple professionnel destiné aux grands débutants. Les nouveaux repères couvrent notamment IA, IA générative, chatbot, moteur de recherche, critère de réussite, anonymisation, pseudonymisation, minimisation, droits, outil autorisé, source, traçabilité et réversibilité. La recherche interroge aussi les exemples et annonce le nombre de résultats. L'affichage à deux colonnes sur ordinateur et une colonne sur téléphone a été vérifié sans débordement.
+- 17 juillet 2026 : un guide formateur interne de 20 pages finalise les trois rythmes de la formation IA générative : 2 séances de 5 heures en présentiel, 4 séances de 2 h 30 en classe virtuelle et 3 séances de 4 h + 4 h + 2 h. Il fournit les minutages, points de reprise, démonstrations, réponses attendues, relances, adaptations pour les grands débutants, règles de correction et preuves minimisées à conserver. Son lien est placé dans le panneau d'administration, à côté des feuilles d'émargement, sans être ajouté aux supports visibles par l'apprenant.
+- 17 juillet 2026 : l'ensemble finalisé a été déployé sur IONOS après réussite des 37 tests applicatifs, des 10 tests Stripe, du lint et du build. Les 109 fichiers distants ont été comparés au build local ; l'index, les routes publiques et d'administration, les ressources principales et le guide formateur PDF correspondent à la version publiée.

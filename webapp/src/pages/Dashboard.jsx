@@ -2,12 +2,13 @@ import { useAuth } from '../contexts/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { CalendarClock, CheckCircle2, MessageSquareText } from 'lucide-react';
+import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
+import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [exerciseResponses, setExerciseResponses] = useState([]);
   const [exerciseReviews, setExerciseReviews] = useState([]);
   const [progressAvailable, setProgressAvailable] = useState(true);
+  const [attestations, setAttestations] = useState([]);
+  const [attestationsAvailable, setAttestationsAvailable] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -51,8 +54,16 @@ export default function Dashboard() {
       setBookingLoadError(false);
       setSurveyLoadError(false);
       setProgressAvailable(true);
+      setAttestationsAvailable(true);
 
-      const [purchasesResult, bookingResult, surveyResult, exerciseResponsesResult, exerciseReviewsResult] = await Promise.all([
+      const [
+        purchasesResult,
+        bookingResult,
+        surveyResult,
+        exerciseResponsesResult,
+        exerciseReviewsResult,
+        attestationsResult,
+      ] = await Promise.all([
         supabase
           .from('purchases')
           .select('id, course_id, purchased_at')
@@ -80,6 +91,11 @@ export default function Dashboard() {
           .from('course_exercise_latest_reviews')
           .select('course_id, exercise_id, review_status')
           .eq('user_id', user.id),
+        supabase
+          .from('course_attestation_issuances')
+          .select('id, reference, course_id, document_type, issued_at')
+          .eq('user_id', user.id)
+          .order('issued_at', { ascending: false }),
       ]);
 
       if (purchasesResult.error) {
@@ -112,6 +128,15 @@ export default function Dashboard() {
       } else {
         setExerciseResponses(exerciseResponsesResult.data ?? []);
         setExerciseReviews(exerciseReviewsResult.data ?? []);
+      }
+
+      if (attestationsResult.error) {
+        if (!['42P01', 'PGRST205'].includes(attestationsResult.error.code)) {
+          console.error('Erreur lors du chargement des attestations :', attestationsResult.error);
+        }
+        setAttestationsAvailable(false);
+      } else {
+        setAttestations(attestationsResult.data ?? []);
       }
       setLoading(false);
     }
@@ -245,6 +270,35 @@ export default function Dashboard() {
                 </section>
               );
             })}
+
+            {attestationsAvailable && attestations.length > 0 && (
+              <section className="learner-attestations" aria-labelledby="learner-attestations-title">
+                <div className="learner-attestations__heading">
+                  <FileCheck2 aria-hidden="true" />
+                  <div>
+                    <p>Documents de fin de formation</p>
+                    <h2 id="learner-attestations-title">Mes attestations</h2>
+                  </div>
+                </div>
+                <div className="learner-attestations__grid">
+                  {attestations.map((attestation) => (
+                    <article key={attestation.id} className="learner-attestation-card">
+                      <div>
+                        <h3>{ATTESTATION_TYPES[attestation.document_type]?.title || 'Attestation'}</h3>
+                        <p>{courseNames[attestation.course_id] || attestation.course_id}</p>
+                        <span>
+                          Délivrée le {new Date(attestation.issued_at).toLocaleDateString('fr-FR')}
+                          {' · '}{attestation.reference}
+                        </span>
+                      </div>
+                      <Link to={`/attestations/${attestation.id}`} className="btn learner-attestation-card__action">
+                        Consulter et imprimer
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div className="learner-course-grid">
               {purchases.map((purchase) => {

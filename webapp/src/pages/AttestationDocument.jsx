@@ -1,44 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Printer } from 'lucide-react';
+import { FileCheck2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import AttestationPaper from '../components/AttestationPaper';
 import { useAuth } from '../contexts/useAuth';
-import { COURSE_ATTESTATION_CONFIG, FORMATION_ORGANIZATION } from '../data/attestationConfig';
+import { COURSE_ATTESTATION_CONFIG } from '../data/attestationConfig';
 import { courseCatalog } from '../data/courseCatalog';
-import { buildAttestationDossier, formatAttestationDuration } from '../lib/attestationDossier';
-import {
-  ATTESTATION_TYPES,
-  createAttestationReference,
-  formatAttestationPeriod,
-  resolveAttestationIssuedAt,
-} from '../lib/attestationDocument';
+import { buildAttestationDossier } from '../lib/attestationDossier';
+import { ATTESTATION_TYPES, createAttestationReference } from '../lib/attestationDocument';
+import { createAttestationSnapshot } from '../lib/attestationSnapshot';
 import { groupBookedSessions } from '../lib/courseBookingSlots';
 import { FINAL_PROJECT_REVIEW_FIELDS } from '../lib/finalProjectEvaluation';
 import { supabase } from '../lib/supabaseClient';
 import './AttestationDocument.css';
-
-const BOOKING_FORMAT_LABELS = {
-  two_5h: '2 séances de 5 h',
-  four_2h30: '4 séances de 2 h 30',
-  three_4h_4h_2h: '3 séances : 4 h + 4 h + 2 h',
-};
-
-const REVIEW_STATUS_LABELS = {
-  needs_revision: 'Acquis à consolider – nouvelle remise attendue',
-  validated: 'Compétences évaluées et validées',
-};
-
-function formatDate(value) {
-  return value
-    ? new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-    : 'En attente de finalisation';
-}
-
-function formatDeliveryMode(booking) {
-  if (!booking) return 'Modalité non disponible';
-  const mode = booking.delivery_mode === 'remote' ? 'Distanciel synchrone' : 'Présentiel';
-  const format = BOOKING_FORMAT_LABELS[booking.schedule_format] || booking.schedule_format;
-  return `${mode} · ${format}`;
-}
 
 export default function AttestationDocument() {
   const { submissionId, documentType } = useParams();
@@ -47,6 +20,7 @@ export default function AttestationDocument() {
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [issuing, setIssuing] = useState(false);
   const typeConfig = ATTESTATION_TYPES[documentType];
 
   useEffect(() => {
@@ -160,13 +134,6 @@ export default function AttestationDocument() {
       finalReview: record.review,
     });
     const isReady = documentType === 'realisation' ? dossier.realizationReady : dossier.competencyReady;
-    const issuedAt = isReady ? resolveAttestationIssuedAt(documentType, dossier, record.review) : null;
-    const reference = isReady ? createAttestationReference({
-      documentType,
-      bookingId: booking?.id,
-      reviewId: record.review?.id,
-      issuedAt,
-    }) : null;
     const rubric = course?.finalProject?.rubric || [];
     const levels = course?.finalProject?.rubricLevels || [];
     const criteria = rubric.map((criterion) => {
@@ -183,8 +150,6 @@ export default function AttestationDocument() {
       course,
       booking,
       dossier,
-      issuedAt,
-      reference,
       criteria,
       isReady,
       missingRequirements: documentType === 'realisation'
@@ -193,6 +158,80 @@ export default function AttestationDocument() {
       attestationConfig: COURSE_ATTESTATION_CONFIG[record.submission.course_id],
     };
   }, [documentType, record, typeConfig]);
+
+  const snapshot = useMemo(() => createAttestationSnapshot({
+    documentType,
+    record,
+    documentData,
+  }), [documentData, documentType, record]);
+
+  async function issueAttestation() {
+    if (!documentData?.isReady || !snapshot || !record || !user) return;
+    setIssuing(true);
+    setError('');
+
+    const existingResult = await supabase
+      .from('course_attestation_issuances')
+      .select('id')
+      .eq('submission_id', record.submission.id)
+      .eq('document_type', documentType)
+      .maybeSingle();
+
+    if (existingResult.data?.id) {
+      navigate(`/attestations/${existingResult.data.id}`);
+      return;
+    }
+    if (existingResult.error) {
+      console.error('Vérification du registre des attestations impossible :', existingResult.error);
+      setError("Le registre des attestations n’a pas pu être vérifié.");
+      setIssuing(false);
+      return;
+    }
+
+    const issuedAt = new Date().toISOString();
+    const reference = createAttestationReference({
+      documentType,
+      bookingId: documentData.booking?.id,
+      reviewId: record.review?.id,
+      issuedAt,
+    });
+    const { data: issuance, error: issuanceError } = await supabase
+      .from('course_attestation_issuances')
+      .insert({
+        reference,
+        user_id: record.submission.user_id,
+        course_id: record.submission.course_id,
+        document_type: documentType,
+        submission_id: record.submission.id,
+        review_id: documentType === 'competences' ? record.review?.id : null,
+        booking_request_id: documentData.booking?.id,
+        issued_by: user.id,
+        content_snapshot: snapshot,
+      })
+      .select('id')
+      .single();
+
+    if (issuanceError) {
+      if (issuanceError.code === '23505') {
+        const { data: existingIssuance } = await supabase
+          .from('course_attestation_issuances')
+          .select('id')
+          .eq('submission_id', record.submission.id)
+          .eq('document_type', documentType)
+          .maybeSingle();
+        if (existingIssuance?.id) {
+          navigate(`/attestations/${existingIssuance.id}`);
+          return;
+        }
+      }
+      console.error("Délivrance de l’attestation impossible :", issuanceError);
+      setError("L’attestation n’a pas pu être inscrite dans le registre. Aucune attestation n’a été délivrée.");
+      setIssuing(false);
+      return;
+    }
+
+    navigate(`/attestations/${issuance.id}`);
+  }
 
   if (!user || (role !== 'admin' && role !== 'employee')) return null;
   if (!typeConfig) {
@@ -209,10 +248,11 @@ export default function AttestationDocument() {
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!documentData?.isReady}
-          onClick={() => window.print()}
+          disabled={!documentData?.isReady || issuing}
+          onClick={issueAttestation}
         >
-          <Printer size={18} aria-hidden="true" /> Imprimer ou enregistrer en PDF
+          <FileCheck2 size={18} aria-hidden="true" />
+          {issuing ? 'Délivrance en cours…' : 'Délivrer et ouvrir l’attestation'}
         </button>
         <button
           type="button"
@@ -232,130 +272,18 @@ export default function AttestationDocument() {
               <strong>Aperçu uniquement : document non délivrable.</strong>
               <span>
                 Éléments à compléter : {documentData.missingRequirements.join(' · ')}.
-                Le bouton d’impression restera bloqué jusqu’à la finalisation des preuves requises.
+                La délivrance restera bloquée jusqu’à la finalisation des preuves requises.
               </span>
             </div>
           )}
 
-          <article className={`attestation-paper ${documentData.isReady ? '' : 'is-draft'}`}>
-            {!documentData.isReady && <div className="attestation-watermark" aria-hidden="true">BROUILLON</div>}
-
-            <header className="attestation-paper__header">
-              <img src="/assets/logo-new.png" alt="FormaPrompt" />
-              <div>
-                <p>{FORMATION_ORGANIZATION.legalName}</p>
-                <span>{FORMATION_ORGANIZATION.address}</span>
-                <span>SIRET : {FORMATION_ORGANIZATION.siret}</span>
-              </div>
-              <dl>
-                <div><dt>Référence</dt><dd>{documentData.reference || 'En attente'}</dd></div>
-                <div><dt>Délivrée le</dt><dd>{formatDate(documentData.issuedAt)}</dd></div>
-              </dl>
-            </header>
-
-            <section className="attestation-paper__title">
-              <p>Action de formation professionnelle</p>
-              <h1>{typeConfig.title}</h1>
-              {documentType === 'competences' && (
-                <span>Évaluation des acquis – formation non certifiante</span>
-              )}
-            </section>
-
-            <p className="attestation-paper__statement">
-              Je soussigné <strong>{FORMATION_ORGANIZATION.trainerName}</strong>, formateur et responsable de
-              l’organisme {FORMATION_ORGANIZATION.brandName}, atteste que :
-            </p>
-
-            <section className="attestation-paper__identity" aria-label="Identité et formation">
-              <div><strong>Apprenant</strong><span>{record.learnerName}</span></div>
-              <div><strong>Formation</strong><span>{documentData.course?.title || record.submission.course_id}</span></div>
-              <div><strong>Nature de l’action</strong><span>{documentData.attestationConfig?.nature || 'Action de formation'}</span></div>
-              <div><strong>Période</strong><span>{formatAttestationPeriod(documentData.dossier.sessionProofs)}</span></div>
-              <div><strong>Modalité</strong><span>{formatDeliveryMode(documentData.booking)}</span></div>
-              <div>
-                <strong>Durée</strong>
-                <span>
-                  {formatAttestationDuration(documentData.dossier.attendedMinutes)} réellement suivie
-                  {documentData.dossier.plannedMinutes > 0
-                    ? ` sur ${formatAttestationDuration(documentData.dossier.plannedMinutes)} planifiées`
-                    : ''}
-                </span>
-              </div>
-            </section>
-
-            <section className="attestation-paper__section">
-              <h2>Objectifs pédagogiques</h2>
-              <ul>
-                {(documentData.attestationConfig?.objectives || []).map((objective) => (
-                  <li key={objective}>{objective}</li>
-                ))}
-              </ul>
-            </section>
-
-            {documentType === 'realisation' ? (
-              <section className="attestation-paper__result">
-                <h2>Réalisation de la formation</h2>
-                <p>
-                  Les {documentData.dossier.sessionCount} séances planifiées disposent d’un émargement apprenant
-                  et d’une validation du formateur. La durée indiquée correspond au temps réellement suivi et
-                  constaté dans les feuilles d’émargement.
-                </p>
-              </section>
-            ) : (
-              <section className="attestation-paper__section attestation-paper__evaluation">
-                <div className="attestation-paper__evaluation-heading">
-                  <h2>Résultats de l’évaluation des acquis</h2>
-                  <strong>{REVIEW_STATUS_LABELS[record.review?.review_status] || 'Évaluation en attente'}</strong>
-                </div>
-                <table>
-                  <thead><tr><th>Critère évalué</th><th>Niveau observé</th></tr></thead>
-                  <tbody>
-                    {documentData.criteria.map((criterion) => (
-                      <tr key={criterion.id}><td>{criterion.label}</td><td>{criterion.level}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-                {record.review && (
-                  <div className="attestation-paper__feedback">
-                    <p><strong>Appréciation :</strong> {record.review.appreciation}</p>
-                    <p><strong>Axes de progrès :</strong> {record.review.improvement_areas}</p>
-                  </div>
-                )}
-                <p className="attestation-paper__non-certifying">
-                  Cette attestation décrit le résultat d’une évaluation interne. Elle ne constitue ni un diplôme,
-                  ni un titre professionnel, ni une certification enregistrée au RNCP ou au Répertoire spécifique.
-                </p>
-              </section>
-            )}
-
-            <section className="attestation-paper__signature">
-              <div>
-                <span>Fait à Calais, le {formatDate(documentData.issuedAt)}</span>
-                <strong>{FORMATION_ORGANIZATION.trainerName}</strong>
-                <small>Formateur et responsable pédagogique</small>
-              </div>
-              <div className="attestation-paper__signature-box">
-                <span>Signature</span>
-              </div>
-            </section>
-
-            <footer className="attestation-paper__footer">
-              <p>
-                Enregistrée sous le numéro {FORMATION_ORGANIZATION.activityDeclarationNumber}.
-                Cet enregistrement ne vaut pas agrément de l’État.
-              </p>
-              <p>{FORMATION_ORGANIZATION.email} · {FORMATION_ORGANIZATION.website}</p>
-              <details>
-                <summary>Références internes de traçabilité</summary>
-                <span>Réservation : {documentData.booking?.id || '—'}</span>
-                <span>Remise finale : {record.submission.id}</span>
-                <span>Évaluation : {record.review?.id || '—'}</span>
-                <span>
-                  Émargements : {documentData.dossier.sessionProofs.map((proof) => proof.attendanceId).filter(Boolean).join(', ') || '—'}
-                </span>
-              </details>
-            </footer>
-          </article>
+          <AttestationPaper
+            documentType={documentType}
+            reference={null}
+            issuedAt={null}
+            snapshot={snapshot}
+            isDraft={!documentData.isReady}
+          />
         </>
       )}
     </main>

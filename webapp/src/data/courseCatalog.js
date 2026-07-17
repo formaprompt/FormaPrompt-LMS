@@ -852,56 +852,189 @@ Présente le résultat comme une fiche action d'une page et indique clairement l
 
 const generativeAiGlossary = [
   {
+    term: 'Anonymisation',
+    definition: "Transformation irréversible qui rend impossible, en pratique, l'identification d'une personne. Retirer seulement son nom ne suffit pas toujours.",
+    example: "Remplacer un nom par « Participant 12 » reste une pseudonymisation si une autre liste permet de retrouver la personne.",
+  },
+  {
     term: "Assistant d'IA",
-    definition: "Interface qui permet d'interagir avec un ou plusieurs modèles afin de générer, analyser ou transformer un contenu.",
+    definition: "Outil qui permet de dialoguer avec un ou plusieurs modèles afin de générer, analyser ou transformer un contenu.",
+    example: "Demander une première structure de courriel, puis la relire et la corriger avant envoi.",
   },
   {
     term: 'Biais',
     definition: "Tendance d'un modèle ou de ses résultats à reproduire des déséquilibres, stéréotypes ou choix présents dans les données et les consignes.",
+    example: "Une proposition de recrutement qui associe systématiquement certains métiers à un genre doit être rejetée et analysée.",
+  },
+  {
+    term: 'Chatbot',
+    definition: "Interface de conversation automatisée. Selon l'outil, ses réponses peuvent être produites par une IA, une base de règles, une recherche ou plusieurs de ces méthodes.",
+    example: "La fenêtre de discussion d'un service client peut être un chatbot sans être un assistant d'IA générative complet.",
+  },
+  {
+    term: 'Confidentialité',
+    definition: "Protection d'une information qui ne doit être accessible qu'aux personnes autorisées.",
+    example: "Une note interne non publique ne doit pas être copiée dans un assistant qui n'est pas autorisé par l'organisation.",
+  },
+  {
+    term: 'Consigne',
+    definition: "Instruction de travail qui précise ce qui doit être produit, pour qui, à partir de quelles informations et selon quelles règles.",
+    example: "Rédiger un courriel de 150 mots pour des adultes débutants, à partir des trois faits fournis.",
   },
   {
     term: 'Contexte',
     definition: 'Informations utiles qui permettent d’adapter une réponse à la situation, au public et au résultat attendu.',
+    example: "Préciser que le document s'adresse à des participants peu à l'aise avec le numérique aide à choisir des mots plus simples.",
+  },
+  {
+    term: 'Critère de réussite',
+    definition: "Condition observable utilisée pour déterminer si un résultat répond réellement au besoin.",
+    example: "Le courriel reprend les trois dates fournies, reste inférieur à 180 mots et présente les actions dans l'ordre.",
+  },
+  {
+    term: 'Décision sensible',
+    definition: "Décision pouvant avoir un effet important sur une personne, ses droits, sa santé, son emploi, son accès à un service ou une obligation.",
+    example: "L'IA peut aider à préparer une liste de points de vigilance, mais elle ne doit pas décider seule d'une sanction ou d'un recrutement.",
   },
   {
     term: 'Donnée personnelle',
-    definition: "Information se rapportant à une personne identifiée ou identifiable. Son utilisation doit respecter un cadre autorisé et le principe de minimisation.",
+    definition: "Information se rapportant à une personne physique identifiée ou identifiable, directement ou par recoupement.",
+    example: "Un nom, une adresse électronique, une photographie, une voix ou un identifiant de connexion peuvent être des données personnelles.",
   },
   {
     term: 'Donnée sensible',
     definition: "Catégorie de donnée personnelle bénéficiant d'une protection renforcée, notamment lorsqu'elle concerne la santé, les opinions ou les caractéristiques biométriques.",
+    example: "Un dossier médical ou une information révélant une opinion politique ne doit jamais servir d'exemple dans un exercice avec un outil non autorisé.",
+  },
+  {
+    term: "Droit d'auteur",
+    definition: "Protection accordée à l'auteur d'une œuvre originale. Un contenu accessible sur internet n'est pas automatiquement libre de réutilisation.",
+    example: "Avant d'intégrer une image trouvée en ligne dans un support, vérifier son origine, sa licence et les conditions de réutilisation.",
   },
   {
     term: 'Hallucination',
     definition: "Information fausse, inventée ou imprécise produite par une IA, parfois formulée de manière convaincante.",
+    example: "L'assistant cite une étude avec un titre crédible, mais cette étude n'existe pas : la référence doit être rejetée.",
+  },
+  {
+    term: 'Intelligence artificielle (IA)',
+    definition: "Ensemble de techniques permettant à un système informatique de réaliser certaines tâches associées à l'analyse, la prédiction, la recommandation ou la génération de contenus.",
+    example: "Un outil peut classer des messages, détecter des objets dans une image ou proposer un texte sans comprendre la situation comme une personne.",
+  },
+  {
+    term: 'IA générative',
+    definition: "Type d'IA qui produit un nouveau contenu probable, par exemple du texte, une image, du son, une vidéo ou du code, à partir d'une demande.",
+    example: "Produire une première version de FAQ à partir de consignes techniques validées.",
   },
   {
     term: 'IA multimodale',
     definition: 'Système capable de traiter ou de générer plusieurs types de contenus, par exemple du texte, des images, du son ou de la vidéo.',
+    example: "Analyser une photographie accompagnée d'une question écrite, puis proposer une description textuelle.",
   },
   {
     term: 'Itération',
     definition: "Amélioration progressive d'une demande ou d'un résultat après analyse des écarts constatés.",
+    example: "Demander une seconde version plus courte après avoir constaté que la limite de 150 mots n'était pas respectée.",
+  },
+  {
+    term: "Licence d'utilisation",
+    definition: "Règles définissant les droits accordés pour utiliser, modifier, partager ou intégrer un contenu ou un logiciel.",
+    example: "Une licence peut autoriser la réutilisation d'une image à condition de citer son auteur et de ne pas la modifier.",
+  },
+  {
+    term: 'Livrable',
+    definition: "Résultat concret attendu à la fin d'une tâche : document, maquette, tableau, présentation, message ou autre production vérifiable.",
+    example: "Le livrable du cas final peut être la maquette d'un compte rendu accompagnée de sa grille de contrôle.",
   },
   {
     term: 'LLM (grand modèle de langage)',
     definition: "Modèle entraîné sur de grands volumes de textes afin d'analyser et de générer du langage naturel.",
+    example: "Le modèle peut proposer une phrase plausible sans disposer d'une preuve que cette phrase est vraie.",
+  },
+  {
+    term: 'Minimisation des données',
+    definition: "Principe consistant à utiliser uniquement les données adéquates, pertinentes et nécessaires pour atteindre un objectif défini.",
+    example: "Pour préparer un modèle générique de courriel, les noms et adresses des participants ne sont pas nécessaires.",
+  },
+  {
+    term: "Modèle d'IA",
+    definition: "Système entraîné à repérer des régularités dans des données afin de produire une prédiction, un classement ou un contenu.",
+    example: "Un assistant de conversation est l'interface visible ; le modèle est l'un des systèmes qui produit la réponse.",
+  },
+  {
+    term: 'Moteur de recherche',
+    definition: "Service qui aide à retrouver des pages, documents ou ressources. Les résultats doivent encore être évalués selon leur auteur, leur date et leur fiabilité.",
+    example: "Rechercher une règle sur le site officiel compétent, puis ouvrir la page source avant de la citer.",
+  },
+  {
+    term: 'Outil autorisé',
+    definition: "Service dont l'utilisation a été approuvée pour un besoin et un type de données déterminés par l'organisation.",
+    example: "Un outil peut être autorisé pour des textes génériques mais interdit pour des dossiers de clients ou de salariés.",
   },
   {
     term: 'Prompt',
     definition: "Instruction, question ou ensemble de consignes fourni à une IA pour guider son résultat.",
+    example: "Objectif, contexte, public, informations autorisées, contraintes, format et critères peuvent former un prompt structuré.",
+  },
+  {
+    term: 'Propriété intellectuelle',
+    definition: "Ensemble de droits protégeant notamment les œuvres, créations, marques et inventions. Les conditions varient selon le contenu et son usage.",
+    example: "Avant de diffuser un support créé avec une IA, contrôler les éléments repris, leur origine et les droits de réutilisation.",
+  },
+  {
+    term: 'Pseudonymisation',
+    definition: "Remplacement des informations directement identifiantes par un code ou un alias. Cette opération reste réversible et les données restent personnelles.",
+    example: "Remplacer un nom par un numéro tout en conservant séparément la table de correspondance est une pseudonymisation.",
   },
   {
     term: 'RAG',
     definition: "Méthode qui fournit des documents de référence à un modèle afin d'ancrer sa réponse dans des sources déterminées.",
+    example: "Un assistant répond à partir d'un manuel interne autorisé et doit indiquer les passages utilisés.",
+  },
+  {
+    term: 'Réversibilité',
+    definition: "Possibilité d'arrêter une expérimentation, de revenir au fonctionnement précédent ou de corriger le résultat sans conséquence disproportionnée.",
+    example: "Tester un modèle de courriel en brouillon est plus réversible que déclencher automatiquement son envoi à tous les clients.",
+  },
+  {
+    term: 'RGPD',
+    definition: "Règlement européen encadrant le traitement des données personnelles et renforçant les droits des personnes concernées.",
+    example: "Avant d'utiliser des données de participants, définir l'objectif, limiter les informations nécessaires et respecter les règles de l'organisation.",
+  },
+  {
+    term: 'Source de référence',
+    definition: "Document, page ou ensemble de faits autorisés servant de base au travail et au contrôle d'une information.",
+    example: "Pour préparer une FAQ, utiliser la procédure technique validée plutôt qu'une réponse précédente non vérifiée de l'assistant.",
   },
   {
     term: 'Token',
     definition: "Unité utilisée par un modèle pour découper et traiter un contenu. La taille d'un texte ne correspond donc pas directement à son nombre de tokens.",
+    example: "Une phrase est découpée en plusieurs unités avant d'être analysée par le modèle.",
+  },
+  {
+    term: 'Traçabilité',
+    definition: "Conservation des éléments permettant de comprendre ce qui a été demandé, produit, vérifié, corrigé et validé.",
+    example: "Garder la consigne finale, les deux essais, les sources consultées, la grille de vérification et la date de validation.",
   },
   {
     term: 'Validation humaine',
     definition: "Contrôle réalisé par une personne compétente avant l'utilisation, la prise de décision ou la diffusion d'un résultat produit avec l'IA.",
+    example: "Le responsable vérifie les dates, les sources et les consignes avant d'autoriser l'envoi du message.",
+  },
+  {
+    term: 'Variable',
+    definition: "Élément à remplacer dans un modèle de consigne pour l'adapter à une nouvelle situation.",
+    example: "Dans « Rédige pour [public] », le texte entre crochets doit être remplacé par le public réel.",
+  },
+  {
+    term: 'Version de travail',
+    definition: "Résultat provisoire destiné à être comparé, corrigé et vérifié avant de devenir un livrable final.",
+    example: "La première synthèse produite par l'assistant reste un brouillon tant que les faits n'ont pas été contrôlés.",
+  },
+  {
+    term: 'Workflow',
+    definition: "Enchaînement organisé d'étapes, d'informations d'entrée, de résultats intermédiaires et de validations.",
+    example: "Préparer la source, produire deux versions, comparer, vérifier, corriger puis valider avant diffusion.",
   },
 ];
 
@@ -1344,6 +1477,37 @@ export const courseCatalog = {
     landingPath: '/formation-ia-generative',
     durationLabel: '10 heures accompagnées',
     moduleTitle: 'Votre parcours de 10 heures en cinq modules',
+    onboarding: {
+      title: 'Comment suivre cette formation ?',
+      introduction: "Vous pouvez avancer progressivement : lisez un module, pratiquez avec le formateur, puis enregistrez votre exercice. Il n’est pas nécessaire de tout terminer en une seule fois.",
+      steps: [
+        {
+          title: 'Ouvrez le module prévu pour votre séance',
+          description: "Commencez par l’explication pour débuter, puis suivez la méthode et l’exemple commenté. Le module 1 est ouvert par défaut.",
+        },
+        {
+          title: 'Testez avec un cas professionnel simple',
+          description: "Reproduisez la démonstration avec une tâche que vous connaissez, sans transmettre de donnée personnelle, sensible ou confidentielle.",
+        },
+        {
+          title: 'Réalisez l’exercice du module',
+          description: "Enregistrez un brouillon aussi souvent que nécessaire. Déclarez la réponse terminée uniquement lorsqu’elle respecte les critères d’autoévaluation.",
+        },
+        {
+          title: 'Consultez le retour du formateur',
+          description: "Un exercice peut être validé ou demandé en reprise. Les commentaires restent visibles sous votre réponse et une nouvelle version ne supprime pas l’ancienne.",
+        },
+        {
+          title: 'Terminez par le cas pratique final',
+          description: "Après les cinq modules, préparez les quatre livrables du cas final. Votre évaluation et vos attestations seront disponibles lorsque toutes les preuves requises seront finalisées.",
+        },
+      ],
+      reminders: [
+        'Votre progression compte les exercices déclarés terminés ; un brouillon reste simplement en cours.',
+        'Les onglets Supports et liens, Exercices pratiques et Lexique restent accessibles en bas de la page.',
+        'Si une consigne n’est pas claire, notez votre question et reprenez-la avec le formateur pendant la séance.',
+      ],
+    },
     videoUrl: null,
     quiz: generativeAiQuiz,
     positioningLevels: [
@@ -1422,11 +1586,25 @@ export const courseCatalog = {
     glossary: generativeAiGlossary,
     resources: [
       {
-        title: 'Guide du Prompt Engineering',
-        description: 'Une méthode pour structurer des consignes destinées aux principaux assistants IA.',
-        href: '/assets/creation-prompt-efficace-chatgpt.pdf',
-        action: 'Télécharger le PDF',
-        download: 'creation-prompt-efficace-chatgpt.pdf',
+        title: "Guide pratique de l'IA générative",
+        description: 'Le support pas à pas des cinq modules : choix des usages, consignes, production, vérification et plan d’action.',
+        href: '/assets/guide-pratique-ia-generative-formaprompt.pdf',
+        action: 'Télécharger le guide pratique',
+        download: 'guide-pratique-ia-generative-formaprompt.pdf',
+      },
+      {
+        title: "Cahier d'activités – les cinq exercices",
+        description: 'Un support imprimable pour préparer chaque exercice, analyser ses essais, s’autoévaluer et conserver le retour du formateur.',
+        href: '/assets/cahier-activites-ia-generative-formaprompt.pdf',
+        action: "Télécharger le cahier d'activités",
+        download: 'cahier-activites-ia-generative-formaprompt.pdf',
+      },
+      {
+        title: "Modèle du cas pratique final et plan d'action",
+        description: 'Un dossier imprimable pour réunir les quatre livrables, préparer l’expérimentation à 30 jours et appliquer la grille d’évaluation finale.',
+        href: '/assets/modele-cas-final-plan-action-ia-generative-formaprompt.pdf',
+        action: 'Télécharger le modèle du cas final',
+        download: 'modele-cas-final-plan-action-ia-generative-formaprompt.pdf',
       },
       {
         title: 'Fiche synthétique – aide-mémoire IA',

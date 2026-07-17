@@ -1419,15 +1419,22 @@ export default function AdminDashboard() {
         <span className="admin-dashboard__title-text">Panneau d'Administration</span>
       </h1>
 
-      <div style={{ marginBottom: '1rem' }}>
+      <div className="admin-dashboard__quick-actions" aria-label="Outils du formateur">
         <button
           type="button"
           onClick={() => navigate('/admin/emargements')}
           className="btn btn-primary"
-          style={{ background: '#078966', borderColor: '#078966' }}
         >
           Feuilles d’émargement
         </button>
+        <a
+          href="/assets/guide-formateur-ia-generative-formaprompt.pdf"
+          target="_blank"
+          rel="noreferrer"
+          className="btn admin-dashboard__guide-link"
+        >
+          Guide formateur IA générative (PDF)
+        </a>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>

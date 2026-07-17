@@ -30,7 +30,8 @@
 }
 
 .attestation-error,
-.attestation-warning {
+.attestation-warning,
+.attestation-issued-notice {
   padding: 1rem;
   border-radius: 8px;
 }
@@ -48,6 +49,15 @@
   color: #854d0e;
   background: #fefce8;
   border: 1px solid #facc15;
+}
+
+.attestation-issued-notice {
+  display: grid;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
 }
 
 .attestation-paper {
@@ -402,7 +412,8 @@
   body > #root footer,
   .skip-link,
   .attestation-actions,
-  .attestation-warning {
+  .attestation-warning,
+  .attestation-issued-notice {
     display: none !important;
   }
 

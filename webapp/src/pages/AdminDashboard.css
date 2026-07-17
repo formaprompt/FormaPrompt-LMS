@@ -15,6 +15,35 @@
   overflow-wrap: anywhere;
 }
 
+.admin-dashboard__quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.admin-dashboard__quick-actions .btn {
+  min-height: 44px;
+}
+
+.admin-dashboard__quick-actions .btn-primary {
+  background: #078966;
+  border-color: #078966;
+}
+
+.admin-dashboard__guide-link {
+  color: #f8fafc;
+  background: #243044;
+  border: 1px solid #64748b;
+}
+
+.admin-dashboard__guide-link:hover,
+.admin-dashboard__guide-link:focus-visible {
+  color: #fff;
+  background: #334155;
+  border-color: #94a3b8;
+}
+
 .admin-dashboard__panel {
   color: #e5e7eb;
 }
@@ -1452,6 +1481,14 @@
     align-items: flex-start;
     gap: 0.65rem;
     font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
+  .admin-dashboard__quick-actions {
+    flex-direction: column;
+  }
+
+  .admin-dashboard__quick-actions .btn {
+    width: 100%;
   }
 
   .booking-workspace-tabs {

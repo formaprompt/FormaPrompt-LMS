@@ -442,10 +442,13 @@ export default function CoursePlayer() {
     );
   }
 
-  const filteredGlossary = course.glossary.filter((item) =>
-    item.term.toLowerCase().includes(searchTerm.toLowerCase())
-      || item.definition.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredGlossary = [...course.glossary]
+    .sort((firstItem, secondItem) => firstItem.term.localeCompare(secondItem.term, 'fr', { sensitivity: 'base' }))
+    .filter((item) =>
+      item.term.toLowerCase().includes(searchTerm.toLowerCase())
+        || item.definition.toLowerCase().includes(searchTerm.toLowerCase())
+        || item.example?.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
   const courseProgress = calculateCourseProgress(
     course.exercises,
     Object.entries(savedExerciseAnswers).map(([exerciseId, answer]) => ({
@@ -489,6 +492,42 @@ export default function CoursePlayer() {
         progress={courseProgress}
         loading={exerciseResponsesLoading || exerciseReviewsLoading}
       />
+
+      {course.onboarding && (
+        <section className="course-onboarding" aria-labelledby="course-onboarding-title">
+          <div className="course-onboarding__heading">
+            <span className="course-onboarding__icon" aria-hidden="true"><BookOpen /></span>
+            <div>
+              <p className="course-eyebrow">Vos repères avant de commencer</p>
+              <h2 id="course-onboarding-title">{course.onboarding.title}</h2>
+              <p>{course.onboarding.introduction}</p>
+            </div>
+          </div>
+
+          <ol className="course-onboarding__steps">
+            {course.onboarding.steps.map((step, index) => (
+              <li key={step.title}>
+                <span aria-hidden="true">{index + 1}</span>
+                <div>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="course-onboarding__reminders">
+            <h3>Trois repères utiles</h3>
+            <ul>
+              {course.onboarding.reminders.map((reminder) => <li key={reminder}>{reminder}</li>)}
+            </ul>
+          </div>
+
+          <a className="btn course-onboarding__action" href="#learning-path-title">
+            Commencer par le module 1
+          </a>
+        </section>
+      )}
 
       {course.modules?.length ? (
         <section className="learning-path-section" aria-labelledby="learning-path-title">
@@ -1230,6 +1269,12 @@ export default function CoursePlayer() {
 
           {activeTab === 'glossary' && (
             <div>
+              <div className="glossary-intro">
+                <h2>Comprendre les mots utilisés dans la formation</h2>
+                <p>
+                  Recherchez un terme ou un mot présent dans sa définition. Les exemples montrent comment la notion peut apparaître dans une situation professionnelle.
+                </p>
+              </div>
               <div className="glossary-search-wrapper">
                 <Search className="glossary-search-icon" size={20} aria-hidden="true" />
                 <label className="sr-only" htmlFor="glossary-search">Rechercher dans le lexique</label>
@@ -1243,12 +1288,19 @@ export default function CoursePlayer() {
                 />
               </div>
 
+              <p className="glossary-results" aria-live="polite">
+                {filteredGlossary.length} {filteredGlossary.length > 1 ? 'notions affichées' : 'notion affichée'}
+              </p>
+
               {filteredGlossary.length > 0 ? (
                 <div className="glossary-grid">
                   {filteredGlossary.map((item) => (
                     <article key={item.term} className="glossary-item">
                       <h3 className="glossary-term">{item.term}</h3>
                       <p className="glossary-def">{item.definition}</p>
+                      {item.example && (
+                        <p className="glossary-example"><strong>Exemple :</strong> {item.example}</p>
+                      )}
                     </article>
                   ))}
                 </div>

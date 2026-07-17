@@ -131,6 +131,103 @@
   gap: 1.5rem;
 }
 
+.learner-attestations {
+  margin: 0 0 1.75rem;
+  padding: 1.5rem;
+  color: #172033;
+  background: #f0fdf4;
+  border: 2px solid #22c55e;
+  border-radius: 12px;
+}
+
+.learner-attestations__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.learner-attestations__heading svg {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0.45rem;
+  color: #fff;
+  background: #087f5b;
+  border-radius: 50%;
+}
+
+.learner-attestations__heading p,
+.learner-attestations__heading h2 {
+  margin: 0;
+}
+
+.learner-attestations__heading p {
+  color: #087153;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.learner-attestations__heading h2 {
+  color: #14532d;
+  font-size: 1.45rem;
+}
+
+.learner-attestations__grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.learner-attestation-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+}
+
+.learner-attestation-card h3,
+.learner-attestation-card p {
+  margin: 0;
+}
+
+.learner-attestation-card h3 {
+  color: #14532d;
+  font-size: 1.05rem;
+}
+
+.learner-attestation-card p {
+  margin-top: 0.2rem;
+  color: #334155;
+}
+
+.learner-attestation-card span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.learner-attestation-card__action {
+  flex: 0 0 auto;
+  color: #fff;
+  text-align: center;
+  background: #087f5b;
+  border: 2px solid #087f5b;
+}
+
+.learner-attestation-card__action:hover,
+.learner-attestation-card__action:focus-visible {
+  color: #fff;
+  background: #065f46;
+  border-color: #065f46;
+}
+
 .learner-course-card {
   display: flex;
   min-width: 0;
@@ -168,6 +265,15 @@
 
   .booking-next-step__action {
     grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .learner-attestation-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learner-attestation-card__action {
     width: 100%;
   }
 }

@@ -1,9 +1,23 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/useAuth';
 import './Auth.css';
+
+const AUTH_TIMEOUT_MS = 15_000;
+
+function signInWithTimeout(credentials) {
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error('AUTH_TIMEOUT')), AUTH_TIMEOUT_MS);
+  });
+
+  return Promise.race([
+    supabase.auth.signInWithPassword(credentials),
+    timeout,
+  ]).finally(() => window.clearTimeout(timeoutId));
+}
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,33 +33,39 @@ export default function Login() {
     ? requestedRedirect
     : '/dashboard';
 
-  useEffect(() => {
-    if (user) {
-      navigate(redirectTo, { replace: true });
-    }
-  }, [user, navigate, redirectTo]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error: signInError } = await signInWithTimeout({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError('Identifiants incorrects. Veuillez réessayer.');
-      setLoading(false);
-      return;
-    }
+      if (signInError) {
+        setError('Identifiants incorrects. Veuillez réessayer.');
+        return;
+      }
 
-    if (!data.session) {
-      setError("La connexion n'a pas pu être confirmée. Veuillez réessayer.");
+      if (!data.session) {
+        setError("La connexion n'a pas pu être confirmée. Veuillez réessayer.");
+        return;
+      }
+
+      navigate(redirectTo, { replace: true });
+    } catch (signInError) {
+      console.error('Connexion Supabase impossible :', signInError);
+      setError('Le service de connexion ne répond pas. Veuillez réessayer dans quelques instants.');
+    } finally {
       setLoading(false);
     }
   };
+
+  if (user) {
+    return <Navigate to={redirectTo} replace />;
+  }
 
   return (
     <div className="auth-container">
