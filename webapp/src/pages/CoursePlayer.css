@@ -370,6 +370,10 @@
   border-left: 5px solid #10b981 !important;
 }
 
+.module-video .video-container {
+  margin: 1rem 0 0;
+}
+
 .module-concept-grid,
 .module-before-after-grid,
 .module-recap-grid {

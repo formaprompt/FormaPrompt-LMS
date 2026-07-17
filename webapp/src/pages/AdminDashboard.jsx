@@ -28,6 +28,21 @@ const COURSE_LABELS = {
 
 const COURSE_OPTIONS = Object.entries(COURSE_LABELS).map(([id, label]) => ({ id, label }));
 
+const TRAINER_GUIDES = [
+  {
+    id: 'formation-ia',
+    title: 'Guide formateur IA générative',
+    description: 'Déroulés des trois rythmes de 10 heures, démonstrations, corrections, adaptations et preuves pédagogiques.',
+    href: '/assets/guide-formateur-ia-generative-formaprompt.pdf',
+  },
+  {
+    id: 'formation-prompt-level-1',
+    title: 'Guide formateur Prompt Engineering – Niveau 1',
+    description: 'Déroulés des deux formats de 7 heures, six démonstrations, réponses attendues, corrections et preuves Qualiopi.',
+    href: '/assets/guide-formateur-prompt-engineering-niveau-1-formaprompt.pdf',
+  },
+];
+
 const EXERCISE_REVIEW_STATUS_LABELS = {
   needs_revision: 'À reprendre',
   validated: 'Validé',
@@ -556,9 +571,11 @@ export default function AdminDashboard() {
   
   const requestedTab = searchParams.get('onglet');
   const [activeTab, setActiveTab] = useState(
-    ['bookings', 'corrections'].includes(requestedTab) ? requestedTab : 'overview',
+    ['bookings', 'corrections', 'trainer-guides'].includes(requestedTab) ? requestedTab : 'overview',
   );
   const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState('sessions');
+  const [correctionWorkspaceTab, setCorrectionWorkspaceTab] = useState('exercises');
+  const [correctionSearch, setCorrectionSearch] = useState('');
   const [users, setUsers] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [blogPosts, setBlogPosts] = useState([]);
@@ -823,21 +840,30 @@ export default function AdminDashboard() {
     const exercise = course?.exercises?.find(
       (item) => String(item.id) === String(submission.exercise_id),
     );
+    const learnerEmail = users.find((profile) => profile.id === submission.user_id)?.email || submission.user_id;
+    const positioning = positioningAssessments.find((assessment) => (
+      assessment.user_id === submission.user_id && assessment.course_id === submission.course_id
+    ));
     const history = exerciseReviewHistory.filter((review) => (
       review.user_id === submission.user_id
       && review.course_id === submission.course_id
       && String(review.exercise_id) === String(submission.exercise_id)
     ));
+    const currentSubmissionReview = history.find(
+      (review) => String(review.response_id) === String(submission.id),
+    ) || null;
 
     return {
       ...submission,
-      learnerEmail: users.find((profile) => profile.id === submission.user_id)?.email || submission.user_id,
+      learnerName: positioning?.learner_name || learnerEmail,
+      learnerEmail,
       courseTitle: course?.title || COURSE_LABELS[submission.course_id] || submission.course_id,
       exerciseTitle: exercise?.title || `Exercice ${submission.exercise_id}`,
       history,
       latestReview: history[0] || null,
+      currentSubmissionReview,
     };
-  }), [exerciseReviewHistory, exerciseSubmissions, users]);
+  }), [exerciseReviewHistory, exerciseSubmissions, positioningAssessments, users]);
 
   const finalProjectEvaluations = useMemo(() => finalProjectSubmissions.map((submission) => {
     const course = courseCatalog[submission.course_id];
@@ -890,6 +916,37 @@ export default function AdminDashboard() {
     positioningAssessments,
     users,
   ]);
+
+  const normalizedCorrectionSearch = normalizeAdministrativeSearch(correctionSearch);
+  const pendingExerciseCorrections = useMemo(
+    () => exerciseCorrections.filter((submission) => !submission.currentSubmissionReview),
+    [exerciseCorrections],
+  );
+  const pendingFinalProjectEvaluations = useMemo(
+    () => finalProjectEvaluations.filter((submission) => !submission.currentSubmissionReview),
+    [finalProjectEvaluations],
+  );
+  const visibleExerciseCorrections = useMemo(() => {
+    if (!normalizedCorrectionSearch) return pendingExerciseCorrections;
+    return exerciseCorrections.filter((submission) => normalizeAdministrativeSearch([
+      submission.learnerName,
+      submission.learnerEmail,
+      submission.courseTitle,
+      submission.exerciseTitle,
+      submission.response_text,
+    ].join(' ')).includes(normalizedCorrectionSearch));
+  }, [exerciseCorrections, normalizedCorrectionSearch, pendingExerciseCorrections]);
+  const visibleFinalProjectEvaluations = useMemo(() => {
+    if (!normalizedCorrectionSearch) return pendingFinalProjectEvaluations;
+    return finalProjectEvaluations.filter((submission) => normalizeAdministrativeSearch([
+      submission.learnerName,
+      submission.learnerEmail,
+      submission.courseTitle,
+      submission.learner_note,
+      ...submission.deliverables.map((deliverable) => deliverable.value),
+    ].join(' ')).includes(normalizedCorrectionSearch));
+  }, [finalProjectEvaluations, normalizedCorrectionSearch, pendingFinalProjectEvaluations]);
+  const pendingPedagogicalWorkCount = pendingExerciseCorrections.length + pendingFinalProjectEvaluations.length;
 
   if (!user || (role !== 'admin' && role !== 'employee')) return null;
 
@@ -1427,14 +1484,6 @@ export default function AdminDashboard() {
         >
           Feuilles d’émargement
         </button>
-        <a
-          href="/assets/guide-formateur-ia-generative-formaprompt.pdf"
-          target="_blank"
-          rel="noreferrer"
-          className="btn admin-dashboard__guide-link"
-        >
-          Guide formateur IA générative (PDF)
-        </a>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
@@ -1493,9 +1542,16 @@ export default function AdminDashboard() {
           style={activeTab !== 'corrections' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Corrections & évaluations
-          {(exerciseCorrections.length + finalProjectEvaluations.length) > 0
-            ? ` (${exerciseCorrections.length + finalProjectEvaluations.length})`
+          {pendingPedagogicalWorkCount > 0
+            ? ` (${pendingPedagogicalWorkCount})`
             : ''}
+        </button>
+        <button
+          onClick={() => setActiveTab('trainer-guides')}
+          className={`btn ${activeTab === 'trainer-guides' ? 'btn-primary' : ''}`}
+          style={activeTab !== 'trainer-guides' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
+        >
+          Guides formateur ({TRAINER_GUIDES.length})
         </button>
         <button 
           onClick={() => setActiveTab('feedback')} 
@@ -1542,6 +1598,40 @@ export default function AdminDashboard() {
                   </p>
                 </div>
               </div>
+            )}
+
+            {activeTab === 'trainer-guides' && (
+              <section className="trainer-guides-section" aria-labelledby="trainer-guides-title">
+                <header className="trainer-guides-heading">
+                  <div>
+                    <p className="trainer-guides-kicker">Documents internes</p>
+                    <h2 id="trainer-guides-title">Guides formateur</h2>
+                  </div>
+                  <span>{TRAINER_GUIDES.length} guides disponibles</span>
+                </header>
+                <p className="trainer-guides-intro">
+                  Retrouvez ici les déroulés, réponses attendues, adaptations et preuves à conserver pour chaque formation.
+                  Ces documents ne doivent contenir aucune donnée personnelle d’apprenant.
+                </p>
+                <div className="trainer-guides-grid">
+                  {TRAINER_GUIDES.map((guide) => (
+                    <article className="trainer-guide-card" key={guide.id}>
+                      <div>
+                        <h3>{guide.title}</h3>
+                        <p>{guide.description}</p>
+                      </div>
+                      <a
+                        href={guide.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn admin-dashboard__guide-link"
+                      >
+                        Ouvrir le guide PDF
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </section>
             )}
 
             {activeTab === 'users' && (
@@ -1999,8 +2089,65 @@ export default function AdminDashboard() {
             )}
 
             {activeTab === 'corrections' && (
-              <section className="exercise-corrections" aria-labelledby="exercise-corrections-title">
-                <section className="final-project-evaluations" aria-labelledby="final-project-evaluations-title">
+              <section className="exercise-corrections" aria-labelledby="correction-workspace-title">
+                <div className="booking-workspace-heading">
+                  <h2 id="correction-workspace-title">Corrections et évaluations</h2>
+                  <p>
+                    Traitez les nouvelles remises. Les éléments déjà corrigés sont masqués et restent accessibles par
+                    la recherche.
+                  </p>
+                </div>
+
+                <div className="booking-workspace-tabs correction-workspace-tabs" role="tablist" aria-label="Corrections et évaluations pédagogiques">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={correctionWorkspaceTab === 'exercises'}
+                    aria-controls="exercise-corrections-panel"
+                    className={correctionWorkspaceTab === 'exercises' ? 'is-active' : ''}
+                    onClick={() => setCorrectionWorkspaceTab('exercises')}
+                  >
+                    Corrections des exercices ({pendingExerciseCorrections.length})
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={correctionWorkspaceTab === 'evaluations'}
+                    aria-controls="final-project-evaluations-panel"
+                    className={correctionWorkspaceTab === 'evaluations' ? 'is-active' : ''}
+                    onClick={() => setCorrectionWorkspaceTab('evaluations')}
+                  >
+                    Évaluations finales ({pendingFinalProjectEvaluations.length})
+                  </button>
+                </div>
+
+                <div className="correction-workspace-search">
+                  <label htmlFor="correction-workspace-search">
+                    Rechercher dans les {correctionWorkspaceTab === 'exercises' ? 'corrections' : 'évaluations'}
+                    <input
+                      id="correction-workspace-search"
+                      type="search"
+                      placeholder={correctionWorkspaceTab === 'exercises'
+                        ? 'Nom, e-mail, formation ou exercice…'
+                        : 'Nom, e-mail ou formation…'}
+                      value={correctionSearch}
+                      onChange={(event) => setCorrectionSearch(event.target.value)}
+                    />
+                  </label>
+                  <div className="correction-workspace-search__status" role="status">
+                    <p>
+                      {normalizedCorrectionSearch
+                        ? `La recherche inclut les éléments à traiter et ceux déjà terminés.`
+                        : 'Seuls les éléments à traiter sont affichés. Utilisez la recherche pour retrouver un historique.'}
+                    </p>
+                    {normalizedCorrectionSearch && (
+                      <button type="button" onClick={() => setCorrectionSearch('')}>Effacer la recherche</button>
+                    )}
+                  </div>
+                </div>
+
+                {correctionWorkspaceTab === 'evaluations' && (
+                <section id="final-project-evaluations-panel" role="tabpanel" className="final-project-evaluations" aria-labelledby="final-project-evaluations-title">
                   <div className="exercise-corrections-heading">
                     <div>
                       <h2 id="final-project-evaluations-title">Évaluations finales</h2>
@@ -2009,7 +2156,12 @@ export default function AdminDashboard() {
                         automatiquement : les quatre critères doivent atteindre au minimum « Acquis ».
                       </p>
                     </div>
-                    <span>{finalProjectEvaluations.length} remise{finalProjectEvaluations.length > 1 ? 's' : ''} à suivre</span>
+                    <span>
+                      {visibleFinalProjectEvaluations.length} remise{visibleFinalProjectEvaluations.length !== 1 ? 's' : ''}{' '}
+                      {normalizedCorrectionSearch
+                        ? `trouvée${visibleFinalProjectEvaluations.length !== 1 ? 's' : ''}`
+                        : 'à traiter'}
+                    </span>
                   </div>
 
                   {!finalProjectReviewsAvailable ? (
@@ -2019,14 +2171,18 @@ export default function AdminDashboard() {
                     </div>
                   ) : finalProjectReviewsError ? (
                     <div className="exercise-corrections-notice is-error" role="alert">{finalProjectReviewsError}</div>
-                  ) : finalProjectEvaluations.length === 0 ? (
+                  ) : visibleFinalProjectEvaluations.length === 0 ? (
                     <div className="exercise-corrections-empty">
-                      <h3>Aucune remise finale à évaluer</h3>
-                      <p>Une remise apparaît ici lorsque l’apprenant transmet ses quatre livrables au formateur.</p>
+                      <h3>{normalizedCorrectionSearch ? 'Aucune évaluation trouvée' : 'Toutes les évaluations sont à jour'}</h3>
+                      <p>
+                        {normalizedCorrectionSearch
+                          ? 'Modifiez la recherche pour retrouver une autre remise.'
+                          : 'Une nouvelle remise apparaîtra ici automatiquement. Les évaluations terminées restent accessibles par recherche.'}
+                      </p>
                     </div>
                   ) : (
                     <div className="final-project-evaluation-list">
-                      {finalProjectEvaluations.map((submission) => {
+                      {visibleFinalProjectEvaluations.map((submission) => {
                         const draft = finalProjectReviewDrafts[submission.id] || {};
                         const feedback = finalProjectReviewFeedbacks[submission.id];
                         const isSaving = finalProjectReviewSaving === String(submission.id);
@@ -2039,7 +2195,8 @@ export default function AdminDashboard() {
                           <article key={submission.id} className="final-project-evaluation-card">
                             <header className="exercise-correction-card__header">
                               <div>
-                                <p className="exercise-correction-card__learner">{submission.learnerEmail}</p>
+                                <p className="exercise-correction-card__learner">{submission.learnerName}</p>
+                                {submission.learnerName !== submission.learnerEmail && <p>{submission.learnerEmail}</p>}
                                 <h3>{submission.courseTitle}</h3>
                                 <p>Cas pratique final</p>
                               </div>
@@ -2359,7 +2516,10 @@ export default function AdminDashboard() {
                     N’ouvrez que les liens volontairement transmis et ne recopiez aucune donnée sensible inutile.
                   </p>
                 </section>
+                )}
 
+                {correctionWorkspaceTab === 'exercises' && (
+                <section id="exercise-corrections-panel" role="tabpanel" className="exercise-corrections-panel" aria-labelledby="exercise-corrections-title">
                 <div className="exercise-corrections-heading">
                   <div>
                     <h2 id="exercise-corrections-title">Corrections des exercices terminés</h2>
@@ -2368,7 +2528,12 @@ export default function AdminDashboard() {
                       attendues, puis validez l’exercice ou demandez une reprise.
                     </p>
                   </div>
-                  <span>{exerciseCorrections.length} réponse{exerciseCorrections.length > 1 ? 's' : ''} à suivre</span>
+                  <span>
+                    {visibleExerciseCorrections.length} réponse{visibleExerciseCorrections.length !== 1 ? 's' : ''}{' '}
+                    {normalizedCorrectionSearch
+                      ? `trouvée${visibleExerciseCorrections.length !== 1 ? 's' : ''}`
+                      : 'à traiter'}
+                  </span>
                 </div>
 
                 {!correctionsAvailable ? (
@@ -2378,14 +2543,18 @@ export default function AdminDashboard() {
                   </div>
                 ) : correctionsError ? (
                   <div className="exercise-corrections-notice is-error" role="alert">{correctionsError}</div>
-                ) : exerciseCorrections.length === 0 ? (
+                ) : visibleExerciseCorrections.length === 0 ? (
                   <div className="exercise-corrections-empty">
-                    <h3>Aucune réponse terminée à corriger</h3>
-                    <p>Les brouillons restent privés. Une réponse apparaît ici lorsque l’apprenant la déclare terminée.</p>
+                    <h3>{normalizedCorrectionSearch ? 'Aucune correction trouvée' : 'Toutes les corrections sont à jour'}</h3>
+                    <p>
+                      {normalizedCorrectionSearch
+                        ? 'Modifiez la recherche pour retrouver une autre réponse.'
+                        : 'Une nouvelle réponse terminée apparaîtra ici automatiquement. Les corrections réalisées restent accessibles par recherche.'}
+                    </p>
                   </div>
                 ) : (
                   <div className="exercise-corrections-list">
-                    {exerciseCorrections.map((submission) => {
+                    {visibleExerciseCorrections.map((submission) => {
                       const draft = correctionDrafts[submission.id] || {};
                       const feedback = correctionFeedbacks[submission.id];
                       const isSaving = correctionSaving === String(submission.id);
@@ -2394,14 +2563,15 @@ export default function AdminDashboard() {
                         <article key={submission.id} className="exercise-correction-card">
                           <header className="exercise-correction-card__header">
                             <div>
-                              <p className="exercise-correction-card__learner">{submission.learnerEmail}</p>
+                              <p className="exercise-correction-card__learner">{submission.learnerName}</p>
+                              {submission.learnerName !== submission.learnerEmail && <p>{submission.learnerEmail}</p>}
                               <h3>{submission.exerciseTitle}</h3>
                               <p>{submission.courseTitle}</p>
                             </div>
                             <div className="exercise-correction-card__status">
-                              {submission.latestReview ? (
-                                <span className={`is-${submission.latestReview.review_status}`}>
-                                  {EXERCISE_REVIEW_STATUS_LABELS[submission.latestReview.review_status]}
+                              {submission.currentSubmissionReview ? (
+                                <span className={`is-${submission.currentSubmissionReview.review_status}`}>
+                                  {EXERCISE_REVIEW_STATUS_LABELS[submission.currentSubmissionReview.review_status]}
                                 </span>
                               ) : (
                                 <span className="is-pending">À corriger</span>
@@ -2506,6 +2676,8 @@ export default function AdminDashboard() {
                   Ces réponses et appréciations servent exclusivement au suivi pédagogique. Elles doivent être conservées
                   pendant la durée définie par FormaPrompt, puis supprimées ou anonymisées lorsqu’elles ne sont plus utiles.
                 </p>
+                </section>
+                )}
               </section>
             )}
 

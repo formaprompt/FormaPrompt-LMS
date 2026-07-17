@@ -44,6 +44,85 @@
   border-color: #94a3b8;
 }
 
+.trainer-guides-section {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.trainer-guides-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.trainer-guides-heading h2,
+.trainer-guides-kicker,
+.trainer-guides-intro,
+.trainer-guide-card h3,
+.trainer-guide-card p {
+  margin: 0;
+}
+
+.trainer-guides-kicker {
+  color: #6ee7b7;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.trainer-guides-heading h2 {
+  margin-top: 0.3rem;
+}
+
+.trainer-guides-heading > span {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.75rem;
+  color: #d1fae5;
+  background: #064e3b;
+  border: 1px solid #34d399;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.trainer-guides-intro {
+  max-width: 850px;
+  color: #cbd5e1;
+  line-height: 1.65;
+}
+
+.trainer-guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.trainer-guide-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  background: #111827;
+  border: 1px solid #475569;
+  border-radius: 12px;
+}
+
+.trainer-guide-card h3 {
+  margin-bottom: 0.5rem;
+}
+
+.trainer-guide-card p {
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.trainer-guide-card .btn {
+  flex: 0 0 auto;
+  min-height: 44px;
+}
+
 .admin-dashboard__panel {
   color: #e5e7eb;
 }
@@ -837,6 +916,75 @@
   gap: 1.25rem;
 }
 
+.exercise-corrections-panel {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.correction-workspace-search {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: #172033;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+.correction-workspace-search label {
+  display: grid;
+  gap: 0.4rem;
+  color: #172033;
+  font-weight: 800;
+}
+
+.admin-dashboard__panel .correction-workspace-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  color: #111827;
+  background: #fff;
+  border: 1px solid #64748b;
+  border-radius: 7px;
+  font: inherit;
+}
+
+.admin-dashboard__panel .correction-workspace-search input:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 2px;
+}
+
+.correction-workspace-search__status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.correction-workspace-search__status p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.correction-workspace-search__status button {
+  flex: 0 0 auto;
+  padding: 0;
+  color: #0f766e;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.correction-workspace-search__status button:hover,
+.correction-workspace-search__status button:focus-visible {
+  color: #134e4a;
+  text-decoration-thickness: 2px;
+}
+
 .exercise-corrections-heading {
   display: flex;
   align-items: flex-start;
@@ -1491,6 +1639,16 @@
     width: 100%;
   }
 
+  .trainer-guides-heading,
+  .trainer-guide-card {
+    flex-direction: column;
+  }
+
+  .trainer-guides-heading > span,
+  .trainer-guide-card .btn {
+    width: 100%;
+  }
+
   .booking-workspace-tabs {
     grid-template-columns: 1fr;
   }
@@ -1551,7 +1709,8 @@
 
   .exercise-corrections-heading,
   .exercise-correction-card__header,
-  .exercise-correction-form__footer {
+  .exercise-correction-form__footer,
+  .correction-workspace-search__status {
     align-items: stretch;
     flex-direction: column;
   }

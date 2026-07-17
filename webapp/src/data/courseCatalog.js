@@ -1252,19 +1252,701 @@ const aiActQuiz = [
   },
 ];
 
+const promptLevelOneModules = [
+  {
+    id: 'cadrer-besoin',
+    number: 1,
+    duration: '1 h 15',
+    title: 'Cadrer le besoin et construire un prompt professionnel',
+    summary: 'Transformer une demande vague en consigne claire, contrôlable et adaptée à une situation professionnelle.',
+    goals: [
+      'Définir le résultat concret attendu avant de rédiger le prompt',
+      'Sélectionner le contexte utile sans transmettre de donnée inappropriée',
+      'Formuler des contraintes, un format et des critères de réussite observables',
+    ],
+    keyPoints: [
+      'Un prompt professionnel est une consigne de travail, pas une formule magique',
+      'Objectif, contexte, public, informations autorisées, contraintes et format attendu',
+      'Critères de réussite et questions de clarification avant la production',
+    ],
+    activity: 'Structurer une demande d’e-mail professionnel, la tester puis repérer les informations qui doivent encore être précisées.',
+    exerciseId: 1,
+    lesson: {
+      introduction: [
+        "Un prompt professionnel décrit le travail à réaliser et les conditions qui permettront de vérifier le résultat. Une phrase comme « Rédige un e-mail » laisse trop de décisions à l’IA : elle ne connaît ni votre objectif, ni votre destinataire, ni les informations qui doivent absolument apparaître.",
+        "La qualité ne dépend pas du nombre de mots ou d’une formule secrète. Elle repose sur un besoin bien cadré, des informations autorisées et des critères simples. Le premier résultat reste une proposition à relire, tester et améliorer avant toute utilisation.",
+      ],
+      video: {
+        title: 'Capsule : rédiger un bon prompt',
+        description: 'Cette courte démonstration introduit les éléments essentiels d’une consigne structurée. Utilisez ensuite la méthode ci-dessous pour les appliquer à votre propre situation.',
+        url: promptEngineeringIntroVideoUrl,
+      },
+      concepts: [
+        {
+          title: 'Besoin professionnel',
+          description: 'La situation réelle à traiter, le résultat recherché et l’action qui sera réalisée après la réponse.',
+        },
+        {
+          title: 'Prompt professionnel',
+          description: 'Une consigne qui précise le travail, les informations utiles, les limites et la forme du résultat attendu.',
+        },
+        {
+          title: 'Critère de réussite',
+          description: 'Un point observable qui permet de contrôler le résultat, par exemple la présence d’une date, un ton adapté ou une longueur maximale.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Nommer le résultat attendu',
+          description: 'Commencez par un verbe d’action et un livrable précis : rédiger un e-mail, préparer un plan ou produire un tableau comparatif.',
+        },
+        {
+          title: '2. Décrire le contexte et le public',
+          description: 'Précisez la situation, le destinataire, son niveau de connaissance et l’action attendue après la lecture.',
+        },
+        {
+          title: '3. Sélectionner les informations autorisées',
+          description: 'Transmettez uniquement les faits nécessaires et retirez les données personnelles, sensibles ou confidentielles qui ne sont pas indispensables.',
+        },
+        {
+          title: '4. Fixer les contraintes et le format',
+          description: 'Indiquez le ton, la longueur, la structure, les éléments obligatoires et ceux qui doivent être évités.',
+        },
+        {
+          title: '5. Définir les contrôles',
+          description: 'Ajoutez des critères de réussite et demandez à l’IA de poser des questions lorsqu’une information essentielle manque.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : préparer un e-mail de confirmation',
+        introduction: 'Une assistante doit confirmer un rendez-vous à un client. Elle construit sa consigne progressivement, sans transmettre de donnée personnelle inutile.',
+        columns: ['Élément', 'Information donnée', 'Utilité pour le résultat'],
+        rows: [
+          [
+            'Objectif',
+            'Confirmer un rendez-vous et obtenir une réponse en cas d’indisponibilité.',
+            'Le message poursuit une action précise au lieu de produire un texte générique.',
+          ],
+          [
+            'Public et contexte',
+            'Client déjà informé oralement ; ton professionnel, cordial et direct.',
+            'Le vocabulaire et le niveau de détail peuvent être adaptés au destinataire.',
+          ],
+          [
+            'Contraintes et format',
+            'Objet explicite, trois paragraphes courts, date fictive, appel à l’action final.',
+            'La réponse possède une structure directement contrôlable.',
+          ],
+          [
+            'Contrôle',
+            'Ne rien inventer et poser jusqu’à trois questions si une information manque.',
+            'Les éléments absents sont signalés au lieu d’être complétés de façon hasardeuse.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : passer d’une demande vague à une consigne exploitable',
+        unsafeRequest: '« Écris-moi un mail professionnel pour mon client. »',
+        saferRequest: '« Rédige un e-mail destiné à un client pour confirmer un rendez-vous fixé au 22 septembre à 14 h. Utilise un ton cordial et direct, un objet explicite et trois paragraphes courts. Termine en demandant au destinataire de signaler toute indisponibilité. N’ajoute aucune information absente et pose-moi une question si un élément indispensable manque. »',
+        analysis: [
+          'Le résultat attendu et l’action demandée au destinataire sont explicites.',
+          'Le ton, la structure et la longueur peuvent être vérifiés facilement.',
+          'La consigne interdit l’invention et prévoit une clarification en cas de manque.',
+        ],
+      },
+      commonMistakes: [
+        'Commencer par attribuer un rôle à l’IA sans définir le résultat concret attendu.',
+        'Ajouter beaucoup de contexte sans distinguer les informations utiles des données à protéger.',
+        'Demander un résultat « professionnel » sans préciser le public, le ton ou le format.',
+        'Accepter la première réponse sans la comparer à des critères définis à l’avance.',
+      ],
+      takeaways: [
+        'Un prompt professionnel part du besoin et du livrable attendu.',
+        'Le contexte doit être utile, autorisé et limité au strict nécessaire.',
+        'Les contraintes et critères rendent le résultat vérifiable.',
+        'Une question de clarification vaut mieux qu’une information inventée.',
+      ],
+    },
+  },
+  {
+    id: 'ancrer-source',
+    number: 2,
+    duration: '1 h 15',
+    title: 'Ancrer la réponse dans une source et produire une synthèse vérifiable',
+    summary: 'Obtenir une synthèse fidèle sans laisser l’IA inventer, déduire ou masquer les informations absentes.',
+    goals: [
+      'Délimiter clairement la source que l’IA est autorisée à utiliser',
+      'Distinguer les faits, les décisions, les actions et les points à confirmer',
+      'Comparer la synthèse au document d’origine avant de l’utiliser',
+    ],
+    keyPoints: [
+      'Une réponse fluide ne garantit ni l’exactitude ni l’exhaustivité',
+      'La source doit être identifiable, autorisée et séparée des consignes',
+      'Les informations absentes doivent être signalées plutôt que complétées',
+    ],
+    activity: 'Produire la synthèse structurée d’une note fictive ou non confidentielle, puis contrôler chaque information importante dans la source.',
+    exerciseId: 2,
+    lesson: {
+      introduction: [
+        "Une IA peut résumer rapidement un document, mais elle peut aussi simplifier une réserve importante, confondre une proposition avec une décision ou compléter une information manquante. Une synthèse agréable à lire n’est donc pas nécessairement fidèle.",
+        "Pour garder le contrôle, le prompt doit délimiter la source autorisée, préciser les catégories attendues et imposer une règle simple : ce qui n’est pas présent dans le document doit être signalé comme absent. La synthèse reste ensuite à comparer au texte d’origine.",
+      ],
+      concepts: [
+        {
+          title: 'Source de référence',
+          description: 'Le document autorisé qui contient les informations utilisables. Il doit être clairement séparé des consignes données à l’IA.',
+        },
+        {
+          title: 'Fidélité',
+          description: 'Le résultat conserve le sens, les réserves et les informations importantes sans ajouter ni transformer un élément de la source.',
+        },
+        {
+          title: 'Point à confirmer',
+          description: 'Une information absente, ambiguë ou incomplète qui doit être vérifiée par une personne au lieu d’être déduite par l’IA.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Définir l’usage de la synthèse',
+          description: 'Précisez le destinataire, ce qu’il doit comprendre et la décision ou l’action que la synthèse doit préparer.',
+        },
+        {
+          title: '2. Préparer une source autorisée',
+          description: 'Utilisez un document fictif ou non confidentiel, retirez les données inutiles et placez le texte entre des balises clairement nommées.',
+        },
+        {
+          title: '3. Définir les catégories attendues',
+          description: 'Demandez de séparer les faits, les décisions, les actions, les responsables, les échéances et les points à confirmer.',
+        },
+        {
+          title: '4. Interdire les compléments inventés',
+          description: 'Exigez la mention « non précisé » lorsqu’une information manque et demandez que les ambiguïtés restent visibles.',
+        },
+        {
+          title: '5. Vérifier dans le document',
+          description: 'Retrouvez chaque fait, décision et échéance dans la source, puis corrigez les omissions ou reformulations qui changent le sens.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : contrôler une synthèse de réunion',
+        introduction: 'À partir d’une note fictive, le formateur montre comment classer chaque information et repérer ce que la source ne permet pas d’affirmer.',
+        columns: ['Élément de la source', 'Classement attendu', 'Contrôle à effectuer'],
+        rows: [
+          [
+            '« La réunion a eu lieu le 12 septembre. »',
+            'Fait établi.',
+            'Conserver la date exacte sans en déduire la durée ou les participants.',
+          ],
+          [
+            '« L’équipe valide l’envoi d’une version simplifiée. »',
+            'Décision.',
+            'Ne pas transformer cette décision en simple proposition.',
+          ],
+          [
+            '« Préparer la nouvelle version avant le 18 septembre. »',
+            'Action avec échéance.',
+            'Indiquer que le responsable n’est pas précisé dans la source.',
+          ],
+          [
+            'Aucune information sur le budget.',
+            'Point à confirmer.',
+            'Écrire « budget non précisé » au lieu de proposer un montant.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : empêcher l’ajout d’informations absentes',
+        unsafeRequest: '« Résume ce document et complète les informations qui manquent pour que ce soit professionnel. »',
+        saferRequest: '« Utilise uniquement le texte placé entre les balises <source>. Sépare les faits, les décisions, les actions et les points à confirmer. N’ajoute aucune information. Lorsqu’un responsable, une date ou un montant manque, écris “non précisé”. Termine par trois vérifications à effectuer dans le document d’origine. »',
+        analysis: [
+          'La source autorisée et les catégories de sortie sont clairement définies.',
+          'Les informations absentes restent visibles au lieu d’être complétées.',
+          'La vérification humaine dans le document d’origine est prévue avant utilisation.',
+        ],
+      },
+      commonMistakes: [
+        'Demander un résumé sans préciser son destinataire ni son usage.',
+        'Mélanger la source, les consignes et des commentaires personnels dans un même bloc.',
+        'Supposer qu’un texte plus court conserve automatiquement toutes les réserves importantes.',
+        'Contrôler uniquement le style sans retrouver les faits, décisions et échéances dans la source.',
+      ],
+      takeaways: [
+        'Une synthèse fiable utilise une source clairement délimitée et autorisée.',
+        'Les faits, décisions et actions ne doivent pas être confondus.',
+        'Une information absente doit rester absente ou être signalée comme à confirmer.',
+        'La validation finale consiste à comparer le résultat au document d’origine.',
+      ],
+    },
+  },
+  {
+    id: 'adapter-publics',
+    number: 3,
+    duration: '1 h 30',
+    title: 'Adapter un contenu à différents publics sans perdre le sens',
+    summary: 'Faire varier le vocabulaire, les exemples et le niveau de détail tout en conservant les informations essentielles.',
+    goals: [
+      'Décrire les besoins et le niveau de connaissance de chaque public',
+      'Adapter la forme d’un contenu sans modifier son message principal',
+      'Comparer deux versions à partir de critères explicites',
+    ],
+    keyPoints: [
+      'Adapter ne signifie ni appauvrir ni ajouter des informations absentes',
+      'Le vocabulaire, les exemples, la longueur et l’action attendue dépendent du public',
+      'Les faits, les réserves et les messages essentiels doivent rester stables',
+    ],
+    activity: 'Produire deux versions d’une même explication pour un débutant et un professionnel, puis comparer les choix de vocabulaire, d’exemples et de profondeur.',
+    exerciseId: 3,
+    lesson: {
+      introduction: [
+        "Un contenu utile à une personne débutante ne se présente pas comme un contenu destiné à un professionnel expérimenté. Le premier public a besoin de repères, de mots expliqués et d’un exemple concret ; le second peut attendre davantage de précision, de conditions et de vocabulaire métier.",
+        "L’adaptation ne doit toutefois pas changer le sens. Les faits, les limites et les informations importantes restent identiques. Le prompt sert à faire varier la forme, le niveau de détail et les exemples, puis la comparaison des deux versions permet de vérifier que le message principal a été conservé.",
+      ],
+      concepts: [
+        {
+          title: 'Public cible',
+          description: 'Le groupe précis qui recevra le contenu, avec son niveau de connaissance, ses besoins et l’action attendue après la lecture.',
+        },
+        {
+          title: 'Niveau de langage',
+          description: 'Le choix des mots, la longueur des phrases et la quantité de vocabulaire technique adaptés au lecteur.',
+        },
+        {
+          title: 'Message invariant',
+          description: 'L’idée, le fait ou la règle qui doit rester identique dans toutes les versions, même lorsque la présentation change.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Définir le message à conserver',
+          description: 'Identifiez les faits, les réserves et les trois idées qui doivent apparaître dans toutes les versions.',
+        },
+        {
+          title: '2. Décrire chaque public',
+          description: 'Précisez son niveau de connaissance, son contexte, son besoin et ce qu’il devra comprendre ou savoir faire.',
+        },
+        {
+          title: '3. Choisir les adaptations utiles',
+          description: 'Décidez du vocabulaire, de la longueur, du type d’exemple et du niveau de détail adaptés à chaque public.',
+        },
+        {
+          title: '4. Produire les deux versions',
+          description: 'Demandez une structure comparable afin de pouvoir observer facilement les différences et les informations conservées.',
+        },
+        {
+          title: '5. Comparer avec des critères',
+          description: 'Vérifiez la fidélité du message, la clarté, l’utilité de l’exemple et l’adaptation du vocabulaire pour chaque public.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : expliquer l’authentification à deux facteurs',
+        introduction: 'Le même sujet est présenté à une personne qui découvre l’outil et à un professionnel chargé d’accompagner son déploiement.',
+        columns: ['Dimension', 'Public débutant', 'Public professionnel'],
+        rows: [
+          [
+            'Objectif',
+            'Comprendre pourquoi une seconde vérification protège le compte.',
+            'Expliquer le principe et préparer les conditions d’accompagnement des utilisateurs.',
+          ],
+          [
+            'Vocabulaire',
+            '« Deuxième preuve » et exemple du code reçu sur un appareil.',
+            '« Facteur de possession », modalités d’activation et solutions de récupération.',
+          ],
+          [
+            'Exemple',
+            'Connexion à une messagerie depuis un nouvel ordinateur.',
+            'Déploiement auprès d’une équipe avec procédure en cas de perte du second facteur.',
+          ],
+          [
+            'Vérification',
+            'Le lecteur peut expliquer l’intérêt avec ses propres mots.',
+            'Le lecteur peut identifier les étapes, les risques et les points d’assistance.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : préciser les différences attendues entre deux versions',
+        unsafeRequest: '« Explique l’authentification à deux facteurs en version simple et en version experte. »',
+        saferRequest: '« Explique l’authentification à deux facteurs à deux publics : une personne débutante qui doit l’activer et un responsable qui doit accompagner son équipe. Conserve dans les deux versions le principe, le bénéfice et la limite principale. Adapte le vocabulaire, l’exemple et le niveau de détail. Termine chaque version par une question permettant de vérifier la compréhension. »',
+        analysis: [
+          'Les deux publics et les actions qu’ils doivent réaliser sont précisés.',
+          'Le message invariant empêche de supprimer une information essentielle.',
+          'Les éléments à adapter et la vérification finale sont observables.',
+        ],
+      },
+      commonMistakes: [
+        'Décrire un public uniquement par son métier sans préciser son niveau ni son besoin.',
+        'Confondre langage accessible et suppression des limites ou réserves importantes.',
+        'Ajouter des détails techniques non présents dans la source pour rendre la version professionnelle plus longue.',
+        'Comparer seulement la longueur des versions sans vérifier le sens, l’exemple et l’action attendue.',
+      ],
+      takeaways: [
+        'Une adaptation réussie commence par un public et une action attendue clairement définis.',
+        'La forme varie, mais les faits, limites et messages essentiels restent stables.',
+        'Un exemple pertinent dépend du contexte réel du lecteur.',
+        'La comparaison des versions permet de vérifier la fidélité autant que la clarté.',
+      ],
+    },
+  },
+  {
+    id: 'concevoir-activite-pedagogique',
+    number: 4,
+    duration: '1 h',
+    title: 'Concevoir une activité pédagogique observable et adaptable',
+    summary: 'Utiliser l’IA pour préparer une activité cohérente tout en laissant au formateur la validation du contenu, de la durée et des adaptations.',
+    goals: [
+      'Formuler un objectif pédagogique observable adapté au public et à la durée',
+      'Aligner les consignes, la production attendue, la correction et les critères d’évaluation',
+      'Contrôler la faisabilité, les sources et les adaptations proposées avant l’animation',
+    ],
+    keyPoints: [
+      'Une activité utile fait agir l’apprenant et produit une trace que le formateur peut observer',
+      'L’objectif, l’activité, la production attendue et l’évaluation doivent mesurer la même compétence',
+      'L’IA peut proposer une trame, mais le formateur valide le contenu, le rythme, la correction et l’accessibilité',
+    ],
+    activity: 'Concevoir une activité courte sur une compétence maîtrisée, tester son alignement pédagogique puis corriger un point de faisabilité ou d’évaluation.',
+    exerciseId: 4,
+    lesson: {
+      introduction: [
+        "Une ressource pédagogique ne se résume pas à une fiche bien présentée. Elle doit aider un public précis à réaliser une action, dans un temps donné, et permettre au formateur d’observer ce qui a été compris ou produit.",
+        "Une IA peut accélérer la préparation d’une activité, mais elle peut proposer un déroulé trop long, supposer des prérequis inexistants ou inventer une correction. Le formateur reste responsable des contenus, des sources, de la faisabilité et des adaptations nécessaires pour les apprenants.",
+      ],
+      concepts: [
+        {
+          title: 'Objectif observable',
+          description: 'Une compétence formulée avec une action que l’apprenant devra réaliser et que le formateur pourra constater dans une production.',
+        },
+        {
+          title: 'Alignement pédagogique',
+          description: 'La cohérence entre l’objectif annoncé, l’activité demandée, la production attendue, la correction et les critères d’évaluation.',
+        },
+        {
+          title: 'Preuve d’apprentissage',
+          description: 'La trace concrète produite pendant l’activité, par exemple un document annoté, une procédure expliquée ou une réalisation contrôlable.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Cadrer la situation de formation',
+          description: 'Précisez le public, ses prérequis, la modalité, la durée disponible, les outils autorisés et les besoins d’adaptation déjà connus.',
+        },
+        {
+          title: '2. Formuler une action observable',
+          description: 'Décrivez ce que l’apprenant devra savoir faire à la fin avec un verbe d’action, des conditions de réalisation et un résultat vérifiable.',
+        },
+        {
+          title: '3. Concevoir une production cohérente',
+          description: 'Demandez une activité dans laquelle l’apprenant agit réellement et remet une trace directement liée à l’objectif.',
+        },
+        {
+          title: '4. Préparer la correction et les critères',
+          description: 'Définissez les éléments attendus, les erreurs acceptables et quatre critères permettant au formateur de justifier son appréciation.',
+        },
+        {
+          title: '5. Simuler puis valider le déroulé',
+          description: 'Vérifiez les temps, les consignes, le matériel, les sources et les adaptations avant d’utiliser la ressource avec un groupe.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : préparer une activité sur les e-mails suspects',
+        introduction: 'Le formateur construit une activité courte à partir d’un message entièrement fictif et vérifie que chaque élément permet d’observer la compétence annoncée.',
+        columns: ['Élément', 'Proposition pédagogique', 'Contrôle du formateur'],
+        rows: [
+          [
+            'Objectif',
+            'Repérer trois indices de vigilance dans un e-mail fictif et justifier la décision prise.',
+            'Le verbe « repérer » et la justification produisent une action observable.',
+          ],
+          [
+            'Activité',
+            'Annoter individuellement le message, puis comparer les indices en binôme.',
+            'La durée et la constitution des binômes doivent être compatibles avec le groupe.',
+          ],
+          [
+            'Production attendue',
+            'Une copie annotée, trois indices expliqués et une décision argumentée.',
+            'La trace permet de retrouver les éléments réellement observés par l’apprenant.',
+          ],
+          [
+            'Correction et adaptation',
+            'Corrigé commenté fondé sur la source ; version textuelle structurée et temps supplémentaire si l’aménagement retenu le prévoit.',
+            'Le formateur vérifie la source et confirme l’adaptation avec la personne concernée selon le cadre prévu.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : passer d’une idée d’activité à un scénario contrôlable',
+        unsafeRequest: '« Crée une activité ludique sur les e-mails frauduleux pour des débutants. »',
+        saferRequest: '« Conçois une activité de 30 minutes pour des adultes débutants. À la fin, ils devront repérer dans un e-mail fictif trois indices de vigilance et justifier leur décision. Utilise uniquement les informations de référence fournies. Prévois les étapes minutées, la production attendue, un corrigé commenté, quatre critères observables et une variante d’accessibilité à faire valider par le formateur. Signale toute information manquante au lieu de l’inventer. »',
+        analysis: [
+          'Le public, la durée et l’action observable limitent les propositions trop générales.',
+          'La production, le corrigé et les critères permettent d’observer la même compétence.',
+          'Les sources et adaptations restent soumises à une validation humaine explicite.',
+        ],
+      },
+      commonMistakes: [
+        'Utiliser un verbe vague comme « comprendre » sans préciser ce que l’apprenant devra produire.',
+        'Ajouter trop d’étapes pour le temps disponible ou supposer des outils et prérequis non vérifiés.',
+        'Évaluer la présentation du livrable alors que l’objectif porte sur une autre compétence.',
+        'Reprendre une correction, une règle ou une adaptation proposée par l’IA sans validation du formateur.',
+      ],
+      takeaways: [
+        'Une activité pédagogique part d’une compétence et d’une action observables.',
+        'La production attendue constitue une preuve lorsque ses critères sont définis à l’avance.',
+        'La correction doit s’appuyer sur des informations maîtrisées et des sources autorisées.',
+        'La faisabilité et l’accessibilité se vérifient dans le contexte réel avant l’animation.',
+      ],
+    },
+  },
+  {
+    id: 'cadrer-page-html',
+    number: 5,
+    duration: '45 min',
+    title: 'Préparer le cahier des charges d’une page HTML accessible et responsive',
+    summary: 'Décrire le public, les contenus, la structure et les contrôles d’une page avant de demander sa production technique.',
+    goals: [
+      'Transformer un besoin de page web en cahier des charges compréhensible et vérifiable',
+      'Organiser les contenus et l’action principale selon les besoins du public',
+      'Prévoir des contrôles simples d’accessibilité, d’affichage mobile et de validation avant diffusion',
+    ],
+    keyPoints: [
+      'Le besoin, les contenus et l’arborescence se valident avant la production du code',
+      'Une page responsive hiérarchise les informations pour rester utilisable sur un écran étroit comme sur un ordinateur',
+      'Un code généré doit être relu, affiché et testé ; une réponse techniquement plausible ne garantit pas une page accessible',
+    ],
+    activity: 'Préparer le cahier des charges d’une page d’information simple, valider son arborescence puis contrôler les tests manuels proposés.',
+    exerciseId: 5,
+    lesson: {
+      introduction: [
+        "Il n’est pas nécessaire de savoir programmer pour décrire correctement une page web. Avant de parler de code, il faut savoir à qui la page s’adresse, ce que la personne doit trouver, quelle action elle doit pouvoir réaliser et quels contenus sont réellement disponibles.",
+        "Une IA peut proposer rapidement une arborescence ou du code HTML et CSS. Elle peut aussi inventer un contenu, oublier un état d’erreur ou produire une page difficile à utiliser au clavier ou sur téléphone. Une étape de validation entre le cahier des charges et la production limite ces écarts.",
+      ],
+      concepts: [
+        {
+          title: 'Cahier des charges',
+          description: 'Le document qui décrit le public, l’objectif, les contenus, les sections, les interactions, les contraintes et les contrôles attendus.',
+        },
+        {
+          title: 'Structure sémantique',
+          description: 'Une organisation logique de la page avec un titre principal, des sections clairement nommées et des éléments utilisés selon leur fonction.',
+        },
+        {
+          title: 'Affichage responsive',
+          description: 'Une mise en page qui adapte l’ordre, l’espace et la présentation des contenus à différentes largeurs d’écran sans perdre d’information essentielle.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Définir le public et l’action principale',
+          description: 'Précisez ce que la personne vient chercher et l’action prioritaire qu’elle doit pouvoir réaliser sans hésitation.',
+        },
+        {
+          title: '2. Fournir les contenus autorisés',
+          description: 'Listez les textes, informations et médias disponibles, leur source et les éléments encore manquants sans demander à l’IA de les inventer.',
+        },
+        {
+          title: '3. Organiser l’arborescence',
+          description: 'Définissez les sections dans un ordre logique, un seul titre principal et des intitulés qui permettent de comprendre la page rapidement.',
+        },
+        {
+          title: '4. Décrire les contraintes d’usage',
+          description: 'Prévoyez l’affichage sur écran étroit, la navigation au clavier, les libellés explicites, les alternatives aux images et les messages utiles.',
+        },
+        {
+          title: '5. Valider avant de produire et tester',
+          description: 'Corrigez le cahier des charges, autorisez ensuite la production si elle est utile, puis contrôlez la page dans plusieurs situations réelles.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : cadrer une page présentant un atelier',
+        introduction: 'Une page fictive doit permettre à un adulte débutant de comprendre un atelier de bureautique et de contacter l’organisme sans transmettre de donnée inutile.',
+        columns: ['Décision', 'Choix dans le cahier des charges', 'Contrôle à effectuer'],
+        rows: [
+          [
+            'Besoin principal',
+            'Comprendre le contenu, la durée et les prérequis avant de demander des informations.',
+            'Ces informations doivent être repérables avant l’action de contact.',
+          ],
+          [
+            'Arborescence',
+            'Titre, résumé, compétences visées, programme, informations pratiques, accessibilité et contact.',
+            'Chaque section répond à une question réelle du public et possède un intitulé explicite.',
+          ],
+          [
+            'Affichage étroit',
+            'Une seule colonne ; informations essentielles et action principale présentées dans un ordre logique.',
+            'Le texte reste lisible et aucun contenu important ne nécessite un défilement horizontal.',
+          ],
+          [
+            'Accessibilité',
+            'Titres hiérarchisés, lien de contact explicite, focus visible et alternative pertinente pour l’image informative.',
+            'Parcourir la page au clavier et vérifier les textes, les liens, les images et les contrastes.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : imposer une validation avant le code',
+        unsafeRequest: '« Fais une belle page HTML moderne pour présenter mon atelier. »',
+        saferRequest: '« Prépare d’abord le cahier des charges d’une page destinée à des adultes débutants qui souhaitent comprendre un atelier et contacter l’organisme. Utilise uniquement les contenus fournis. Propose l’arborescence, l’ordre sur écran étroit, les interactions et les contrôles d’accessibilité. Liste les éléments à confirmer, puis attends ma validation avant de produire du code. »',
+        analysis: [
+          'Le public, son besoin et l’action principale guident la structure de la page.',
+          'Les contenus manquants restent visibles au lieu d’être complétés automatiquement.',
+          'La pause de validation permet de corriger les choix avant une production plus coûteuse à reprendre.',
+        ],
+      },
+      commonMistakes: [
+        'Demander immédiatement du code sans avoir validé le contenu, le public et l’action principale.',
+        'Décrire seulement les couleurs ou le style sans préciser la hiérarchie des informations.',
+        'Considérer qu’une page réduite visuellement est automatiquement utilisable sur téléphone.',
+        'Diffuser un code généré sans tester le clavier, les liens, les libellés, les images et plusieurs largeurs d’écran.',
+      ],
+      takeaways: [
+        'Le cahier des charges transforme une idée générale en décisions contrôlables.',
+        'L’arborescence et l’ordre des contenus dépendent du public et de son action principale.',
+        'L’accessibilité et l’affichage mobile se prévoient avant la production technique.',
+        'Le code reste une proposition à afficher, tester, corriger et valider avant diffusion.',
+      ],
+    },
+  },
+  {
+    id: 'organiser-processus-controle',
+    number: 6,
+    duration: '45 min',
+    title: 'Construire un processus de travail contrôlé et réutilisable',
+    summary: 'Décomposer une tâche en étapes simples, chacune associée à un résultat attendu, des critères et une validation humaine.',
+    goals: [
+      'Décomposer une tâche professionnelle en trois à cinq étapes compréhensibles',
+      'Définir pour chaque étape les entrées, le résultat, les critères et le contrôle humain',
+      'Créer des prompts réutilisables avec des variables et des conditions d’arrêt explicites',
+    ],
+    keyPoints: [
+      'Au Niveau 1, un workflow est un enchaînement manuel de prompts et de contrôles, pas une automatisation technique',
+      'Seul un résultat vérifié peut devenir l’entrée de l’étape suivante',
+      'Une décision métier, une donnée sensible, un envoi ou une publication exige une intervention humaine',
+    ],
+    activity: 'Construire puis tester un processus de trois à cinq étapes pour un livrable récurrent, repérer un point de rupture et améliorer le workflow.',
+    exerciseId: 6,
+    lesson: {
+      introduction: [
+        "Un prompt unique peut produire rapidement un livrable, mais il devient difficile de comprendre où une erreur est apparue. En séparant le cadrage, l’extraction des informations, la rédaction et la vérification, chaque résultat peut être contrôlé avant de poursuivre.",
+        "Dans cette formation, un workflow désigne simplement une méthode de travail organisée. L’apprenant déclenche chaque étape, vérifie le résultat et décide de continuer, de corriger ou de s’arrêter. Il ne s’agit pas de connecter des outils ni d’automatiser une action externe.",
+      ],
+      concepts: [
+        {
+          title: 'Entrée et résultat',
+          description: 'L’entrée contient les informations autorisées nécessaires à une étape ; le résultat est la production précise qui devra être vérifiée.',
+        },
+        {
+          title: 'Point de validation',
+          description: 'Le moment où une personne compare le résultat aux critères et choisit de poursuivre, de corriger ou d’arrêter le processus.',
+        },
+        {
+          title: 'Condition d’arrêt',
+          description: 'Une règle qui interdit de continuer lorsqu’une source manque, qu’une donnée ne peut pas être transmise ou qu’une décision dépasse le rôle de l’IA.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Définir le livrable final',
+          description: 'Précisez son destinataire, son usage, son format et les critères qui permettront de décider qu’il est prêt.',
+        },
+        {
+          title: '2. Recenser les entrées autorisées',
+          description: 'Listez les sources nécessaires, leur propriétaire, les données à retirer et les informations qui devront rester vérifiables.',
+        },
+        {
+          title: '3. Découper le travail',
+          description: 'Créez trois à cinq étapes dont chacune poursuit un seul objectif et produit une sortie identifiable.',
+        },
+        {
+          title: '4. Ajouter les contrôles et arrêts',
+          description: 'Associez à chaque sortie des critères, une validation humaine et les situations dans lesquelles le processus ne doit pas continuer.',
+        },
+        {
+          title: '5. Tester et documenter une correction',
+          description: 'Utilisez un cas fictif, repérez l’étape qui produit un écart puis améliorez uniquement le prompt ou le contrôle concerné.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : préparer un compte rendu à partir de notes fictives',
+        introduction: 'Le formateur montre comment quatre étapes courtes rendent les erreurs plus faciles à repérer qu’une demande unique de compte rendu final.',
+        columns: ['Étape', 'Résultat attendu', 'Validation avant de poursuivre'],
+        rows: [
+          [
+            '1. Cadrer',
+            'Usage, destinataire, format et source autorisée clairement identifiés.',
+            'Retirer les données inutiles et signaler les informations manquantes.',
+          ],
+          [
+            '2. Extraire',
+            'Tableau séparant faits, décisions, actions, responsables et échéances.',
+            'Retrouver chaque élément dans les notes et écrire « non précisé » si nécessaire.',
+          ],
+          [
+            '3. Rédiger',
+            'Brouillon conforme au format et au public définis.',
+            'Vérifier que le texte ne transforme ni une hypothèse en fait, ni une proposition en décision.',
+          ],
+          [
+            '4. Finaliser',
+            'Version corrigée accompagnée de la checklist complétée.',
+            'Une personne autorisée approuve la diffusion ; l’IA n’envoie pas le document.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : remplacer une demande globale par des étapes validées',
+        unsafeRequest: '« Transforme mes notes clients en compte rendu définitif et envoie-le aux participants. »',
+        saferRequest: '« Aide-moi à préparer un compte rendu à partir de notes fictives en quatre étapes : cadrage, extraction, rédaction et vérification. Pour chaque étape, indique l’entrée autorisée, le résultat, les critères et la validation humaine. Arrête-toi si une information manque ou si une donnée ne doit pas être transmise. Aucun envoi ni aucune publication ne doit être effectué. »',
+        analysis: [
+          'Chaque étape produit une trace qui peut être comparée à la source ou aux critères.',
+          'Les informations absentes et les données à protéger déclenchent un arrêt au lieu d’être ignorées.',
+          'La décision de diffuser et l’action d’envoi restent entièrement humaines.',
+        ],
+      },
+      commonMistakes: [
+        'Créer un très long prompt qui mélange cadrage, production, contrôle et diffusion.',
+        'Transmettre un résultat non vérifié à l’étape suivante et propager ainsi une erreur.',
+        'Réutiliser un modèle contenant encore des données personnelles ou confidentielles du cas précédent.',
+        'Confondre processus guidé et automatisation d’une décision, d’un envoi ou d’une publication.',
+      ],
+      takeaways: [
+        'Un processus contrôlé transforme une tâche complexe en petites décisions vérifiables.',
+        'Chaque étape possède une entrée, un résultat, des critères et un responsable de la validation.',
+        'Les variables rendent les prompts réutilisables sans conserver les données du cas précédent.',
+        'Une condition d’arrêt protège mieux qu’une correction effectuée trop tard dans le processus.',
+      ],
+    },
+  },
+];
+
 const promptLevelOneExercises = [
   {
     id: 1,
     title: 'Passer d’une demande vague à une consigne exploitable',
     objective: 'Objectif, contexte et résultat attendu',
-    instructions: 'Comparez la demande initiale avec sa version structurée, puis adaptez-la à votre propre activité.',
+    instructions: 'Choisissez une situation professionnelle simple et non confidentielle. Conservez votre demande initiale, testez sa version structurée puis analysez les écarts observés.',
+    howTo: [
+      'Écrivez d’abord la demande vague que vous auriez spontanément adressée à l’IA, sans ajouter de donnée personnelle ou confidentielle.',
+      'Personnalisez chaque champ du modèle et définissez trois critères qui permettront de vérifier le résultat.',
+      'Testez la consigne, répondez aux éventuelles questions de clarification puis conservez le résultat obtenu.',
+      'Comparez le résultat avec vos trois critères, repérez au moins un écart et rédigez une amélioration ciblée du prompt.',
+    ],
+    successCriteria: [
+      'L’objectif, le destinataire et l’action attendue sont formulés sans ambiguïté.',
+      'Les informations transmises sont utiles, autorisées et ne contiennent aucune donnée personnelle ou confidentielle inutile.',
+      'Le format, les contraintes et trois critères de réussite peuvent être contrôlés dans le résultat.',
+      'La réponse enregistrée présente la demande initiale, le prompt structuré, le résultat testé et au moins une amélioration justifiée.',
+    ],
     prompt: `Je souhaite rédiger un e-mail professionnel.
 
 Objectif : [indiquer le résultat recherché].
 Contexte : [préciser la situation utile].
 Destinataire : [fonction, niveau de connaissance et attentes].
+Informations autorisées : [faits ou éléments non confidentiels que l’IA peut utiliser].
 Contraintes : [ton, longueur, informations obligatoires et éléments à éviter].
 Format attendu : [objet, formule d’appel, paragraphes, appel à l’action et signature].
+Critères de réussite : [indiquer trois points observables permettant de contrôler le résultat].
 
 Avant de rédiger, pose-moi jusqu’à trois questions si une information essentielle manque.`,
   },
@@ -1272,90 +1954,523 @@ Avant de rédiger, pose-moi jusqu’à trois questions si une information essent
     id: 2,
     title: 'Créer une synthèse fidèle et vérifiable',
     objective: 'Données sources, structure et contrôle',
-    instructions: 'Utilisez uniquement un document fictif ou non confidentiel pendant l’exercice.',
+    instructions: 'Utilisez uniquement une courte source fictive ou explicitement autorisée. La synthèse doit pouvoir être contrôlée point par point dans le document d’origine.',
+    howTo: [
+      'Préparez une source courte contenant au moins un fait, une décision, une action et une information volontairement absente.',
+      'Indiquez le destinataire et l’usage de la synthèse, puis placez la source entre les balises prévues sans ajouter de donnée personnelle ou confidentielle.',
+      'Testez le prompt et vérifiez que le résultat sépare les faits, les décisions, les actions et les points à confirmer.',
+      'Retrouvez chaque information importante dans la source, notez au moins un contrôle effectué et corrigez tout ajout, omission ou changement de sens.',
+    ],
+    successCriteria: [
+      'La source utilisée est fictive ou autorisée, clairement délimitée et adaptée à l’exercice.',
+      'Le destinataire, l’usage et le format de la synthèse sont explicitement indiqués.',
+      'Les faits, décisions, actions et informations absentes sont distingués sans contenu inventé.',
+      'La réponse enregistrée contient le prompt testé, la synthèse obtenue et la trace d’au moins un contrôle réalisé dans la source.',
+    ],
     prompt: `À partir du texte placé entre <source> et </source>, produis une synthèse destinée à [public].
 
+Usage de la synthèse : [informer, préparer une décision, organiser des actions ou autre usage précis].
+
 <source>
-[coller ici un contenu non confidentiel]
+[coller ici une courte source fictive ou explicitement autorisée]
 </source>
+
+Format attendu :
+1. faits établis ;
+2. décisions prises ;
+3. actions à réaliser, avec responsable et échéance uniquement s’ils sont précisés ;
+4. points à confirmer.
 
 Contraintes :
 - ne rien inventer ;
-- distinguer les faits, les décisions et les points à confirmer ;
-- signaler explicitement toute information absente ;
+- conserver le sens et les réserves du document ;
+- écrire « non précisé » lorsqu’une information attendue est absente ;
+- signaler toute formulation ambiguë au lieu de la compléter ;
 - terminer par une liste de vérifications à effectuer dans le document source.`,
   },
   {
     id: 3,
     title: 'Adapter un contenu à deux publics',
     objective: 'Audience, niveau et exemples',
-    instructions: 'Observez comment le public cible modifie le vocabulaire, la profondeur et les exemples.',
-    prompt: `Explique [sujet] à deux publics :
-1. une personne débutante qui découvre le sujet ;
-2. un professionnel qui doit l’utiliser dans son activité.
+    instructions: 'Choisissez un sujet professionnel que vous maîtrisez et définissez trois informations essentielles qui devront rester identiques dans les deux versions.',
+    howTo: [
+      'Choisissez un sujet non sensible que vous maîtrisez, puis notez trois faits, idées ou limites à conserver à partir d’informations fiables et non confidentielles.',
+      'Décrivez les deux publics : leurs connaissances de départ, leur besoin et l’action qu’ils devront pouvoir réaliser après la lecture.',
+      'Personnalisez le prompt, testez-le dans votre outil d’IA générative et conservez les deux versions obtenues.',
+      'Comparez la fidélité du message, le vocabulaire, les exemples et le niveau de détail, puis corrigez au moins un écart constaté.',
+    ],
+    successCriteria: [
+      'Les deux publics et les actions attendues sont distincts et décrits avec précision.',
+      'Les trois informations essentielles apparaissent dans les deux versions, sans ajout inventé.',
+      'Le vocabulaire, les exemples et le niveau de détail sont réellement adaptés sans modifier le sens.',
+      'La réponse enregistrée contient le message invariant, le prompt testé, les deux versions, leur comparaison et au moins une amélioration justifiée.',
+    ],
+    prompt: `Sujet : [sujet].
 
-Pour chaque public, fournis : une explication courte, un exemple concret, une erreur fréquente et une question de vérification.`,
+Informations de référence autorisées :
+- [fait ou idée essentielle 1] ;
+- [fait ou idée essentielle 2] ;
+- [limite ou réserve à conserver].
+
+Public 1 : [profil débutant, besoin et action attendue].
+Public 2 : [profil professionnel, niveau de connaissance et action attendue].
+
+Pour chaque public, fournis :
+1. une explication courte ;
+2. un exemple adapté à son contexte ;
+3. une erreur fréquente ;
+4. une question de vérification ;
+5. l’action à retenir.
+
+Contraintes :
+- conserver dans les deux versions les trois informations de référence ;
+- ne rien inventer ;
+- expliquer ou éviter le vocabulaire technique pour le public débutant ;
+- préciser les conditions et limites utiles pour le public professionnel.
+
+Termine par un tableau comparant le vocabulaire, l’exemple, le niveau de détail et le message conservé.`,
   },
   {
     id: 4,
     title: 'Construire une ressource pédagogique',
     objective: 'Scénario, activité et évaluation',
-    instructions: 'Adaptez le niveau et la durée au profil réel de vos apprenants.',
-    prompt: `Conçois une activité pédagogique de [durée] sur [compétence] pour [public].
+    instructions: 'Choisissez une compétence que vous maîtrisez et concevez une activité courte à partir d’informations fiables, autorisées et adaptées à votre public réel.',
+    howTo: [
+      'Décrivez le public, les prérequis, la modalité, la durée et l’action observable que l’apprenant devra réaliser.',
+      'Préparez les informations de référence et les contraintes matérielles sans utiliser de donnée personnelle, sensible ou confidentielle.',
+      'Personnalisez le prompt, testez-le puis vérifiez l’alignement entre l’objectif, les consignes, la production, le corrigé et les critères.',
+      'Simulez le déroulé du point de vue d’un apprenant, corrigez au moins un problème de faisabilité ou d’évaluation et conservez les deux versions.',
+    ],
+    successCriteria: [
+      'Le public, les prérequis, la durée, la modalité et l’objectif observable sont définis sans ambiguïté.',
+      'L’activité fait produire une trace directement liée à la compétence annoncée et réalisable dans le temps prévu.',
+      'Le corrigé ou les réponses attendues et les quatre critères permettent au formateur de justifier l’évaluation.',
+      'La réponse enregistrée contient le prompt testé, la première proposition, le contrôle réalisé, une amélioration justifiée et les points restant à valider par le formateur.',
+    ],
+    prompt: `Conçois une activité pédagogique à partir des informations suivantes.
 
-Le résultat doit contenir :
-- un objectif observable ;
-- les consignes données à l’apprenant ;
-- un exemple ;
-- une activité pratique ;
-- quatre critères d’évaluation ;
-- une variante d’accessibilité.
+Compétence travaillée : [compétence].
+Public : [profil, niveau et besoin].
+Prérequis : [connaissances ou outils déjà maîtrisés].
+Modalité : [présentiel, classe virtuelle ou autre modalité].
+Durée totale : [durée].
+Objectif observable : à la fin, l’apprenant sera capable de [verbe d’action et résultat attendu].
+Informations de référence autorisées : [faits, procédure ou source fournie].
+Matériel et outils disponibles : [liste].
+Contraintes ou adaptations déjà validées : [éléments connus ou « aucune à ce stade »].
 
-N’invente aucune obligation réglementaire et indique les éléments qui doivent être validés par le formateur.`,
+Propose :
+1. un titre et un rappel de l’objectif ;
+2. les étapes minutées pour le formateur et pour l’apprenant ;
+3. des consignes prêtes à être données à l’apprenant ;
+4. un exemple utilisant uniquement les informations de référence ;
+5. la production attendue comme preuve de réalisation ;
+6. un corrigé commenté ou les éléments de réponse attendus ;
+7. quatre critères observables avec les indicateurs « acquis » et « à reprendre » ;
+8. une variante d’accessibilité à confirmer avec le formateur et la personne concernée ;
+9. une liste finale des points que le formateur doit valider avant l’animation.
+
+Contraintes :
+- l’activité doit être réalisable dans la durée indiquée ;
+- ne rien inventer au-delà des informations de référence ;
+- écrire « à confirmer par le formateur » lorsqu’une information manque ;
+- ne créer aucune obligation réglementaire ou adaptation individuelle non validée ;
+- ne demander aucune donnée personnelle, sensible ou confidentielle à l’apprenant.`,
   },
   {
     id: 5,
     title: 'Préparer une page HTML',
     objective: 'Spécification structurée avant production',
-    instructions: 'L’objectif est de préparer un cahier des charges clair, pas de déléguer la validation finale à l’IA.',
-    prompt: `Prépare le cahier des charges d’une page HTML consacrée à [sujet].
+    instructions: 'Travaillez sur une page d’information simple, fictive ou fondée sur des contenus que vous êtes autorisé à utiliser. Validez son organisation avant toute production de code.',
+    howTo: [
+      'Définissez le sujet, le public, son besoin, l’action principale et les contenus de référence réellement disponibles.',
+      'Personnalisez le prompt et demandez uniquement le cahier des charges, l’arborescence et les points à confirmer lors de la première réponse.',
+      'Contrôlez l’ordre des contenus, l’affichage sur écran étroit, la navigation au clavier et les informations inventées, puis corrigez au moins un choix.',
+      'Après validation, demandez le code si vous souhaitez poursuivre, affichez-le dans un environnement autorisé et notez les résultats des tests manuels.',
+    ],
+    successCriteria: [
+      'Le public, son besoin, l’action principale et les contenus autorisés sont définis avec précision.',
+      'L’arborescence hiérarchise les sections et indique l’ordre des contenus sur ordinateur et sur écran étroit.',
+      'La première réponse s’arrête aux choix à valider et n’invente ni contenu, ni collecte de données, ni dépendance externe.',
+      'La réponse enregistrée contient le prompt testé, l’arborescence proposée, le contrôle réalisé, une correction justifiée et les tests prévus ou effectués.',
+    ],
+    prompt: `Nous allons préparer une page HTML en deux phases. Ne produis aucun code pendant la première phase.
 
-Public : [public].
+Sujet de la page : [sujet].
+Public : [profil, niveau et besoin].
+Objectif de la page : [ce que le public doit comprendre ou trouver].
 Action principale attendue : [action].
+Contenus de référence autorisés : [textes, faits et médias disponibles].
 Sections obligatoires : [liste].
-Contraintes : responsive, navigation au clavier, contrastes lisibles, titres hiérarchisés et langage clair.
+Identité visuelle disponible : [couleurs, typographies, logo ou « non précisée »].
+Interactions prévues : [liens, boutons, formulaire ou « aucune »].
+Dépendances externes autorisées : [liste ou « aucune »].
+Données à ne pas collecter ou afficher : [liste].
 
-Commence par proposer l’arborescence de la page. Attends ma validation avant de produire le code HTML et CSS.`,
+Phase 1 — Cahier des charges :
+1. reformule le besoin et pose jusqu’à cinq questions si une information essentielle manque ;
+2. propose une arborescence avec un titre principal, les sections et leur ordre ;
+3. précise pour chaque section son contenu, son utilité et l’action éventuelle ;
+4. indique l’ordre et les priorités sur un écran étroit ;
+5. décris les éléments interactifs et leur utilisation au clavier ;
+6. prévois des libellés explicites, un focus visible, les alternatives utiles aux images et des contrastes à vérifier ;
+7. termine par un tableau « élément / choix proposé / à confirmer » ;
+8. attends ma validation explicite avant toute production de code.
+
+Phase 2 — Uniquement après ma validation :
+- produis un fichier HTML autonome avec un CSS simple et lisible ;
+- utilise une structure sémantique et n’ajoute aucune dépendance non autorisée ;
+- remplace toute information absente par « contenu à fournir » ;
+- n’ajoute aucun suivi, aucune collecte ou aucun envoi de données non demandé ;
+- fournis une liste de tests manuels : clavier, liens et boutons, titres et libellés, images, contrastes, écran étroit, ordinateur et absence de défilement horizontal.`,
   },
   {
     id: 6,
     title: 'Créer un workflow de production contrôlé',
     objective: 'Décomposition, critères et validation humaine',
-    instructions: 'Transformez une tâche complexe en étapes contrôlables et réutilisables.',
-    prompt: `Aide-moi à construire un workflow pour produire [livrable].
+    instructions: 'Choisissez une tâche professionnelle simple et récurrente. Construisez un processus manuel de trois à cinq étapes à partir d’informations fictives ou explicitement autorisées.',
+    howTo: [
+      'Décrivez le livrable final, son destinataire, son usage, les entrées autorisées et les limites à ne pas franchir.',
+      'Personnalisez le prompt, obtenez le tableau du processus puis contrôlez l’ordre, les sorties, les critères et les conditions d’arrêt.',
+      'Après validation du tableau, demandez les prompts réutilisables et testez chaque étape avec un cas fictif sans transmettre automatiquement le résultat suivant.',
+      'Repérez au moins un écart, corrigez uniquement l’étape concernée et conservez le workflow initial, le test et la version améliorée.',
+    ],
+    successCriteria: [
+      'Le processus comporte trois à cinq étapes ordonnées, chacune avec une entrée et un résultat clairement identifiés.',
+      'Chaque étape possède des critères observables, une validation humaine et au moins une condition d’arrêt pertinente.',
+      'Les prompts utilisent des variables explicites, limitent les données transmises et ne déclenchent aucune action externe.',
+      'La réponse enregistrée contient le workflow initial, les prompts testés, le contrôle effectué, l’écart constaté et la correction justifiée.',
+    ],
+    prompt: `Nous allons construire un processus de travail manuel et contrôlé. Il ne doit déclencher aucune automatisation ni action externe.
 
-Décompose le travail en étapes successives. Pour chaque étape, précise :
-- les informations d’entrée ;
-- le résultat attendu ;
-- les critères de qualité ;
-- les vérifications humaines ;
-- les données à ne pas transmettre.
+Tâche récurrente : [tâche].
+Livrable final : [résultat attendu et format].
+Destinataire et usage : [public et décision ou action préparée].
+Entrées autorisées : [sources et informations utilisables].
+Données à ne pas transmettre : [données personnelles, sensibles ou confidentielles].
+Critères du livrable final : [trois à cinq critères observables].
+Personne responsable de la validation : [fonction].
+Actions interdites à l’IA : [envoi, publication, décision ou autre action].
 
-Propose ensuite un prompt réutilisable pour chaque étape, avec des variables entre crochets.`,
+Phase 1 — Plan du processus :
+1. reformule l’objectif et signale les informations manquantes ;
+2. propose trois à cinq étapes dans un tableau ;
+3. indique pour chaque étape : objectif, entrée autorisée, résultat attendu, critères, validation humaine et condition d’arrêt ;
+4. vérifie que seul un résultat validé devient l’entrée de l’étape suivante ;
+5. attends ma validation explicite avant de rédiger les prompts.
+
+Phase 2 — Uniquement après ma validation :
+- rédige un prompt réutilisable par étape avec des variables entre crochets ;
+- demande uniquement les informations nécessaires à l’étape ;
+- impose le format du résultat et les critères à vérifier ;
+- écris « information manquante » au lieu d’inventer ;
+- termine chaque prompt par une pause de validation ;
+- arrête le processus lorsqu’une donnée interdite, une source absente ou une décision humaine est nécessaire.
+
+Phase 3 — Protocole de test :
+- propose un cas fictif court pour tester le processus ;
+- indique les traces à conserver pour chaque étape ;
+- fournis une grille permettant de noter le résultat, l’écart constaté, la correction apportée et la décision de poursuivre ou d’arrêter.`,
   },
 ];
 
+const promptLevelOneFinalProject = {
+  title: 'Concevoir, tester et présenter un prompt professionnel maîtrisé',
+  description: 'En 30 minutes, le participant finalise un cas simple issu de son activité ou d’une situation réaliste, avec des informations fictives ou explicitement autorisées.',
+  learnerGuidance: 'Réutilisez de préférence un travail commencé dans l’un des six exercices. Le formateur n’attend pas un résultat parfait : il évalue votre capacité à cadrer, tester, corriger, vérifier et expliquer votre décision d’usage.',
+  steps: [
+    'Choisir un cas limité et définir le besoin, le public, le résultat attendu et les informations autorisées',
+    'Présenter le prompt initial, trois critères de réussite et le premier résultat obtenu',
+    'Repérer au moins un écart puis réaliser une correction ciblée du prompt ou du processus',
+    'Contrôler le résultat final, les sources, les données, les limites et les validations humaines nécessaires',
+    'Présenter le modèle réutilisable, la décision d’usage et une situation proche dans laquelle le transférer',
+  ],
+  deliverables: [
+    'Le prompt final et la principale amélioration apportée',
+    'Le résultat final ou sa maquette',
+    'La grille de contrôle et la décision d’usage',
+    'Le modèle réutilisable et le prochain usage envisagé',
+  ],
+  submissionFields: [
+    {
+      id: 'prompt_and_iterations',
+      label: '1. Prompt final et amélioration apportée',
+      help: 'Collez le prompt final ou indiquez son emplacement sécurisé, puis présentez le prompt initial, l’écart constaté et la correction principale.',
+      placeholder: 'Exemple : le premier essai ne signalait pas les informations absentes ; ajout de la règle « écris non précisé » et d’un contrôle dans la source…',
+    },
+    {
+      id: 'final_output',
+      label: '2. Résultat final ou maquette',
+      help: 'Décrivez le résultat obtenu et précisez où le formateur peut le consulter sans transmettre de donnée personnelle ou confidentielle.',
+      placeholder: 'Exemple : synthèse fictive structurée en faits, décisions, actions et points à confirmer, collée ci-dessous ou déposée dans un espace autorisé…',
+    },
+    {
+      id: 'verification_grid_reference',
+      label: '3. Contrôles réalisés et décision d’usage',
+      help: 'Présentez les critères vérifiés, les sources consultées, les limites restantes et votre décision : utiliser, corriger ou rejeter.',
+      placeholder: 'Exemple : les trois faits ont été retrouvés dans la source ; aucune donnée personnelle utilisée ; format conforme ; résultat utilisable après validation du responsable…',
+    },
+    {
+      id: 'action_plan',
+      label: '4. Modèle réutilisable et prochain usage',
+      help: 'Indiquez les variables du modèle, la situation proche dans laquelle vous pourrez le réutiliser et le contrôle humain à conserver.',
+      placeholder: 'Exemple : modèle avec [source], [public], [format] et [critères] ; prochain test sur une note fictive ; comparaison obligatoire avant diffusion…',
+    },
+  ],
+  criteria: [
+    'Cadrage du besoin, du public, des informations autorisées et du résultat attendu',
+    'Qualité du prompt, des critères de réussite et de l’amélioration réalisée',
+    'Fiabilité des contrôles, protection des données et validation humaine',
+    'Capacité à expliquer les choix, les limites et les conditions de réutilisation',
+  ],
+  rubricLevels: [
+    {
+      id: 'not_acquired',
+      label: 'Non acquis',
+      help: 'Les éléments indispensables sont absents ou le résultat ne peut pas être utilisé en sécurité.',
+    },
+    {
+      id: 'developing',
+      label: "En cours d'acquisition",
+      help: 'La démarche est engagée, mais des précisions ou des corrections importantes restent nécessaires.',
+    },
+    {
+      id: 'acquired',
+      label: 'Acquis',
+      help: 'La méthode attendue est appliquée et le résultat peut être utilisé après les validations prévues.',
+    },
+    {
+      id: 'mastered',
+      label: 'Maîtrisé',
+      help: 'La méthode est appliquée avec autonomie, justification et capacité de transfert.',
+    },
+  ],
+  rubric: [
+    {
+      id: 'need_and_audience',
+      criterion: 'Cadrage du besoin et du public',
+      descriptors: {
+        not_acquired: 'Le besoin, le public, les informations autorisées ou le résultat attendu ne sont pas identifiés.',
+        developing: 'Le cas est compréhensible, mais le public, les sources, les contraintes ou l’usage du résultat restent partiellement définis.',
+        acquired: 'Le besoin, le public, le résultat, les informations autorisées et les contraintes utiles sont définis avec précision.',
+        mastered: 'Le cadrage justifie les choix, anticipe les limites du cas et permet d’adapter la méthode à une situation proche.',
+      },
+    },
+    {
+      id: 'prompt_and_success_criteria',
+      criterion: 'Prompt, critères et amélioration',
+      descriptors: {
+        not_acquired: 'Le prompt reste vague et aucun critère ne permet de contrôler le résultat.',
+        developing: 'Le prompt possède une structure, mais le contexte, le format, les critères ou l’amélioration restent incomplets.',
+        acquired: 'Le prompt précise l’objectif, le contexte, le public, les informations, les contraintes, le format et des critères observables. Une correction ciblée est justifiée.',
+        mastered: 'Le prompt est réutilisable grâce à des variables et les essais démontrent une amélioration autonome fondée sur les écarts constatés.',
+      },
+    },
+    {
+      id: 'checks_and_risks',
+      criterion: 'Contrôles et maîtrise des risques',
+      descriptors: {
+        not_acquired: 'Le résultat est conservé sans contrôle suffisant ou des données non autorisées sont utilisées.',
+        developing: 'Des contrôles sont mentionnés, mais les sources, les critères, les données, les limites ou la validation humaine ne sont pas tous traités.',
+        acquired: 'Le résultat est comparé aux critères et aux sources utiles. Les données sont minimisées, les incertitudes signalées et la validation humaine prévue.',
+        mastered: 'Les contrôles sont hiérarchisés, traçables et proportionnés ; les conditions d’arrêt, de correction ou de rejet sont clairement expliquées.',
+      },
+    },
+    {
+      id: 'choices_and_limits',
+      criterion: 'Explication des choix et réutilisation',
+      descriptors: {
+        not_acquired: 'L’écart, la correction, la décision d’usage ou les limites ne peuvent pas être expliqués.',
+        developing: 'Les étapes sont décrites, mais la correction, la décision d’usage ou les conditions de réutilisation restent peu justifiées.',
+        acquired: 'L’écart, la correction, la décision d’usage, les limites, les variables et le contrôle à conserver sont expliqués clairement.',
+        mastered: 'L’analyse tire un enseignement transférable, précise les situations dans lesquelles le modèle ne doit pas être utilisé et propose un prochain usage réaliste.',
+      },
+    },
+  ],
+  validationRule: 'Le cas pratique final est validé lorsque les quatre critères atteignent au minimum le niveau « Acquis ». Le niveau « Maîtrisé » valorise une autonomie supplémentaire sans être obligatoire. Si un critère reste « Non acquis » ou « En cours d’acquisition », le formateur précise les éléments à reprendre avant une nouvelle remise.',
+};
+
 const promptLevelOneGlossary = [
-  { term: 'Prompt', definition: 'Instruction, question ou ensemble de consignes fourni à une IA pour guider son résultat.' },
-  { term: 'Contexte', definition: 'Informations utiles qui permettent au modèle de comprendre la situation, le public et l’objectif.' },
-  { term: 'Contrainte', definition: 'Règle à respecter concernant le contenu, la longueur, le ton, les sources ou le format.' },
-  { term: 'Exemple', definition: 'Démonstration d’une entrée et du résultat attendu qui aide le modèle à reproduire une structure.' },
-  { term: 'Critère de réussite', definition: 'Condition observable utilisée pour déterminer si le résultat répond réellement au besoin.' },
-  { term: 'Itération', definition: 'Amélioration progressive d’un prompt ou d’un résultat après analyse des écarts constatés.' },
-  { term: 'Hallucination', definition: 'Information fausse ou inventée produite par une IA, parfois avec une formulation convaincante.' },
-  { term: 'Variable', definition: 'Élément à remplacer dans un modèle de prompt, par exemple [public], [objectif] ou [format].' },
-  { term: 'Workflow', definition: 'Enchaînement organisé de plusieurs étapes, prompts et contrôles pour produire un livrable.' },
-  { term: 'Validation humaine', definition: 'Contrôle réalisé par une personne compétente avant l’utilisation ou la diffusion du résultat.' },
+  {
+    term: 'Action externe',
+    definition: 'Opération réalisée hors de la conversation avec l’IA, par exemple envoyer un e-mail, publier une page ou modifier un dossier.',
+    example: 'Le prompt prépare le message, mais son envoi reste une action externe déclenchée uniquement par une personne autorisée.',
+  },
+  {
+    term: 'Ancrage dans une source',
+    definition: 'Consigne qui limite la réponse aux informations présentes dans un document ou un ensemble de références clairement identifié.',
+    example: 'La synthèse doit utiliser uniquement le compte rendu placé entre les balises <source> et </source>.',
+  },
+  {
+    term: 'Arborescence',
+    definition: 'Organisation hiérarchique des titres, sections et contenus d’un document ou d’une page.',
+    example: 'La page comporte un titre principal, une présentation de l’atelier, le programme, les informations pratiques et un contact.',
+  },
+  {
+    term: 'Balise de délimitation',
+    definition: 'Repère placé avant et après un contenu pour montrer précisément à l’IA quelle partie elle peut utiliser.',
+    example: 'Les notes autorisées sont placées entre <source> et </source> afin de les distinguer des consignes.',
+  },
+  {
+    term: 'Cahier des charges',
+    definition: 'Document qui décrit le besoin, le public, les contenus, les contraintes, les fonctionnalités et les contrôles attendus avant la production.',
+    example: 'Avant de demander le code HTML, l’apprenant fait valider l’ordre des sections, les interactions et les règles d’accessibilité.',
+  },
+  {
+    term: 'Condition d’arrêt',
+    definition: 'Situation dans laquelle le processus doit s’interrompre pour éviter une erreur ou demander une décision humaine.',
+    example: 'Le workflow s’arrête si la source manque, si une donnée confidentielle apparaît ou si un responsable doit trancher.',
+  },
+  {
+    term: 'Contexte',
+    definition: 'Informations utiles qui permettent à l’IA de comprendre la situation, le public, l’usage et les limites de la demande.',
+    example: 'Le message est destiné à des participants débutants inscrits à un atelier à distance de deux heures.',
+  },
+  {
+    term: 'Contrainte',
+    definition: 'Règle à respecter concernant le contenu, la longueur, le ton, les sources, les outils ou le format.',
+    example: 'Le résultat doit tenir en 180 mots, utiliser un ton professionnel et ne contenir aucune information inventée.',
+  },
+  {
+    term: 'Critère de réussite',
+    definition: 'Condition observable utilisée pour déterminer si le résultat répond réellement au besoin.',
+    example: 'Le courriel est réussi s’il contient la date, l’horaire, le lien de connexion et une action clairement demandée.',
+  },
+  {
+    term: 'Donnée confidentielle',
+    definition: 'Information dont l’accès est limité par l’organisation, un contrat ou le contexte professionnel.',
+    example: 'Un tarif négocié, un dossier interne ou une stratégie non publiée ne doit pas être collé dans un outil non autorisé.',
+  },
+  {
+    term: 'Donnée personnelle',
+    definition: 'Information qui permet d’identifier directement ou indirectement une personne physique.',
+    example: 'Un nom, une adresse électronique nominative ou un numéro de téléphone sont remplacés par des données fictives pour l’exercice.',
+  },
+  {
+    term: 'Entrée',
+    definition: 'Information, document ou résultat validé fourni au début d’une étape de travail.',
+    example: 'Dans le workflow, les notes fictives validées constituent l’entrée de l’étape de synthèse.',
+  },
+  {
+    term: 'Exemple',
+    definition: 'Démonstration concrète d’une forme ou d’un résultat attendu qui aide à comprendre la consigne.',
+    example: 'Le prompt montre un exemple de tableau avec les colonnes « action », « responsable » et « échéance ».',
+  },
+  {
+    term: 'Format de sortie',
+    definition: 'Forme précise demandée pour présenter le résultat : texte, liste, tableau, plan, code ou autre structure.',
+    example: 'La synthèse est demandée sous forme de quatre rubriques : faits, décisions, actions et points à confirmer.',
+  },
+  {
+    term: 'Hallucination',
+    definition: 'Information fausse, inventée ou non vérifiée produite par une IA, parfois avec une formulation convaincante.',
+    example: 'L’IA ajoute une échéance absente du document source : cette information doit être supprimée et signalée.',
+  },
+  {
+    term: 'Information autorisée',
+    definition: 'Contenu que l’utilisateur a le droit de transmettre à l’outil choisi et qui est réellement nécessaire à la tâche.',
+    example: 'L’exercice utilise un compte rendu fictif plutôt qu’un document réel contenant des noms de clients.',
+  },
+  {
+    term: 'Instruction',
+    definition: 'Action précise demandée à l’IA dans le prompt.',
+    example: '« Compare les deux versions avec les quatre critères fournis » est une instruction contrôlable.',
+  },
+  {
+    term: 'Itération',
+    definition: 'Nouvel essai réalisé après avoir analysé un résultat et apporté une amélioration ciblée au prompt.',
+    example: 'Après avoir repéré un ton trop technique, l’apprenant précise le niveau débutant du public puis teste une deuxième version.',
+  },
+  {
+    term: 'Maquette',
+    definition: 'Représentation préparatoire d’un résultat qui permet de valider son organisation avant sa réalisation complète.',
+    example: 'L’arborescence et les contenus attendus servent de maquette textuelle avant la création de la page HTML.',
+  },
+  {
+    term: 'Message invariant',
+    definition: 'Information essentielle qui doit conserver le même sens lorsque le contenu est adapté à plusieurs publics ou formats.',
+    example: 'La règle de sécurité reste identique dans la version pour débutants et dans celle destinée aux professionnels.',
+  },
+  {
+    term: 'Minimisation des données',
+    definition: 'Principe consistant à utiliser uniquement les informations nécessaires à l’objectif poursuivi.',
+    example: 'Pour rédiger une invitation, le prompt indique le type de public sans transmettre la liste nominative des participants.',
+  },
+  {
+    term: 'Objectif observable',
+    definition: 'Résultat formulé avec une action que l’on peut constater ou évaluer à la fin d’une activité.',
+    example: 'À la fin de l’exercice, l’apprenant sera capable de repérer trois informations absentes dans une synthèse.',
+  },
+  {
+    term: 'Point à confirmer',
+    definition: 'Information absente, ambiguë ou incertaine qui doit rester visible jusqu’à sa vérification par une personne compétente.',
+    example: 'Le responsable de l’action n’est pas indiqué dans la source : la synthèse affiche « responsable à confirmer ».',
+  },
+  {
+    term: 'Prompt',
+    definition: 'Instruction, question ou ensemble de consignes fourni à une IA pour guider son résultat.',
+    example: 'Le prompt précise l’objectif, le contexte, les informations autorisées, le format et les critères de réussite.',
+  },
+  {
+    term: 'Prompt réutilisable',
+    definition: 'Modèle de consigne contenant des variables explicites que l’on peut adapter à plusieurs situations proches.',
+    example: 'Le modèle utilise [public], [source], [format] et [critères] sans conserver les informations du cas précédent.',
+  },
+  {
+    term: 'Question de clarification',
+    definition: 'Question posée avant la production lorsqu’une information indispensable manque ou reste ambiguë.',
+    example: 'Avant de rédiger le courriel, l’IA demande quelle action le destinataire doit réaliser et pour quelle date.',
+  },
+  {
+    term: 'Résultat attendu',
+    definition: 'Livrable concret que la demande doit permettre d’obtenir et d’utiliser après contrôle.',
+    example: 'Le résultat attendu est un e-mail de confirmation prêt à relire, et non une simple liste d’idées.',
+  },
+  {
+    term: 'Responsive',
+    definition: 'Capacité d’une page à adapter son organisation aux différentes largeurs d’écran sans perdre d’information ni créer de défilement horizontal.',
+    example: 'Sur téléphone, les deux colonnes passent l’une sous l’autre et le bouton principal reste visible et utilisable.',
+  },
+  {
+    term: 'Source de référence',
+    definition: 'Document ou ensemble d’informations identifié dans lequel les faits doivent être vérifiés.',
+    example: 'Le compte rendu autorisé est la seule source de référence utilisée pour produire la synthèse.',
+  },
+  {
+    term: 'Structure sémantique',
+    definition: 'Organisation d’une page avec des éléments qui décrivent le rôle de chaque contenu, comme le titre principal, la navigation et les sections.',
+    example: 'La page utilise un seul titre principal, des titres de section ordonnés et un bouton dont le libellé décrit clairement l’action.',
+  },
+  {
+    term: 'Synthèse',
+    definition: 'Présentation condensée qui conserve les informations essentielles, leur sens et leurs réserves.',
+    example: 'La synthèse distingue les faits établis des décisions et des points qui doivent encore être confirmés.',
+  },
+  {
+    term: 'Test manuel',
+    definition: 'Vérification réalisée par une personne en utilisant concrètement le résultat obtenu.',
+    example: 'La page est parcourue au clavier et contrôlée sur téléphone pour vérifier les liens, le focus et l’absence de débordement.',
+  },
+  {
+    term: 'Traçabilité',
+    definition: 'Conservation des éléments utiles pour comprendre ce qui a été demandé, produit, contrôlé et décidé.',
+    example: 'L’apprenant conserve le prompt initial, l’écart observé, la correction, le résultat final et sa décision d’usage.',
+  },
+  {
+    term: 'Validation humaine',
+    definition: 'Contrôle réalisé par une personne compétente avant l’utilisation, la transmission ou la diffusion du résultat.',
+    example: 'Le formateur valide le corrigé et la faisabilité de l’activité avant de la proposer aux apprenants.',
+  },
+  {
+    term: 'Variable',
+    definition: 'Élément à remplacer dans un modèle de prompt pour l’adapter à un nouveau cas.',
+    example: 'Dans « Rédige pour [public] au format [format] », les deux éléments entre crochets sont des variables.',
+  },
+  {
+    term: 'Workflow',
+    definition: 'Enchaînement organisé de plusieurs étapes, entrées, résultats et contrôles pour produire un livrable.',
+    example: 'Les notes validées sont synthétisées, la synthèse est contrôlée, puis le courriel est préparé sans envoi automatique.',
+  },
 ];
 
 const promptLevelOneQuiz = [
@@ -1652,7 +2767,9 @@ export const courseCatalog = {
       { maximumRatio: 0.7, label: 'Niveau intermédiaire' },
       { maximumRatio: 1, label: 'Niveau autonome ou avancé' },
     ],
+    modules: promptLevelOneModules,
     exercises: promptLevelOneExercises,
+    finalProject: promptLevelOneFinalProject,
     glossary: promptLevelOneGlossary,
     resources: [
       {
@@ -1664,11 +2781,25 @@ export const courseCatalog = {
         pending: !promptLibraryNotionUrl,
       },
       {
-        title: 'Guide du Prompt Engineering',
-        description: 'Méthode synthétique pour structurer une demande professionnelle et contrôler le résultat.',
-        href: '/assets/creation-prompt-efficace-chatgpt.pdf',
+        title: 'Guide pratique Prompt Engineering – Niveau 1',
+        description: 'Guide textuel de 19 pages : six modules, productions attendues, prompts complets, méthode d’itération, cas final, lexique et checklist.',
+        href: '/assets/guide-pratique-prompt-engineering-niveau-1-formaprompt.pdf',
         action: 'Télécharger le PDF',
-        download: 'creation-prompt-efficace-chatgpt.pdf',
+        download: 'guide-pratique-prompt-engineering-niveau-1-formaprompt.pdf',
+      },
+      {
+        title: 'Cahier d’activités – Prompt Engineering Niveau 1',
+        description: 'Support imprimable de 21 pages pour préparer, tester, analyser et autoévaluer les six exercices.',
+        href: '/assets/cahier-activites-prompt-engineering-niveau-1-formaprompt.pdf',
+        action: 'Télécharger le PDF',
+        download: 'cahier-activites-prompt-engineering-niveau-1-formaprompt.pdf',
+      },
+      {
+        title: 'Modèle du cas pratique final et plan d’action',
+        description: 'Dossier imprimable de 12 pages pour préparer les quatre livrables, documenter l’amélioration et appliquer la grille d’évaluation.',
+        href: '/assets/modele-cas-final-plan-action-prompt-engineering-niveau-1-formaprompt.pdf',
+        action: 'Télécharger le modèle du cas final',
+        download: 'modele-cas-final-plan-action-prompt-engineering-niveau-1-formaprompt.pdf',
       },
     ],
   },

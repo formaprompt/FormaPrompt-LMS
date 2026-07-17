@@ -570,6 +570,26 @@ export default function CoursePlayer() {
                         {module.lesson.introduction.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
                       </section>
 
+                      {module.lesson.video && (
+                        <section className="module-video" aria-labelledby={`module-${module.id}-video`}>
+                          <p className="module-lesson-kicker">Démonstration en vidéo</p>
+                          <h3 id={`module-${module.id}-video`}>{module.lesson.video.title}</h3>
+                          <p>{module.lesson.video.description}</p>
+                          <div className="video-container video-container-with-player">
+                            <video
+                              controls
+                              preload="metadata"
+                              playsInline
+                              className="course-video"
+                              aria-label={module.lesson.video.title}
+                            >
+                              <source src={module.lesson.video.url} type="video/mp4" />
+                              Votre navigateur ne permet pas de lire cette vidéo.
+                            </video>
+                          </div>
+                        </section>
+                      )}
+
                       {module.lesson.concepts?.length > 0 && (
                         <section aria-labelledby={`module-${module.id}-concepts`}>
                           <h3 id={`module-${module.id}-concepts`}>Trois notions à distinguer</h3>
