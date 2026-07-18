@@ -25,7 +25,7 @@
 }
 
 .footer-text {
-  color: var(--color-text-light);
+  color: #cbd5e1;
   margin-bottom: 0.5rem;
 }
 
@@ -38,17 +38,22 @@
 }
 
 .footer-col a {
-  color: var(--color-text-light);
+  color: #cbd5e1;
 }
 
 .footer-col a:hover {
   color: var(--color-primary-light);
 }
 
+.footer-col a.btn-primary,
+.footer-col a.btn-primary:hover {
+  color: #fff;
+}
+
 .footer-bottom {
   border-top: 1px solid var(--color-secondary-light);
   padding: 1.5rem 0;
   text-align: center;
-  color: var(--color-text-light);
+  color: #cbd5e1;
   font-size: 0.9rem;
 }

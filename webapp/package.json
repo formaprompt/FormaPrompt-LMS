@@ -5,32 +5,56 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:app && npm run prerender:studio",
+    "build:app": "vite build",
+    "prerender:studio": "node scripts/prerender-studio.mjs",
+    "audit:studio": "node scripts/audit-studio.mjs",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:app && npm run test:stripe && npm run test:studio",
+    "test:app": "node --test src/lib/*.test.js",
+    "test:studio": "vitest run --config vitest.config.ts",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e",
     "test:stripe": "node --test supabase/functions/_tests/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.105.1",
     "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-cookie-consent": "^10.0.1",
     "react-dom": "^19.2.5",
     "react-helmet-async": "^3.0.0",
+    "react-hook-form": "^7.82.0",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.14.2",
+    "react-router-dom": "^7.18.1",
     "rehype-sanitize": "^6.0.0",
-    "remark-gfm": "^4.0.1"
+    "remark-gfm": "^4.0.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
+    "chrome-launcher": "^1.2.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "jsdom": "^25.0.1",
+    "lighthouse": "^13.4.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.64.0",
     "vite": "^5.0.0",
-    "vite-plugin-pwa": "^0.20.0"
-  }}
+    "vite-plugin-pwa": "^0.20.0",
+    "vitest": "^2.1.9"
+  }
+}

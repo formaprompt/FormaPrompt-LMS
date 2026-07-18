@@ -49,6 +49,11 @@
   color: var(--color-primary);
 }
 
+.nav > a.btn-primary,
+.nav > a.btn-primary:hover {
+  color: #fff;
+}
+
 .dropdown {
   position: relative;
   display: inline-block;

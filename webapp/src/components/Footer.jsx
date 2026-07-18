@@ -44,7 +44,7 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <div className="container">
-          <p>&copy; {new Date().getFullYear()} FormaPrompt. Tous droits réservés.</p>
+          <p>{`© ${new Date().getFullYear()} FormaPrompt. Tous droits réservés.`}</p>
         </div>
       </div>
     </footer>

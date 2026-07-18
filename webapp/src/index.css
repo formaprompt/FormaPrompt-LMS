@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 :root {
-  --color-primary: #059669; /* Vert */
-  --color-primary-light: #10b981;
-  --color-primary-dark: #047857;
+  --color-primary: #047857; /* Vert accessible sur fond blanc */
+  --color-primary-light: #6ee7b7;
+  --color-primary-dark: #065f46;
   --color-secondary: #0f172a; /* Bleu nuit / Gris anthracite */
   --color-secondary-light: #1e293b;
   --color-text: #334155;
@@ -12,7 +10,7 @@
   --color-bg-white: #ffffff;
   --color-border: #e2e8f0;
 
-  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-main: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 * {

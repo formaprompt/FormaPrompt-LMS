@@ -1,10 +1,12 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
-import Home from "./pages/Home";
-import CookieConsent from "react-cookie-consent";
+import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
+import StudioPage from "./studio/StudioPage";
 // Lazy‑loaded pages
+const Home = lazy(() => import("./pages/Home"));
+const CookieConsent = lazy(() => import("react-cookie-consent"));
 const FormationIA = lazy(() => import("./pages/FormationIA"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
@@ -35,9 +37,19 @@ const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
 
 function App() {
+  const { pathname } = useLocation();
+  const isPublicStudio = pathname === '/studio' || pathname === '/studio/';
+
   return (
     <>
       <ScrollToTop />
+      {isPublicStudio ? (
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
+          </Route>
+        </Routes>
+      ) : (
       <Suspense
         fallback={
           <div
@@ -87,7 +99,10 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+      )}
 
+      {!isPublicStudio && (
+      <Suspense fallback={null}>
       <CookieConsent
         location="bottom"
         buttonText="J'accepte"
@@ -113,8 +128,15 @@ function App() {
         expires={150}
       >
         Ce site utilise des cookies pour améliorer votre expérience utilisateur et réaliser des statistiques de visites.{' '}
-        <a href="/privacy" style={{ color: "var(--color-primary-light)" }}>En savoir plus</a>
+        <a
+          href="/privacy"
+          style={{ color: "var(--color-primary-light)", textDecoration: "underline", textUnderlineOffset: "0.2em" }}
+        >
+          En savoir plus
+        </a>
       </CookieConsent>
+      </Suspense>
+      )}
     </>
   );
 }

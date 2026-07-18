@@ -26,7 +26,7 @@ export default function Header() {
           {user && (
             <Link to="/dashboard" className="mobile-account-shortcut mobile-account-shortcut--primary" onClick={() => setIsMenuOpen(false)}>
               <User size={18} aria-hidden="true" />
-              <span>Espace</span>
+              <span>Espace apprenant</span>
             </Link>
           )}
           <button
@@ -44,6 +44,7 @@ export default function Header() {
         {/* Navigation */}
         <nav id="primary-navigation" className={`nav ${isMenuOpen ? 'nav-open' : ''}`}>
           <Link to="/" onClick={() => setIsMenuOpen(false)}>Accueil</Link>
+          <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio</Link>
           
           <div className="dropdown">
             <span className="dropdown-title">Formations</span>
@@ -74,7 +75,7 @@ export default function Header() {
                 </Link>
               )}
               <Link to="/dashboard" className="btn btn-primary" onClick={() => setIsMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <User size={18} /> Mon Espace
+                <User size={18} /> Espace apprenant
               </Link>
             </div>
           ) : (

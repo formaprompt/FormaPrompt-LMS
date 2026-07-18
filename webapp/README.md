@@ -1,16 +1,40 @@
-# React + Vite
+# FormaPrompt — application web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application React/Vite de FormaPrompt : site public de formations, fonctionnalités pédagogiques et espace apprenant.
 
-Currently, two official plugins are available:
+## Préparer le projet
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
 
-## React Compiler
+```powershell
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Les secrets Supabase, Stripe et les autres paramètres sensibles doivent rester dans les variables d'environnement. Ils ne doivent jamais être ajoutés au dépôt.
 
-## Expanding the ESLint configuration
+## Commandes principales
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```powershell
+npm run typecheck     # Vérification TypeScript
+npm run lint          # Analyse du code
+npm test              # Tests applicatifs, Stripe et Studio
+npm run test:e2e      # Parcours Studio sur ordinateur et mobile
+npm run test:all      # Tous les tests précédents
+npm run build         # Build Vite puis pré-rendu de /studio/
+npm run audit:studio  # Lighthouse du build sur mobile et ordinateur
+npm run preview       # Prévisualisation du build
+```
+
+Google Chrome doit être installé localement pour le pré-rendu, les tests navigateur et Lighthouse.
+
+## FormaPrompt Studio
+
+Le Studio est intégré à la route publique `/studio`. Sa première catégorie, « courriel professionnel », fonctionne sans appel à un fournisseur d'IA, sans stockage et sans compte utilisateur.
+
+- architecture et extensions : `src/studio/README.md` ;
+- grille exacte du score : `src/studio/SCORING.md` ;
+- tests navigateur : `tests/e2e/studio.spec.ts` ;
+- HTML indexable généré : `dist/studio/index.html` après le build.
+
+Le build ne modifie aucune migration ni aucune donnée Supabase, Stripe ou Qualiopi.

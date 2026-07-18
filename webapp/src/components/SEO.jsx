@@ -1,6 +1,14 @@
 import { Helmet } from 'react-helmet-async';
 
-export default function SEO({ title, description, url, image, type = 'website' }) {
+export default function SEO({ title, description, url, image, type = 'website', jsonLd }) {
+  const structuredData = jsonLd || {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    url,
+    logo: image || '',
+    name: 'FormaPrompt',
+  };
+
   return (
     <Helmet>
       <title>{title}</title>
@@ -18,17 +26,9 @@ export default function SEO({ title, description, url, image, type = 'website' }
       {image && <meta name="twitter:image" content={image} />}
       {/* Canonical */}
       <link rel="canonical" href={url} />
-      {/* Structured data for Organization */}
+      {/* Données structurées adaptées à chaque page, ou Organization par défaut. */}
       <script type="application/ld+json">
-        {`
-          {
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "url": "${url}",
-            "logo": "${image || ''}",
-            "name": "FormaPrompt"
-          }
-        `}
+        {JSON.stringify(structuredData).replace(/</g, '\\u003c')}
       </script>
     </Helmet>
   );

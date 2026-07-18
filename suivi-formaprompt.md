@@ -238,6 +238,25 @@ La formation est positionnée comme un parcours d'acculturation et de mise en pr
 
 Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont pédagogiquement finalisées. La prochaine vérification utile consiste à délivrer une première attestation IA Act à partir d'un dossier réel entièrement finalisé, puis à contrôler son affichage dans l'espace apprenant sur ordinateur et téléphone. Les tests complets du paiement, du déplacement et de l'émargement restent à réaliser séparément avec plusieurs comptes apprenants.
 
+## Préparation de la prochaine tâche — FormaPrompt Studio 2026
+
+- Le prochain chantier produit est un outil public de Prompt Engineering, réutilisable dans les formations, nommé provisoirement « FormaPrompt Studio » et portant le nom de code « Prompt OS ».
+- Le prompt de démarrage est conservé dans `brief-formaprompt-studio-2026.md` et le suivi dédié dans `todo-formaprompt-studio.md`.
+- La première étape de la nouvelle tâche est strictement un audit produit, UX et technique. Aucun développement, choix d'architecture, schéma Supabase, produit Stripe ou appel IA ne doit être créé avant validation de Thierry.
+- L'audit devra comparer l'intégration au projet React/Vite existant avec une éventuelle application Next.js séparée, puis recommander un MVP et une seule tranche verticale modèle.
+
+## FormaPrompt Studio 2026 — première tranche verticale réalisée
+
+- L'architecture React/Vite existante et le périmètre sans appel externe ni stockage ont été validés par Thierry.
+- La route publique `/studio` propose le cas d'usage « courriel professionnel », un constructeur CROP générique, un prompt structuré, un score pédagogique explicable et des recommandations d'amélioration.
+- Le Studio ne charge ni Supabase, ni authentification, ni bandeau cookies sur cette route et ne conserve aucune saisie.
+- La configuration de catégorie regroupe les champs, le schéma Zod, les règles de score, le constructeur, les aides, les exemples et les recommandations.
+- La page publique contient les métadonnées SEO, Open Graph, JSON-LD, la FAQ, l'exemple avant-après et les liens internes demandés.
+- Le build produit un HTML pré-rendu pour `/studio/` afin que le contenu soit lisible sans attendre l'exécution de React.
+- Les tests unitaires, le parcours React, les quatre tests navigateur ordinateur/mobile, les contrôles WCAG automatisables, le lint, les types et le build ont été exécutés avec succès.
+- Audit Lighthouse local du build : mobile 97/99/100/100 et ordinateur 100/99/100/100 pour performance/accessibilité/bonnes pratiques/SEO.
+- Aucun schéma, aucune migration Supabase et aucun produit Stripe n'ont été ajoutés ou modifiés. Aucun commit, push ou déploiement n'a été réalisé.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
