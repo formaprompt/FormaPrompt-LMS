@@ -21,4 +21,15 @@ export const COURSE_ATTESTATION_CONFIG = {
       'Protéger les données et construire des pratiques responsables adaptées à son activité.',
     ],
   },
+  'formation-ia-act': {
+    nature: 'Action de formation professionnelle',
+    objectives: [
+      "Expliquer les principaux repères de l’AI Act et distinguer les acteurs d’un usage professionnel de l’IA.",
+      "Cartographier un usage de l’IA, les personnes concernées, les données mobilisées et la supervision humaine prévue.",
+      "Repérer les principaux signaux de vigilance et orienter les questions nécessitant une analyse spécialisée.",
+      "Construire un plan d’acculturation à l’IA adapté aux fonctions, aux usages et aux responsabilités des équipes.",
+      "Prioriser des actions, attribuer les responsabilités et définir les preuves ainsi que les échéances utiles.",
+      "Consulter des sources officielles datées et préparer une démarche sans conclure automatiquement à la conformité.",
+    ],
+  },
 };

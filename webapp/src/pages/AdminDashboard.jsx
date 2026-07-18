@@ -36,6 +36,12 @@ const TRAINER_GUIDES = [
     href: '/assets/guide-formateur-ia-generative-formaprompt.pdf',
   },
   {
+    id: 'formation-ia-act',
+    title: 'Guide formateur IA Act',
+    description: "Déroulés des trois formats de 4 heures guidées, exercices liés aux modules, évaluation finale et preuves pédagogiques.",
+    href: '/assets/guide-formateur-ia-act-formaprompt.pdf',
+  },
+  {
     id: 'formation-prompt-level-1',
     title: 'Guide formateur Prompt Engineering – Niveau 1',
     description: 'Déroulés des deux formats de 7 heures, six démonstrations, réponses attendues, corrections et preuves Qualiopi.',

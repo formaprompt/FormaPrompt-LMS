@@ -5,6 +5,9 @@ const BOOKING_FORMAT_LABELS = {
   two_5h: '2 séances de 5 h',
   four_2h30: '4 séances de 2 h 30',
   three_4h_4h_2h: '3 séances : 4 h + 4 h + 2 h',
+  one_4h: '1 séance de 4 h',
+  two_2h: '2 séances de 2 h',
+  four_1h: '4 séances de 1 h',
 };
 
 const REVIEW_STATUS_LABELS = {

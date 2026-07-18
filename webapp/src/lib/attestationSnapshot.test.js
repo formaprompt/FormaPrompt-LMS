@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { COURSE_ATTESTATION_CONFIG } from '../data/attestationConfig.js';
 import { createAttestationSnapshot, formatAttestationDeliveryMode } from './attestationSnapshot.js';
 
 test('formate les trois rythmes de la formation IA générative', () => {
@@ -11,6 +12,49 @@ test('formate les trois rythmes de la formation IA générative', () => {
     formatAttestationDeliveryMode({ delivery_mode: 'in_person', schedule_format: 'two_5h' }),
     'Présentiel · 2 séances de 5 h',
   );
+});
+
+test('formate les trois rythmes de la formation IA Act', () => {
+  assert.equal(
+    formatAttestationDeliveryMode({ delivery_mode: 'in_person', schedule_format: 'one_4h' }),
+    'Présentiel · 1 séance de 4 h',
+  );
+  assert.equal(
+    formatAttestationDeliveryMode({ delivery_mode: 'remote', schedule_format: 'two_2h' }),
+    'Distanciel synchrone · 2 séances de 2 h',
+  );
+  assert.equal(
+    formatAttestationDeliveryMode({ delivery_mode: 'remote', schedule_format: 'four_1h' }),
+    'Distanciel synchrone · 4 séances de 1 h',
+  );
+});
+
+test('conserve les objectifs pédagogiques sur une attestation IA Act', () => {
+  const snapshot = createAttestationSnapshot({
+    documentType: 'realisation',
+    record: {
+      learnerName: 'Camille Exemple',
+      submission: { id: 84, course_id: 'formation-ia-act' },
+      review: null,
+    },
+    documentData: {
+      course: { title: 'IA : acculturation et préparation à la conformité AI Act' },
+      booking: { id: 'booking-ia-act', delivery_mode: 'remote', schedule_format: 'two_2h' },
+      dossier: {
+        attendedMinutes: 240,
+        plannedMinutes: 240,
+        sessionCount: 2,
+        sessionProofs: [],
+      },
+      criteria: [],
+      attestationConfig: COURSE_ATTESTATION_CONFIG['formation-ia-act'],
+    },
+  });
+
+  assert.equal(snapshot.nature, 'Action de formation professionnelle');
+  assert.equal(snapshot.objectives.length, 6);
+  assert.match(snapshot.objectives.join(' '), /plan d’acculturation/);
+  assert.equal(snapshot.deliveryMode, 'Distanciel synchrone · 2 séances de 2 h');
 });
 
 test('fige uniquement les informations utiles au document et à sa traçabilité', () => {

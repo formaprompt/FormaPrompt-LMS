@@ -1142,71 +1142,965 @@ const generativeAiQuiz = [
   },
 ];
 
+const aiActModules = [
+  {
+    id: 'comprendre-cadre-europeen',
+    number: 1,
+    duration: '1 h',
+    title: "Comprendre l’IA et son cadre européen",
+    summary: "Identifier les acteurs, les usages et les premiers repères de l’AI Act sans transformer l’acculturation en diagnostic juridique.",
+    goals: [
+      "Expliquer simplement ce qu’est un système d’IA dans un contexte professionnel",
+      "Distinguer le fournisseur, le déployeur, les utilisateurs et les personnes concernées",
+      "Relier un usage concret aux premiers points de vigilance et à l’obligation de maîtrise de l’IA",
+    ],
+    keyPoints: [
+      "L’AI Act raisonne à partir du système, de l’usage, du rôle de l’organisation et des effets possibles",
+      "Les définitions, les pratiques interdites et l’obligation de maîtrise de l’IA s’appliquent depuis le 2 février 2025",
+      "Une cartographie factuelle prépare l’analyse, mais ne constitue pas à elle seule une qualification juridique",
+    ],
+    activity: "Cartographier un à trois usages réels ou réalistes, distinguer les acteurs et noter les informations qui restent à vérifier.",
+    exerciseId: 1,
+    lesson: {
+      introduction: [
+        "L’AI Act est le règlement européen qui encadre la mise sur le marché et l’utilisation de systèmes d’intelligence artificielle. Il ne classe pas une organisation entière comme « conforme » ou « non conforme » à partir du seul nom d’un outil. Il faut d’abord comprendre quel système est utilisé, dans quel but, par qui et avec quelles conséquences possibles.",
+        "Pour débuter, l’objectif n’est pas de produire une analyse juridique. Il consiste à décrire les usages avec des faits vérifiables, à distinguer les acteurs et à repérer les questions à transmettre aux personnes compétentes. Cette première cartographie servira de base aux modules suivants sur les niveaux de vigilance et le plan d’acculturation.",
+      ],
+      concepts: [
+        {
+          title: "Système d’IA",
+          description: "Un système automatisé qui produit notamment des prédictions, contenus, recommandations ou décisions pouvant influencer un environnement. Le nom commercial de l’outil ne suffit pas pour comprendre son fonctionnement ou son usage.",
+        },
+        {
+          title: "Fournisseur et déployeur",
+          description: "Le fournisseur développe ou fait développer le système et le met sur le marché sous son nom. Le déployeur l’utilise sous son autorité dans un cadre professionnel. Une organisation doit examiner son rôle pour chaque usage.",
+        },
+        {
+          title: "Maîtrise de l’IA",
+          description: "Les connaissances et compétences permettant aux personnes concernées d’utiliser l’IA de manière éclairée, en comprenant ses possibilités, ses limites et ses risques selon leur fonction et le contexte d’usage.",
+        },
+      ],
+      guidedSteps: [
+        {
+          title: "1. Décrire l’usage réel",
+          description: "Notez la tâche, le résultat produit et l’action réalisée après ce résultat. Évitez les formulations vagues comme « nous utilisons l’IA au bureau ».",
+        },
+        {
+          title: "2. Identifier les acteurs",
+          description: "Relevez le fournisseur du service, l’organisation qui l’utilise, les fonctions utilisatrices et les personnes éventuellement concernées par le résultat.",
+        },
+        {
+          title: "3. Repérer les données et les effets",
+          description: "Décrivez uniquement les catégories de données, sans copier de donnée réelle, puis indiquez ce que le résultat peut changer pour une personne ou une activité.",
+        },
+        {
+          title: "4. Situer le contrôle humain",
+          description: "Précisez qui vérifie le résultat, qui prend la décision finale et dans quelle situation l’usage doit être interrompu ou transmis à un responsable.",
+        },
+        {
+          title: "5. Conserver les questions ouvertes",
+          description: "Notez les informations inconnues, la source officielle ou interne à consulter, sa date de consultation et la personne compétente qui devra confirmer l’analyse.",
+        },
+      ],
+      demonstration: {
+        title: "Démonstration : assistant de rédaction pour le service client",
+        introduction: "Une PME envisage un assistant génératif pour préparer des brouillons de réponses. Le tableau sépare les faits connus des conclusions qui demandent encore une vérification.",
+        columns: ["Élément observé", "Premier repère", "Point à vérifier"],
+        rows: [
+          [
+            "L’assistant prépare un brouillon à partir d’une demande fictive ou anonymisée.",
+            "Le résultat est un contenu proposé, pas une réponse envoyée automatiquement.",
+            "Confirmer les données réellement transmises et les conditions du fournisseur.",
+          ],
+          [
+            "Un salarié relit et corrige le brouillon avant tout envoi.",
+            "Une supervision humaine est prévue dans le processus.",
+            "Définir des critères de contrôle et les situations imposant un arrêt.",
+          ],
+          [
+            "La PME utilise un service proposé sous le nom d’un éditeur externe.",
+            "Elle examine d’abord sa position possible de déployeur pour cet usage.",
+            "Vérifier le contrat, le paramétrage et les responsabilités exactes.",
+          ],
+          [
+            "Les utilisateurs doivent reconnaître les limites et protéger les informations.",
+            "Le contenu de l’acculturation doit être adapté à leur fonction et à cet usage.",
+            "Conserver les objectifs, activités et preuves de réalisation de cette acculturation.",
+          ],
+        ],
+      },
+      professionalExample: {
+        title: "Exemple commenté : passer d’une conclusion immédiate à un inventaire vérifiable",
+        unsafeRequest: "« Nous utilisons un assistant d’IA pour écrire des messages. Dis-moi si notre entreprise est conforme à l’AI Act. »",
+        saferRequest: "« Aide-moi à préparer l’inventaire factuel d’un assistant d’IA utilisé pour produire des brouillons de messages. Distingue la finalité, le fournisseur, le rôle possible de l’organisation, les utilisateurs, les personnes concernées, les catégories de données, la validation humaine et les informations manquantes. Ne conclus pas juridiquement et indique les points à vérifier dans une source officielle ou avec la personne compétente. »",
+        analysis: [
+          "La seconde demande décrit un usage précis au lieu de juger toute l’organisation.",
+          "Les rôles, les données, la supervision et les personnes concernées deviennent observables.",
+          "Les informations absentes restent visibles et aucune qualification juridique automatique n’est demandée.",
+        ],
+      },
+      commonMistakes: [
+        "Confondre un outil d’IA générative avec l’ensemble des systèmes d’IA visés par le règlement.",
+        "Classer un usage uniquement à partir du nom de l’outil, sans examiner sa finalité et ses effets.",
+        "Déclarer l’organisation conforme sans inventorier les usages, les rôles, les données et les contrôles.",
+        "Copier des données personnelles ou confidentielles dans un service public pour réaliser la cartographie.",
+      ],
+      takeaways: [
+        "L’analyse commence par un usage précis, pas par le nom commercial d’un outil.",
+        "Le fournisseur, le déployeur, les utilisateurs et les personnes concernées ont des positions différentes.",
+        "La maîtrise de l’IA doit être adaptée aux fonctions, aux connaissances et au contexte d’utilisation.",
+        "La cartographie conserve les faits, les sources et les questions à faire confirmer ; elle ne remplace pas un avis juridique.",
+      ],
+    },
+  },
+  {
+    id: 'identifier-niveaux-vigilance',
+    number: 2,
+    duration: '1 h',
+    title: 'Identifier les usages et les niveaux de vigilance',
+    summary: 'Repérer les situations qui imposent un arrêt, une analyse spécialisée, une information des personnes ou des contrôles renforcés.',
+    goals: [
+      'Reconnaître les principaux signaux associés aux pratiques interdites, au haut risque et à la transparence',
+      'Examiner les personnes concernées, les données, les effets et la place de la décision humaine',
+      'Orienter un cas vers la bonne suite sans produire de qualification juridique automatique',
+    ],
+    keyPoints: [
+      'Le niveau de vigilance dépend de la finalité prévue et du contexte réel, pas seulement de la technologie utilisée',
+      'Une pratique interdite ou un possible système à haut risque nécessite une vérification spécialisée avant de poursuivre',
+      'L’AI Act complète les autres règles applicables, notamment la protection des données, la confidentialité et le droit du travail',
+    ],
+    activity: 'Analyser un cas fictif, repérer ses signaux de vigilance et préparer les questions à transmettre au référent compétent.',
+    exerciseId: 2,
+    lesson: {
+      introduction: [
+        'L’AI Act adopte une approche fondée sur les risques. Certains usages sont interdits, d’autres sont soumis à des exigences renforcées ou à des obligations de transparence, tandis que de nombreux usages courants restent possibles avec des contrôles proportionnés. La catégorie ne se déduit toutefois pas du nom de l’outil : elle dépend de sa finalité prévue, de son fonctionnement et du contexte dans lequel il est utilisé.',
+        'À ce stade, l’apprenant réalise un premier tri. Il recherche des signaux d’alerte, distingue les faits des suppositions et choisit la prochaine action prudente. La décision finale peut nécessiter le fournisseur, le responsable interne, le délégué à la protection des données ou un professionnel du droit.',
+      ],
+      concepts: [
+        {
+          title: 'Pratique interdite',
+          description: 'Usage que le règlement interdit lorsqu’il réunit des conditions précises. Un signal possible impose d’arrêter l’analyse simplifiée et de faire vérifier le cas avant tout déploiement.',
+        },
+        {
+          title: 'Système à haut risque',
+          description: 'Système relevant de situations définies par le règlement, notamment selon sa finalité et son domaine d’emploi. Une activité importante ou sensible n’est pas automatiquement une qualification juridique de haut risque.',
+        },
+        {
+          title: 'Obligation de transparence',
+          description: 'Information à fournir dans certaines situations, par exemple lorsqu’une personne interagit avec une IA ou rencontre certains contenus générés. Les conditions exactes doivent être vérifiées pour chaque usage.',
+        },
+      ],
+      guidedSteps: [
+        {
+          title: '1. Fixer les faits du cas',
+          description: 'Décrivez la finalité, les utilisateurs, les personnes concernées, le résultat produit et l’action ou la décision qu’il prépare. Marquez les informations absentes comme inconnues.',
+        },
+        {
+          title: '2. Mesurer les effets possibles',
+          description: 'Demandez si le résultat influence un accès à un emploi, une formation, un service, un droit ou une décision pouvant affecter significativement une personne.',
+        },
+        {
+          title: '3. Rechercher les signaux réglementaires',
+          description: 'Repérez une possible pratique interdite, un domaine potentiellement à haut risque ou une situation dans laquelle la personne devrait être informée de l’usage de l’IA.',
+        },
+        {
+          title: '4. Examiner les protections existantes',
+          description: 'Vérifiez les catégories de données, la confidentialité, les contrôles humains, la possibilité de corriger le résultat et les conditions permettant d’interrompre l’usage.',
+        },
+        {
+          title: '5. Décider de la prochaine vérification',
+          description: 'Classez la suite à donner : suspendre, demander une analyse spécialisée, préciser la transparence et les contrôles, ou poursuivre une expérimentation limitée sous validation humaine.',
+        },
+      ],
+      demonstration: {
+        title: 'Démonstration : comparer quatre usages professionnels',
+        introduction: 'Le formateur montre que des outils proches peuvent appeler des niveaux de vigilance différents selon leur finalité et leurs effets.',
+        columns: ['Cas fictif', 'Signal à repérer', 'Suite prudente'],
+        rows: [
+          [
+            'Corriger l’orthographe d’une note interne fictive, sans donnée personnelle.',
+            'Usage courant, mais confidentialité et exactitude restent à contrôler.',
+            'Expérimentation limitée avec source autorisée et relecture humaine.',
+          ],
+          [
+            'Répondre aux visiteurs avec un agent conversationnel présenté comme assistant automatisé.',
+            'Interaction directe avec une IA et information de la personne à examiner.',
+            'Vérifier les obligations de transparence, les limites annoncées et le relais humain.',
+          ],
+          [
+            'Classer automatiquement des candidatures avant un recrutement.',
+            'Effet possible sur l’accès à l’emploi et signal de haut risque.',
+            'Suspendre toute conclusion simplifiée et demander une analyse spécialisée du système et du processus.',
+          ],
+          [
+            'Déduire la motivation de salariés à partir de leurs expressions faciales.',
+            'Signal très fort de pratique interdite dans le contexte professionnel.',
+            'Ne pas déployer et faire vérifier immédiatement le cas, ses conditions exactes et les éventuelles exceptions prévues par le texte.',
+          ],
+        ],
+      },
+      professionalExample: {
+        title: 'Exemple commenté : remplacer une réponse binaire par un premier tri documenté',
+        unsafeRequest: '« Notre outil classe automatiquement les candidatures. Est-ce autorisé par l’AI Act ? Réponds simplement oui ou non. »',
+        saferRequest: '« À partir de ce cas fictif de classement de candidatures, sépare les faits connus, les informations manquantes et les signaux de vigilance. Examine la finalité, les personnes concernées, les données, l’effet sur la décision, la supervision humaine et le rôle possible de l’organisation. Ne conclus pas juridiquement. Indique les questions à transmettre au responsable compétent et les sources officielles à consulter sans inventer de référence. »',
+        analysis: [
+          'La seconde demande refuse une conclusion binaire fondée sur une description incomplète.',
+          'L’effet sur les personnes, les données et la décision humaine devient visible.',
+          'Le résultat attendu est une liste de vérifications et non une autorisation produite par l’IA.',
+        ],
+      },
+      commonMistakes: [
+        'Considérer que tout usage professionnel est automatiquement à haut risque.',
+        'Considérer au contraire qu’un outil courant ne peut jamais relever d’une situation réglementée.',
+        'Confondre un premier signal de vigilance avec une qualification juridique définitive.',
+        'Examiner uniquement l’AI Act sans vérifier les données personnelles, la confidentialité, les droits et les règles métier applicables.',
+      ],
+      takeaways: [
+        'La finalité et les effets du système comptent davantage que son nom ou sa popularité.',
+        'Un signal de pratique interdite entraîne un arrêt et une vérification compétente.',
+        'Un possible haut risque ou une obligation de transparence doit être documenté et confirmé.',
+        'Le premier tri prépare la décision ; il ne remplace ni les sources officielles ni l’analyse spécialisée.',
+      ],
+    },
+  },
+  {
+    id: 'organiser-acculturation-equipes',
+    number: 3,
+    duration: '1 h',
+    title: "Organiser l’acculturation des équipes",
+    summary: "Construire des actions de maîtrise de l’IA adaptées aux fonctions, aux usages et aux risques, puis conserver des preuves proportionnées.",
+    goals: [
+      "Identifier les personnes qui utilisent ou encadrent des systèmes d’IA pour le compte de l’organisation",
+      "Définir des compétences et activités adaptées aux connaissances, aux responsabilités et aux usages",
+      "Prévoir des traces simples, une actualisation et des règles de minimisation des données",
+    ],
+    keyPoints: [
+      "L’article 4 ne prévoit pas un programme identique pour tous : les mesures dépendent des personnes, des systèmes et du contexte",
+      "Une formation peut être complétée par des consignes, exercices, ressources, échanges et rappels adaptés aux usages",
+      "Aucun certificat ni aucune structure de gouvernance particulière n’est imposé pour l’article 4 ; un registre interne proportionné peut conserver les actions réalisées",
+    ],
+    activity: "Préparer un plan d’acculturation pour trois groupes de fonctions, avec objectifs, activités, preuves et conditions d’actualisation.",
+    exerciseId: 3,
+    lesson: {
+      introduction: [
+        "La maîtrise de l’IA ne consiste pas à faire suivre le même cours à toute l’organisation. Une personne qui utilise occasionnellement un assistant de rédaction, un salarié qui exploite régulièrement des recommandations et un responsable qui choisit ou déploie un système n’ont ni les mêmes besoins, ni les mêmes responsabilités.",
+        "Le point de départ est l’inventaire des usages. Pour chaque groupe, l’organisation précise ce qu’il faut comprendre, savoir faire et savoir arrêter. Elle choisit ensuite des actions réalistes et conserve des traces utiles. Le cadre européen évoluant, les sources officielles et les supports internes doivent être datés et revus lorsque l’outil, l’usage, le risque ou la règle change.",
+      ],
+      concepts: [
+        {
+          title: "Public concerné",
+          description: "Personnel ou autre personne qui utilise ou fait fonctionner un système d’IA pour le compte de l’organisation. Le périmètre peut inclure des prestataires ou partenaires selon la situation.",
+        },
+        {
+          title: "Niveau suffisant",
+          description: "Compétences, connaissances et compréhension adaptées à la fonction, à l’expérience, au système utilisé, à ses risques et aux personnes sur lesquelles il peut produire des effets.",
+        },
+        {
+          title: "Preuve proportionnée",
+          description: "Trace interne utile pour retrouver le public, l’objectif, l’action, le support, la date et la suite prévue, sans conserver de donnée personnelle ou d’évaluation individuelle inutile.",
+        },
+      ],
+      guidedSteps: [
+        {
+          title: "1. Relier les publics aux usages",
+          description: "Partez de la cartographie et regroupez les personnes par fonctions proches : utilisateurs occasionnels, utilisateurs réguliers, responsables, superviseurs ou personnes chargées du support.",
+        },
+        {
+          title: "2. Identifier les besoins de chaque groupe",
+          description: "Estimez les connaissances déjà présentes sans imposer de test nominatif : échange, questionnaire non noté, observation d’une tâche fictive ou retour sur les difficultés rencontrées.",
+        },
+        {
+          title: "3. Définir des objectifs observables",
+          description: "Précisez ce que chaque groupe devra savoir expliquer, appliquer, vérifier et interrompre dans les usages qui le concernent.",
+        },
+        {
+          title: "4. Combiner les actions utiles",
+          description: "Choisissez une combinaison proportionnée : sensibilisation, atelier pratique, guide interne, règles d’usage, démonstration, questions-réponses et rappel lors d’une évolution importante.",
+        },
+        {
+          title: "5. Tracer et actualiser",
+          description: "Conservez la version du support, la date, le public par fonction, la réalisation et les suites prévues. Définissez les événements déclenchant une mise à jour du plan.",
+        },
+      ],
+      demonstration: {
+        title: "Démonstration : adapter le parcours à trois fonctions",
+        introduction: "Une PME utilise un assistant génératif pour préparer des contenus. Le formateur montre comment différencier les objectifs sans créer trois formations entièrement séparées.",
+        columns: ["Groupe", "Compétences prioritaires", "Action et preuve utile"],
+        rows: [
+          [
+            "Utilisateurs occasionnels",
+            "Reconnaître les limites, protéger les informations et faire relire le résultat.",
+            "Sensibilisation courte, exercice fictif et trace de réalisation par groupe.",
+          ],
+          [
+            "Utilisateurs réguliers",
+            "Cadrer une tâche, vérifier les faits, appliquer les règles internes et signaler un incident.",
+            "Atelier sur les usages autorisés, grille de contrôle et retour collectif anonymisé.",
+          ],
+          [
+            "Responsables de déploiement ou de supervision",
+            "Identifier les rôles, apprécier les risques, organiser la supervision et décider d’une suspension.",
+            "Étude de cas, procédure d’escalade et compte rendu des décisions de mise à jour.",
+          ],
+        ],
+      },
+      professionalExample: {
+        title: "Exemple commenté : passer d’un webinaire unique à un plan adapté",
+        unsafeRequest: "« Prépare un webinaire identique pour tous les salariés et un certificat prouvant automatiquement notre conformité à l’article 4. »",
+        saferRequest: "« Aide-moi à construire un plan de maîtrise de l’IA à partir de trois groupes de fonctions et des usages réellement recensés. Pour chaque groupe, précise les compétences attendues, les risques à connaître, les activités, les règles d’arrêt, la preuve minimale à conserver et le déclencheur de mise à jour. Ne promets pas la conformité et n’invente aucune obligation de certificat ou de test individuel. »",
+        analysis: [
+          "La seconde demande adapte les actions aux responsabilités et aux usages réels.",
+          "Les apprentissages attendus et les situations d’arrêt deviennent observables.",
+          "La trace documente la démarche sans présenter une simple attestation comme une preuve automatique de conformité.",
+        ],
+      },
+      commonMistakes: [
+        "Proposer exactement le même contenu à tous les publics sans examiner leurs usages et responsabilités.",
+        "Confondre maîtrise de l’IA et réussite obligatoire à un test individuel nominatif.",
+        "Considérer qu’un certificat de présence suffit à démontrer l’adaptation et l’efficacité des actions.",
+        "Réaliser une action unique sans prévoir d’actualisation lorsque les outils, les usages ou le cadre évoluent.",
+      ],
+      takeaways: [
+        "Le plan part des usages, des publics et des risques réellement identifiés.",
+        "Les objectifs diffèrent selon que la personne utilise, supervise, choisit ou déploie le système.",
+        "Formation, consignes, pratique et accompagnement peuvent être combinés de manière proportionnée.",
+        "Les preuves restent minimales, datées et actualisées ; elles ne garantissent pas seules la conformité juridique.",
+      ],
+    },
+  },
+  {
+    id: 'preparer-plan-action-realiste',
+    number: 4,
+    duration: '1 h',
+    title: "Préparer un plan d’action réaliste",
+    summary: "Transformer l’inventaire des usages, les vigilances et le plan d’acculturation en actions prioritaires, attribuées et vérifiables.",
+    goals: [
+      "Prioriser les actions selon l’urgence, les effets possibles et les informations encore inconnues",
+      "Attribuer chaque action à une fonction pilote et identifier les validations nécessaires",
+      "Définir un livrable, une échéance, une preuve minimale et un déclencheur de révision",
+    ],
+    keyPoints: [
+      "La feuille de route organise le travail mais ne constitue ni une déclaration, ni une garantie de conformité",
+      "Les situations potentiellement interdites ou sensibles sont suspendues et transmises avant les améliorations de confort",
+      "Le calendrier européen évolue : chaque échéance doit être reliée à une source officielle consultée et datée",
+    ],
+    activity: "Construire une feuille de route à 30, 60 et 90 jours à partir d’un cas fictif, puis justifier les priorités et les validations spécialisées.",
+    exerciseId: 4,
+    lesson: {
+      introduction: [
+        "Une organisation peut avoir recensé ses usages, repéré des vigilances et prévu l’acculturation de ses équipes sans savoir par quoi commencer. Le plan d’action sert à transformer ces constats en décisions réalisables : arrêter ce qui présente un signal fort, sécuriser les usages courants, obtenir les informations manquantes et préparer les mesures plus structurantes.",
+        "Une bonne feuille de route reste courte et pilotable. Chaque ligne décrit une action observable, une fonction responsable, les personnes qui doivent valider, un résultat attendu, une échéance et une trace utile. Les dates réglementaires ne sont jamais recopiées sans leur source et leur date de consultation, car le calendrier et les textes d’accompagnement peuvent évoluer.",
+      ],
+      concepts: [
+        {
+          title: "Action prioritaire",
+          description: "Mesure choisie à partir de faits connus, d’un risque ou d’une échéance. Elle commence par un verbe d’action et produit un résultat vérifiable, par exemple suspendre un usage, obtenir une documentation ou formaliser une règle.",
+        },
+        {
+          title: "Fonction pilote et validation",
+          description: "La fonction pilote coordonne l’action et son suivi. Elle ne remplace pas les validations juridiques, techniques, métiers, sociales ou relatives aux données lorsque celles-ci sont nécessaires.",
+        },
+        {
+          title: "Trace et révision",
+          description: "Le plan conserve uniquement les informations utiles : décision, version du livrable, fonction responsable, échéance, source datée et statut. Il prévoit aussi les événements qui imposent une nouvelle analyse.",
+        },
+      ],
+      guidedSteps: [
+        {
+          title: "1. Rassembler les constats",
+          description: "Reprenez la cartographie, le premier tri des vigilances et le plan d’acculturation. Séparez les faits vérifiés, les inconnues et les décisions déjà prises.",
+        },
+        {
+          title: "2. Ordonner les priorités",
+          description: "Traitez d’abord les signaux d’interdiction, les effets importants sur les personnes, les données sensibles et les échéances proches, puis les règles d’usage et les améliorations progressives.",
+        },
+        {
+          title: "3. Attribuer les rôles",
+          description: "Désignez une fonction pilote par action et précisez les fonctions qui doivent apporter une information, réaliser un contrôle ou valider la décision finale.",
+        },
+        {
+          title: "4. Définir le résultat attendu",
+          description: "Associez à chaque action un livrable concret, une échéance réaliste, un critère de réalisation et une preuve minimale qui n’ajoute pas de donnée personnelle inutile.",
+        },
+        {
+          title: "5. Planifier la revue",
+          description: "Programmez un point de suivi et les déclencheurs de révision : nouvel outil, changement de finalité, incident, nouvelle population concernée, documentation fournisseur ou évolution officielle.",
+        },
+      ],
+      demonstration: {
+        title: "Démonstration : organiser les 90 premiers jours d’une PME",
+        introduction: "La PME des modules précédents utilise un assistant de rédaction et étudie un outil de classement de candidatures. Le plan distingue les actions internes immédiates de celles qui exigent une validation spécialisée.",
+        columns: ["Horizon", "Action et résultat attendu", "Pilotage, validation et trace"],
+        rows: [
+          [
+            "Sous 30 jours",
+            "Suspendre l’étude du classement de candidatures et réunir la finalité, la documentation et le processus de décision.",
+            "Pilotage RH ; validations juridique, données et métier ; décision et sources datées conservées.",
+          ],
+          [
+            "Sous 30 jours",
+            "Formaliser les usages autorisés et interdits de l’assistant de rédaction, avec validation humaine avant diffusion.",
+            "Pilotage métier avec sécurité et données ; règle interne versionnée et diffusée par fonction.",
+          ],
+          [
+            "Sous 60 jours",
+            "Réaliser l’acculturation adaptée des utilisateurs et tester une situation fictive de contrôle et d’arrêt.",
+            "Pilotage formation ; objectifs, support, date et réalisation conservés sans score nominatif inutile.",
+          ],
+          [
+            "Sous 90 jours",
+            "Revoir l’inventaire, les incidents, les questions ouvertes et les changements de sources officielles.",
+            "Pilotage désigné ; compte rendu court, décisions actualisées et nouvelle date de revue.",
+          ],
+        ],
+      },
+      professionalExample: {
+        title: "Exemple commenté : remplacer une promesse de conformité par un plan pilotable",
+        unsafeRequest: "« Produis notre plan de conformité AI Act complet, certifie que toutes nos obligations sont couvertes et attribue automatiquement les responsabilités. »",
+        saferRequest: "« À partir de constats vérifiés et d’informations génériques, aide-moi à préparer une feuille de route à 30, 60 et 90 jours. Pour chaque action, indique la priorité, la justification, la fonction pilote, les validations nécessaires, le livrable, l’échéance, le critère de réalisation, la preuve minimale et le déclencheur de révision. Distingue les décisions internes des points à faire confirmer et ne conclus pas à la conformité. »",
+        analysis: [
+          "La seconde demande utilise les faits disponibles et conserve les inconnues au lieu de les combler.",
+          "Chaque priorité produit un livrable, un responsable par fonction et une trace contrôlable.",
+          "Les sujets sensibles sont transmis aux compétences appropriées au lieu d’être tranchés automatiquement par l’IA.",
+        ],
+      },
+      commonMistakes: [
+        "Créer une liste très longue sans priorité, responsable, échéance ni résultat attendu.",
+        "Commencer par rédiger une charte générale alors qu’un usage potentiellement interdit ou sensible doit d’abord être suspendu et vérifié.",
+        "Présenter une feuille de route produite par l’IA comme une preuve suffisante de conformité juridique.",
+        "Utiliser une échéance réglementaire non datée sans vérifier la source officielle et les éventuelles modifications du calendrier.",
+      ],
+      takeaways: [
+        "Le plan transforme les constats des trois premiers modules en actions limitées, attribuées et vérifiables.",
+        "L’ordre des priorités dépend des effets, de l’urgence, des inconnues et des échéances applicables à chaque usage.",
+        "Une fonction pilote coordonne ; les validations compétentes restent nécessaires lorsque le sujet dépasse son rôle.",
+        "Les traces et les revues rendent la démarche pilotable sans promettre une conformité automatique.",
+      ],
+    },
+  },
+];
+
 const aiActExercises = [
   {
     id: 1,
     title: "Cartographier les usages de l'IA",
-    objective: 'Usages, acteurs et données',
-    instructions: "Recensez les outils et usages existants dans votre structure. N'insérez aucune donnée personnelle ou confidentielle dans un service public d'IA.",
-    prompt: `Aide-moi à construire une grille de cartographie des usages de l'IA dans une organisation.
-La grille doit comporter : l'outil, la finalité, les utilisateurs, les personnes concernées, les données traitées, le fournisseur, la validation humaine et les risques identifiés.
-Fournis uniquement une trame vierge et des consignes de remplissage.`,
+    objective: 'Module 1 · Usages, acteurs et premiers repères',
+    instructions: "Travaillez sur un à trois usages réels décrits avec des termes génériques, ou sur des situations réalistes. N’insérez aucune donnée personnelle, sensible ou confidentielle dans un service public d’IA. Cette cartographie prépare l’analyse et ne constitue pas une qualification juridique.",
+    howTo: [
+      "Choisissez un à trois usages précis : tâche réalisée, résultat produit et action effectuée après ce résultat.",
+      "Remplacez les éléments entre crochets avec des informations génériques et indiquez « inconnu » lorsqu’un fait n’est pas vérifié.",
+      "Contrôlez la grille proposée : corrigez les acteurs, retirez les suppositions et complétez la supervision humaine réellement prévue.",
+      "Conservez la grille, les questions ouvertes, les sources consultées avec leur date et les fonctions qui devront confirmer les points sensibles.",
+    ],
+    successCriteria: [
+      "Chaque usage est décrit par une finalité, un résultat et une action suffisamment précis.",
+      "Le fournisseur, le rôle possible de l’organisation, les utilisateurs et les personnes concernées sont distingués sans conclusion hâtive.",
+      "Les catégories de données, les effets possibles et la validation humaine sont indiqués sans donnée réelle ni information confidentielle.",
+      "Les informations inconnues, les sources à consulter et les points à faire confirmer sont clairement conservés.",
+    ],
+    prompt: `Je prépare une cartographie factuelle des usages de l’IA dans une organisation. Cette cartographie ne constitue pas une analyse juridique.
+
+Contexte général :
+- secteur ou activité : [secteur] ;
+- taille ou type de structure : [information générique] ;
+- usage à étudier : [tâche, résultat produit et action réalisée ensuite] ;
+- outil ou service : [nom si vérifié, sinon « inconnu »].
+
+Construis un tableau avec les colonnes suivantes :
+1. usage et finalité ;
+2. système ou service utilisé ;
+3. fournisseur identifié ou à confirmer ;
+4. rôle possible de l’organisation, à confirmer ;
+5. fonctions utilisatrices ;
+6. personnes concernées par le résultat ;
+7. catégories de données, sans aucune donnée réelle ;
+8. résultat produit et action qu’il prépare ;
+9. décision ou validation humaine ;
+10. premier point de vigilance ;
+11. information, source ou responsable à consulter.
+
+Règles :
+- n’invente ni fait, ni contrat, ni source ;
+- écris « inconnu » lorsqu’une information manque ;
+- ne conclus pas que l’usage est conforme ou qu’il relève d’une catégorie juridique ;
+- signale les points à faire valider par une personne compétente.
+
+Termine par cinq questions de clarification et une courte liste des vérifications à conserver avec leur date.`,
   },
   {
     id: 2,
     title: 'Effectuer un premier tri des risques',
-    objective: 'Repérage, pas qualification juridique',
-    instructions: "Analysez un cas fictif pour identifier les questions à transmettre au référent compétent. Cet exercice ne remplace pas une analyse juridique.",
-    prompt: `À partir de ce cas fictif : [décrire un usage sans donnée réelle], prépare une liste de questions permettant d'identifier :
-- le rôle de l'organisation ;
-- les personnes affectées ;
-- le niveau d'automatisation de la décision ;
-- les obligations de transparence possibles ;
-- les risques pour les droits fondamentaux ;
-- les validations humaines nécessaires.
-Ne conclus pas juridiquement : indique les points à faire valider par un professionnel compétent.`,
+    objective: 'Module 2 · Premier tri et orientation',
+    instructions: "Analysez un cas fictif ou entièrement anonymisé pour repérer les signaux de vigilance et choisir la prochaine vérification. N’utilisez aucune donnée réelle. L’exercice ne produit ni qualification juridique, ni décision de conformité.",
+    howTo: [
+      'Choisissez un cas fictif et décrivez sa finalité, son résultat, les personnes concernées et la décision ou l’action qu’il prépare.',
+      'Complétez les éléments entre crochets et écrivez « inconnu » pour chaque information non vérifiée.',
+      'Contrôlez le tableau obtenu : séparez les faits, les signaux possibles et les conclusions qui exigent une expertise.',
+      'Conservez la suite choisie, les questions à transmettre, les sources officielles consultées avec leur date et la fonction chargée de valider.',
+    ],
+    successCriteria: [
+      'Le cas décrit clairement la finalité, les personnes concernées, le résultat produit et son influence sur une action ou une décision.',
+      'Les signaux possibles de pratique interdite, de haut risque ou de transparence sont repérés sans être présentés comme une qualification définitive.',
+      'Les données, les droits, la supervision humaine, les possibilités de correction et les conditions d’arrêt sont examinés.',
+      'La prochaine action, les questions à transmettre et les sources à vérifier sont justifiées et traçables.',
+    ],
+    prompt: `Je réalise un premier tri pédagogique d’un usage fictif de l’IA. Je ne cherche ni avis juridique, ni décision de conformité.
+
+Cas à étudier :
+- finalité prévue : [objectif précis] ;
+- secteur ou activité : [contexte] ;
+- utilisateurs : [fonctions] ;
+- personnes concernées : [public générique] ;
+- catégories de données : [sans donnée réelle] ;
+- résultat produit : [contenu, recommandation, score ou décision] ;
+- action ou décision préparée : [conséquence possible] ;
+- supervision humaine : [contrôle, responsable et possibilité de corriger] ;
+- informations inconnues : [liste].
+
+Construis un tableau avec :
+1. fait connu ;
+2. information manquante ;
+3. effet possible sur une personne ou une activité ;
+4. signal éventuel de pratique interdite, de haut risque, de transparence ou d’autre vigilance ;
+5. contrôle humain et protection des données à examiner ;
+6. question à transmettre ;
+7. fonction ou expertise à consulter.
+
+Règles :
+- ne déduis aucune information absente ;
+- ne classe pas juridiquement le système et ne déclare pas l’usage conforme ;
+- explique pourquoi chaque signal doit être vérifié dans le contexte exact ;
+- n’invente ni article, ni source, ni lien ;
+- distingue l’AI Act des autres règles pouvant s’appliquer.
+
+Termine par une orientation argumentée parmi ces quatre suites :
+A. suspendre le projet en attendant une vérification compétente ;
+B. demander une analyse spécialisée avant de poursuivre ;
+C. préciser la transparence, les données et les contrôles humains ;
+D. poursuivre uniquement une expérimentation limitée, réversible et sous validation humaine.
+
+Ajoute la liste des questions, des sources officielles et des dates de consultation à conserver comme trace.`,
   },
   {
     id: 3,
     title: "Construire un plan d'acculturation",
-    objective: 'Article 4 et usages réels',
-    instructions: "Préparez un plan adapté aux fonctions, aux outils utilisés et au contexte de votre structure.",
-    prompt: `Propose une trame de plan d'acculturation à l'IA pour une organisation de [taille] dans le secteur [secteur].
-Distingue trois publics : utilisateurs occasionnels, utilisateurs réguliers et responsables de déploiement.
-Pour chacun, précise les compétences attendues, les risques à connaître, les activités pédagogiques et les preuves de réalisation à conserver.`,
+    objective: 'Module 3 · Publics, actions et preuves',
+    instructions: "Préparez un plan adapté aux fonctions et aux usages recensés. Utilisez uniquement des catégories de fonctions et des situations génériques : aucun nom, score individuel, donnée personnelle ou information confidentielle ne doit être transmis.",
+    howTo: [
+      "Choisissez trois groupes de fonctions liés à des usages réels ou réalistes : occasionnels, réguliers et responsables ou superviseurs.",
+      "Complétez le contexte avec des informations génériques, puis reliez chaque groupe à un ou plusieurs usages précis.",
+      "Vérifiez que les compétences, activités, règles d’arrêt et preuves proposées sont différentes lorsque les responsabilités ou les risques le justifient.",
+      "Conservez le plan daté, les sources officielles consultées, la version des supports et les événements qui déclencheront une actualisation.",
+    ],
+    successCriteria: [
+      "Chaque groupe de fonctions est relié à des usages, responsabilités et risques clairement identifiés.",
+      "Les objectifs décrivent ce que les personnes devront comprendre, appliquer, vérifier et savoir interrompre.",
+      "Les activités, formats et accompagnements sont proportionnés au niveau initial et au contexte, sans programme uniforme imposé.",
+      "Les preuves minimales, les responsables, les échéances et les conditions d’actualisation sont définis sans collecte de données inutile.",
+    ],
+    prompt: `Je prépare un plan interne de maîtrise de l’IA adapté aux usages de mon organisation. Ce plan ne constitue pas une preuve automatique de conformité.
+
+Contexte générique :
+- type et taille de structure : [information générique] ;
+- secteur ou activité : [secteur] ;
+- rôle possible de l’organisation : [fournisseur, déployeur ou à confirmer] ;
+- systèmes et usages recensés : [liste sans donnée confidentielle] ;
+- principaux risques et personnes concernées : [description générique] ;
+- règles et ressources déjà disponibles : [éléments vérifiés] ;
+- fonction chargée de coordonner le plan : [fonction, sans nom].
+
+Distingue au minimum :
+1. utilisateurs occasionnels ;
+2. utilisateurs réguliers ;
+3. responsables de déploiement, superviseurs ou fonctions support.
+
+Pour chaque groupe, construis un tableau indiquant :
+- les usages concernés ;
+- les connaissances ou expériences déjà supposées, à confirmer ;
+- les compétences à acquérir ;
+- les possibilités, limites et risques à comprendre ;
+- les règles d’utilisation, de vérification et d’arrêt ;
+- l’activité proposée et son format ;
+- l’accompagnement ou la ressource disponible ;
+- la preuve minimale à conserver ;
+- le responsable par fonction ;
+- l’échéance et le déclencheur d’actualisation.
+
+Règles :
+- n’invente ni obligation, ni article, ni exigence de certificat ;
+- ne demande aucun nom, score individuel ou donnée personnelle inutile ;
+- adapte le plan aux usages et aux risques au lieu de proposer le même programme à tous ;
+- distingue les faits vérifiés des décisions restant à confirmer ;
+- indique que les sources officielles doivent être consultées et datées.
+
+Termine par :
+1. une action prioritaire réalisable sous 30 jours ;
+2. cinq traces internes proportionnées à conserver ;
+3. trois événements imposant une mise à jour du plan ;
+4. les questions à transmettre aux fonctions compétentes.`,
+  },
+  {
+    id: 4,
+    title: "Construire une feuille de route 30-60-90 jours",
+    objective: "Module 4 · Priorités, responsabilités et suivi",
+    instructions: "Travaillez à partir d’un cas fictif ou d’informations entièrement génériques. N’insérez aucun nom, contrat, incident détaillé, donnée personnelle, information confidentielle ou documentation non autorisée dans un service public d’IA.",
+    howTo: [
+      "Rassemblez les constats des exercices précédents et séparez les faits vérifiés, les inconnues, les signaux de vigilance et les décisions déjà prises.",
+      "Complétez le modèle, puis répartissez les actions entre les horizons de 30, 60 et 90 jours en justifiant leur ordre.",
+      "Contrôlez chaque ligne : une fonction pilote, les validations nécessaires, un livrable, un critère de réalisation, une échéance et une preuve minimale doivent apparaître.",
+      "Vérifiez les dates dans les sources officielles, ajoutez leur date de consultation et faites valider les sujets juridiques, techniques, sociaux, métiers ou relatifs aux données par les fonctions compétentes.",
+    ],
+    successCriteria: [
+      "Les priorités découlent clairement des effets possibles, de l’urgence, des informations manquantes et des échéances applicables.",
+      "Les actions potentiellement interdites ou sensibles sont suspendues ou transmises avant les améliorations secondaires.",
+      "Chaque action possède un pilote par fonction, des validations identifiées, un livrable observable et une échéance réaliste.",
+      "Les preuves, sources datées, points de revue et déclencheurs d’actualisation permettent un suivi sans collecte de données inutile ni promesse de conformité.",
+    ],
+    prompt: `Je prépare une feuille de route pédagogique à 30, 60 et 90 jours pour encadrer des usages de l’IA. Cette feuille de route ne constitue ni un avis juridique, ni une déclaration de conformité.
+
+Contexte générique :
+- type de structure et secteur : [informations génériques] ;
+- usages recensés : [finalités et résultats produits] ;
+- rôle possible de l’organisation : [fournisseur, déployeur ou à confirmer] ;
+- personnes concernées et effets possibles : [description générique] ;
+- catégories de données : [sans donnée réelle] ;
+- contrôles humains existants : [faits vérifiés] ;
+- signaux de vigilance : [pratique interdite, haut risque, transparence, données, sécurité ou autre] ;
+- actions d’acculturation prévues : [groupes et objectifs] ;
+- décisions prises et informations inconnues : [liste distincte] ;
+- fonctions disponibles pour piloter ou valider : [fonctions, sans nom].
+
+Commence par séparer dans un tableau :
+1. les faits vérifiés ;
+2. les informations inconnues ;
+3. les risques ou échéances à confirmer ;
+4. la fonction ou la source officielle à consulter.
+
+Construis ensuite une feuille de route avec les colonnes suivantes :
+- horizon : sous 30 jours, sous 60 jours, sous 90 jours ou suivi continu ;
+- priorité et justification ;
+- action commençant par un verbe ;
+- usage concerné ;
+- fonction pilote ;
+- fonctions à consulter ou validation nécessaire ;
+- livrable attendu ;
+- critère de réalisation ;
+- échéance ;
+- preuve minimale à conserver ;
+- source officielle et date de consultation ;
+- déclencheur de révision ;
+- statut proposé.
+
+Règles :
+- traite d’abord les signaux d’interdiction, les effets importants, les données sensibles et les échéances proches ;
+- ne déduis aucun fait absent et écris « à confirmer » lorsque nécessaire ;
+- n’invente ni article, ni obligation, ni date, ni responsabilité ;
+- ne déclare pas l’organisation ou un usage conforme ;
+- distingue une action interne d’un avis juridique, technique, social, métier ou relatif aux données ;
+- ne demande aucune donnée personnelle ou confidentielle inutile ;
+- limite la feuille de route à huit actions réellement pilotables.
+
+Termine par :
+1. les trois actions à lancer en premier et leur justification ;
+2. les décisions qui exigent une validation spécialisée ;
+3. un ordre du jour de revue de 30 minutes ;
+4. cinq questions permettant de vérifier que le plan reste à jour.`,
   },
 ];
 
+const aiActFinalProject = {
+  title: "Analyser un usage d’IA et présenter une feuille de route proportionnée",
+  description: "En 45 minutes, le participant consolide les travaux des quatre modules à partir d’un usage fictif, réaliste ou décrit uniquement avec des informations génériques.",
+  learnerGuidance: "Le formateur n’attend pas une analyse juridique ni une déclaration de conformité. Il évalue votre capacité à décrire les faits, repérer les vigilances, organiser l’acculturation, proposer des actions réalistes et identifier les validations nécessaires.",
+  steps: [
+    "Décrire l’usage, sa finalité, les acteurs, les personnes concernées, les données et la supervision humaine",
+    "Réaliser un premier tri des vigilances et séparer les faits, les inconnues et les points à faire confirmer",
+    "Proposer des objectifs et des actions d’acculturation adaptés aux fonctions concernées",
+    "Construire une feuille de route à 30, 60 et 90 jours avec priorités, responsables et preuves minimales",
+    "Présenter les limites du travail, les sources officielles datées et les validations spécialisées encore nécessaires",
+  ],
+  deliverables: [
+    "La cartographie factuelle de l’usage et des acteurs",
+    "Le premier tri des vigilances et les questions à faire confirmer",
+    "Le plan d’acculturation adapté aux fonctions",
+    "La feuille de route à 30, 60 et 90 jours",
+  ],
+  submissionFields: [
+    {
+      id: 'prompt_and_iterations',
+      label: "1. Cartographie de l’usage et des acteurs",
+      help: "Décrivez l’usage, sa finalité, le résultat produit, le rôle possible de l’organisation, les fonctions utilisatrices, les personnes concernées, les catégories de données et la validation humaine.",
+      placeholder: "Exemple : assistant préparant des brouillons de réponses ; organisation potentiellement déployeur ; données fictives ; relecture obligatoire avant tout envoi…",
+    },
+    {
+      id: 'final_output',
+      label: "2. Premier tri et points à confirmer",
+      help: "Présentez les signaux de vigilance, les informations inconnues, la suite prudente choisie et les fonctions ou expertises qui devront confirmer l’analyse.",
+      placeholder: "Exemple : transparence à vérifier ; conditions du fournisseur inconnues ; contrôle des données par la fonction compétente ; aucune qualification juridique automatique…",
+    },
+    {
+      id: 'verification_grid_reference',
+      label: "3. Plan d’acculturation adapté",
+      help: "Indiquez les groupes de fonctions, les compétences attendues, les activités proposées, les règles d’arrêt, les preuves minimales et les déclencheurs d’actualisation.",
+      placeholder: "Exemple : sensibilisation courte pour les utilisateurs occasionnels ; atelier de contrôle pour les utilisateurs réguliers ; support versionné et revue lors d’un changement d’outil…",
+    },
+    {
+      id: 'action_plan',
+      label: "4. Feuille de route 30-60-90 jours",
+      help: "Présentez les actions prioritaires, leur justification, la fonction pilote, les validations, les livrables, les échéances, les sources datées et les points de revue.",
+      placeholder: "Exemple : sous 30 jours, formaliser les usages autorisés ; pilotage métier, validations données et sécurité ; règle versionnée et revue sous 60 jours…",
+    },
+  ],
+  criteria: [
+    "Précision de la cartographie de l’usage, des acteurs, des données et des effets possibles",
+    "Pertinence du premier tri, des questions ouvertes et de l’orientation proposée",
+    "Adaptation de l’acculturation, des contrôles et de la supervision humaine",
+    "Caractère réaliste, traçable et actualisable de la feuille de route",
+  ],
+  rubricLevels: [
+    {
+      id: 'not_acquired',
+      label: 'Non acquis',
+      help: "Les éléments indispensables sont absents ou une situation sensible est traitée sans contrôle suffisant.",
+    },
+    {
+      id: 'developing',
+      label: "En cours d'acquisition",
+      help: "La démarche est engagée, mais des faits, protections, responsabilités ou validations restent à préciser.",
+    },
+    {
+      id: 'acquired',
+      label: 'Acquis',
+      help: "La méthode attendue est appliquée et les limites ainsi que les validations nécessaires sont clairement indiquées.",
+    },
+    {
+      id: 'mastered',
+      label: 'Maîtrisé',
+      help: "La démarche est hiérarchisée, argumentée, proportionnée et peut être adaptée avec autonomie à une situation proche.",
+    },
+  ],
+  rubric: [
+    {
+      id: 'need_and_audience',
+      criterion: "Cartographie de l’usage et des acteurs",
+      descriptors: {
+        not_acquired: "La finalité, les acteurs, les personnes concernées, les données ou la supervision humaine ne sont pas identifiés.",
+        developing: "L’usage est compréhensible, mais plusieurs acteurs, effets, catégories de données ou contrôles restent imprécis.",
+        acquired: "La finalité, le résultat, les acteurs, les personnes concernées, les données et la supervision humaine sont décrits avec des faits vérifiables.",
+        mastered: "La cartographie distingue clairement les faits et les inconnues, justifie le périmètre choisi et prépare une analyse adaptée à une situation proche.",
+      },
+    },
+    {
+      id: 'prompt_and_success_criteria',
+      criterion: "Premier tri et orientation",
+      descriptors: {
+        not_acquired: "Les vigilances sont ignorées ou une conclusion juridique est affirmée sans information ni validation suffisante.",
+        developing: "Quelques vigilances sont repérées, mais les faits, les inconnues, les effets ou la suite à donner restent partiellement distingués.",
+        acquired: "Les signaux de vigilance, les informations manquantes et les effets possibles sont distingués ; une suite prudente et les validations nécessaires sont justifiées.",
+        mastered: "Les priorités sont hiérarchisées avec recul, les autres règles applicables sont repérées et l’orientation est argumentée sans dépasser les faits disponibles.",
+      },
+    },
+    {
+      id: 'checks_and_risks',
+      criterion: "Acculturation, contrôles et protection",
+      descriptors: {
+        not_acquired: "Les actions sont identiques pour tous, les données ne sont pas protégées ou aucun contrôle humain et aucune règle d’arrêt ne sont prévus.",
+        developing: "Des actions et contrôles existent, mais ils restent peu adaptés aux fonctions, aux usages, aux risques ou aux besoins d’actualisation.",
+        acquired: "Les compétences, activités, contrôles, règles d’arrêt, protections et preuves sont adaptés aux fonctions et aux usages sans collecte inutile.",
+        mastered: "Les mesures sont proportionnées, articulées avec l’accompagnement et conçues pour évoluer selon les incidents, les outils, les usages et les sources officielles.",
+      },
+    },
+    {
+      id: 'choices_and_limits',
+      criterion: "Feuille de route, responsabilités et limites",
+      descriptors: {
+        not_acquired: "Le plan ne permet pas d’identifier les priorités, les responsables, les livrables ou les validations nécessaires.",
+        developing: "Le plan contient des actions, mais leur ordre, leur justification, leurs échéances, leurs preuves ou leurs responsables restent incomplets.",
+        acquired: "Les actions à 30, 60 et 90 jours sont limitées, justifiées, attribuées et reliées à des livrables, échéances, preuves, sources datées et revues.",
+        mastered: "La feuille de route anticipe les conditions d’arrêt et de révision, explique ses limites et permet un pilotage autonome sans promettre une conformité automatique.",
+      },
+    },
+  ],
+  validationRule: "Le cas pratique final est validé lorsque les quatre critères atteignent au minimum le niveau « Acquis ». Le niveau « Maîtrisé » valorise une autonomie supplémentaire sans être obligatoire. Si un critère reste « Non acquis » ou « En cours d’acquisition », le formateur précise les éléments à reprendre avant une nouvelle remise.",
+};
+
 const aiActGlossary = [
   {
-    term: "Maîtrise de l'IA",
-    definition: "Compétences, connaissances et compréhension permettant un usage éclairé des systèmes d'IA et une prise de conscience de leurs possibilités et risques.",
+    term: 'Action corrective',
+    definition: "Mesure prise pour supprimer une non-conformité, réduire un risque ou empêcher qu’un problème identifié se reproduise.",
+    example: "Suspendre un outil, corriger son paramétrage et former les utilisateurs après la découverte d’un usage non autorisé.",
   },
   {
-    term: 'Fournisseur',
-    definition: "Acteur qui développe, ou fait développer, un système ou un modèle d'IA et le met sur le marché ou en service sous son nom.",
+    term: 'AI Act',
+    definition: "Nom courant du règlement européen sur l’intelligence artificielle, qui encadre certains acteurs, systèmes et usages selon leurs risques.",
+    example: "Une organisation consulte le texte et les lignes directrices applicables à son usage au lieu de se fier uniquement au nom de l’outil.",
+  },
+  {
+    term: 'Analyse d’impact relative à la protection des données',
+    definition: "Démarche prévue par le RGPD pour étudier un traitement susceptible d’engendrer un risque élevé pour les droits et libertés des personnes.",
+    example: "Avant un traitement de données sensibles à grande échelle, le délégué à la protection des données vérifie si une analyse d’impact est nécessaire.",
+  },
+  {
+    term: 'Anonymisation',
+    definition: "Transformation qui empêche durablement d’identifier une personne, directement ou par recoupement raisonnable. Retirer seulement le nom ne suffit pas toujours.",
+    example: "Un cas d’exercice est entièrement reconstruit avec des informations fictives plutôt que simplement privé du nom du client.",
+  },
+  {
+    term: 'Autorité nationale compétente',
+    definition: "Autorité désignée pour participer à l’application, au contrôle ou à la surveillance du règlement selon les missions prévues.",
+    example: "La fonction juridique vérifie quelle autorité et quelle procédure concernent réellement un incident au lieu d’inventer un destinataire.",
+  },
+  {
+    term: "Base de données de l’Union européenne",
+    definition: "Registre européen dans lequel certaines informations sur des systèmes d’IA à haut risque doivent être enregistrées dans les situations prévues.",
+    example: "Une autorité publique vérifie l’enregistrement requis avant d’utiliser un système qualifié à haut risque.",
+  },
+  {
+    term: 'Biais',
+    definition: "Tendance d’un système ou de ses résultats à produire des écarts, déséquilibres ou traitements défavorables liés notamment aux données, aux choix de conception ou au contexte.",
+    example: "Une équipe compare les résultats pour plusieurs profils fictifs afin de repérer un écart injustifié avant toute utilisation.",
+  },
+  {
+    term: 'Contenu généré ou manipulé par une IA',
+    definition: "Texte, image, son ou vidéo produit ou modifié par un système d’IA et pouvant relever d’exigences de transparence selon son usage.",
+    example: "Avant de publier une image artificielle, le service communication vérifie si elle doit être identifiée comme générée par une IA.",
+  },
+  {
+    term: 'Cybersécurité',
+    definition: "Mesures destinées à protéger un système, ses données et ses accès contre les attaques, altérations, fuites ou utilisations non autorisées.",
+    example: "L’accès à l’outil est limité aux comptes autorisés et les incidents de sécurité suivent la procédure interne.",
   },
   {
     term: 'Déployeur',
-    definition: "Personne physique ou morale qui utilise un système d'IA sous son autorité, sauf usage personnel non professionnel.",
+    definition: "Personne ou organisation qui utilise un système d’IA sous sa propre autorité dans un cadre professionnel ou institutionnel.",
+    example: "Une entreprise qui met un assistant d’IA à disposition de ses salariés examine son rôle possible de déployeur pour cet usage.",
   },
   {
-    term: "Système d'IA à haut risque",
-    definition: "Système relevant de catégories définies par le règlement et soumis à des exigences renforcées. La qualification doit être étudiée au cas par cas.",
+    term: 'Donnée à caractère personnel',
+    definition: "Information se rapportant à une personne identifiée ou identifiable, directement ou indirectement.",
+    example: "Une adresse électronique professionnelle nominative reste une donnée personnelle et ne doit pas être transmise sans base et outil appropriés.",
   },
   {
-    term: 'Transparence',
-    definition: "Ensemble d'informations permettant notamment de comprendre qu'une IA est utilisée et, selon le cas, ses capacités, limites et conditions d'emploi.",
+    term: 'Évaluation de conformité',
+    definition: "Procédure permettant de vérifier si les exigences applicables à un système sont respectées avant sa mise sur le marché ou sa mise en service, selon le cas.",
+    example: "Le fournisseur d’un système à haut risque détermine la procédure applicable ; le client ne remplace pas cette analyse par un simple questionnaire commercial.",
+  },
+  {
+    term: 'Évaluation d’impact sur les droits fondamentaux',
+    definition: "Analyse exigée pour certains déployeurs et certains systèmes à haut risque afin d’étudier les personnes concernées, les risques, la supervision et les mesures prévues.",
+    example: "Une entité concernée décrit le processus, les publics affectés et les recours avant le premier déploiement, avec les expertises appropriées.",
+  },
+  {
+    term: 'Exactitude',
+    definition: "Capacité d’un système à produire le niveau de résultats corrects attendu pour sa finalité et son contexte d’utilisation.",
+    example: "Le taux d’erreur est mesuré sur des cas représentatifs et les résultats importants restent contrôlés par une personne compétente.",
+  },
+  {
+    term: 'Finalité prévue',
+    definition: "Usage auquel le fournisseur destine le système, avec son contexte et ses conditions, tels qu’ils sont décrits dans les informations et la documentation disponibles.",
+    example: "Utiliser un outil prévu pour classer des documents afin d’évaluer des candidats constitue un changement d’usage à examiner avant tout test.",
+  },
+  {
+    term: 'Fournisseur',
+    definition: "Acteur qui développe ou fait développer un système ou un modèle d’IA et le commercialise ou le met en service sous son nom ou sa marque.",
+    example: "L’éditeur qui propose le système sous sa marque fournit la documentation utile et examine les obligations liées à son rôle.",
+  },
+  {
+    term: 'Gouvernance des données',
+    definition: "Organisation des règles, responsabilités et contrôles concernant la collecte, la qualité, l’accès, l’utilisation et la conservation des données.",
+    example: "La structure définit quelles catégories de données peuvent être utilisées, par qui, dans quel outil et pendant combien de temps.",
+  },
+  {
+    term: 'Incident grave',
+    definition: "Événement ou dysfonctionnement produisant ou susceptible de produire certaines conséquences graves définies par le règlement.",
+    example: "Un dommage important ou une atteinte grave aux droits déclenche l’escalade interne et la vérification des obligations de signalement applicables.",
+  },
+  {
+    term: "Instructions d’utilisation",
+    definition: "Informations fournies pour expliquer notamment la finalité prévue, le bon usage, les capacités, les limites et les mesures de supervision du système.",
+    example: "Le responsable lit les instructions avant le déploiement et transforme les limites utiles en consignes compréhensibles pour les utilisateurs.",
+  },
+  {
+    term: 'Journalisation',
+    definition: "Enregistrement automatique ou organisé d’événements utiles pour suivre le fonctionnement d’un système et retrouver certaines actions ou anomalies.",
+    example: "Les journaux disponibles permettent de retrouver la date d’un résultat et l’intervention humaine, dans le respect des règles de conservation.",
+  },
+  {
+    term: "Maîtrise de l'IA",
+    definition: "Compétences, connaissances et compréhension permettant un usage éclairé des systèmes d’IA et une conscience adaptée de leurs possibilités et risques.",
+    example: "Un utilisateur sait ce que l’outil peut faire, quelles données il ne doit pas saisir, quels contrôles réaliser et quand arrêter l’usage.",
+  },
+  {
+    term: "Modèle d’IA à usage général",
+    definition: "Modèle capable d’accomplir de nombreuses tâches et pouvant être intégré dans différents systèmes ou applications.",
+    example: "Un même modèle peut servir à produire du texte, résumer ou analyser, tandis que chaque application ajoute son interface et son contexte d’usage.",
+  },
+  {
+    term: 'Opérateur',
+    definition: "Terme regroupant plusieurs acteurs de la chaîne, notamment fournisseur, déployeur, importateur, distributeur, représentant autorisé ou fabricant concerné.",
+    example: "Avant d’attribuer une obligation, l’organisation identifie le rôle exact qu’elle exerce pour le système étudié.",
+  },
+  {
+    term: 'Personne concernée',
+    definition: "Personne physique sur laquelle l’utilisation d’un système ou de son résultat peut produire un effet, même si elle n’utilise pas elle-même l’outil.",
+    example: "Le candidat évalué par un processus assisté par IA est concerné même si seul le service des ressources humaines manipule le système.",
+  },
+  {
+    term: 'Pratique interdite',
+    definition: "Usage de l’IA interdit lorsque les conditions précises prévues par le règlement sont réunies.",
+    example: "Un signal d’analyse des émotions au travail impose de suspendre le projet et de faire vérifier le cas avant toute utilisation.",
+  },
+  {
+    term: 'Preuve proportionnée',
+    definition: "Trace limitée à ce qui est utile pour montrer une action, une décision, une source ou une validation, sans collecter d’information excessive.",
+    example: "Le registre conserve la fonction formée, l’objectif, la date et la version du support, sans score nominatif inutile.",
+  },
+  {
+    term: 'Risque',
+    definition: "Combinaison entre la probabilité qu’un préjudice survienne et la gravité de ce préjudice.",
+    example: "Une erreur sans conséquence et une erreur pouvant priver une personne d’un droit ne demandent pas le même niveau de contrôle.",
+  },
+  {
+    term: 'Robustesse',
+    definition: "Capacité d’un système à maintenir un fonctionnement approprié face aux erreurs, variations, perturbations ou situations raisonnablement prévisibles.",
+    example: "L’équipe teste des entrées incomplètes et vérifie que le système signale l’incertitude plutôt que de produire une conclusion trompeuse.",
   },
   {
     term: 'Supervision humaine',
-    definition: "Mesures permettant à une personne compétente de surveiller un système, d'interpréter ses résultats et d'intervenir lorsque cela est nécessaire.",
+    definition: "Mesures permettant à une personne compétente de comprendre suffisamment le système, surveiller ses résultats et intervenir ou arrêter l’usage lorsque nécessaire.",
+    example: "Une personne autorisée relit le résultat, peut l’ignorer ou le corriger et connaît la procédure d’escalade en cas de doute.",
+  },
+  {
+    term: "Système d'IA",
+    definition: "Système automatisé qui déduit, à partir des données reçues et d’objectifs explicites ou implicites, comment produire des prédictions, contenus, recommandations ou décisions.",
+    example: "Un outil qui recommande des candidatures et influence le tri ne s’analyse pas comme un simple fichier de calcul statique.",
+  },
+  {
+    term: "Système d'IA à haut risque",
+    definition: "Système relevant des catégories et conditions prévues par le règlement et soumis à des exigences renforcées. La qualification dépend de la finalité et du contexte.",
+    example: "Un outil utilisé pour influencer l’accès à l’emploi demande une analyse précise du système et du processus ; le mot « recrutement » ne suffit pas seul à conclure.",
+  },
+  {
+    term: 'Traçabilité',
+    definition: "Possibilité de retrouver les informations utiles sur un usage, une source, une version, un contrôle et une décision au fil du temps.",
+    example: "La fiche indique la version de l’outil, la date de contrôle, la source consultée et la fonction ayant validé la suite.",
+  },
+  {
+    term: 'Transparence',
+    definition: "Informations permettant de comprendre qu’une IA est utilisée et, selon le cas, d’identifier ses capacités, limites, conditions d’emploi ou contenus générés.",
+    example: "Un visiteur est clairement informé qu’il échange avec un assistant automatisé et sait comment contacter une personne.",
+  },
+  {
+    term: 'Usage abusif raisonnablement prévisible',
+    definition: "Utilisation différente de la finalité prévue mais pouvant résulter d’un comportement humain ou d’une interaction que l’on peut raisonnablement anticiper.",
+    example: "Un outil de rédaction interne risque d’être utilisé pour envoyer directement des réponses ; la règle et l’interface doivent prévenir cet usage prévisible.",
   },
 ];
 
 const aiActQuiz = [
   {
     id: 'inventory',
+    domain: 'uses_and_roles',
     question: "Votre structure dispose-t-elle d'un inventaire des outils et usages de l'IA ?",
     answers: [
       { label: 'Non', score: 0 },
@@ -1215,7 +2109,28 @@ const aiActQuiz = [
     ],
   },
   {
+    id: 'actors',
+    domain: 'uses_and_roles',
+    question: "Pour chaque usage, les rôles du fournisseur, de votre structure et des utilisateurs sont-ils identifiés ?",
+    answers: [
+      { label: 'Non, ces rôles ne sont pas distingués', score: 0 },
+      { label: 'Pour certains outils seulement', score: 1 },
+      { label: 'Oui, les rôles sont décrits et les inconnues sont signalées', score: 2 },
+    ],
+  },
+  {
+    id: 'effects',
+    domain: 'uses_and_roles',
+    question: "Les résultats produits par l’IA et leurs effets possibles sur les personnes ou les décisions sont-ils décrits ?",
+    answers: [
+      { label: 'Pas encore', score: 0 },
+      { label: 'Pour les usages considérés comme sensibles', score: 1 },
+      { label: 'Oui, avec la décision humaine et les personnes concernées', score: 2 },
+    ],
+  },
+  {
     id: 'rules',
+    domain: 'vigilance_and_controls',
     question: "Des règles internes encadrent-elles l'utilisation de l'IA ?",
     answers: [
       { label: 'Aucune règle identifiée', score: 0 },
@@ -1224,16 +2139,18 @@ const aiActQuiz = [
     ],
   },
   {
-    id: 'literacy',
-    question: "Les personnes qui utilisent l'IA ont-elles été sensibilisées à ses limites et à ses risques ?",
+    id: 'risk_triage',
+    domain: 'vigilance_and_controls',
+    question: "Savez-vous repérer un signal de pratique interdite, de haut risque ou d’obligation de transparence ?",
     answers: [
-      { label: 'Pas encore', score: 0 },
-      { label: 'Pour une partie des utilisateurs', score: 1 },
-      { label: 'Oui, selon leurs fonctions et leurs usages', score: 2 },
+      { label: 'Non, ces catégories restent difficiles à distinguer', score: 0 },
+      { label: 'Je reconnais quelques situations, sans méthode formalisée', score: 1 },
+      { label: 'Oui, avec une procédure d’orientation vers la fonction compétente', score: 2 },
     ],
   },
   {
     id: 'data',
+    domain: 'vigilance_and_controls',
     question: "Les données personnelles et confidentielles sont-elles prises en compte avant l'emploi d'un outil d'IA ?",
     answers: [
       { label: 'Pas systématiquement', score: 0 },
@@ -1242,12 +2159,43 @@ const aiActQuiz = [
     ],
   },
   {
+    id: 'human_oversight',
+    domain: 'vigilance_and_controls',
+    question: "La supervision humaine et les situations imposant de corriger, suspendre ou rejeter un résultat sont-elles définies ?",
+    answers: [
+      { label: 'Non', score: 0 },
+      { label: 'Une relecture est généralement prévue, sans règle d’arrêt', score: 1 },
+      { label: 'Oui, les contrôles, responsables et conditions d’arrêt sont connus', score: 2 },
+    ],
+  },
+  {
+    id: 'literacy',
+    domain: 'literacy_and_action',
+    question: "Les personnes qui utilisent l'IA ont-elles été sensibilisées à ses limites et à ses risques ?",
+    answers: [
+      { label: 'Pas encore', score: 0 },
+      { label: 'Pour une partie des utilisateurs', score: 1 },
+      { label: 'Oui, selon leurs fonctions et leurs usages', score: 2 },
+    ],
+  },
+  {
     id: 'responsibility',
+    domain: 'literacy_and_action',
     question: "Une personne ou une fonction pilote-t-elle les sujets liés à l'IA ?",
     answers: [
       { label: 'Non', score: 0 },
       { label: 'Le rôle est en cours de définition', score: 1 },
       { label: 'Oui, les responsabilités sont connues', score: 2 },
+    ],
+  },
+  {
+    id: 'action_plan',
+    domain: 'literacy_and_action',
+    question: "Votre structure dispose-t-elle d’un plan d’action daté pour encadrer et actualiser ses usages de l’IA ?",
+    answers: [
+      { label: 'Non', score: 0 },
+      { label: 'Quelques actions sont prévues, sans suivi commun', score: 1 },
+      { label: 'Oui, avec priorités, responsables, échéances et points de revue', score: 2 },
     ],
   },
 ];
@@ -2746,12 +3694,136 @@ export const courseCatalog = {
   'formation-ia-act': {
     title: 'IA : acculturation et préparation à la conformité AI Act',
     landingPath: '/formation-ia-act-conformite',
-    moduleTitle: "Capsule 1 : rédiger un bon prompt dans un cadre professionnel",
-    videoUrl: promptEngineeringIntroVideoUrl,
+    durationLabel: '4 h 45 de formation',
+    moduleTitle: 'Parcours guidé : comprendre l’IA et préparer les premiers repères de conformité',
+    onboarding: {
+      title: 'Comment suivre cette formation ?',
+      introduction: "Avancez avec le formateur, un module après l’autre. Vous partirez d’un usage précis, apprendrez à repérer les vigilances, préparerez l’acculturation des équipes puis construirez une première feuille de route.",
+      steps: [
+        {
+          title: 'Relisez votre positionnement initial',
+          description: "Le questionnaire indique les domaines auxquels accorder le plus d’attention. Il sert à adapter l’accompagnement et ne constitue ni une évaluation des acquis, ni une validation de conformité.",
+        },
+        {
+          title: 'Ouvrez le module prévu pour la séance',
+          description: 'Commencez par les explications et la démonstration. Avancez dans l’ordre : cartographie, vigilances, acculturation, puis plan d’action.',
+        },
+        {
+          title: 'Réalisez l’exercice lié au module',
+          description: 'Utilisez un cas fictif ou des informations génériques. Enregistrez un brouillon, puis déclarez la réponse terminée lorsqu’elle respecte les quatre critères indiqués.',
+        },
+        {
+          title: 'Utilisez le retour du formateur',
+          description: 'Une réponse peut être validée ou demandée en reprise. Les versions et commentaires restent disponibles dans votre espace apprenant pour montrer votre progression.',
+        },
+        {
+          title: 'Terminez par le cas pratique final',
+          description: 'Les quatre livrables permettent d’évaluer vos acquis. Le questionnaire de satisfaction, distinct de cette évaluation, devient accessible après la dernière séance signée.',
+        },
+      ],
+      reminders: [
+        'Le parcours prépare des repères et des actions ; il ne remplace pas un avis juridique, technique ou relatif aux données.',
+        'Les sources officielles doivent être consultées, datées et vérifiées de nouveau lorsque le cadre ou l’usage évolue.',
+        'Les onglets Supports et liens, Exercices pratiques et Lexique restent disponibles en bas de l’espace apprenant.',
+      ],
+    },
     quiz: aiActQuiz,
+    positioningLevels: [
+      { maximumRatio: 0.34, label: 'Repères à construire' },
+      { maximumRatio: 0.7, label: 'Démarche à structurer' },
+      { maximumRatio: 1, label: 'Démarche déjà avancée' },
+    ],
+    positioningDomains: [
+      {
+        id: 'uses_and_roles',
+        label: 'Usages et rôles',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Cartographie à démarrer',
+            advice: 'Commencez par le module 1 pour décrire un usage précis, distinguer les acteurs et repérer les personnes ainsi que les données concernées.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Cartographie à préciser',
+            advice: 'Vos premiers repères existent. Utilisez les modules 1 et 2 pour mieux distinguer les faits, les rôles, les effets possibles et les informations encore inconnues.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Cartographie déjà structurée',
+            advice: 'Votre inventaire est avancé. Concentrez-vous sur les changements d’usage, la qualité des sources et les questions qui exigent encore une confirmation compétente.',
+          },
+        ],
+      },
+      {
+        id: 'vigilance_and_controls',
+        label: 'Vigilances et contrôles',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Vigilance à développer',
+            advice: 'Accordez une attention particulière au module 2 : signaux d’interdiction ou de haut risque, transparence, données et conditions d’arrêt.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Contrôles à formaliser',
+            advice: 'Vous reconnaissez certaines vigilances. Entraînez-vous à séparer les faits des conclusions, puis à documenter la supervision et l’orientation vers les fonctions compétentes.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Contrôles déjà structurés',
+            advice: 'Vos contrôles sont solides. Travaillez surtout leur proportionnalité, leur traçabilité et leur actualisation lorsque l’outil, l’usage ou les sources officielles évoluent.',
+          },
+        ],
+      },
+      {
+        id: 'literacy_and_action',
+        label: 'Acculturation et plan d’action',
+        guidance: [
+          {
+            maximumRatio: 0.34,
+            label: 'Organisation à construire',
+            advice: 'Les modules 3 et 4 vous aideront à adapter l’acculturation aux fonctions, attribuer les actions et conserver des preuves minimales.',
+          },
+          {
+            maximumRatio: 0.7,
+            label: 'Organisation à consolider',
+            advice: 'Des actions existent déjà. Reliez-les aux usages, aux responsabilités, aux règles d’arrêt, aux échéances et aux déclencheurs de mise à jour.',
+          },
+          {
+            maximumRatio: 1,
+            label: 'Pilotage déjà avancé',
+            advice: 'Votre démarche est structurée. Utilisez le module 4 et le cas final pour tester la cohérence des priorités, des validations, des preuves et des revues prévues.',
+          },
+        ],
+      },
+    ],
+    modules: aiActModules,
     exercises: aiActExercises,
+    finalProject: aiActFinalProject,
     glossary: aiActGlossary,
     resources: [
+      {
+        title: "Guide pratique de l'IA Act",
+        description: "Le support pas à pas des quatre modules : inventaire des usages, premier tri des vigilances, maîtrise de l'IA et feuille de route 30-60-90 jours.",
+        href: '/assets/guide-pratique-ia-act-formaprompt.pdf',
+        action: 'Télécharger le guide pratique',
+        download: 'guide-pratique-ia-act-formaprompt.pdf',
+      },
+      {
+        title: "Cahier d'activités IA Act",
+        description: "Les quatre exercices imprimables pour préparer la cartographie, le premier tri, le plan d'acculturation et la feuille de route avant la remise dans l'espace apprenant.",
+        href: '/assets/cahier-activites-ia-act-formaprompt.pdf',
+        action: "Télécharger le cahier d'activités",
+        download: 'cahier-activites-ia-act-formaprompt.pdf',
+      },
+      {
+        title: 'Modèle du cas pratique final IA Act',
+        description: "Un dossier imprimable pour cadrer l'usage, préparer les quatre livrables, s'autoévaluer et appliquer la grille d'évaluation finale.",
+        href: '/assets/modele-cas-final-ia-act-formaprompt.pdf',
+        action: 'Télécharger le modèle du cas final',
+        download: 'modele-cas-final-ia-act-formaprompt.pdf',
+      },
       {
         title: "Règlement européen sur l'intelligence artificielle",
         description: 'Texte officiel du règlement (UE) 2024/1689 publié sur EUR-Lex.',
