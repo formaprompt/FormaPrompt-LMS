@@ -182,6 +182,8 @@ La formation est positionnée comme un parcours d'acculturation et de mise en pr
 - Quatre ajustements ciblés ont été réalisés localement après ce contrôle : affichage de la durée « 7 heures accompagnées » dans l'espace apprenant, ajout d'un guide de démarrage en cinq étapes, restitution du positionnement selon trois domaines et activation du menu mobile de l'en-tête jusqu'à 960 px pour supprimer le débordement sur tablette.
 - Les parcours formation, exercices et lexique ont été contrôlés localement à 900 px, 768 px et 390 px sans débordement de page. `npm run lint`, les 37 tests applicatifs, les 10 tests Stripe et `npm run build` ont réussi. Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié.
 - La formation « Prompt Engineering — Niveau 1 » est considérée comme pédagogiquement finalisée. Les quatre ajustements issus du contrôle final ont été déployés sur IONOS le 17 juillet 2026. Les 113 fichiers du build, soit 136 798 045 octets, ont été comparés par SHA-256 ; 52 fichiers ont été transférés et 61 étaient déjà identiques. L'accueil, la route Prompt Engineering, le script principal, la feuille de style et le catalogue répondent en HTTPS avec un contenu identique au build local.
+- Le contrôle réel réalisé par Thierry le 18 juillet 2026 valide la formation Prompt Engineering. Il a toutefois révélé qu'une réservation OF restait proposée dans le choix des horaires apprenant. Le verrou transactionnel empêchait déjà l'enregistrement d'une double réservation, mais le filtre d'affichage avait été supprimé involontairement lors de l'élargissement du calendrier aux nouvelles formations.
+- La migration corrective `hide_of_bookings_from_learner_availability` a été activée séparément dans Supabase le 18 juillet 2026 sous le numéro distant `20260718092424`. Une option ou réservation OF du matin masque le matin, celle de l'après-midi masque l'après-midi et une journée masque les deux périodes. Un test avec un compte apprenant existant confirme que les horaires OF ne sont plus visibles et que les créneaux réellement libres restent proposés. Aucune réservation ni donnée personnelle n'a été modifiée ; aucun déploiement web n'est nécessaire.
 
 ## État de la dernière correction
 
@@ -230,7 +232,7 @@ La formation est positionnée comme un parcours d'acculturation et de mise en pr
 
 ## Prochaine action recommandée
 
-Thierry prévoit le contrôle réel du parcours Prompt Engineering avec les comptes concernés le 18 juillet 2026 au matin. La prochaine formation pédagogique à traiter sera ensuite « IA Act — acculturation et conformité ». Les tests complets du paiement, des réservations, du déplacement, de l'émargement et de la délivrance d'attestations restent à réaliser séparément avec plusieurs comptes apprenants.
+Le contrôle réel du parcours Prompt Engineering est terminé. La prochaine formation pédagogique à traiter sera « IA Act — acculturation et conformité ». Les tests complets du paiement, du déplacement, de l'émargement et de la délivrance d'attestations restent à réaliser séparément avec plusieurs comptes apprenants.
 
 ## Commandes utiles
 
