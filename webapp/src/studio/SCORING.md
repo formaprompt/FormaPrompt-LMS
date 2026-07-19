@@ -1024,3 +1024,126 @@ La longueur, le niveau de technicité, le ton et le format de restitution valent
 | Validation avant publication | 12 caractères | 35 caractères | 1 | 2 |
 
 Le score mesure la qualité du cadrage éditorial. Il ne vérifie ni l'exactitude des faits, ni l'actualité des informations, ni l'existence des sources ou des liens. Les dates, citations, chiffres, versions techniques, droits des médias et éventuels conflits d'intérêts doivent être contrôlés avant publication.
+
+## Catégorie « Agent IA »
+
+### Contexte — 25 points
+
+Le type d'agent sélectionné vaut 4 points.
+
+#### Situation et besoin — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Utilisateurs et responsables — 5 points
+
+- moins de 15 caractères : 2 points ;
+- de 15 à 34 caractères : 3 points ;
+- 35 caractères ou plus : 5 points.
+
+#### Processus actuel — 6 points
+
+- moins de 20 caractères : 0 point ;
+- de 20 à 49 caractères : 4 points ;
+- 50 caractères ou plus : 6 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Mission limitée — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Résultat observable — 8 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+Le niveau d'autonomie, la politique de mémoire et le livrable valent ensemble 10 points lorsqu'ils sont définis.
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Conditions et outils autorisés | 15 caractères | 45 caractères | 1 | 3 |
+| Sources, entrées et données exclues | 15 caractères | 45 caractères | 2 | 4 |
+| Actions autorisées et interdites | 20 caractères | 55 caractères | 3 | 5 |
+| Validations humaines et escalade | 20 caractères | 55 caractères | 3 | 5 |
+| Traçabilité | 12 caractères | 35 caractères | 1 | 2 |
+| Quotas et ressources | 12 caractères | 35 caractères | 1 | 2 |
+| Arrêt et reprise | 15 caractères | 45 caractères | 1 | 2 |
+| Tests et suivi | 12 caractères | 35 caractères | 1 | 2 |
+
+Le score mesure la qualité du cadrage d'une spécification. Il ne prouve ni la sécurité, ni la conformité, ni la fiabilité d'un agent et ne vérifie aucun accès réel. La mise en œuvre doit commencer dans un environnement isolé, avec des permissions minimales, des quotas, une traçabilité maîtrisée, un arrêt d'urgence et des validations humaines adaptées aux risques.
+
+## Catégorie « Audio »
+
+### Contexte — 25 points
+
+Le type de contenu audio sélectionné vaut 4 points.
+
+#### Sujet, situation et usage — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Public et conditions d'écoute — 6 points
+
+- moins de 20 caractères : 2 points ;
+- de 20 à 39 caractères : 4 points ;
+- 40 caractères ou plus : 6 points.
+
+#### Sources et médias disponibles — 5 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 3 points ;
+- 40 caractères ou plus : 5 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Effet attendu auprès du public — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Message essentiel — 8 points
+
+- moins de 25 caractères : 3 points ;
+- de 25 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+Le mode de préparation, la famille d'outil, la durée et le format de restitution valent ensemble 10 points lorsqu'ils sont définis.
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Structure et transitions | 15 caractères | 45 caractères | 2 | 4 |
+| Voix et intervenants | 15 caractères | 45 caractères | 2 | 4 |
+| Ton, rythme et pauses | 12 caractères | 35 caractères | 1 | 3 |
+| Prononciations et termes difficiles | 10 caractères | 30 caractères | 1 | 2 |
+| Musique, ambiances et silences | 10 caractères | 30 caractères | 1 | 2 |
+| Transcription et accessibilité | 12 caractères | 35 caractères | 1 | 3 |
+| Droits, licences et consentements | 15 caractères | 45 caractères | 1 | 3 |
+| Qualité technique | 10 caractères | 30 caractères | 1 | 2 |
+| Contrôles avant diffusion | 15 caractères | 45 caractères | 1 | 2 |
+
+Le score mesure la qualité de la préparation. Il ne vérifie ni l'exactitude du contenu, ni les droits réellement obtenus, ni la qualité d'un enregistrement, d'une synthèse vocale, d'un montage ou d'un fichier audio. Les faits, prononciations, voix, consentements, musiques, extraits, transcriptions, niveaux sonores et conditions de diffusion doivent être contrôlés par une personne compétente avant publication.

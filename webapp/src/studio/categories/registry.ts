@@ -1,4 +1,6 @@
 import { analysisSynthesisCategory } from './analysisSynthesis';
+import { aiAgentCategory } from './aiAgent';
+import { audioCategory } from './audio';
 import { codeCategory } from './code';
 import { editorialContentCategory } from './editorialContent';
 import { imageCreationCategory } from './imageCreation';
@@ -47,10 +49,10 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
   { id: 'office-data', family: 'analyze', label: 'Bureautique et données', description: 'Préparer un traitement de données, un tableau ou une automatisation bureautique.', available: true },
   { id: 'image-creation', family: 'create', label: 'Création d’image', description: 'Structurer une consigne visuelle adaptée à un support et un public.', available: true },
   { id: 'video', family: 'create', label: 'Vidéo', description: 'Structurer un scénario, un storyboard ou un brief vidéo adapté au public, au format et à l’outil.', available: true },
-  { id: 'audio', family: 'create', label: 'Audio', description: 'Préparer un contenu sonore, sa voix et son format.', available: false },
+  { id: 'audio', family: 'create', label: 'Audio', description: 'Structurer un podcast, une voix off, une interview ou un contenu sonore accessible et vérifiable.', available: true },
   { id: 'code', family: 'build', label: 'Code', description: 'Cadrer une création, une correction ou une revue de code avec des tests explicites.', available: true },
   { id: 'productivity', family: 'build', label: 'Productivité', description: 'Organiser une tâche, simplifier un processus et définir des contrôles humains.', available: true },
-  { id: 'ai-agent', family: 'build', label: 'Agent IA', description: 'Définir un rôle, des limites et des contrôles humains.', available: false },
+  { id: 'ai-agent', family: 'build', label: 'Agent IA', description: 'Cadrer la mission, l’autonomie, les outils, les données et les contrôles humains d’un futur agent.', available: true },
 ];
 
 export const availableStudioCategories = {
@@ -68,6 +70,8 @@ export const availableStudioCategories = {
   productivity: productivityCategory,
   code: codeCategory,
   video: videoCategory,
+  audio: audioCategory,
+  'ai-agent': aiAgentCategory,
 } as const;
 
 export function getAvailableStudioCategory(categoryId: StudioCategoryId) {

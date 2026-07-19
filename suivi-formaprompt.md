@@ -279,6 +279,17 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Le démarrage du Studio utilise désormais un rendu React classique sur le HTML pré-rendu, comme l'accueil, afin d'éviter un avertissement d'hydratation tout en conservant le contenu SEO directement lisible.
 - Aucun appel à un fournisseur externe, aucun stockage et aucune modification de Supabase, Stripe, de l'authentification, des migrations ou des données Qualiopi n'ont été ajoutés pendant cette extension.
 
+## Finalisation de FormaPrompt Studio à seize cas d'usage — 19 juillet 2026
+
+- Les seize catégories prévues dans le catalogue sont désormais développées et actives. Cette finalisation ajoute « Agent IA » et « Audio » aux quatorze usages déjà publiés.
+- « Agent IA » produit uniquement une spécification déterministe : mission, autonomie, mémoire, outils et données autorisés, limites d'action, validations humaines, quotas, traçabilité, tests et procédure d'arrêt. Le Studio ne crée, ne connecte et n'exécute aucun agent.
+- « Audio » couvre notamment les podcasts, voix off, capsules pédagogiques, interviews, messages sonores et briefs de montage. Le prompt exige une transcription accessible, le contrôle des faits et prononciations, ainsi que les droits et consentements nécessaires pour les voix, musiques, œuvres et extraits.
+- Chaque catégorie conserve ses validations Zod, son constructeur de prompt, sa grille CROP explicable sur 100 points, ses aides, exemples, recommandations et garde-fous propres.
+- Les 39 tests applicatifs, les 10 tests Stripe et les 66 tests Studio ont réussi, soit 115 tests. Le typecheck, le lint, le build, le pré-rendu et les parcours ciblés Agent IA, Audio, accueil et accessibilité WCAG sur ordinateur et mobile ont également réussi.
+- La publication IONOS a comparé les 131 fichiers du build par SHA-256 : 61 fichiers ont été transférés et 70 étaient déjà identiques, pour 139 177 343 octets contrôlés.
+- L'accueil, `/studio/`, les scripts et styles principaux, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local. L'accueil annonce seize usages et le Studio expose « Audio », « Agent IA » et la méthode CROP.
+- Aucun appel à un fournisseur externe, aucun stockage et aucune modification de Supabase, Stripe, de l'authentification, des migrations ou des données Qualiopi n'ont été ajoutés pendant cette publication.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

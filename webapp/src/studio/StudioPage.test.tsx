@@ -952,4 +952,109 @@ describe('parcours principal du Studio', () => {
     const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
     expect(improvedScore).toBeGreaterThan(initialScore);
   });
+
+  it('cadre un futur agent sans exécuter d’action et améliore ses garde-fous', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'ai-agent');
+
+    expect(categorySelector).toHaveValue('ai-agent');
+    expect(screen.getByText(/Le Studio construit une spécification à copier/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Niveau d’autonomie maximal/)).toHaveValue('proposer uniquement, sans exécuter d’action externe');
+    expect(screen.getByLabelText(/^Politique de mémoire/)).toHaveValue('aucune mémoire persistante');
+
+    await user.type(
+      screen.getByLabelText(/^Situation, besoin et problème à résoudre/),
+      'Une équipe prépare des réponses à partir d’une base documentaire validée et souhaite mieux tracer les contrôles.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Utilisateurs et personnes responsables/),
+      'Une équipe support débutante supervisée par un responsable de service.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Mission précise et limitée/),
+      'Préparer un brouillon sourcé sans envoyer de message, modifier un document ni prendre de décision à la place du responsable.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('## Garde-fous obligatoires');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('Tu n’exécutes aucune action');
+    expect(screen.getByText(/Le Studio ne vérifie aucun accès/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Processus actuel et difficultés/),
+      'Réception de la demande, recherche manuelle, préparation du brouillon, contrôle des sources puis validation du responsable.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Sources, entrées autorisées et données exclues/),
+      'Fiches publiques validées en lecture seule ; exclure les données personnelles, secrets et documents non autorisés.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Scénarios de test, indicateurs et suivi/),
+      'Tester les cas normaux, incomplets et contradictoires, suivre les erreurs et organiser une revue humaine mensuelle.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
+  it('construit et améliore un prompt audio accessible et respectueux des droits', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'audio');
+
+    expect(categorySelector).toHaveValue('audio');
+    expect(screen.getByText('Structurer un podcast, une voix off, une interview ou un contenu sonore accessible et vérifiable.')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Durée cible/)).toHaveValue('entre 3 et 10 minutes');
+
+    await user.type(
+      screen.getByLabelText(/^Sujet, situation et usage prévu du contenu audio/),
+      'Capsule intégrée à une formation pour expliquer comment vérifier une source avant de la citer.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Public et conditions d’écoute/),
+      'Adultes débutants écoutant la capsule sur téléphone depuis leur espace apprenant.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Objectif auprès du public/),
+      'Permettre au public d’appliquer une vérification simple en trois étapes après l’écoute.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Message essentiel à retenir/),
+      'Une source doit être identifiée, datée et recoupée avant d’être présentée comme fiable.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('## Règles de préparation');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('ne clones jamais la voix');
+    expect(screen.getByText(/Le Studio n’enregistre, ne synthétise, ne monte et ne publie aucun fichier audio/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Structure, séquences et transitions/),
+      'Question d’ouverture, méthode en trois étapes, exemple fictif, récapitulatif puis invitation à appliquer la méthode.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Voix, intervenants et tours de parole/),
+      'Une voix adulte claire, sans imitation d’une personne réelle, sous la responsabilité éditoriale du formateur.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Qualité technique et compatibilité/),
+      'Voix intelligible, niveau homogène et contrôle au casque, sur téléphone et sur ordinateur.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
 });

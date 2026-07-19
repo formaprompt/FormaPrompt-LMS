@@ -800,6 +800,45 @@ test.describe('FormaPrompt Studio', () => {
     expect(pageWidth.scroll).toBe(pageWidth.client);
   });
 
+  test('sélectionne Audio et produit un script accessible avec contrôle des droits', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('audio');
+    await expect(page.getByText('Structurer un podcast, une voix off, une interview ou un contenu sonore accessible et vérifiable.')).toBeVisible();
+    await expect(page.getByLabel('Durée cible')).toHaveValue('entre 3 et 10 minutes');
+
+    await page.getByLabel('Sujet, situation et usage prévu du contenu audio').fill('Capsule intégrée à une formation pour expliquer comment vérifier une source avant de la citer.');
+    await page.getByLabel('Public et conditions d’écoute').fill('Adultes débutants écoutant la capsule sur téléphone depuis leur espace apprenant.');
+    await page.getByLabel('Objectif auprès du public').fill('Permettre au public d’appliquer une vérification simple en trois étapes après l’écoute.');
+    await page.getByLabel('Message essentiel à retenir').fill('Une source doit être identifiée, datée et recoupée avant d’être présentée comme fiable.');
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('## Règles de préparation');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('ne clones jamais la voix');
+    await expect(page.getByText(/Le Studio n’enregistre, ne synthétise, ne monte et ne publie aucun fichier audio/)).toBeVisible();
+  });
+
+  test('sélectionne Agent IA et produit une spécification avec contrôles humains', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('ai-agent');
+    await expect(page.getByText('Cadrer la mission, l’autonomie, les outils, les données et les contrôles humains d’un futur agent.')).toBeVisible();
+    await expect(page.getByLabel('Niveau d’autonomie maximal')).toHaveValue('proposer uniquement, sans exécuter d’action externe');
+
+    await page.getByLabel('Situation, besoin et problème à résoudre').fill('Une équipe prépare des réponses à partir d’une base documentaire validée et souhaite mieux tracer les contrôles humains.');
+    await page.getByLabel('Utilisateurs et personnes responsables').fill('Une équipe support débutante supervisée par un responsable de service.');
+    await page.getByLabel('Mission précise et limitée').fill('Préparer un brouillon sourcé sans envoyer de message, modifier un document ni décider à la place du responsable.');
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('## Garde-fous obligatoires');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Tu n’exécutes aucune action');
+    await expect(page.getByText(/Le Studio ne vérifie aucun accès/)).toBeVisible();
+  });
+
   test('respecte les contrôles WCAG automatisables', async ({ page }) => {
     await page.goto('/studio');
     await expect(page.getByRole('heading', {
@@ -929,5 +968,23 @@ test.describe('FormaPrompt Studio', () => {
       .analyze();
 
     expect(imageCreationResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('audio');
+    await expect(page.getByLabel('Sujet, situation et usage prévu du contenu audio')).toBeVisible();
+
+    const audioResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(audioResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('ai-agent');
+    await expect(page.getByLabel('Situation, besoin et problème à résoudre')).toBeVisible();
+
+    const aiAgentResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(aiAgentResults.violations).toEqual([]);
   });
 });
