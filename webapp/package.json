@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:app && npm run prerender:studio",
+    "build": "npm run build:app && npm run prerender:public",
     "build:app": "vite build",
-    "prerender:studio": "node scripts/prerender-studio.mjs",
+    "prerender:public": "node scripts/prerender-studio.mjs",
+    "prerender:studio": "npm run prerender:public",
     "audit:studio": "node scripts/audit-studio.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

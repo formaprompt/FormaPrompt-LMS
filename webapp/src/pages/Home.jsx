@@ -1,11 +1,54 @@
 import { Link } from 'react-router-dom';
-import { Bot, BookOpen, Monitor, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Bot, BookOpen, Monitor, CheckCircle, ShieldCheck, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import './Home.css';
 import SEO from '../components/SEO';
 
 const SUPERPROF_PROFILE_URL = 'https://www.superprof.fr/formez-prompt-engineering-revolutionnez-facon-dinteragir-lia.html';
+
+const homeStructuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'EducationalOrganization',
+      '@id': 'https://formaprompt.com/#organization',
+      name: 'FormaPrompt',
+      url: 'https://formaprompt.com/',
+      logo: 'https://formaprompt.com/assets/logo-new.png',
+      description: 'Organisme de formation professionnelle en intelligence artificielle générative, prompt engineering et outils bureautiques.',
+      founder: {
+        '@type': 'Person',
+        name: 'Thierry FREZARD',
+      },
+      sameAs: [SUPERPROF_PROFILE_URL],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://formaprompt.com/#website',
+      name: 'FormaPrompt',
+      url: 'https://formaprompt.com/',
+      inLanguage: 'fr-FR',
+      publisher: {
+        '@id': 'https://formaprompt.com/#organization',
+      },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': 'https://formaprompt.com/studio/#application',
+      name: 'FormaPrompt Studio',
+      url: 'https://formaprompt.com/studio/',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Navigateur web',
+      inLanguage: 'fr-FR',
+      isAccessibleForFree: true,
+      description: 'Outil pédagogique gratuit pour structurer un prompt avec la méthode CROP, obtenir un score expliqué et repérer les informations manquantes.',
+      publisher: {
+        '@id': 'https://formaprompt.com/#organization',
+      },
+    },
+  ],
+};
 
 // Courts extraits de recommandations publiques, avec attribution et lien vers la source.
 const superprofRecommendations = [
@@ -73,10 +116,11 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="FormaPrompt – Formation IA, Prompt Engineering, Bureautique"
-        description="Plateforme de formation professionnelle en IA générative, Prompt Engineering et outils bureautiques. Découvrez nos programmes certifiants."
-        url="https://www.formaprompt.fr/"
-        image="https://www.formaprompt.fr/assets/photo%20page%20d'accueil.png"
+        title="FormaPrompt | Formations IA, prompts et bureautique"
+        description="Formations professionnelles en IA générative, prompt engineering et bureautique. Testez gratuitement FormaPrompt Studio pour structurer vos prompts."
+        url="https://formaprompt.com/"
+        image="https://formaprompt.com/assets/logo-new.png"
+        jsonLd={homeStructuredData}
       />
       <div className="home">
         {/* Hero Section */}
@@ -84,7 +128,7 @@ export default function Home() {
           <div className="container hero-container">
             <div className="grid grid-cols-2" style={{alignItems: 'center', gap: '3rem'}}>
               <div className="hero-content" style={{textAlign: 'left', margin: '0', maxWidth: '100%'}}>
-                <h1 style={{textAlign: 'left'}}>Maîtrisez l'IA et les Outils Numériques</h1>
+                <h1 style={{textAlign: 'left'}}>Formations en IA, Prompt Engineering et Bureautique</h1>
                 <p className="hero-subtitle" style={{textAlign: 'left'}}>
                   FormaPrompt forme les professionnels, étudiants et personnes en reconversion aux usages concrets de l'IA générative, du prompt engineering et des outils bureautiques.
                 </p>
@@ -118,6 +162,42 @@ export default function Home() {
                   }}
                 />
               </div>
+            </div>
+          </div>
+        </section>
+        {/* FormaPrompt Studio Section */}
+        <section className="section home-studio" aria-labelledby="home-studio-title">
+          <div className="container">
+            <div className="home-studio-card">
+              <div className="home-studio-content">
+                <p className="home-studio-eyebrow">
+                  <Sparkles size={20} aria-hidden="true" />
+                  Nouvel outil public
+                </p>
+                <h2 id="home-studio-title">Structurez vos prompts avec FormaPrompt Studio</h2>
+                <p>
+                  Le Studio vous guide avec la méthode CROP — Contexte, Rôle, Objectif et Précisions — pour construire un prompt professionnel, obtenir un score de qualité expliqué et repérer les informations manquantes.
+                </p>
+                <ul className="home-studio-benefits">
+                  <li><CheckCircle size={20} aria-hidden="true" /> Neuf cas d’usage pour écrire, transmettre, analyser et créer.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> Un diagnostic déterministe, sans appel à un fournisseur externe.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> Aucune saisie conservée dans cette première version.</li>
+                </ul>
+                <div className="home-studio-actions">
+                  <Link to="/studio" className="btn btn-primary">Essayer gratuitement le Studio</Link>
+                  <Link to="/formation-prompt-engineering" className="link-arrow">Découvrir la formation Prompt Engineering &rarr;</Link>
+                </div>
+              </div>
+              <aside className="home-studio-method" aria-label="Les quatre composantes de la méthode CROP">
+                <p className="home-studio-method-title">Méthode CROP</p>
+                <ol>
+                  <li><strong>C</strong><span>Contexte</span></li>
+                  <li><strong>R</strong><span>Rôle</span></li>
+                  <li><strong>O</strong><span>Objectif</span></li>
+                  <li><strong>P</strong><span>Précisions</span></li>
+                </ol>
+                <p>Construisez, diagnostiquez, améliorez puis copiez votre prompt.</p>
+              </aside>
             </div>
           </div>
         </section>

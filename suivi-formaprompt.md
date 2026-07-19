@@ -257,6 +257,16 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Audit Lighthouse local du build : mobile 97/99/100/100 et ordinateur 100/99/100/100 pour performance/accessibilité/bonnes pratiques/SEO.
 - Aucun schéma, aucune migration Supabase et aucun produit Stripe n'ont été ajoutés ou modifiés. Aucun commit, push ou déploiement n'a été réalisé.
 
+## Annonce du Studio et SEO de l'accueil — 19 juillet 2026
+
+- La page d'accueil présente désormais FormaPrompt Studio, la méthode CROP, les neuf cas d'usage disponibles et un accès direct à `/studio`.
+- Le titre principal, le titre SEO, la description, l'URL canonique, les métadonnées Open Graph et les données structurées `EducationalOrganization`, `WebSite` et `WebApplication` ont été harmonisés sur `https://formaprompt.com/`.
+- L'accueil est pré-rendu pendant le build, comme le Studio, afin que son contenu et ses métadonnées soient directement lisibles par les moteurs de recherche.
+- Le sitemap utilise uniquement le domaine sans `www`, contient la route Studio et est déclaré dans `robots.txt`.
+- Le typecheck, le lint, le build et les deux tests navigateur ordinateur/mobile ont réussi. Le contrôle automatisé n'a détecté ni violation WCAG A/AA ni débordement horizontal.
+- La version a été déployée sur IONOS le 19 juillet 2026. Les 131 fichiers du build, soit 138 998 312 octets, ont été comparés par SHA-256. L'accueil, le Studio, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local.
+- Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié pendant cette publication.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
