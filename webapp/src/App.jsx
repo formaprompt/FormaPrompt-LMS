@@ -3,8 +3,8 @@ import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
 import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
-import StudioPage from "./studio/StudioPage";
 // Lazy‑loaded pages
+const StudioPage = lazy(() => import("./studio/StudioPage"));
 const Home = lazy(() => import("./pages/Home"));
 const CookieConsent = lazy(() => import("react-cookie-consent"));
 const FormationIA = lazy(() => import("./pages/FormationIA"));
@@ -44,11 +44,27 @@ function App() {
     <>
       <ScrollToTop />
       {isPublicStudio ? (
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
-          </Route>
-        </Routes>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+                color: "var(--color-primary)"
+              }}
+            >
+              Chargement du Studio…
+            </div>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
+            </Route>
+          </Routes>
+        </Suspense>
       ) : (
       <Suspense
         fallback={

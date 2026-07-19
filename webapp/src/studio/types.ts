@@ -5,14 +5,22 @@ export type CropSection = 'context' | 'role' | 'objective' | 'precisions';
 
 export type StudioCategoryId =
   | 'professional-email'
+  | 'professional-documents'
   | 'training'
   | 'social-media'
   | 'image-creation'
+  | 'analysis-synthesis'
+  | 'office-data'
+  | 'presentation'
+  | 'marketing-communication'
   | 'research'
   | 'code'
   | 'productivity'
   | 'video'
+  | 'audio'
   | 'ai-agent';
+
+export type StudioCategoryFamilyId = 'write' | 'transmit' | 'analyze' | 'create' | 'build';
 
 export interface StudioFieldOption {
   value: string;
@@ -99,9 +107,15 @@ export interface StudioCategoryConfig<TValues extends FieldValues> {
 
 export interface StudioCategorySummary {
   id: StudioCategoryId;
+  family: StudioCategoryFamilyId;
   label: string;
   description: string;
   available: boolean;
+}
+
+export interface StudioCategoryFamilySummary {
+  id: StudioCategoryFamilyId;
+  label: string;
 }
 
 export interface StudioResult<TValues extends FieldValues> {

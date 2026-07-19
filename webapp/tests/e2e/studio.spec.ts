@@ -163,6 +163,277 @@ test.describe('FormaPrompt Studio', () => {
     expect(pageWidth.scroll).toBe(pageWidth.client);
   });
 
+  test('sélectionne Documents professionnels et produit un document structuré', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('professional-documents');
+    await expect(page.getByText(/Préparer un rapport, un compte rendu, une procédure/)).toBeVisible();
+    await expect(page.getByLabel('Type de document')).toHaveValue('rapport professionnel');
+
+    await page.getByLabel('Sujet et contexte du document').fill(
+      'Formaliser un processus fictif de validation interne utilisé par plusieurs services.',
+    );
+    await page.getByLabel('Lecteur ou destinataire du document').fill(
+      'responsables de service découvrant le nouveau processus interne',
+    );
+    await page.getByLabel('Objectif du document').fill(
+      'Expliquer chaque étape afin que les responsables puissent appliquer le processus sans ambiguïté.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Type de document : rapport professionnel');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Informations sources autorisées').fill(
+      'Le processus comprend trois validations, une réponse sous deux jours ouvrés et un suivi dans un tableau fictif.',
+    );
+    await page.getByLabel('Résultat ou action attendue après lecture').fill(
+      'Chaque responsable identifie son intervention, son délai et le contrôle à réaliser.',
+    );
+    await page.getByLabel('Sections et informations obligatoires').fill(
+      'Objectif, périmètre, responsabilités, étapes, délais et points de contrôle.',
+    );
+    await page.getByLabel('Contraintes et éléments à éviter').fill(
+      'Phrases courtes, aucun jargon non expliqué et aucune information inventée.',
+    );
+    await page.getByLabel('Critères de vérification avant utilisation').fill(
+      'Toutes les étapes sont présentes et chaque délai correspond aux informations fournies.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Analyse et synthèse et produit une restitution traçable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('analysis-synthesis');
+    await expect(page.getByText('Examiner des informations et produire une synthèse vérifiable.')).toBeVisible();
+    await expect(page.getByLabel('Type d’analyse')).toHaveValue('analyse thématique structurée');
+
+    await page.getByLabel('Sujet et contexte de l’analyse').fill(
+      'Comparer plusieurs retours anonymisés sur l’utilisation d’une procédure fictive.',
+    );
+    await page.getByLabel('Destinataire de la synthèse').fill(
+      'responsables pédagogiques connaissant le processus mais pas les retours détaillés',
+    );
+    await page.getByLabel('Question principale à traiter').fill(
+      'Quelles difficultés reviennent le plus souvent et quels points nécessitent une clarification prioritaire ?',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('## Objectif d’analyse');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Distingue explicitement les faits');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Périmètre, période et limites des sources').fill(
+      'Cinq retours anonymisés recueillis sur un mois, limités à la phase de validation.',
+    );
+    await page.getByLabel('Usage attendu de la synthèse').fill(
+      'Prioriser les explications à revoir avant la prochaine diffusion de la procédure fictive.',
+    );
+    await page.getByLabel('Critères ou axes d’analyse').fill(
+      'Fréquence, étape concernée, impact sur le délai et clarté de la consigne.',
+    );
+    await page.getByLabel('Incertitudes et contradictions à signaler').fill(
+      'Signaler les cas isolés, les périodes non comparables et les causes non démontrées.',
+    );
+    await page.getByLabel('Contraintes et éléments à éviter').fill(
+      'Aucune cause supposée et aucune recommandation sans appui dans les sources.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Bureautique et données et produit une procédure vérifiable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('office-data');
+    await expect(page.getByText('Préparer un traitement de données, un tableau ou une automatisation bureautique.')).toBeVisible();
+    await expect(page.getByLabel('Outil et version visés')).toHaveValue('Microsoft Excel pour Microsoft 365');
+
+    await page.getByLabel('Situation et besoin bureautique').fill(
+      'Fiabiliser un tableau de suivi fictif afin de réduire les erreurs de saisie.',
+    );
+    await page.getByLabel('Structure du document ou des données de départ').fill(
+      'Une feuille Suivi avec les colonnes Date, Catégorie, Statut et Montant fictif.',
+    );
+    await page.getByLabel('Résultat attendu').fill(
+      'Créer une liste contrôlée pour le statut, signaler les doublons et produire un total mensuel vérifiable.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Microsoft Excel pour Microsoft 365');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Travaille sur une copie');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Critères de réussite').fill(
+      'Aucune valeur hors liste, doublons signalés et total identique à un calcul manuel.',
+    );
+    await page.getByLabel('Règles de structure, de calcul ou de mise en forme').fill(
+      'Conserver les colonnes existantes, ajouter les contrôles à droite et ne jamais fusionner les cellules.',
+    );
+    await page.getByLabel('Contraintes et éléments à éviter').fill(
+      'Aucune macro, conserver le fichier source intact et utiliser uniquement des fonctions compatibles.',
+    );
+    await page.getByLabel('Méthode de vérification et cas de test').fill(
+      'Tester une ligne valide, un doublon, une valeur vide et comparer le total à un calcul manuel.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Présentation et produit un plan de diaporama vérifiable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('presentation');
+    await expect(page.getByText('Structurer un diaporama, son message, sa progression visuelle et sa prise de parole.')).toBeVisible();
+    await expect(page.getByLabel('Durée de prise de parole')).toHaveValue('10 minutes de présentation puis questions');
+    await expect(page.getByLabel('Application ou outil visé')).toHaveValue('Microsoft PowerPoint');
+
+    await page.getByLabel('Qui doit réaliser la présentation ?').selectOption(
+      'créer directement une présentation ou un fichier éditable si cette capacité est disponible',
+    );
+    await page.getByLabel('Application ou outil visé').selectOption('Prezi');
+
+    await page.getByLabel('Sujet, situation et enjeux de la présentation').fill(
+      'Présenter les résultats anonymisés d’un projet fictif lors d’une réunion mensuelle.',
+    );
+    await page.getByLabel('Public, niveau et attentes').fill(
+      'Responsables de service connaissant le projet et attendant une recommandation claire.',
+    );
+    await page.getByLabel('Message central à retenir').fill(
+      'La simplification proposée réduit les étapes inutiles sans supprimer les contrôles essentiels.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('diapositive par diapositive');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’invente aucun chiffre');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('zones du canevas');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('indique clairement cette limite');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Documents et informations disponibles').fill(
+      'Une synthèse anonymisée, trois indicateurs validés et une chronologie vérifiée.',
+    );
+    await page.getByLabel('Résultat attendu auprès du public').fill(
+      'Valider les deux prochaines étapes et désigner les personnes responsables de leur suivi.',
+    );
+    await page.getByLabel('Contenus et éléments obligatoires').fill(
+      'Contexte, trois résultats validés, limites, recommandation et décision attendue.',
+    );
+    await page.getByLabel('Sources, citations et informations à ne pas inventer').fill(
+      'Utiliser seulement les indicateurs fournis et signaler toute information manquante.',
+    );
+    await page.getByLabel('Lisibilité et accessibilité').fill(
+      'Contraste renforcé, texte court et aucune information portée uniquement par la couleur.',
+    );
+    await page.getByLabel('Contrôles avant présentation').fill(
+      'Contrôler chaque source et effectuer une répétition chronométrée avant la réunion.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Marketing et communication et produit un contenu responsable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('marketing-communication');
+    await expect(page.getByText('Cadrer un contenu, une campagne ou un argumentaire crédible et adapté à son public.')).toBeVisible();
+    await expect(page.getByLabel('Type de contenu marketing ou de communication')).toHaveValue('page de présentation d’une offre ou d’un service');
+
+    await page.getByLabel('Situation et contexte de communication').fill(
+      'Présenter une nouvelle ressource professionnelle fictive sur le site FormaPrompt.',
+    );
+    await page.getByLabel('Offre, service, ressource ou sujet à présenter').fill(
+      'Un guide pratique gratuit proposant une méthode en quatre étapes et des exemples fictifs.',
+    );
+    await page.getByLabel('Public visé, besoins et freins').fill(
+      'Responsables pédagogiques connaissant leur besoin mais disposant de peu de temps.',
+    );
+    await page.getByLabel('Message central à retenir').fill(
+      'Cette ressource aide à préciser une demande professionnelle avant de transmettre la consigne.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’invente aucun chiffre');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('pression artificielle');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Action ou résultat attendu auprès du public').fill(
+      'Consulter la page détaillée puis décider librement si la ressource répond au besoin.',
+    );
+    await page.getByLabel('Proposition de valeur et bénéfice concret').fill(
+      'Une méthode courte et réutilisable qui aide à repérer les imprécisions avant utilisation.',
+    );
+    await page.getByLabel('Preuves et informations vérifiables disponibles').fill(
+      'Contenu validé, accès gratuit confirmé et exemples fictifs relus ; aucun témoignage disponible.',
+    );
+    await page.getByLabel('Règles de marque, vocabulaire et identité').fill(
+      'Ton pédagogique, vouvoiement, phrases courtes et aucune promesse excessive.',
+    );
+    await page.getByLabel('Contraintes éthiques, réglementaires et mentions obligatoires').fill(
+      'Aucune fausse urgence et consentement requis pour tout envoi de courriel.',
+    );
+    await page.getByLabel('Indicateurs de réussite').fill(
+      'Compréhension du message lors d’une relecture test.',
+    );
+    await page.getByLabel('Contraintes éditoriales et éléments à éviter').fill(
+      'Six cents mots maximum, aucune comparaison non sourcée et aucun superlatif.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
   test('sélectionne Création d’image et produit une consigne visuelle structurée', async ({ page }) => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
@@ -247,6 +518,51 @@ test.describe('FormaPrompt Studio', () => {
       .analyze();
 
     expect(socialMediaResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('professional-documents');
+    await expect(page.getByLabel('Sujet et contexte du document')).toBeVisible();
+
+    const professionalDocumentsResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(professionalDocumentsResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('analysis-synthesis');
+    await expect(page.getByLabel('Sujet et contexte de l’analyse')).toBeVisible();
+
+    const analysisSynthesisResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(analysisSynthesisResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('office-data');
+    await expect(page.getByLabel('Situation et besoin bureautique')).toBeVisible();
+
+    const officeDataResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(officeDataResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('presentation');
+    await expect(page.getByLabel('Sujet, situation et enjeux de la présentation')).toBeVisible();
+
+    const presentationResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(presentationResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('marketing-communication');
+    await expect(page.getByLabel('Situation et contexte de communication')).toBeVisible();
+
+    const marketingCommunicationResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(marketingCommunicationResults.violations).toEqual([]);
 
     await page.getByLabel('Cas d’usage').selectOption('image-creation');
     await expect(page.getByLabel('Sujet principal')).toBeVisible();

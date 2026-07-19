@@ -1,12 +1,17 @@
-import type { StudioCategoryId, StudioCategorySummary } from '../types';
+import type {
+  StudioCategoryFamilySummary,
+  StudioCategoryId,
+  StudioCategorySummary,
+} from '../types';
 
 interface CategorySelectorProps {
   categories: StudioCategorySummary[];
+  families: StudioCategoryFamilySummary[];
   value: StudioCategoryId;
   onChange: (categoryId: StudioCategoryId) => void;
 }
 
-export function CategorySelector({ categories, value, onChange }: CategorySelectorProps) {
+export function CategorySelector({ categories, families, value, onChange }: CategorySelectorProps) {
   const availableCount = categories.filter((category) => category.available).length;
   const selectedCategory = categories.find((category) => category.id === value);
 
@@ -22,10 +27,16 @@ export function CategorySelector({ categories, value, onChange }: CategorySelect
         aria-describedby="studio-category-help"
         onChange={(event) => onChange(event.target.value as StudioCategoryId)}
       >
-        {categories.map((category) => (
-          <option key={category.id} value={category.id} disabled={!category.available}>
-            {`${category.label}${category.available ? '' : ' — prochainement'}`}
-          </option>
+        {families.map((family) => (
+          <optgroup key={family.id} label={family.label}>
+            {categories
+              .filter((category) => category.family === family.id)
+              .map((category) => (
+                <option key={category.id} value={category.id} disabled={!category.available}>
+                  {`${category.label}${category.available ? '' : ' — prochainement'}`}
+                </option>
+              ))}
+          </optgroup>
         ))}
       </select>
       {selectedCategory && (

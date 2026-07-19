@@ -12,7 +12,9 @@ Le MVP :
 - ne conserve aucune saisie dans `localStorage`, `sessionStorage`, un cookie ou une base de données ;
 - construit un prompt et son diagnostic avec des fonctions déterministes.
 
-Quatre catégories sont disponibles : `professional-email` pour les courriels professionnels, `training` pour les activités, séquences et ressources pédagogiques, `social-media` pour les publications destinées aux réseaux sociaux, et `image-creation` pour les consignes visuelles. Les autres catégories prévues sont déclarées dans `categories/registry.ts` mais restent désactivées tant que leur configuration n'est pas développée et validée.
+Neuf catégories sont disponibles : `professional-email` pour les courriels professionnels, `professional-documents` pour les rapports, comptes rendus, procédures, notes de synthèse, lettres, propositions commerciales et cahiers des charges, `training` pour les activités, séquences et ressources pédagogiques, `presentation` pour les diaporamas, leur prise de parole et leur adaptation à PowerPoint, Google Slides, Gamma, Prezi, Canva, Keynote ou LibreOffice, `social-media` pour les publications destinées aux réseaux sociaux, `marketing-communication` pour les pages, brochures, newsletters, campagnes, argumentaires et plans de communication, `image-creation` pour les consignes visuelles, `analysis-synthesis` pour l'analyse de sources et les synthèses traçables, et `office-data` pour les tâches bureautiques, les traitements de données et les automatisations. Les autres catégories prévues sont déclarées dans `categories/registry.ts` mais restent désactivées tant que leur configuration n'est pas développée et validée.
+
+Le catalogue est regroupé en cinq familles afin de rester lisible sur mobile : Écrire, Transmettre, Analyser, Créer et Construire. Ce regroupement relève de la navigation ; chaque catégorie conserve sa configuration, son schéma, son constructeur et ses règles de score propres.
 
 ## Organisation
 
