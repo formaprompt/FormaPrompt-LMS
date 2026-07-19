@@ -169,10 +169,14 @@ a:focus, button:focus {
     background-color: white;
     flex-direction: column;
     align-items: stretch;
-    gap: 0.85rem;
+    gap: 0.35rem;
+    height: calc(100dvh - 72px);
     max-height: calc(100dvh - 72px);
-    padding: 1rem 1.5rem 1.5rem;
+    padding: 0.75rem 1.5rem max(5rem, calc(1.5rem + env(safe-area-inset-bottom)));
     overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-bottom: max(5rem, calc(1.5rem + env(safe-area-inset-bottom)));
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     z-index: 60;
   }
@@ -193,6 +197,24 @@ a:focus, button:focus {
   .nav > a,
   .dropdown-title {
     width: 100%;
+  }
+
+  .nav > a,
+  .dropdown-title,
+  .dropdown-content a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .nav > a,
+  .dropdown-title {
+    padding: 0.4rem 0;
+  }
+
+  .dropdown-content a {
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
   }
 
   .nav-account-actions {
