@@ -1,4 +1,7 @@
+import { imageCreationCategory } from './imageCreation';
 import { professionalEmailCategory } from './professionalEmail';
+import { socialMediaCategory } from './socialMedia';
+import { trainingCategory } from './training';
 import type { FieldValues } from 'react-hook-form';
 import type { StudioCategoryConfig, StudioCategoryId, StudioCategorySummary } from '../types';
 
@@ -9,9 +12,9 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     description: 'Structurer un prompt pour préparer un courriel professionnel.',
     available: true,
   },
-  { id: 'training', label: 'Formation', description: 'Concevoir une activité ou une ressource pédagogique.', available: false },
-  { id: 'social-media', label: 'Réseaux sociaux', description: 'Préparer une publication adaptée à un canal et un public.', available: false },
-  { id: 'image-creation', label: 'Création d’image', description: 'Décrire une intention visuelle et ses contraintes.', available: false },
+  { id: 'training', label: 'Formation', description: 'Concevoir une activité, une séquence ou une ressource pédagogique.', available: true },
+  { id: 'social-media', label: 'Réseaux sociaux', description: 'Préparer une publication adaptée à une plateforme, un public et un objectif.', available: true },
+  { id: 'image-creation', label: 'Création d’image', description: 'Structurer une consigne visuelle adaptée à un support et un public.', available: true },
   { id: 'research', label: 'Recherche', description: 'Cadrer une recherche et les sources à vérifier.', available: false },
   { id: 'code', label: 'Code', description: 'Décrire un besoin technique et ses critères de validation.', available: false },
   { id: 'productivity', label: 'Productivité', description: 'Structurer une tâche et un livrable professionnel.', available: false },
@@ -21,6 +24,9 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
 
 export const availableStudioCategories = {
   'professional-email': professionalEmailCategory,
+  training: trainingCategory,
+  'social-media': socialMediaCategory,
+  'image-creation': imageCreationCategory,
 } as const;
 
 export function getAvailableStudioCategory(categoryId: StudioCategoryId) {

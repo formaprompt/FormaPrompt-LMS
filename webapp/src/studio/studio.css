@@ -191,6 +191,14 @@
   font-size: 0.92rem;
 }
 
+.studio-category-selector .studio-category-description {
+  margin: 0.75rem 0 0;
+  padding-left: 0.8rem;
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-secondary);
+  font-weight: 650;
+}
+
 .studio-category-selector select,
 .studio-field input,
 .studio-field textarea,

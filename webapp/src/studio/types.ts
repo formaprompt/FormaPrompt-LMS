@@ -70,6 +70,13 @@ export interface StudioExample {
   prompt: string;
 }
 
+export interface StudioBeforeAfter {
+  vagueRequest: string;
+  missingDescription: string;
+  structuredPrompt: string;
+  benefit: string;
+}
+
 export interface StudioCategoryConfig<TValues extends FieldValues> {
   id: StudioCategoryId;
   label: string;
@@ -85,6 +92,7 @@ export interface StudioCategoryConfig<TValues extends FieldValues> {
     privacy: string;
     resultHelp: string;
   };
+  beforeAfter: StudioBeforeAfter;
   examples: StudioExample[];
   recommendations: string[];
 }

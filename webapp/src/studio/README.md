@@ -12,7 +12,7 @@ Le MVP :
 - ne conserve aucune saisie dans `localStorage`, `sessionStorage`, un cookie ou une base de données ;
 - construit un prompt et son diagnostic avec des fonctions déterministes.
 
-La première catégorie disponible est `professional-email`. Les catégories prévues sont déclarées dans `categories/registry.ts` mais restent désactivées tant que leur configuration n'est pas développée et validée.
+Quatre catégories sont disponibles : `professional-email` pour les courriels professionnels, `training` pour les activités, séquences et ressources pédagogiques, `social-media` pour les publications destinées aux réseaux sociaux, et `image-creation` pour les consignes visuelles. Les autres catégories prévues sont déclarées dans `categories/registry.ts` mais restent désactivées tant que leur configuration n'est pas développée et validée.
 
 ## Organisation
 

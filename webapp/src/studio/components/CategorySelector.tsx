@@ -7,11 +7,14 @@ interface CategorySelectorProps {
 }
 
 export function CategorySelector({ categories, value, onChange }: CategorySelectorProps) {
+  const availableCount = categories.filter((category) => category.available).length;
+  const selectedCategory = categories.find((category) => category.id === value);
+
   return (
     <div className="studio-category-selector">
       <label htmlFor="studio-category">Cas d’usage</label>
       <p id="studio-category-help">
-        Une première catégorie est disponible. Les suivantes utiliseront le même moteur modulaire.
+        {`${availableCount} catégories sont disponibles. Choisissez celle qui correspond au résultat que vous souhaitez préparer.`}
       </p>
       <select
         id="studio-category"
@@ -25,6 +28,11 @@ export function CategorySelector({ categories, value, onChange }: CategorySelect
           </option>
         ))}
       </select>
+      {selectedCategory && (
+        <p className="studio-category-description" aria-live="polite">
+          {selectedCategory.description}
+        </p>
+      )}
     </div>
   );
 }

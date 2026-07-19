@@ -411,6 +411,12 @@ export const professionalEmailCategory: StudioCategoryConfig<ProfessionalEmailVa
     privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Utilisez des situations génériques, fictives ou anonymisées.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations présentes dans le formulaire et sur une grille CROP documentée.',
   },
+  beforeAfter: {
+    vagueRequest: '« Rédige un mail pour rappeler une réunion. »',
+    missingDescription: 'Le destinataire, le résultat attendu, le ton et les informations pratiques ne sont pas définis.',
+    structuredPrompt: '« Contexte : rappel destiné à des participants adultes. Rôle : assistant de communication pédagogique. Objectif : rappeler les modalités et obtenir une confirmation. Précisions : ton cordial, moins de 180 mots, objet clair, date fictive et action attendue explicite. »',
+    benefit: 'Le résultat peut être relu à partir d’éléments observables.',
+  },
   examples: [
     {
       title: 'Rappel de réunion',

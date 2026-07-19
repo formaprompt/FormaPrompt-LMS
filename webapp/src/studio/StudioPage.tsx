@@ -21,7 +21,7 @@ const studioFaq = [
     answer: 'Non. Le score est un repère pédagogique fondé sur la grille CROP. Il mesure la présence d’informations utiles, pas la vérité ni la qualité finale du contenu obtenu.',
   },
   {
-    question: 'Puis-je saisir un courriel réel ou un dossier client ?',
+    question: 'Puis-je saisir un contenu réel ou un dossier concernant une personne ?',
     answer: 'Non. Utilisez une situation fictive, générique ou anonymisée. Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible.',
   },
   {
@@ -35,13 +35,13 @@ const studioStructuredData = {
   '@graph': [
     {
       '@type': 'WebApplication',
-      name: 'FormaPrompt Studio — Prompt pour courriel professionnel',
+      name: 'FormaPrompt Studio — Structurer un prompt avec la méthode CROP',
       url: 'https://www.formaprompt.com/studio',
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Navigateur web',
       inLanguage: 'fr-FR',
       isAccessibleForFree: true,
-      description: 'Outil pédagogique gratuit pour structurer et diagnostiquer un prompt de courriel professionnel avec la méthode CROP.',
+      description: 'Outil pédagogique gratuit pour structurer et diagnostiquer des prompts professionnels, pédagogiques, éditoriaux et visuels avec la méthode CROP.',
       provider: {
         '@type': 'Organization',
         name: 'FormaPrompt',
@@ -97,8 +97,8 @@ export default function StudioPage() {
   return (
     <div className="studio-page">
       <SEO
-        title="FormaPrompt Studio – Construire un prompt de courriel professionnel"
-        description="Structurez gratuitement un prompt de courriel professionnel avec la méthode CROP, obtenez un score de qualité expliqué et des recommandations d’amélioration."
+        title="FormaPrompt Studio – Structurer un prompt avec la méthode CROP"
+        description="Structurez gratuitement vos prompts professionnels, pédagogiques, éditoriaux et visuels avec la méthode CROP, un score expliqué et des recommandations."
         url="https://www.formaprompt.com/studio"
         image="https://www.formaprompt.com/assets/photo%20page%20d'accueil.png"
         type="website"
@@ -114,10 +114,10 @@ export default function StudioPage() {
         <div className="container studio-hero-layout">
           <div>
             <p className="studio-kicker">FormaPrompt Studio 2026</p>
-            <h1>Construisez un prompt clair pour votre courriel professionnel</h1>
+            <h1>Construisez un prompt clair pour vos usages professionnels</h1>
             <p className="studio-hero-introduction">
-              Décrivez votre besoin, suivez les quatre repères CROP et repartez avec un prompt structuré,
-              un score de qualité expliqué et des recommandations d’amélioration.
+              Choisissez un cas d’usage, suivez les quatre repères CROP et repartez avec un prompt structuré,
+              un score de qualité expliqué et des recommandations d’amélioration concrètes.
             </p>
             <a href="#outil-studio" className="btn btn-primary studio-hero-action">
               Commencer gratuitement <ArrowRight aria-hidden="true" />
@@ -211,18 +211,14 @@ export default function StudioPage() {
             <article className="is-before">
               <span>Avant</span>
               <h3>Demande imprécise</h3>
-              <blockquote>« Rédige un mail pour rappeler une réunion. »</blockquote>
-              <p>Le destinataire, le résultat attendu, le ton et les informations pratiques ne sont pas définis.</p>
+              <blockquote>{category.beforeAfter.vagueRequest}</blockquote>
+              <p>{category.beforeAfter.missingDescription}</p>
             </article>
             <article className="is-after">
               <span>Après</span>
               <h3>Prompt structuré</h3>
-              <blockquote>
-                « Contexte : rappel destiné à des participants adultes. Rôle : assistant de communication pédagogique.
-                Objectif : rappeler les modalités et obtenir une confirmation. Précisions : ton cordial, moins de 180 mots,
-                objet clair, date fictive et action attendue explicite. »
-              </blockquote>
-              <p>Le résultat peut être relu à partir d’éléments observables.</p>
+              <blockquote>{category.beforeAfter.structuredPrompt}</blockquote>
+              <p>{category.beforeAfter.benefit}</p>
             </article>
           </div>
         </div>
