@@ -213,6 +213,66 @@ test.describe('FormaPrompt Studio', () => {
     expect(pageWidth.scroll).toBe(pageWidth.client);
   });
 
+  test('sélectionne Articles et contenus éditoriaux et produit un article sourcé', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('editorial-content');
+    await expect(page.getByText('Préparer un article de blog, technique, d’actualité ou de fond avec un angle et des sources explicites.')).toBeVisible();
+    await page.getByLabel('Type d’article ou de contenu').selectOption('article d’actualité ou de veille');
+
+    await page.getByLabel('Sujet, contexte et besoin éditorial').fill(
+      'Article de veille consacré à une évolution technique récente susceptible de modifier les pratiques professionnelles.',
+    );
+    await page.getByLabel('Lectorat, niveau et attentes').fill(
+      'Responsables de petites structures, non spécialistes et lecteurs sur téléphone.',
+    );
+    await page.getByLabel('Objectif éditorial et valeur apportée au lecteur').fill(
+      'Permettre au lecteur de comprendre ce qui est confirmé et les vérifications à effectuer avant toute décision.',
+    );
+    await page.getByLabel('Angle éditorial et idée directrice').fill(
+      'Distinguer les faits confirmés, les annonces attribuées et les conséquences encore incertaines.',
+    );
+    await page.getByLabel('Plan, progression et éléments obligatoires').fill(
+      'Contexte, faits confirmés, points encore incertains, conséquences possibles puis liste de contrôle.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('Distingue la date de publication de la date réelle des événements');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’invente aucun fait, chiffre, date, citation, source');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Média, rubrique et ligne éditoriale').fill(
+      'Rubrique de veille professionnelle, ton factuel et lecture majoritairement réalisée sur téléphone.',
+    );
+    await page.getByLabel('Sources, citations et informations incertaines').fill(
+      'Prioriser les sources officielles, attribuer chaque déclaration et signaler les informations non confirmées.',
+    );
+    await page.getByLabel('Période couverte, dates et actualisation').fill(
+      'Dater chaque annonce, chaque événement et chaque consultation, puis indiquer la date de dernière vérification.',
+    );
+    await page.getByLabel('Intentions de recherche et contraintes SEO').fill(
+      'Répondre clairement à la question principale sans répéter artificiellement les mots-clés.',
+    );
+    await page.getByLabel('Liens internes, externes et ancres').fill(
+      'Lien interne vers la ressource associée et liens externes uniquement vers les sources primaires.',
+    );
+    await page.getByLabel('Relecture et validation avant publication').fill(
+      'Contrôle des faits, dates, liens et formulations incertaines par le responsable éditorial.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
   test('sélectionne Analyse et synthèse et produit une restitution traçable', async ({ page }) => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
@@ -434,6 +494,258 @@ test.describe('FormaPrompt Studio', () => {
     expect(pageWidth.scroll).toBe(pageWidth.client);
   });
 
+  test('sélectionne Recherche et produit une méthode traçable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('research');
+    await expect(page.getByText('Cadrer une recherche documentaire, vérifier les sources et produire une restitution traçable.')).toBeVisible();
+    await expect(page.getByLabel('Type de recherche')).toHaveValue('recherche documentaire générale');
+
+    await page.getByLabel('Sujet et contexte de la recherche').fill(
+      'Actualiser un support pédagogique fictif à partir d’informations publiques récentes.',
+    );
+    await page.getByLabel('Destinataire de la recherche').fill(
+      'Formateurs généralistes connaissant le sujet mais pas ses évolutions récentes.',
+    );
+    await page.getByLabel('Question principale de recherche').fill(
+      'Quelles évolutions vérifiées depuis 2024 modifient cette pratique et quels points restent incertains ?',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('## Objectif de recherche');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’invente aucune source');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Informations déjà connues ou restant à vérifier').fill(
+      'Une recommandation générale est connue, mais sa date et son périmètre doivent être confirmés.',
+    );
+    await page.getByLabel('Usage attendu des résultats').fill(
+      'Décider quels passages du support fictif doivent être actualisés.',
+    );
+    await page.getByLabel('Périmètre géographique').fill('France et Union européenne.');
+    await page.getByLabel('Période et actualité attendue').fill('Publications depuis janvier 2024.');
+    await page.getByLabel('Exigences et exclusions relatives aux sources').fill(
+      'Auteur et date identifiables, document primaire recherché et aucune source anonyme utilisée seule.',
+    );
+    await page.getByLabel('Stratégie, sous-questions et mots-clés').fill(
+      'Rechercher la définition officielle, la chronologie, les acteurs concernés et les exceptions.',
+    );
+    await page.getByLabel('Contradictions, lacunes et incertitudes').fill(
+      'Comparer les dates et périmètres des sources divergentes et isoler les points impossibles à trancher.',
+    );
+    await page.getByLabel('Contraintes et éléments à éviter').fill(
+      'Moins de 1 200 mots et aucune affirmation sans référence vérifiable.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Productivité et produit un processus contrôlé', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('productivity');
+    await expect(page.getByText('Organiser une tâche, simplifier un processus et définir des contrôles humains.')).toBeVisible();
+    await expect(page.getByLabel('Type de besoin de productivité')).toHaveValue('organisation et priorisation d’une charge de travail');
+
+    await page.getByLabel('Situation de travail et difficulté rencontrée').fill(
+      'Une petite équipe fictive prépare plusieurs livrables, mais les priorités changent trop tard.',
+    );
+    await page.getByLabel('Personnes concernées et niveau d’autonomie').fill(
+      'Trois personnes polyvalentes dont une valide les priorités.',
+    );
+    await page.getByLabel('Amélioration principale recherchée').fill(
+      'Construire une méthode hebdomadaire qui clarifie les priorités et rend les blocages visibles.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’affirme jamais avoir exécuté une action');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('validations humaines');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Méthode actuelle, points utiles et irritants').fill(
+      'Les demandes arrivent par plusieurs canaux et les priorités sont confirmées tardivement sans revue intermédiaire.',
+    );
+    await page.getByLabel('Résultat observable attendu').fill(
+      'Chaque personne connaît ses trois priorités, leur échéance et le point de validation prévu.',
+    );
+    await page.getByLabel('Fréquence, volume et variations de charge').fill(
+      'Revue chaque lundi avec quinze tâches actives.',
+    );
+    await page.getByLabel('Informations d’entrée et ressources nécessaires').fill(
+      'Liste des demandes, échéances confirmées, charge disponible et critères d’urgence.',
+    );
+    await page.getByLabel('Outils et environnement disponibles').fill(
+      'Agenda partagé et tableau de tâches existant ; aucun nouvel outil payant.',
+    );
+    await page.getByLabel('Échéances, priorités et règles d’arbitrage').fill(
+      'Engagements datés avant les améliorations internes ; arbitrage par le responsable.',
+    );
+    await page.getByLabel('Étapes, dépendances et responsabilités à préserver').fill(
+      'Vérifier, prioriser, affecter un responsable, réaliser, relire puis valider avant diffusion.',
+    );
+    await page.getByLabel('Critères de réussite et indicateurs utiles').fill(
+      'Priorités validées avant mardi et aucune tâche sans responsable.',
+    );
+    await page.getByLabel('Validations et contrôles humains obligatoires').fill(
+      'Le responsable valide les priorités et toute communication externe avant envoi.',
+    );
+    await page.getByLabel('Risques, contraintes et actions interdites').fill(
+      'Aucune suppression, dépense ou communication externe sans confirmation humaine.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Code et produit une consigne technique testable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('code');
+    await expect(page.getByText('Cadrer une création, une correction ou une revue de code avec des tests explicites.')).toBeVisible();
+    await expect(page.getByLabel('Type de besoin technique')).toHaveValue('création d’une fonctionnalité ciblée');
+
+    await page.getByLabel('Contexte technique et problème rencontré').fill(
+      'Dans une application fictive, un formulaire perd les valeurs lorsqu’une validation échoue.',
+    );
+    await page.getByLabel('Utilisateurs concernés et situation d’usage').fill(
+      'Adultes débutants utilisant le formulaire sur téléphone et ordinateur.',
+    );
+    await page.getByLabel('Comportement technique attendu').fill(
+      'Conserver les valeurs saisies, afficher l’erreur concernée et placer le focus sur la première erreur.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’invente pas d’API');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’affirme jamais avoir modifié un fichier');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Projet existant et comportements à préserver').fill(
+      'Application React et Vite existante, validations Zod et styles partagés à réutiliser sans modifier le service de données.',
+    );
+    await page.getByLabel('Résultat observable et condition de réussite').fill(
+      'Après une erreur, les valeurs restent visibles, le message est annoncé et aucun envoi n’est déclenché.',
+    );
+    await page.getByLabel('Langage, framework et versions').fill(
+      'TypeScript strict, React 19, Vite 5, React Hook Form et Zod.',
+    );
+    await page.getByLabel('Environnement d’exécution et plateformes visées').fill(
+      'Navigateurs récents sur téléphone et ordinateur Windows.',
+    );
+    await page.getByLabel('Entrées, sorties et formats de données').fill(
+      'Objet fictif avec champs texte ; sortie contenant statut, erreurs et valeurs normalisées.',
+    );
+    await page.getByLabel('Règles fonctionnelles et cas limites').fill(
+      'Conserver les champs valides, refuser une chaîne vide et ne jamais envoyer si une erreur subsiste.',
+    );
+    await page.getByLabel('Qualité, performance, accessibilité et maintenabilité').fill(
+      'TypeScript strict, navigation clavier, messages annoncés et fonctions courtes.',
+    );
+    await page.getByLabel('Contraintes et dépendances autorisées').fill(
+      'Réutiliser Zod et React Hook Form, sans nouvelle dépendance ni modification du service.',
+    );
+    await page.getByLabel('Tests et commandes de validation').fill(
+      'Test unitaire de validation, test du focus sur erreur et parcours clavier.',
+    );
+    await page.getByLabel('Sécurité et protection des données').fill(
+      'Aucune clé dans le navigateur, données fictives et validation des entrées.',
+    );
+    await page.getByLabel('Erreurs, états vides et solutions de repli').fill(
+      'Message sous le champ invalide, conservation de la saisie et possibilité de réessayer.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
+  test('sélectionne Vidéo et produit un storyboard accessible et vérifiable', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel('Cas d’usage').selectOption('video');
+    await expect(page.getByText('Structurer un scénario, un storyboard ou un brief vidéo adapté au public, au format et à l’outil.')).toBeVisible();
+    await expect(page.getByLabel('Durée cible')).toHaveValue('entre 1 et 3 minutes');
+    await expect(page.getByLabel('Format et ratio')).toHaveValue('horizontal 16:9 pour écran et plateforme vidéo');
+
+    await page.getByLabel('Sujet, situation et usage prévu de la vidéo').fill(
+      'Courte vidéo intégrée à une formation pour expliquer comment vérifier une source avant de la citer.',
+    );
+    await page.getByLabel('Public, niveau et contexte de visionnage').fill(
+      'Adultes débutants regardant la vidéo sur téléphone dans leur espace apprenant.',
+    );
+    await page.getByLabel('Objectif de la vidéo et effet attendu').fill(
+      'Permettre au public d’appliquer une vérification simple en trois étapes avant de partager une information.',
+    );
+    await page.getByLabel('Message essentiel à retenir').fill(
+      'Une source doit être identifiée, datée et recoupée avant d’être présentée comme fiable.',
+    );
+    await page.getByLabel('Progression narrative et rythme').fill(
+      'Question concrète, erreur fréquente, méthode en trois étapes puis rappel final.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    await expect(page.getByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toBeFocused();
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('## Adaptation à la production et à l’outil');
+    await expect(page.getByLabel('Prompt final à copier')).toContainText('N’affirme jamais avoir tourné, monté, créé');
+    const initialScore = Number(await page.locator('.studio-score-value strong').innerText());
+
+    await page.getByLabel('Informations, documents et médias disponibles').fill(
+      'Procédure validée, captures fictives, charte autorisée et liste des sources officielles à citer.',
+    );
+    await page.getByLabel('Scènes, plans, actions et transitions').fill(
+      'Plan d’ensemble, gros plan sur trois indices fictifs puis écran final récapitulatif.',
+    );
+    await page.getByLabel('Narration, dialogues et textes à l’écran').fill(
+      'Voix posée, phrases courtes et trois mots-clés affichés successivement.',
+    );
+    await page.getByLabel('Direction visuelle, cadrages et mouvements').fill(
+      'Style pédagogique sobre, plans stables, contraste élevé et aucun effet décoratif rapide.',
+    );
+    await page.getByLabel('Voix, musique, bruitages et silences').fill(
+      'Voix claire, musique discrète autorisée et silences entre les étapes.',
+    );
+    await page.getByLabel('Contrôles humains avant diffusion').fill(
+      'Validation du script, test sans le son sur téléphone et contrôle des faits et des droits.',
+    );
+    await page.getByRole('button', { name: 'Recalculer le score et le prompt' }).click();
+
+    const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
+    expect(improvedScore).toBeGreaterThan(initialScore);
+
+    const pageWidth = await page.evaluate(() => ({
+      client: document.documentElement.clientWidth,
+      scroll: document.documentElement.scrollWidth,
+    }));
+    expect(pageWidth.scroll).toBe(pageWidth.client);
+  });
+
   test('sélectionne Création d’image et produit une consigne visuelle structurée', async ({ page }) => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
@@ -528,6 +840,15 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(professionalDocumentsResults.violations).toEqual([]);
 
+    await page.getByLabel('Cas d’usage').selectOption('editorial-content');
+    await expect(page.getByLabel('Sujet, contexte et besoin éditorial')).toBeVisible();
+
+    const editorialContentResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(editorialContentResults.violations).toEqual([]);
+
     await page.getByLabel('Cas d’usage').selectOption('analysis-synthesis');
     await expect(page.getByLabel('Sujet et contexte de l’analyse')).toBeVisible();
 
@@ -563,6 +884,42 @@ test.describe('FormaPrompt Studio', () => {
       .analyze();
 
     expect(marketingCommunicationResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('research');
+    await expect(page.getByLabel('Sujet et contexte de la recherche')).toBeVisible();
+
+    const researchResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(researchResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('productivity');
+    await expect(page.getByLabel('Situation de travail et difficulté rencontrée')).toBeVisible();
+
+    const productivityResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(productivityResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('code');
+    await expect(page.getByLabel('Contexte technique et problème rencontré')).toBeVisible();
+
+    const codeResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(codeResults.violations).toEqual([]);
+
+    await page.getByLabel('Cas d’usage').selectOption('video');
+    await expect(page.getByLabel('Sujet, situation et usage prévu de la vidéo')).toBeVisible();
+
+    const videoResults = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    expect(videoResults.violations).toEqual([]);
 
     await page.getByLabel('Cas d’usage').selectOption('image-creation');
     await expect(page.getByLabel('Sujet principal')).toBeVisible();

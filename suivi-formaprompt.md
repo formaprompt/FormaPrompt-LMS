@@ -267,6 +267,18 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - La version a été déployée sur IONOS le 19 juillet 2026. Les 131 fichiers du build, soit 138 998 312 octets, ont été comparés par SHA-256. L'accueil, le Studio, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local.
 - Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié pendant cette publication.
 
+## Extension de FormaPrompt Studio à quatorze cas d'usage — 19 juillet 2026
+
+- Le Studio propose désormais quatorze catégories déterministes. Cette extension ajoute « Recherche », « Productivité », « Code », « Vidéo » et « Articles et contenus éditoriaux » aux neuf cas d'usage déjà publiés.
+- Chaque nouvelle catégorie possède ses champs et validations Zod, son constructeur de prompt, sa grille CROP explicable sur 100 points, ses aides, exemples, recommandations et garde-fous propres.
+- La catégorie éditoriale couvre notamment les articles de blog, techniques, d'actualité, tutoriels, comparatifs, interviews et mises à jour. Elle impose de distinguer les faits, les incertitudes et les dates utiles, sans inventer de source, citation ou lien.
+- La page d'accueil et les métadonnées du Studio ont été actualisées pour présenter quatorze cas d'usage. Le vocabulaire visible conserve « espace apprenant » et n'emploie pas les expressions réservées à une version avec fournisseur externe.
+- Les 39 tests applicatifs, les 10 tests Stripe et les 58 tests Studio ont réussi, soit 107 tests. Le typecheck, le lint, le build, le pré-rendu et les parcours navigateur ciblés ont également réussi.
+- La publication IONOS a comparé les 131 fichiers du build par SHA-256 : 61 fichiers ont été transférés et 70 étaient déjà identiques, pour 139 127 164 octets contrôlés.
+- L'accueil et le Studio servis en HTTPS correspondent exactement au build local. La catégorie éditoriale est visible et interactive sans erreur ni débordement sur ordinateur et sur un écran mobile de 390 px ; le sitemap et `robots.txt` répondent en HTTP 200.
+- Le démarrage du Studio utilise désormais un rendu React classique sur le HTML pré-rendu, comme l'accueil, afin d'éviter un avertissement d'hydratation tout en conservant le contenu SEO directement lisible.
+- Aucun appel à un fournisseur externe, aucun stockage et aucune modification de Supabase, Stripe, de l'authentification, des migrations ou des données Qualiopi n'ont été ajoutés pendant cette extension.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

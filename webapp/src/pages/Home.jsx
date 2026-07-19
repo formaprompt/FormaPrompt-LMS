@@ -179,7 +179,7 @@ export default function Home() {
                   Le Studio vous guide avec la méthode CROP — Contexte, Rôle, Objectif et Précisions — pour construire un prompt professionnel, obtenir un score de qualité expliqué et repérer les informations manquantes.
                 </p>
                 <ul className="home-studio-benefits">
-                  <li><CheckCircle size={20} aria-hidden="true" /> Neuf cas d’usage pour écrire, transmettre, analyser et créer.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> Quatorze cas d’usage pour écrire, transmettre, analyser, créer et construire.</li>
                   <li><CheckCircle size={20} aria-hidden="true" /> Un diagnostic déterministe, sans appel à un fournisseur externe.</li>
                   <li><CheckCircle size={20} aria-hidden="true" /> Aucune saisie conservée dans cette première version.</li>
                 </ul>

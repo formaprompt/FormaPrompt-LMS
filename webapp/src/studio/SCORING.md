@@ -700,3 +700,327 @@ Le type de contenu, le canal, le ton et le format de réponse valent ensemble 12
 - 25 caractères ou plus : 2 points.
 
 Le score mesure la qualité du cadrage, pas l'efficacité commerciale future du contenu. Les chiffres, prix, résultats, témoignages, certifications, consentements et mentions doivent être vérifiés par une personne compétente avant diffusion. Une estimation ou une intention ne doit jamais être présentée comme une garantie.
+
+## Catégorie « Recherche »
+
+### Contexte — 25 points
+
+Le type de recherche sélectionné vaut 4 points.
+
+#### Situation et besoin d'information — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Destinataire — 6 points
+
+- moins de 20 caractères : 2 points ;
+- de 20 à 39 caractères : 4 points ;
+- 40 caractères ou plus : 6 points.
+
+#### Informations déjà connues — 5 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 3 points ;
+- 40 caractères ou plus : 5 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Question principale — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Usage attendu — 8 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+La priorité des sources, le format de restitution, le niveau de détail et la méthode de citation valent ensemble 12 points lorsqu'ils sont définis.
+
+Les périmètres géographique et temporel valent 2 points chacun lorsqu'ils comportent au moins 12 caractères.
+
+#### Exigences relatives aux sources — 6 points
+
+- moins de 18 caractères : 0 point ;
+- de 18 à 44 caractères : 4 points ;
+- 45 caractères ou plus : 6 points.
+
+#### Stratégie de recherche — 5 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 3 points ;
+- 40 caractères ou plus : 5 points.
+
+#### Contradictions, lacunes et incertitudes — 4 points
+
+- moins de 12 caractères : 0 point ;
+- de 12 à 34 caractères : 2 points ;
+- 35 caractères ou plus : 4 points.
+
+#### Contraintes — 4 points
+
+- moins de 12 caractères : 0 point ;
+- de 12 à 34 caractères : 2 points ;
+- 35 caractères ou plus : 4 points.
+
+Le score mesure le cadrage de la recherche. Il ne vérifie ni l'accès réel aux sources, ni leur authenticité, ni l'exactitude des résultats futurs. Chaque lien, auteur, date, citation et affirmation importante doit être contrôlé avant toute décision ou diffusion.
+
+## Catégorie « Productivité »
+
+### Contexte — 25 points
+
+Le type de besoin sélectionné vaut 4 points.
+
+#### Situation de travail — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Personnes concernées — 5 points
+
+- moins de 15 caractères : 2 points ;
+- de 15 à 34 caractères : 3 points ;
+- 35 caractères ou plus : 5 points.
+
+#### Méthode actuelle — 6 points
+
+- moins de 20 caractères : 0 point ;
+- de 20 à 49 caractères : 4 points ;
+- 50 caractères ou plus : 6 points.
+
+### Rôle — 15 points
+
+- moins de 32 caractères : 8 points ;
+- de 32 à 64 caractères : 12 points ;
+- 65 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Amélioration recherchée — 17 points
+
+- moins de 38 caractères : 8 points ;
+- de 38 à 74 caractères : 13 points ;
+- 75 caractères ou plus : 17 points.
+
+#### Résultat observable — 8 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+Le niveau d'automatisation et le format de restitution valent ensemble 6 points lorsqu'ils sont définis.
+
+Les éléments complémentaires utilisent les seuils suivants :
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Fréquence et volume | 12 caractères | 35 caractères | 2 | 4 |
+| Entrées et ressources | 15 caractères | 45 caractères | 2 | 4 |
+| Outils disponibles | 12 caractères | 35 caractères | 1 | 3 |
+| Échéances et priorités | 12 caractères | 35 caractères | 1 | 3 |
+| Étapes et responsabilités | 15 caractères | 45 caractères | 3 | 5 |
+| Critères de réussite | 12 caractères | 35 caractères | 2 | 4 |
+| Contrôles humains | 12 caractères | 35 caractères | 1 | 3 |
+| Risques et contraintes | 12 caractères | 35 caractères | 1 | 3 |
+
+Le score mesure la qualité du cadrage, pas le gain de temps réel. La méthode doit être testée à petite échelle et les décisions, suppressions, dépenses, engagements et communications externes doivent rester soumis à une validation humaine.
+
+## Catégorie « Code »
+
+### Contexte — 25 points
+
+Le type de besoin technique sélectionné vaut 4 points.
+
+#### Contexte technique — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Utilisateurs concernés — 5 points
+
+- moins de 15 caractères : 2 points ;
+- de 15 à 34 caractères : 3 points ;
+- 35 caractères ou plus : 5 points.
+
+#### Projet existant — 6 points
+
+- moins de 20 caractères : 0 point ;
+- de 20 à 49 caractères : 4 points ;
+- 50 caractères ou plus : 6 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Comportement attendu — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Résultat observable — 8 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+Le périmètre de modification, le livrable et les conventions de code valent ensemble 7 points lorsqu'ils sont définis.
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Pile technique | 2 caractères | 15 caractères | 2 | 4 |
+| Environnement d'exécution | 12 caractères | 30 caractères | 1 | 2 |
+| Entrées et sorties | 15 caractères | 35 caractères | 1 | 3 |
+| Règles fonctionnelles | 18 caractères | 45 caractères | 2 | 4 |
+| Exigences de qualité | 12 caractères | 35 caractères | 1 | 3 |
+| Contraintes et dépendances | 12 caractères | 30 caractères | 1 | 2 |
+| Tests et validations | 15 caractères | 35 caractères | 2 | 4 |
+| Sécurité et données | 12 caractères | 35 caractères | 1 | 3 |
+| Gestion des erreurs | 12 caractères | 35 caractères | 1 | 3 |
+
+Le score mesure la qualité du cadrage et ne vérifie ni la compilation, ni la sécurité, ni le résultat d'un test. Le code doit être relu, les commandes réellement exécutées et les comportements contrôlés dans un environnement autorisé avant toute intégration ou mise en production.
+
+## Catégorie « Vidéo »
+
+### Contexte — 25 points
+
+Le type de vidéo sélectionné vaut 4 points.
+
+#### Situation et usage prévu — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Public — 6 points
+
+- moins de 20 caractères : 2 points ;
+- de 20 à 39 caractères : 4 points ;
+- 40 caractères ou plus : 6 points.
+
+#### Informations et médias disponibles — 5 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 3 points ;
+- 40 caractères ou plus : 5 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Effet attendu — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Message essentiel — 8 points
+
+- moins de 25 caractères : 3 points ;
+- de 25 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+Le mode de production, la famille d'outil, la durée et le ratio valent ensemble 11 points lorsqu'ils sont définis.
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Progression narrative | 15 caractères | 45 caractères | 2 | 4 |
+| Scènes et plans | 15 caractères | 45 caractères | 2 | 4 |
+| Narration et textes | 15 caractères | 40 caractères | 2 | 3 |
+| Direction visuelle | 15 caractères | 40 caractères | 2 | 3 |
+| Son et musique | 12 caractères | 30 caractères | 1 | 2 |
+| Sous-titres et accessibilité | 12 caractères | 35 caractères | 2 | 3 |
+| Droits et consentements | 12 caractères | 35 caractères | 2 | 3 |
+| Contrôles avant diffusion | 12 caractères | 35 caractères | 1 | 2 |
+
+Le score mesure la qualité de la préparation. Il ne vérifie ni l'exactitude du contenu, ni les droits réellement obtenus, ni la qualité d'un tournage, d'un montage ou d'un fichier vidéo. Les faits, consentements, musiques, images, voix, marques, sous-titres et conditions de diffusion doivent être contrôlés par une personne compétente avant publication.
+
+## Catégorie « Articles et contenus éditoriaux »
+
+### Contexte — 25 points
+
+Le type d'article sélectionné vaut 4 points.
+
+#### Sujet et contexte — 10 points
+
+- moins de 45 caractères : 4 points ;
+- de 45 à 89 caractères : 7 points ;
+- 90 caractères ou plus : 10 points.
+
+#### Lectorat — 6 points
+
+- moins de 20 caractères : 2 points ;
+- de 20 à 39 caractères : 4 points ;
+- 40 caractères ou plus : 6 points.
+
+#### Média et ligne éditoriale — 5 points
+
+- moins de 15 caractères : 0 point ;
+- de 15 à 39 caractères : 3 points ;
+- 40 caractères ou plus : 5 points.
+
+### Rôle — 15 points
+
+- moins de 35 caractères : 8 points ;
+- de 35 à 69 caractères : 12 points ;
+- 70 caractères ou plus : 15 points.
+
+### Objectif — 25 points
+
+#### Valeur apportée au lecteur — 17 points
+
+- moins de 40 caractères : 8 points ;
+- de 40 à 79 caractères : 13 points ;
+- 80 caractères ou plus : 17 points.
+
+#### Angle éditorial — 8 points
+
+- moins de 25 caractères : 3 points ;
+- de 25 à 39 caractères : 5 points ;
+- 40 caractères ou plus : 8 points.
+
+### Précisions — 35 points
+
+La longueur, le niveau de technicité, le ton et le format de restitution valent ensemble 11 points lorsqu'ils sont définis.
+
+| Élément | Seuil partiel | Seuil complet | Points partiels | Points complets |
+| --- | ---: | ---: | ---: | ---: |
+| Plan et progression | 15 caractères | 45 caractères | 2 | 4 |
+| Sources et citations | 15 caractères | 45 caractères | 2 | 4 |
+| Période et dates | 12 caractères | 35 caractères | 2 | 3 |
+| Intentions de recherche et SEO | 12 caractères | 35 caractères | 2 | 3 |
+| Liens internes et externes | 10 caractères | 30 caractères | 1 | 2 |
+| Illustrations et alternatives | 10 caractères | 30 caractères | 1 | 2 |
+| Suite proposée au lecteur | 10 caractères | 30 caractères | 1 | 2 |
+| Règles éditoriales | 10 caractères | 30 caractères | 1 | 2 |
+| Validation avant publication | 12 caractères | 35 caractères | 1 | 2 |
+
+Le score mesure la qualité du cadrage éditorial. Il ne vérifie ni l'exactitude des faits, ni l'actualité des informations, ni l'existence des sources ou des liens. Les dates, citations, chiffres, versions techniques, droits des médias et éventuels conflits d'intérêts doivent être contrôlés avant publication.

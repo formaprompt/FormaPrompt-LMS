@@ -3,6 +3,7 @@
 ## État actuel
 
 - Tranche verticale « courriel professionnel » développée dans l'application React/Vite existante.
+- Quatorze catégories déterministes sont désormais développées, dont « Articles et contenus éditoriaux », « Recherche », « Productivité », « Code » et « Vidéo », avec des sources vérifiables, des contrôles humains et des validations techniques explicites.
 - MVP public, déterministe, sans stockage, sans authentification et sans appel à un fournisseur d'IA.
 - Aucun schéma Supabase, produit Stripe ou migration n'a été créé ou modifié pour le Studio.
 - Le brief de démarrage est disponible dans `brief-formaprompt-studio-2026.md`.

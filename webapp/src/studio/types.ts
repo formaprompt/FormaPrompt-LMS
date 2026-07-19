@@ -6,6 +6,7 @@ export type CropSection = 'context' | 'role' | 'objective' | 'precisions';
 export type StudioCategoryId =
   | 'professional-email'
   | 'professional-documents'
+  | 'editorial-content'
   | 'training'
   | 'social-media'
   | 'image-creation'

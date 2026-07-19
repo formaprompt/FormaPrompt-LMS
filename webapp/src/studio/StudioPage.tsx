@@ -45,7 +45,7 @@ const studioStructuredData = {
       operatingSystem: 'Navigateur web',
       inLanguage: 'fr-FR',
       isAccessibleForFree: true,
-      description: 'Outil pédagogique gratuit pour structurer et diagnostiquer des prompts de courriels, documents, analyses, bureautique, formations, présentations, marketing, publications et images avec la méthode CROP.',
+      description: 'Outil pédagogique gratuit pour structurer et diagnostiquer des prompts de courriels, documents, articles, recherches, analyses, productivité, code, bureautique, formations, présentations, marketing, publications, images et vidéos avec la méthode CROP.',
       provider: {
         '@type': 'Organization',
         name: 'FormaPrompt',
@@ -102,7 +102,7 @@ export default function StudioPage() {
     <div className="studio-page">
       <SEO
         title="FormaPrompt Studio – Structurer un prompt avec la méthode CROP"
-        description="Structurez gratuitement vos prompts de courriels, documents, analyses, bureautique, formations, présentations, marketing, publications et images avec la méthode CROP, un score expliqué et des recommandations."
+        description="Structurez gratuitement vos prompts de courriels, documents, articles, recherches, analyses, productivité, code, bureautique, formations, présentations, marketing, publications, images et vidéos avec la méthode CROP, un score expliqué et des recommandations."
         url="https://www.formaprompt.com/studio"
         image="https://www.formaprompt.com/assets/photo%20page%20d'accueil.png"
         type="website"

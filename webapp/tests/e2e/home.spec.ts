@@ -16,7 +16,7 @@ test.describe('Page d’accueil FormaPrompt', () => {
 
     const studioLink = page.getByRole('link', { name: 'Essayer gratuitement le Studio' });
     await expect(studioLink).toHaveAttribute('href', '/studio');
-    await expect(page.getByText('Neuf cas d’usage pour écrire, transmettre, analyser et créer.')).toBeVisible();
+    await expect(page.getByText('Quatorze cas d’usage pour écrire, transmettre, analyser, créer et construire.')).toBeVisible();
 
     await expect(page).toHaveTitle('FormaPrompt | Formations IA, prompts et bureautique');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(

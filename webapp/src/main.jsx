@@ -29,11 +29,6 @@ async function renderApplication() {
 
   const rootElement = document.getElementById('root');
 
-  if (isPublicStudio && rootElement.hasChildNodes()) {
-    ReactDOM.hydrateRoot(rootElement, application);
-    return;
-  }
-
   ReactDOM.createRoot(rootElement).render(application);
 }
 

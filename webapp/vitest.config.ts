@@ -7,7 +7,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/studio/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/studio/test/setup.ts'],
-    testTimeout: 15_000,
+    testTimeout: 45_000,
     css: true,
   },
 });

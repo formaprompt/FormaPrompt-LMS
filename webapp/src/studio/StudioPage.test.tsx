@@ -267,6 +267,77 @@ describe('parcours principal du Studio', () => {
     expect(improvedScore).toBeGreaterThan(initialScore);
   });
 
+  it('construit et améliore un article éditorial sourcé et daté', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'editorial-content');
+
+    expect(categorySelector).toHaveValue('editorial-content');
+    expect(screen.getByText('Préparer un article de blog, technique, d’actualité ou de fond avec un angle et des sources explicites.')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Écrire' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/^Type d’article ou de contenu/), 'article d’actualité ou de veille');
+
+    await user.type(
+      screen.getByLabelText(/^Sujet, contexte et besoin éditorial/),
+      'Article de veille consacré à une évolution technique récente susceptible de modifier les pratiques professionnelles.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Lectorat, niveau et attentes/),
+      'responsables de petites structures, non spécialistes et lecteurs sur téléphone',
+    );
+    await user.type(
+      screen.getByLabelText(/^Objectif éditorial et valeur apportée au lecteur/),
+      'Permettre au lecteur de comprendre ce qui est confirmé et les vérifications à effectuer avant toute décision.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Angle éditorial et idée directrice/),
+      'Distinguer les faits confirmés, les annonces attribuées et les conséquences encore incertaines.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Plan, progression et éléments obligatoires/),
+      'Contexte, faits confirmés, points encore incertains, conséquences possibles puis liste de contrôle.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('Distingue la date de publication de la date réelle des événements');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’invente aucun fait, chiffre, date, citation, source');
+    expect(screen.getByText(/formulaire Articles et contenus éditoriaux/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Média, rubrique et ligne éditoriale/),
+      'Rubrique de veille professionnelle, ton factuel et lecture majoritairement réalisée sur téléphone.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Sources, citations et informations incertaines/),
+      'Prioriser les sources officielles, attribuer chaque déclaration et signaler les informations non confirmées.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Période couverte, dates et actualisation/),
+      'Dater chaque annonce, chaque événement et chaque consultation, puis indiquer la date de dernière vérification.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Intentions de recherche et contraintes SEO/),
+      'Répondre clairement à la question principale sans répéter artificiellement les mots-clés.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Liens internes, externes et ancres/),
+      'Lien interne vers la ressource associée et liens externes uniquement vers les sources primaires.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Relecture et validation avant publication/),
+      'Contrôle des faits, dates, liens et formulations incertaines par le responsable éditorial.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
   it('construit et améliore un prompt d’analyse et de synthèse', async () => {
     const user = userEvent.setup();
     renderStudio();
@@ -516,6 +587,304 @@ describe('parcours principal du Studio', () => {
     await user.type(
       screen.getByLabelText(/^Contraintes éditoriales et éléments à éviter/),
       'Six cents mots maximum, aucune comparaison non sourcée et aucun superlatif.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
+  it('construit et améliore un prompt de recherche traçable', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'research');
+
+    expect(categorySelector).toHaveValue('research');
+    expect(screen.getByText('Cadrer une recherche documentaire, vérifier les sources et produire une restitution traçable.')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Analyser' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Type de recherche/)).toHaveValue('recherche documentaire générale');
+
+    await user.type(
+      screen.getByLabelText(/^Sujet et contexte de la recherche/),
+      'Actualiser un support pédagogique fictif à partir d’informations publiques récentes.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Destinataire de la recherche/),
+      'formateurs généralistes connaissant le sujet mais pas ses évolutions récentes',
+    );
+    await user.type(
+      screen.getByLabelText(/^Question principale de recherche/),
+      'Quelles évolutions vérifiées depuis 2024 modifient cette pratique et quels points restent incertains ?',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('## Objectif de recherche');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’invente aucune source');
+    expect(screen.getByText(/formulaire Recherche/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Informations déjà connues ou restant à vérifier/),
+      'Une recommandation générale est connue, mais sa date et son périmètre doivent être confirmés.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Usage attendu des résultats/),
+      'Décider quels passages du support fictif doivent être actualisés.',
+    );
+    await user.type(screen.getByLabelText(/^Périmètre géographique/), 'France et Union européenne.');
+    await user.type(screen.getByLabelText(/^Période et actualité attendue/), 'Publications depuis janvier 2024.');
+    await user.type(
+      screen.getByLabelText(/^Exigences et exclusions relatives aux sources/),
+      'Auteur et date identifiables, document primaire recherché et aucune source anonyme utilisée seule.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Stratégie, sous-questions et mots-clés/),
+      'Rechercher la définition officielle, la chronologie, les acteurs concernés et les exceptions.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Contradictions, lacunes et incertitudes/),
+      'Comparer les dates et périmètres des sources divergentes et isoler les points impossibles à trancher.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Contraintes et éléments à éviter/),
+      'Moins de 1 200 mots et aucune affirmation sans référence vérifiable.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
+  it('construit et améliore un prompt de productivité contrôlé', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'productivity');
+
+    expect(categorySelector).toHaveValue('productivity');
+    expect(screen.getByText('Organiser une tâche, simplifier un processus et définir des contrôles humains.')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Construire' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Type de besoin de productivité/)).toHaveValue('organisation et priorisation d’une charge de travail');
+
+    await user.type(
+      screen.getByLabelText(/^Situation de travail et difficulté rencontrée/),
+      'Une petite équipe fictive prépare plusieurs livrables, mais les priorités changent trop tard.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Personnes concernées et niveau d’autonomie/),
+      'trois personnes polyvalentes dont une valide les priorités',
+    );
+    await user.type(
+      screen.getByLabelText(/^Amélioration principale recherchée/),
+      'Construire une méthode hebdomadaire qui clarifie les priorités et rend les blocages visibles.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’affirme jamais avoir exécuté une action');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('validations humaines');
+    expect(screen.getByText(/formulaire Productivité/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Méthode actuelle, points utiles et irritants/),
+      'Les demandes arrivent par plusieurs canaux et les priorités sont confirmées tardivement sans revue intermédiaire.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Résultat observable attendu/),
+      'Chaque personne connaît ses trois priorités, leur échéance et le point de validation prévu.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Fréquence, volume et variations de charge/),
+      'Revue chaque lundi avec quinze tâches actives.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Informations d’entrée et ressources nécessaires/),
+      'Liste des demandes, échéances confirmées, charge disponible et critères d’urgence.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Outils et environnement disponibles/),
+      'Agenda partagé et tableau de tâches existant ; aucun nouvel outil payant.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Échéances, priorités et règles d’arbitrage/),
+      'Engagements datés avant les améliorations internes ; arbitrage par le responsable.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Étapes, dépendances et responsabilités à préserver/),
+      'Vérifier, prioriser, affecter un responsable, réaliser, relire puis valider avant diffusion.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Critères de réussite et indicateurs utiles/),
+      'Priorités validées avant mardi et aucune tâche sans responsable.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Validations et contrôles humains obligatoires/),
+      'Le responsable valide les priorités et toute communication externe avant envoi.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Risques, contraintes et actions interdites/),
+      'Aucune suppression, dépense ou communication externe sans confirmation humaine.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
+  it('construit et améliore un prompt de code testable', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'code');
+
+    expect(categorySelector).toHaveValue('code');
+    expect(screen.getByText('Cadrer une création, une correction ou une revue de code avec des tests explicites.')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Construire' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Type de besoin technique/)).toHaveValue('création d’une fonctionnalité ciblée');
+
+    await user.type(
+      screen.getByLabelText(/^Contexte technique et problème rencontré/),
+      'Dans une application fictive, un formulaire perd les valeurs lorsqu’une validation échoue.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Utilisateurs concernés et situation d’usage/),
+      'adultes débutants utilisant le formulaire sur téléphone et ordinateur',
+    );
+    await user.type(
+      screen.getByLabelText(/^Comportement technique attendu/),
+      'Conserver les valeurs saisies, afficher l’erreur concernée et placer le focus sur la première erreur.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’invente pas d’API');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’affirme jamais avoir modifié un fichier');
+    expect(screen.getByText(/formulaire Code/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Projet existant et comportements à préserver/),
+      'Application React et Vite existante, validations Zod et styles partagés à réutiliser sans modifier le service de données.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Résultat observable et condition de réussite/),
+      'Après une erreur, les valeurs restent visibles, le message est annoncé et aucun envoi n’est déclenché.',
+    );
+    const technologyStack = screen.getByLabelText(/^Langage, framework et versions/);
+    await user.clear(technologyStack);
+    await user.type(technologyStack, 'TypeScript strict, React 19, Vite 5, React Hook Form et Zod.');
+    await user.type(
+      screen.getByLabelText(/^Environnement d’exécution et plateformes visées/),
+      'Navigateurs récents sur téléphone et ordinateur Windows.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Entrées, sorties et formats de données/),
+      'Objet fictif avec champs texte ; sortie contenant statut, erreurs et valeurs normalisées.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Règles fonctionnelles et cas limites/),
+      'Conserver les champs valides, refuser une chaîne vide et ne jamais envoyer si une erreur subsiste.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Qualité, performance, accessibilité et maintenabilité/),
+      'TypeScript strict, navigation clavier, messages annoncés et fonctions courtes.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Contraintes et dépendances autorisées/),
+      'Réutiliser Zod et React Hook Form, sans nouvelle dépendance ni modification du service.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Tests et commandes de validation/),
+      'Test unitaire de validation, test du focus sur erreur et parcours clavier.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Sécurité et protection des données/),
+      'Aucune clé dans le navigateur, données fictives et validation des entrées.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Erreurs, états vides et solutions de repli/),
+      'Message sous le champ invalide, conservation de la saisie et possibilité de réessayer.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
+
+    const improvedScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+    expect(improvedScore).toBeGreaterThan(initialScore);
+  });
+
+  it('construit et améliore un storyboard vidéo accessible et vérifiable', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+
+    const categorySelector = screen.getByRole('combobox', { name: 'Cas d’usage' });
+    await user.selectOptions(categorySelector, 'video');
+
+    expect(categorySelector).toHaveValue('video');
+    expect(screen.getByText('Structurer un scénario, un storyboard ou un brief vidéo adapté au public, au format et à l’outil.')).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Créer' })).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Durée cible/)).toHaveValue('entre 1 et 3 minutes');
+    expect(screen.getByLabelText(/^Format et ratio/)).toHaveValue('horizontal 16:9 pour écran et plateforme vidéo');
+
+    await user.type(
+      screen.getByLabelText(/^Sujet, situation et usage prévu de la vidéo/),
+      'Courte vidéo intégrée à une formation pour expliquer comment vérifier une source avant de la citer.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Public, niveau et contexte de visionnage/),
+      'adultes débutants regardant la vidéo sur téléphone dans leur espace apprenant',
+    );
+    await user.type(
+      screen.getByLabelText(/^Objectif de la vidéo et effet attendu/),
+      'Permettre au public d’appliquer une vérification simple en trois étapes avant de partager une information.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Message essentiel à retenir/),
+      'Une source doit être identifiée, datée et recoupée avant d’être présentée comme fiable.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Progression narrative et rythme/),
+      'Question concrète, erreur fréquente, méthode en trois étapes puis rappel final.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Votre prompt structuré' })).toHaveFocus();
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('## Adaptation à la production et à l’outil');
+    expect(screen.getByLabelText('Prompt final à copier')).toHaveTextContent('N’affirme jamais avoir tourné, monté, créé');
+    expect(screen.getByText(/formulaire Vidéo/)).toBeInTheDocument();
+    const initialScore = Number(screen.getByLabelText(/Score de qualité :/).querySelector('strong')?.textContent);
+
+    await user.type(
+      screen.getByLabelText(/^Informations, documents et médias disponibles/),
+      'Procédure validée, captures fictives, charte autorisée et liste des sources officielles à citer.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Scènes, plans, actions et transitions/),
+      'Plan d’ensemble, gros plan sur trois indices fictifs puis écran final récapitulatif.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Narration, dialogues et textes à l’écran/),
+      'Voix posée, phrases courtes et trois mots-clés affichés successivement.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Direction visuelle, cadrages et mouvements/),
+      'Style pédagogique sobre, plans stables, contraste élevé et aucun effet décoratif rapide.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Voix, musique, bruitages et silences/),
+      'Voix claire, musique discrète autorisée et silences entre les étapes.',
+    );
+    await user.type(
+      screen.getByLabelText(/^Contrôles humains avant diffusion/),
+      'Validation du script, test sans le son sur téléphone et contrôle des faits et des droits.',
     );
     await user.click(screen.getByRole('button', { name: 'Recalculer le score et le prompt' }));
 
