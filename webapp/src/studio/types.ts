@@ -83,6 +83,24 @@ export interface StudioExample {
 export interface StudioPromptExample {
   title: string;
   values: Record<string, string>;
+  template?: {
+    text: string;
+    variables: StudioTemplateVariable[];
+  };
+}
+
+export interface StudioTemplateVariable {
+  token: string;
+  label: string;
+  fieldName: string;
+}
+
+export interface StudioImprovementSuggestion {
+  id: string;
+  section: CropSection;
+  fieldName: string;
+  message: string;
+  missingPoints: number;
 }
 
 export interface StudioBeforeAfter {

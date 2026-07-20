@@ -4,10 +4,13 @@ import type { StudioProgressState } from '../progress';
 const steps = ['Cas d’usage', 'Contexte', 'Rôle', 'Objectif', 'Précisions', 'Résultat'];
 
 export function StudioProgress({ progress }: { progress: StudioProgressState }) {
+  const currentLabel = steps[progress.activeStep - 1];
+  const completedCount = progress.completedSections.length;
+
   return (
     <nav className="studio-progress" aria-label="Progression dans le Studio">
       <p className="studio-progress-mobile" aria-live="polite">
-        {`Étape ${progress.activeStep} sur 6 — ${steps[progress.activeStep - 1]}`}
+        {`Étape en cours : ${currentLabel} — ${completedCount} section${completedCount > 1 ? 's' : ''} sur 4 complétée${completedCount > 1 ? 's' : ''}`}
       </p>
       <ol className="studio-progress-list">
         {steps.map((step, index) => {

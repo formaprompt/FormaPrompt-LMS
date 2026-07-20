@@ -1,4 +1,5 @@
 import type { FieldValues } from 'react-hook-form';
+import { calculateCategoryScore } from './engine/scoreCategory';
 import type { CropSection, StudioCategoryConfig } from './types';
 
 export interface StudioProgressState {
@@ -17,9 +18,13 @@ export function calculateStudioProgress(
   values: FieldValues,
   hasResult: boolean,
 ): StudioProgressState {
+  const diagnostic = calculateCategoryScore(category, values);
   const completedSections = SECTION_ORDER.filter((section) => {
     const requiredFields = category.fields.filter((field) => field.cropSection === section && field.required);
-    return requiredFields.length > 0 && requiredFields.every((field) => hasValue(values[field.name]));
+    const criterion = diagnostic.criteria.find((candidate) => candidate.id === section);
+    const requiredFieldsAreValid = requiredFields.length > 0 && requiredFields.every((field) => hasValue(values[field.name]));
+    const structureIsSufficient = Boolean(criterion && criterion.earnedPoints >= Math.ceil(criterion.maxPoints * 0.65));
+    return requiredFieldsAreValid && structureIsSufficient;
   });
 
   if (hasResult) return { activeStep: 6, completedSections };

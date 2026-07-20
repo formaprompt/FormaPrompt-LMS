@@ -10,6 +10,7 @@ import {
 } from 'react-hook-form';
 import { CROP_SECTION_LABELS, type CropSection, type StudioCategoryConfig } from '../types';
 import type { StudioPromptExample } from '../types';
+import { ContextualHelp } from './ContextualHelp';
 import { PromptExamples } from './PromptExamples';
 
 const SECTION_ORDER: CropSection[] = ['context', 'role', 'objective', 'precisions'];
@@ -21,6 +22,7 @@ interface StudioFormProps<TValues extends FieldValues> {
   hasResult: boolean;
   onSubmit: (values: TValues) => void;
   onValuesChange: (values: TValues) => void;
+  onValuesCommit: (values: TValues) => void;
 }
 
 const SECTION_CONTENT: Record<CropSection, { title: string; help: string }> = {
@@ -57,6 +59,7 @@ export function StudioForm<TValues extends FieldValues>({
   hasResult,
   onSubmit,
   onValuesChange,
+  onValuesCommit,
 }: StudioFormProps<TValues>) {
   const {
     register,
@@ -93,14 +96,19 @@ export function StudioForm<TValues extends FieldValues>({
     });
   };
 
-  const applyExample = (example: StudioPromptExample) => {
+  const applyExample = (example: StudioPromptExample, mode: 'replace' | 'fill-empty') => {
     const fieldNames = new Set(category.fields.map((field) => field.name as string));
     const entries = Object.entries(example.values).filter(([fieldName]) => fieldNames.has(fieldName));
+    const nextValues = { ...(getValues() as Record<string, unknown>) };
     entries.forEach(([fieldName, value]) => {
+      const currentValue = nextValues[fieldName];
+      if (mode === 'fill-empty' && typeof currentValue === 'string' && currentValue.trim().length > 0) return;
       setValue(fieldName as never, value as never, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      nextValues[fieldName] = value;
     });
     const firstFieldName = entries[0]?.[0];
     if (firstFieldName) setFocus(firstFieldName as never);
+    onValuesCommit(nextValues as TValues);
   };
 
   const submitValues = (values: TValues) => {
@@ -137,6 +145,7 @@ export function StudioForm<TValues extends FieldValues>({
               <strong>{SECTION_CONTENT[section].title}</strong>
               <small>{SECTION_CONTENT[section].help}</small>
             </legend>
+            <ContextualHelp section={section} />
             <div className="studio-form-fields">
               {sectionFields.map((field) => {
                 const fieldId = `studio-${field.name}`;
@@ -168,6 +177,10 @@ export function StudioForm<TValues extends FieldValues>({
                         aria-describedby={describedBy}
                         aria-errormessage={fieldError ? errorId : undefined}
                         {...registration}
+                        onBlur={(event) => {
+                          void registration.onBlur(event);
+                          onValuesCommit(getValues());
+                        }}
                       />
                     )}
 
@@ -182,6 +195,10 @@ export function StudioForm<TValues extends FieldValues>({
                         aria-describedby={describedBy}
                         aria-errormessage={fieldError ? errorId : undefined}
                         {...registration}
+                        onBlur={(event) => {
+                          void registration.onBlur(event);
+                          onValuesCommit(getValues());
+                        }}
                       />
                     )}
 
@@ -192,6 +209,10 @@ export function StudioForm<TValues extends FieldValues>({
                         aria-describedby={describedBy}
                         aria-errormessage={fieldError ? errorId : undefined}
                         {...registration}
+                        onBlur={(event) => {
+                          void registration.onBlur(event);
+                          onValuesCommit(getValues());
+                        }}
                       >
                         {field.options?.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
@@ -216,7 +237,7 @@ export function StudioForm<TValues extends FieldValues>({
         <button type="submit" className="btn btn-primary studio-primary-action" disabled={isSubmitting}>
           {hasResult ? 'Recalculer le score et le prompt' : 'Construire mon prompt'}
         </button>
-        <p>Le brouillon reste dans ce navigateur et n’est transmis à aucun serveur.</p>
+        <p>Les informations saisies restent dans ce navigateur et ne sont transmises à aucun service.</p>
       </div>
     </form>
   );

@@ -30,7 +30,14 @@ export default function Header() {
     <header className="header">
       <div className="container header-container">
         <Link to="/" className="logo">
-          <img src="/assets/logo-new.png" alt="Logo FormaPrompt" />
+          <img
+            src="/assets/logo-new.png"
+            alt="Logo FormaPrompt"
+            width="96"
+            height="64"
+            decoding="async"
+            fetchPriority="low"
+          />
         </Link>
 
         <div className="mobile-header-actions">

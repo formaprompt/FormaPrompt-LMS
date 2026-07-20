@@ -181,7 +181,7 @@ export default function Home() {
                 <ul className="home-studio-benefits">
                   <li><CheckCircle size={20} aria-hidden="true" /> Seize cas d’usage pour écrire, transmettre, analyser, créer et construire.</li>
                   <li><CheckCircle size={20} aria-hidden="true" /> Un diagnostic déterministe, sans appel à un fournisseur externe.</li>
-                  <li><CheckCircle size={20} aria-hidden="true" /> Aucune saisie conservée dans cette première version.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> Brouillon automatique conservé uniquement dans votre navigateur.</li>
                 </ul>
                 <div className="home-studio-actions">
                   <Link to="/studio" className="btn btn-primary">Essayer gratuitement le Studio</Link>

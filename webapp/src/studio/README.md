@@ -9,7 +9,8 @@ Le MVP :
 - fonctionne uniquement dans le navigateur ;
 - ne fait aucun appel à un fournisseur d'intelligence artificielle ;
 - n'utilise ni Supabase, ni Stripe, ni l'authentification ;
-- ne conserve aucune saisie dans `localStorage`, `sessionStorage`, un cookie ou une base de données ;
+- conserve automatiquement un brouillon versionné dans `localStorage`, uniquement dans le navigateur, avec une action explicite pour l’effacer ;
+- ne transmet ni le brouillon ni le prompt à FormaPrompt, Supabase ou un fournisseur d’intelligence artificielle ;
 - construit un prompt et son diagnostic avec des fonctions déterministes.
 
 Seize catégories sont disponibles : `professional-email` pour les courriels professionnels, `professional-documents` pour les rapports, comptes rendus, procédures, notes de synthèse, lettres, propositions commerciales et cahiers des charges, `editorial-content` pour les articles de blog, techniques, d'actualité, tutoriels, comparatifs et contenus de fond, `training` pour les activités, séquences et ressources pédagogiques, `presentation` pour les diaporamas, leur prise de parole et leur adaptation à PowerPoint, Google Slides, Gamma, Prezi, Canva, Keynote ou LibreOffice, `social-media` pour les publications destinées aux réseaux sociaux, `marketing-communication` pour les pages, brochures, newsletters, campagnes, argumentaires et plans de communication, `image-creation` pour les consignes visuelles, `video` pour les scénarios, storyboards, briefs de tournage ou de montage et consignes destinées aux outils vidéo, `audio` pour les podcasts, voix off, capsules pédagogiques, interviews, messages sonores et briefs de montage accessibles, `analysis-synthesis` pour l'analyse de sources et les synthèses traçables, `office-data` pour les tâches bureautiques, les traitements de données et les automatisations, `research` pour les recherches documentaires, la vérification des sources et les restitutions traçables, `productivity` pour l'organisation des tâches, l'amélioration des processus et leurs contrôles humains, `code` pour les créations, corrections, tests, explications et revues de code, et `ai-agent` pour cadrer la mission, l'autonomie, les permissions, les données, les contrôles humains, la traçabilité et l'arrêt d'un futur agent. Toutes les catégories prévues dans le catalogue sont désormais développées et activées.
@@ -20,7 +21,9 @@ Le catalogue est regroupé en cinq familles afin de rester lisible sur mobile : 
 
 - `types.ts` : contrats génériques des catégories, champs, règles et diagnostics ;
 - `categories/` : configuration et logique propres à chaque catégorie ;
-- `engine/` : fonctions métier communes, indépendantes de React ;
+- `engine/` : fonctions métier communes, indépendantes de React, dont la prévisualisation et les suggestions déterministes ;
+- `draft.ts` : sauvegarde locale versionnée, validation et restauration du brouillon ;
+- `externalAi.ts` : copie contrôlée et adresses officielles des services externes, sans prompt dans l’URL ;
 - `SCORING.md` : grille déterministe détaillée et limites d'interprétation ;
 - `components/` : composants de formulaire, résultat et diagnostic ;
 - `StudioPage.tsx` : composition de la page publique et contenus SEO ;
@@ -57,6 +60,12 @@ Prévoir un registre technique minimisé par compte et par période. Il devra co
 ### Appels à un fournisseur d'intelligence artificielle
 
 Créer une passerelle serveur dédiée, avec validation Zod côté serveur, limites de taille, limitation de débit, délais d'attente, budget maximal et secrets dans les variables d'environnement. Le navigateur ne devra jamais recevoir une clé privée. Le fournisseur sera placé derrière une interface pour permettre son remplacement.
+
+Le Sprint 1.1 ajoute uniquement une aide au lancement de services externes : le prompt est copié localement puis l’utilisateur choisit d’ouvrir le site officiel. Aucun texte n’est ajouté à l’adresse et aucune requête n’est envoyée par le Studio.
+
+### Mesure d’usage
+
+Les événements du Studio sont centralisés et strictement limités à des métadonnées non textuelles. Aucun fournisseur de mesure d’audience n’étant configuré pour le Studio, leur fonction de collecte reste volontairement inactive.
 
 ### Export
 

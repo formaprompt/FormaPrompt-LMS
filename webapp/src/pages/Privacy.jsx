@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SITE_CONFIG } from '../config/site';
 import './Privacy.css';
 
 export default function Privacy() {
@@ -11,7 +12,7 @@ export default function Privacy() {
       <h2>Utilisation des cookies</h2>
       <p>Des cookies sont utilisés pour améliorer votre expérience et pour les statistiques de visites. Vous pouvez accepter ou refuser ces cookies via le bandeau en bas de chaque page.</p>
       <h2>Droits des utilisateurs</h2>
-      <p>Vous avez le droit d’accéder, de rectifier, de supprimer ou de limiter le traitement de vos données. Pour exercer ces droits, contactez <a href="mailto:contact@formaprompt.fr">contact@formaprompt.fr</a>.</p>
+      <p>Vous avez le droit d’accéder, de rectifier, de supprimer ou de limiter le traitement de vos données. Pour exercer ces droits, contactez <a href={`mailto:${SITE_CONFIG.contactEmail}`}>{SITE_CONFIG.contactEmail}</a>.</p>
       <p>En continuant à utiliser le site, vous acceptez les termes de cette politique.</p>
       <Link to="/" className="btn btn-primary" style={{ marginTop: "1rem" }}>Retour à l'accueil</Link>
     </div>

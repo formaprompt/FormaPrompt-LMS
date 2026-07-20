@@ -39,7 +39,25 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     icon: Mail,
     popular: true,
     examples: [
-      { title: 'Demander un rendez-vous à un prospect', values: { need: 'Préparer un courriel pour proposer un rendez-vous à un prospect.', objective: 'Obtenir une réponse avec une proposition de créneau.' } },
+      {
+        title: 'Demander un rendez-vous à un prospect',
+        values: {
+          need: 'Rédiger un courriel pour proposer un rendez-vous à un prospect dans le contexte suivant : [CONTEXTE].',
+          recipient: '[DESTINATAIRE] — précisez sa fonction et son niveau de connaissance du sujet.',
+          objective: '[OBJECTIF] — indiquez la réponse ou l’action attendue.',
+          requiredElements: 'Présenter clairement [ACTION ATTENDUE] et proposer des modalités réalistes.',
+        },
+        template: {
+          text: 'Rédige un courriel destiné à [DESTINATAIRE] afin de [OBJECTIF]. Le contexte est [CONTEXTE]. Adopte un ton [TON] et demande clairement [ACTION ATTENDUE].',
+          variables: [
+            { token: '[DESTINATAIRE]', label: 'Destinataire', fieldName: 'recipient' },
+            { token: '[OBJECTIF]', label: 'Objectif', fieldName: 'objective' },
+            { token: '[CONTEXTE]', label: 'Contexte', fieldName: 'need' },
+            { token: '[TON]', label: 'Ton', fieldName: 'tone' },
+            { token: '[ACTION ATTENDUE]', label: 'Action attendue', fieldName: 'requiredElements' },
+          ],
+        },
+      },
       { title: 'Relancer un devis sans réponse', values: { need: 'Relancer avec tact un devis resté sans réponse.', objective: 'Savoir si le devis est toujours à l’étude et proposer un échange.' } },
       { title: 'Répondre à une réclamation client', values: { need: 'Répondre de façon professionnelle à une réclamation client.', objective: 'Accuser réception, clarifier la situation et présenter la prochaine étape.' } },
       { title: 'Informer une équipe d’un changement', values: { need: 'Informer une équipe d’un changement d’organisation.', objective: 'Faire comprendre ce qui change, quand et comment se préparer.' } },
@@ -75,7 +93,27 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     description: 'Créer des publications adaptées à LinkedIn, Facebook et aux autres plateformes.',
     keywords: ['LinkedIn', 'Facebook', 'Instagram', 'post', 'publication', 'calendrier éditorial'], icon: Share2, popular: true,
     examples: [
-      { title: 'Rédiger un post LinkedIn', values: { contentContext: 'Préparer un post LinkedIn consacré à une pratique professionnelle utile.', platform: 'LinkedIn', communicationObjective: 'Partager un conseil concret et inviter à consulter une ressource.' } },
+      {
+        title: 'Rédiger un post LinkedIn',
+        values: {
+          contentContext: 'Rédiger un post LinkedIn sur [SUJET].',
+          audience: '[PUBLIC] — précisez la fonction, le besoin et le niveau de connaissance.',
+          platform: 'LinkedIn',
+          communicationObjective: '[OBJECTIF] — indiquez ce que le public doit comprendre ou faire.',
+          keyMessage: 'Le message principal à retenir sur [SUJET] est : [MESSAGE ESSENTIEL].',
+          callToAction: '[ACTION ATTENDUE]',
+        },
+        template: {
+          text: 'Rédige un post LinkedIn destiné à [PUBLIC] afin de [OBJECTIF]. Le sujet principal est [SUJET]. Adopte un ton [TON] et termine par [ACTION ATTENDUE].',
+          variables: [
+            { token: '[PUBLIC]', label: 'Public', fieldName: 'audience' },
+            { token: '[OBJECTIF]', label: 'Objectif', fieldName: 'communicationObjective' },
+            { token: '[SUJET]', label: 'Sujet', fieldName: 'contentContext' },
+            { token: '[TON]', label: 'Ton', fieldName: 'tone' },
+            { token: '[ACTION ATTENDUE]', label: 'Action attendue', fieldName: 'callToAction' },
+          ],
+        },
+      },
       { title: 'Créer une publication Facebook', values: { contentContext: 'Préparer une publication Facebook claire et accessible.', platform: 'Facebook', communicationObjective: 'Informer la communauté et susciter une action simple.' } },
       { title: 'Préparer un calendrier éditorial', values: { contentContext: 'Préparer les thèmes d’un calendrier éditorial mensuel pour des réseaux sociaux.', communicationObjective: 'Organiser des publications cohérentes avec les besoins du public.' } },
       { title: 'Transformer un article en publication', values: { contentContext: 'Transformer les idées principales d’un article en publication courte.', communicationObjective: 'Donner envie de consulter l’article sans en déformer le contenu.' } },
@@ -99,7 +137,26 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     description: 'Concevoir un cours, une activité, un exercice ou une évaluation.',
     keywords: ['cours', 'pédagogie', 'exercice', 'quiz', 'évaluation', 'objectifs pédagogiques'], icon: GraduationCap, popular: true,
     examples: [
-      { title: 'Construire un déroulé pédagogique', values: { trainingContext: 'Construire le déroulé pédagogique d’une séquence pour adultes.', learningObjective: 'Permettre aux participants de réaliser une tâche observable en fin de séquence.' } },
+      {
+        title: 'Construire un déroulé pédagogique',
+        values: {
+          trainingContext: 'Concevoir une activité pédagogique sur [SUJET].',
+          audience: '[PUBLIC] — précisez le profil et les besoins des participants.',
+          learnerLevel: 'débutant',
+          learningObjective: '[OBJECTIF PÉDAGOGIQUE] — formulez une action observable.',
+          duration: '[DURÉE]',
+        },
+        template: {
+          text: 'Conçois une activité pédagogique pour [PUBLIC] sur le thème [SUJET]. L’objectif est [OBJECTIF PÉDAGOGIQUE]. La durée disponible est [DURÉE] et le niveau attendu est [NIVEAU].',
+          variables: [
+            { token: '[PUBLIC]', label: 'Public', fieldName: 'audience' },
+            { token: '[SUJET]', label: 'Sujet', fieldName: 'trainingContext' },
+            { token: '[OBJECTIF PÉDAGOGIQUE]', label: 'Objectif pédagogique', fieldName: 'learningObjective' },
+            { token: '[DURÉE]', label: 'Durée', fieldName: 'duration' },
+            { token: '[NIVEAU]', label: 'Niveau', fieldName: 'learnerLevel' },
+          ],
+        },
+      },
       { title: 'Rédiger des objectifs pédagogiques', values: { trainingContext: 'Formuler des objectifs pédagogiques pour une formation professionnelle.', learningObjective: 'Décrire des compétences observables et évaluables adaptées au public.' } },
       { title: 'Créer un exercice pratique', values: { trainingContext: 'Créer un exercice pratique progressif pour des adultes débutants.', learningObjective: 'Faire appliquer une méthode dans une situation professionnelle fictive.' } },
       { title: 'Adapter un cours à un public débutant', values: { trainingContext: 'Adapter un cours existant à des adultes débutants.', learningObjective: 'Rendre les notions compréhensibles et permettre une première mise en pratique.' } },
@@ -159,7 +216,27 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     description: 'Construire un prompt visuel détaillé pour générer une image.',
     keywords: ['image', 'visuel', 'illustration', 'infographie', 'couverture', 'photoréaliste'], icon: Image, popular: true,
     examples: [
-      { title: 'Créer une image photoréaliste', values: { visualNeed: 'Créer une scène professionnelle photoréaliste avec un sujet clairement identifiable.', visualObjective: 'Obtenir une image crédible, sobre et adaptée au support.' } },
+      {
+        title: 'Créer une image photoréaliste',
+        values: {
+          visualNeed: 'Créer une image représentant [SUJET].',
+          decor: '[DÉCOR] — précisez le lieu, l’arrière-plan et les éléments visibles.',
+          visualObjective: 'Obtenir un visuel adapté au support et au public indiqués.',
+          constraints: 'Éviter [ÉLÉMENTS À EXCLURE] et ne représenter aucune personne identifiable sans autorisation.',
+        },
+        template: {
+          text: 'Crée une image représentant [SUJET] dans un style [STYLE]. La scène se déroule dans [DÉCOR], avec une lumière [LUMIÈRE], un cadrage [CADRAGE] et un format [RATIO]. Évite [ÉLÉMENTS À EXCLURE].',
+          variables: [
+            { token: '[SUJET]', label: 'Sujet', fieldName: 'visualNeed' },
+            { token: '[STYLE]', label: 'Style', fieldName: 'style' },
+            { token: '[DÉCOR]', label: 'Décor', fieldName: 'decor' },
+            { token: '[LUMIÈRE]', label: 'Lumière', fieldName: 'lighting' },
+            { token: '[CADRAGE]', label: 'Cadrage', fieldName: 'composition' },
+            { token: '[RATIO]', label: 'Format', fieldName: 'aspectRatio' },
+            { token: '[ÉLÉMENTS À EXCLURE]', label: 'Éléments à exclure', fieldName: 'constraints' },
+          ],
+        },
+      },
       { title: 'Concevoir un visuel LinkedIn', values: { visualNeed: 'Concevoir un visuel professionnel pour accompagner une publication LinkedIn.', visualObjective: 'Faire comprendre le sujet immédiatement sur téléphone.' } },
       { title: 'Produire une infographie pédagogique', values: { visualNeed: 'Produire une infographie pédagogique présentant une méthode simple.', visualObjective: 'Permettre à un public débutant de mémoriser les étapes essentielles.' } },
       { title: 'Créer une couverture de formation', values: { visualNeed: 'Créer une couverture sobre pour une formation professionnelle.', visualObjective: 'Identifier clairement le thème sans promesse exagérée.' } },

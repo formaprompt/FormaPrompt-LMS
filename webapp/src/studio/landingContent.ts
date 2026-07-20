@@ -1,3 +1,103 @@
+import type { StudioCategoryFamilyId } from './types';
+
+export const STUDIO_LAST_UPDATED = '20 juillet 2026';
+
+export interface StudioPublicExample {
+  family: StudioCategoryFamilyId;
+  familyLabel: string;
+  title: string;
+  description: string;
+  prompt: string;
+}
+
+export const studioPublicExamples: StudioPublicExample[] = [
+  {
+    family: 'write',
+    familyLabel: 'Écrire',
+    title: 'Compte rendu professionnel',
+    description: 'Transformer des notes génériques en décisions, actions et échéances vérifiables.',
+    prompt: `## Contexte
+Préparer le compte rendu d’une réunion fictive consacrée au lancement d’un projet interne. Le document s’adresse aux membres de l’équipe.
+
+## Rôle
+Agis comme un rédacteur professionnel attentif à la traçabilité des décisions.
+
+## Objectif
+Restituer les décisions, les actions, les responsables fictifs et les échéances à confirmer.
+
+## Précisions
+Utilise des titres courts et un tableau d’actions. N’invente aucune information et signale clairement les éléments absents des notes.`,
+  },
+  {
+    family: 'transmit',
+    familyLabel: 'Transmettre',
+    title: 'Activité pédagogique pour adultes débutants',
+    description: 'Concevoir une activité reliée à un objectif observable et à une vérification des acquis.',
+    prompt: `## Contexte
+Concevoir une activité de 30 minutes destinée à des adultes débutants qui découvrent les formules simples dans Excel.
+
+## Rôle
+Agis comme un formateur en bureautique habitué à accompagner des adultes peu à l’aise avec le numérique.
+
+## Objectif
+Permettre à chaque participant de créer puis vérifier une formule SOMME dans un tableau fictif.
+
+## Précisions
+Prévois une démonstration courte, une consigne pas à pas, un exercice individuel et trois critères de réussite observables.`,
+  },
+  {
+    family: 'analyze',
+    familyLabel: 'Analyser',
+    title: 'Synthèse structurée d’un document',
+    description: 'Extraire les idées essentielles tout en distinguant faits, limites et éléments à vérifier.',
+    prompt: `## Contexte
+Analyser un document public fourni par l’utilisateur afin d’en préparer une synthèse destinée à un responsable de projet.
+
+## Rôle
+Agis comme un analyste méthodique qui distingue les faits, les interprétations et les incertitudes.
+
+## Objectif
+Présenter les cinq constats essentiels, les risques, les opportunités et les questions encore ouvertes.
+
+## Précisions
+Produis une synthèse de 500 mots maximum. Relie chaque constat au passage fourni et n’ajoute aucune source absente.`,
+  },
+  {
+    family: 'create',
+    familyLabel: 'Créer',
+    title: 'Illustration pédagogique professionnelle',
+    description: 'Décrire précisément un visuel, sa composition et les éléments à exclure.',
+    prompt: `## Contexte
+Créer une illustration destinée à la couverture d’une ressource pédagogique sur la méthode CROP pour adultes débutants.
+
+## Rôle
+Agis comme un directeur artistique spécialisé dans les supports de formation accessibles.
+
+## Objectif
+Représenter la construction progressive d’un prompt avec quatre étapes clairement identifiables.
+
+## Précisions
+Style éditorial sobre, palette verte et bleu nuit, composition lisible sur téléphone, format 16:9. Évite les visages identifiables, les marques et le texte illisible.`,
+  },
+  {
+    family: 'build',
+    familyLabel: 'Construire',
+    title: 'Correction ciblée d’un composant React',
+    description: 'Cadrer une correction technique minimale avec tests et accessibilité.',
+    prompt: `## Contexte
+Un composant React fictif affiche un bouton qui n’est pas utilisable au clavier. Le projet utilise TypeScript et les composants existants doivent être conservés.
+
+## Rôle
+Agis comme un développeur React spécialisé en accessibilité et en corrections ciblées.
+
+## Objectif
+Identifier la cause, proposer le correctif minimal et expliquer comment vérifier le comportement au clavier.
+
+## Précisions
+N’ajoute aucune dépendance. Fournis le changement ciblé, un test automatisé et les étapes de contrôle manuel, sans modifier les autres composants.`,
+  },
+];
+
 export const studioLandingContent = {
   scoreRules: [
     { id: 'context', label: 'Contexte', maxPoints: 25, description: 'Présence d’une situation exploitable, d’un destinataire défini et des faits autorisés utiles.' },

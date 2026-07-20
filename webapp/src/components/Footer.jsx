@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SITE_CONFIG } from '../config/site';
 import './Footer.css';
 
 export default function Footer() {
@@ -38,7 +39,7 @@ export default function Footer() {
         <div className="footer-col">
           <h4>Contact</h4>
           <p className="footer-text">Hauts-de-France (Calais)</p>
-          <p className="footer-text">contact@formaprompt.fr</p>
+          <p className="footer-text"><a href={`mailto:${SITE_CONFIG.contactEmail}`}>{SITE_CONFIG.contactEmail}</a></p>
           <Link to="/contact" className="btn btn-primary" style={{marginTop: '1rem'}}>Me contacter</Link>
         </div>
       </div>

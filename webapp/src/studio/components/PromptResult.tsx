@@ -1,6 +1,9 @@
 import { Check, Copy, PencilLine, RotateCcw, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { trackStudioEvent } from '../analytics';
+import { copyPromptToClipboard } from '../externalAi';
 import type { StudioDiagnostic } from '../types';
+import { ExternalAiLauncher } from './ExternalAiLauncher';
 import { ScoreBreakdown } from './ScoreBreakdown';
 
 interface PromptResultProps {
@@ -40,8 +43,9 @@ export function PromptResult({
 
   const copyPrompt = async () => {
     try {
-      await navigator.clipboard.writeText(prompt);
+      await copyPromptToClipboard(prompt);
       setCopyStatus('success');
+      trackStudioEvent('prompt_copied', { actionType: 'final-result' });
     } catch {
       setCopyStatus('error');
     }
@@ -112,6 +116,8 @@ export function PromptResult({
           <Trash2 aria-hidden="true" /> Effacer le brouillon
         </button>
       </div>
+
+      <ExternalAiLauncher prompt={prompt} />
     </section>
   );
 }

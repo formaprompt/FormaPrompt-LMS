@@ -1,5 +1,5 @@
 import { HelmetProvider } from 'react-helmet-async';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -118,7 +118,7 @@ describe('Sprint 1 UX du Studio', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Rédiger un post LinkedIn' }));
     const contextField = screen.getByLabelText(/^Décrivez le sujet et son contexte/);
-    expect(contextField).toHaveValue('Préparer un post LinkedIn consacré à une pratique professionnelle utile.');
+    expect(contextField).toHaveValue('Rédiger un post LinkedIn sur [SUJET].');
     expect(screen.queryByRole('heading', { name: 'Votre prompt structuré' })).not.toBeInTheDocument();
 
     await user.clear(contextField);
@@ -126,10 +126,33 @@ describe('Sprint 1 UX du Studio', () => {
     await user.click(screen.getByRole('button', { name: 'Créer une publication Facebook' }));
     expect(screen.getByText(/Certains champs concernés contiennent déjà du texte/)).toBeInTheDocument();
     expect(contextField).toHaveValue('Mon texte déjà renseigné');
-    await user.click(screen.getByRole('button', { name: 'Remplacer les champs concernés' }));
+    await user.click(screen.getByRole('button', { name: 'Remplacer avec ce modèle' }));
     expect(contextField).toHaveValue('Préparer une publication Facebook claire et accessible.');
     await user.type(contextField, ' Texte modifiable.');
     expect((contextField as HTMLInputElement).value).toContain('Texte modifiable');
+  });
+
+  it('actualise la prévisualisation, le score et les conseils sans générer le résultat', async () => {
+    const user = userEvent.setup();
+    renderStudio();
+    await chooseCategory(user, 'Courriel professionnel');
+    await user.click(screen.getByRole('button', { name: /Score actuel.*Voir mon prompt en cours/ }));
+
+    const preview = screen.getByLabelText('Prévisualisation du prompt en cours');
+    const initialScore = Number(screen.getByLabelText(/^Score actuel : \d+ sur 100$/).getAttribute('aria-label')?.match(/\d+/)?.[0]);
+    expect(preview).toHaveTextContent('Objectif à compléter');
+    expect(screen.getAllByRole('button', { name: 'Compléter ce point' })).toHaveLength(3);
+
+    fireEvent.change(screen.getByLabelText(/^Décrivez votre besoin/), {
+      target: { value: 'Préparer un courriel fictif pour rappeler une prochaine étape professionnelle.' },
+    });
+
+    await waitFor(() => {
+      expect(preview).toHaveTextContent('Préparer un courriel fictif pour rappeler une prochaine étape professionnelle.');
+      const updatedScore = Number(screen.getByLabelText(/^Score actuel : \d+ sur 100$/).getAttribute('aria-label')?.match(/\d+/)?.[0]);
+      expect(updatedScore).toBeGreaterThan(initialScore);
+    }, { timeout: 2_000 });
+    expect(screen.queryByRole('heading', { name: 'Votre prompt structuré' })).not.toBeInTheDocument();
   });
 
   it('sauvegarde, restaure et supprime un brouillon local sans appel réseau', async () => {
@@ -182,11 +205,17 @@ describe('Sprint 1 UX du Studio', () => {
     await user.type(screen.getByLabelText(/^Objectif du courriel/), values.objective);
     await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
 
-    expect(screen.getByLabelText('Prompt final à copier').textContent).toBe(professionalEmailCategory.buildPrompt(values));
+    expect((await screen.findByLabelText('Prompt final à copier')).textContent).toBe(professionalEmailCategory.buildPrompt(values));
     expect(screen.getByLabelText(/Score de qualité :/)).toHaveTextContent(String(calculateCategoryScore(professionalEmailCategory, values).total));
     await user.click(screen.getByRole('button', { name: 'Copier le prompt' }));
     expect(clipboardWrite).toHaveBeenCalledWith(professionalEmailCategory.buildPrompt(values));
     expect(screen.getByText('Prompt copié dans le presse-papiers.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Tester dans mon IA' }));
+    await user.click(screen.getByRole('button', { name: /^ChatGPT/ }));
+    const externalLink = await screen.findByRole('link', { name: /Ouvrir ChatGPT/ });
+    expect(externalLink).toHaveAttribute('href', 'https://chatgpt.com/');
+    expect(externalLink.getAttribute('href')).not.toContain(encodeURIComponent(values.need));
   });
 
   it('propose une solution de repli lorsque la copie échoue', async () => {
@@ -210,7 +239,7 @@ describe('Sprint 1 UX du Studio', () => {
     const user = userEvent.setup();
     renderStudio();
     await chooseCategory(user, 'Courriel professionnel');
-    expect(screen.getByText('Étape 2 sur 6 — Contexte')).toBeInTheDocument();
+    expect(screen.getByText(/Étape en cours : Contexte/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
     const field = screen.getByLabelText(/^Décrivez votre besoin/);
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
@@ -227,6 +256,12 @@ describe('Sprint 1 UX du Studio', () => {
       expect(category.description.length).toBeGreaterThan(20);
       expect(category.keywords.length).toBeGreaterThan(2);
       expect(category.examples).toHaveLength(5);
+    }
+    const guidedModels = studioCategoryCatalog.flatMap((category) => category.examples.filter((example) => example.template));
+    expect(guidedModels).toHaveLength(4);
+    for (const model of guidedModels) {
+      expect(model.template?.variables.length).toBeGreaterThanOrEqual(5);
+      expect(model.template?.variables.every((variable) => model.template?.text.includes(variable.token))).toBe(true);
     }
   });
 });

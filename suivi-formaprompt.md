@@ -302,6 +302,23 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - L'accueil, `/studio/`, le JavaScript et les styles du Studio, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local. L'URL canonique reste `https://formaprompt.com/studio/`.
 - Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié pendant ce sprint et cette publication.
 
+## Sprint 1.1 — UX, prévisualisation et pédagogie — 20 juillet 2026
+
+- Le formulaire et la prévisualisation sont réunis dans un espace de travail en deux colonnes sur ordinateur. Sur mobile, le prompt et le score s’ouvrent dans un panneau compact annoncé par « Score actuel ».
+- La prévisualisation utilise le constructeur déterministe de la catégorie avec une temporisation de 400 ms. Les repères pédagogiques des informations absentes ne sont jamais copiés dans le prompt final.
+- Le score CROP en direct utilise exactement le moteur existant et conserve la répartition Contexte 25, Rôle 15, Objectif 25 et Précisions 35. Trois améliorations prioritaires au maximum renvoient vers les champs concernés.
+- Quatre exemples deviennent des modèles guidés à variables pour le courriel, LinkedIn, la formation et la création d’image. Un modèle ne génère rien automatiquement et n’écrase pas une saisie sans choix explicite.
+- Des aides contextuelles repliables expliquent CROP avec une question, une erreur fréquente et un exemple amélioré. Les contenus longs sont condensés dans des blocs repliables, complétés par cinq exemples publics et un bloc auteur daté.
+- L’action « Tester dans mon IA » copie d’abord le prompt puis propose les adresses officielles de ChatGPT, Claude, Gemini, Mistral et Copilot. Le prompt n’est jamais ajouté à l’URL ni transmis automatiquement.
+- Le brouillon reste exclusivement dans `localStorage`. Les textes de confidentialité ont été corrigés et l’adresse de contact visible est centralisée sur `thierry@formaprompt.com`. Aucun fournisseur d’analytics n’étant configuré, l’interface d’événements reste sans effet réseau et n’accepte aucun contenu de prompt.
+- Le formulaire, le panneau en direct et le résultat sont chargés à la demande. Le JavaScript initial du Studio est passé de 190,6 à 136,9 Kio et le logo d’en-tête ne bloque plus le rendu principal.
+- TypeScript, lint, les 39 tests applicatifs, les 10 tests Stripe et les 85 tests Studio réussissent, soit 134 tests. Le build et le pré-rendu réussissent.
+- Les 42 scénarios navigateur ont été relancés sur ordinateur et mobile : 41 ont réussi et un scénario prévu par la configuration a été ignoré.
+- Lighthouse local du build final : mobile 99/98/100/100 et ordinateur 100/98/100/100 pour performance/accessibilité/bonnes pratiques/SEO. Le LCP mobile mesuré est de 1,7 s, le TBT de 30 ms et le CLS de 0.
+- La version Sprint 1.1 a été déployée sur IONOS après autorisation explicite. Les 161 fichiers du build, soit 141 323 482 octets, ont été vérifiés par SHA-256 : 91 fichiers ont été transférés et 70 étaient déjà identiques. La page pré-rendue `studio/index.html` a été contrôlée séparément afin de garantir sa publication avec les ressources du Studio.
+- La page publique répond en HTTPS avec un HTML strictement identique au build local, les nouveaux styles sont chargés et l’URL canonique reste `https://formaprompt.com/studio/`. Aucun schéma, migration ou donnée Supabase, Stripe ou Qualiopi n’a été modifié.
+- Point de vigilance pour les prochaines publications : la procédure SFTP doit inclure tous les fichiers `index.html` imbriqués, notamment `dist/studio/index.html`, et conserver uniquement `dist/index.html` comme dernier fichier transféré.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

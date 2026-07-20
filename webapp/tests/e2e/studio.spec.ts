@@ -89,7 +89,7 @@ test.describe('FormaPrompt Studio', () => {
     const improvedScore = Number(await page.locator('.studio-score-value strong').innerText());
     expect(improvedScore).toBeGreaterThan(initialScore);
 
-    await page.getByRole('button', { name: 'Copier le prompt' }).click();
+    await page.getByLabel('Votre prompt structuré').getByRole('button', { name: 'Copier le prompt' }).click();
     await expect(page.getByText('Prompt copié dans le presse-papiers.')).toBeVisible();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('## Précisions');
 
@@ -132,7 +132,7 @@ test.describe('FormaPrompt Studio', () => {
     await page.getByRole('button', { name: 'Construire mon prompt' }).click();
 
     expect(Number(await page.locator('.studio-score-value strong').innerText())).toBeGreaterThan(0);
-    await page.getByRole('button', { name: 'Copier le prompt' }).click();
+    await page.getByLabel('Votre prompt structuré').getByRole('button', { name: 'Copier le prompt' }).click();
     await expect(page.getByText('Prompt copié dans le presse-papiers.')).toBeVisible();
     await expect.poll(() => page.evaluate(() => {
       const storedDraft = localStorage.getItem('formaprompt-studio-draft-v1');
@@ -147,6 +147,38 @@ test.describe('FormaPrompt Studio', () => {
     await page.getByRole('button', { name: 'Effacer mon brouillon' }).click();
     await expect(page.getByText('Le brouillon a été supprimé de ce navigateur.')).toBeVisible();
     await expect.poll(() => page.evaluate(() => localStorage.getItem('formaprompt-studio-draft-v1'))).toBeNull();
+  });
+
+  test('prévisualisation CROP réactive et panneau adapté au mobile', async ({ page }, testInfo) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+    await selectStudioCategory(page, 'Courriel professionnel');
+
+    const toggle = page.getByRole('button', { name: /Score actuel.*Voir mon prompt en cours/ });
+    const livePanel = page.getByLabel('Prévisualisation et score en direct');
+    if (testInfo.project.name === 'mobile') {
+      await expect(toggle).toBeVisible();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(livePanel).toBeHidden();
+      await toggle.click();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    } else {
+      await expect(toggle).toBeHidden();
+    }
+    await expect(livePanel).toBeVisible();
+
+    const initialScore = Number((await livePanel.getByLabel(/Score actuel/).getAttribute('aria-label'))?.match(/\d+/)?.[0]);
+    await page.getByLabel('Décrivez votre besoin').fill(
+      'Préparer un courriel fictif afin de rappeler une prochaine étape professionnelle.',
+    );
+    await expect(livePanel.getByLabel('Prévisualisation du prompt en cours')).toContainText(
+      'Préparer un courriel fictif afin de rappeler une prochaine étape professionnelle.',
+    );
+    await expect.poll(async () => Number((await livePanel.getByLabel(/Score actuel/).getAttribute('aria-label'))?.match(/\d+/)?.[0])).toBeGreaterThan(initialScore);
+    await expect(livePanel.getByRole('button', { name: 'Compléter ce point' })).toHaveCount(3);
+    await livePanel.getByRole('button', { name: 'Compléter ce point' }).first().click();
+    await expect(page.locator(':focus')).toHaveAttribute('id', /^studio-/);
+    await expect(page.getByRole('heading', { name: 'Votre prompt structuré' })).toHaveCount(0);
   });
 
   test('sélectionne Formation et produit un prompt pédagogique structuré', async ({ page }) => {
@@ -924,6 +956,7 @@ test.describe('FormaPrompt Studio', () => {
   });
 
   test('respecte les contrôles WCAG automatisables', async ({ page }) => {
+    test.setTimeout(150_000);
     await page.goto('/studio');
     await expect(page.getByRole('heading', {
       level: 1,

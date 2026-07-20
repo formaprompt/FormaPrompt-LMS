@@ -74,3 +74,21 @@ Ces phases devront être confirmées après l'audit.
 - [x] Valider TypeScript, lint, 124 tests, 40 scénarios navigateur et le build de production.
 - [x] Déployer sur IONOS et comparer les 152 fichiers par SHA-256.
 - [x] Vérifier l'accueil, `/studio/`, les fichiers principaux, le sitemap et `robots.txt` en production.
+
+## Sprint 1.1 — UX, prévisualisation et pédagogie — 20 juillet 2026
+
+- [x] Ajouter une prévisualisation déterministe différée de 400 ms sans modifier le constructeur final.
+- [x] Afficher le score CROP existant en direct et trois améliorations prioritaires au maximum.
+- [x] Ajouter quatre modèles guidés à variables sans génération automatique ni écrasement silencieux.
+- [x] Ajouter les aides CROP contextuelles et améliorer la lisibilité de la progression.
+- [x] Afficher un espace de travail en deux colonnes sur ordinateur et un panneau repliable sur mobile.
+- [x] Ajouter « Tester dans mon IA » avec copie préalable et ouverture explicite d’un service externe, sans prompt dans l’URL.
+- [x] Condenser les contenus éditoriaux, ajouter cinq exemples publics et un bloc auteur daté.
+- [x] Corriger les mentions de confidentialité et centraliser le domaine et l’adresse de contact visibles.
+- [x] Conserver le brouillon uniquement dans `localStorage` et ne connecter aucun fournisseur d’analytics.
+- [x] Préserver les seize identifiants, les constructeurs de prompts et la grille CROP 25/15/25/35.
+- [x] Valider TypeScript, lint, 134 tests, le build, le pré-rendu et les 42 parcours Chrome ordinateur/mobile : 41 réussis et un ignoré par la configuration.
+- [x] Atteindre Lighthouse 99/98/100/100 sur mobile et 100/98/100/100 sur ordinateur.
+- [ ] Effectuer une dernière vérification visuelle humaine sur téléphone réel avant publication.
+- [x] Déployer sur IONOS, puis effectuer le commit et le push après autorisation explicite de Thierry.
+- [x] Vérifier par SHA-256 les 161 fichiers publiés et contrôler que `/studio/` sert un HTML strictement identique au build local avec la canonical attendue.
