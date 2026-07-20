@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/useAuth';
@@ -24,18 +24,21 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginConfirmed, setLoginConfirmed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedRedirect = searchParams.get('redirect');
   const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
     ? requestedRedirect
-    : '/dashboard';
+    : role === 'admin' || role === 'employee'
+      ? '/admin'
+      : '/dashboard';
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginConfirmed(false);
     setError('');
 
     try {
@@ -54,7 +57,10 @@ export default function Login() {
         return;
       }
 
-      navigate(redirectTo, { replace: true });
+      // AuthContext récupère ensuite le profil et son rôle. Attendre cette
+      // synchronisation évite que la route /admin ne renvoie prématurément
+      // un administrateur vers l'espace apprenant.
+      setLoginConfirmed(true);
     } catch (signInError) {
       console.error('Connexion Supabase impossible :', signInError);
       setError('Le service de connexion ne répond pas. Veuillez réessayer dans quelques instants.');
@@ -63,7 +69,7 @@ export default function Login() {
     }
   };
 
-  if (user) {
+  if (user && role) {
     return <Navigate to={redirectTo} replace />;
   }
 
@@ -114,8 +120,8 @@ export default function Login() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
             <Link to="/forgot-password" style={{ fontSize: '0.9rem', color: '#10b981', textDecoration: 'none' }}>Mot de passe oublié ?</Link>
           </div>
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          <button type="submit" className="auth-btn" disabled={loading || loginConfirmed}>
+            {loginConfirmed ? 'Ouverture de votre espace…' : loading ? 'Connexion en cours...' : 'Se connecter'}
           </button>
         </form>
 

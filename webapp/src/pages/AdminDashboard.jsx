@@ -621,7 +621,16 @@ export default function AdminDashboard() {
   // Blog Form State
   const [isAddingPost, setIsAddingPost] = useState(false);
   const [editingPostId, setEditingPostId] = useState(null);
-  const [newPost, setNewPost] = useState({ title: '', category: '', excerpt: '', content: '' });
+  const [newPost, setNewPost] = useState({
+    title: '',
+    slug: '',
+    category: '',
+    excerpt: '',
+    seo_title: '',
+    meta_description: '',
+    image_alt: '',
+    content: '',
+  });
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -1413,9 +1422,12 @@ export default function AdminDashboard() {
 
     const postData = {
       title: newPost.title,
-      slug: generateSlug(newPost.title),
+      slug: generateSlug(newPost.slug || newPost.title),
       category: newPost.category || 'Général',
       excerpt: newPost.excerpt,
+      seo_title: newPost.seo_title || null,
+      meta_description: newPost.meta_description || null,
+      image_alt: newPost.image_alt || null,
       content: newPost.content,
       image_url: imageUrl,
       author: 'Thierry FREZARD'
@@ -1456,12 +1468,31 @@ export default function AdminDashboard() {
   const resetForm = () => {
     setIsAddingPost(false);
     setEditingPostId(null);
-    setNewPost({ title: '', category: '', excerpt: '', content: '' });
+    setNewPost({
+      title: '',
+      slug: '',
+      category: '',
+      excerpt: '',
+      seo_title: '',
+      meta_description: '',
+      image_alt: '',
+      content: '',
+    });
     setImageFile(null);
   };
 
   const handleEditPost = (post) => {
-    setNewPost(post);
+    setNewPost({
+      title: post.title || '',
+      slug: post.slug || '',
+      category: post.category || '',
+      excerpt: post.excerpt || '',
+      seo_title: post.seo_title || '',
+      meta_description: post.meta_description || '',
+      image_alt: post.image_alt || '',
+      content: post.content || '',
+      image_url: post.image_url || null,
+    });
     setEditingPostId(post.id);
     setIsAddingPost(true);
   };
@@ -1837,6 +1868,20 @@ export default function AdminDashboard() {
                         />
                       </div>
                       <div className="form-group">
+                        <label>Adresse de l'article (slug)</label>
+                        <input
+                          type="text"
+                          value={newPost.slug}
+                          onChange={(e) => setNewPost({...newPost, slug: e.target.value})}
+                          placeholder="Ex: meilleur-generateur-prompts-comparatif-2026"
+                          aria-describedby="blog-slug-help"
+                          style={{ background: '#1e1e1e', color: 'white', padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #444' }}
+                        />
+                        <small id="blog-slug-help" style={{ display: 'block', color: '#aaa', marginTop: '0.5rem' }}>
+                          Laissez vide pour créer automatiquement l'adresse à partir du titre.
+                        </small>
+                      </div>
+                      <div className="form-group">
                         <label>Catégorie</label>
                         <input 
                           type="text" 
@@ -1852,6 +1897,36 @@ export default function AdminDashboard() {
                           value={newPost.excerpt} 
                           onChange={(e) => setNewPost({...newPost, excerpt: e.target.value})}
                           rows="3"
+                          style={{ background: '#1e1e1e', color: 'white', padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #444' }}
+                        ></textarea>
+                      </div>
+                      <div className="form-group">
+                        <label>Titre SEO</label>
+                        <input
+                          type="text"
+                          value={newPost.seo_title}
+                          onChange={(e) => setNewPost({...newPost, seo_title: e.target.value})}
+                          placeholder="Titre concis pour les moteurs de recherche"
+                          style={{ background: '#1e1e1e', color: 'white', padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #444' }}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Méta-description</label>
+                        <textarea
+                          value={newPost.meta_description}
+                          onChange={(e) => setNewPost({...newPost, meta_description: e.target.value})}
+                          rows="3"
+                          placeholder="Description affichée dans les résultats de recherche et les aperçus de partage"
+                          style={{ background: '#1e1e1e', color: 'white', padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #444' }}
+                        ></textarea>
+                      </div>
+                      <div className="form-group">
+                        <label>Texte alternatif de l'image</label>
+                        <textarea
+                          value={newPost.image_alt}
+                          onChange={(e) => setNewPost({...newPost, image_alt: e.target.value})}
+                          rows="2"
+                          placeholder="Décrivez le contenu utile de l'image pour les personnes qui ne la voient pas"
                           style={{ background: '#1e1e1e', color: 'white', padding: '0.75rem', width: '100%', borderRadius: '4px', border: '1px solid #444' }}
                         ></textarea>
                       </div>

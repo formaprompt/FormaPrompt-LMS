@@ -10,6 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         cleanupOutdatedCaches: true,
+        navigateFallbackDenylist: [/^\/blog\/[^/?#]+\/?$/],
       },
       manifest: {
         name: 'FormaPrompt',

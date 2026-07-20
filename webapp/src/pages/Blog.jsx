@@ -97,7 +97,7 @@ export default function Blog() {
             <div key={post.id} className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', padding: 0 }}>
               {post.image_url && (
                 <div style={{ height: '200px', width: '100%', overflow: 'hidden' }}>
-                  <img src={post.image_url} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                  <img src={post.image_url} alt={post.image_alt || post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
                 </div>
               )}
               <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>

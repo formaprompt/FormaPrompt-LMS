@@ -5,7 +5,10 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    include: ['src/studio/**/*.test.{ts,tsx}'],
+    include: [
+      'src/studio/**/*.test.{ts,tsx}',
+      'src/pages/**/*.test.{js,jsx}',
+    ],
     setupFiles: ['./src/studio/test/setup.ts'],
     testTimeout: 45_000,
     css: true,

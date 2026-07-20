@@ -39,13 +39,45 @@ export default function BlogPost() {
     return <Navigate to="/blog" replace />;
   }
 
+  const canonicalUrl = `https://www.formaprompt.com/blog/${post.slug}`;
+  const seoTitle = post.seo_title || `${post.title} – FormaPrompt`;
+  const seoDescription = post.meta_description
+    || post.excerpt
+    || `Lisez l'article ${post.title} sur le blog de FormaPrompt.`;
+  const socialImage = post.image_url || 'https://www.formaprompt.com/assets/blog-cover.png';
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: seoDescription,
+    image: [socialImage],
+    datePublished: post.created_at,
+    dateModified: post.created_at,
+    inLanguage: 'fr-FR',
+    mainEntityOfPage: canonicalUrl,
+    author: {
+      '@type': 'Person',
+      name: post.author || 'Thierry FREZARD',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'FormaPrompt',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.formaprompt.com/assets/logo-new.png',
+      },
+    },
+  };
+
   return (
     <>
       <SEO
-        title={`${post.title} – FormaPrompt`}
-        description={post.excerpt || `Lisez l'article ${post.title} sur le blog de FormaPrompt.`}
-        url={`https://www.formaprompt.com/blog/${post.slug}`}
-        image={post.image_url || "https://www.formaprompt.com/assets/blog-cover.png"}
+        title={seoTitle}
+        description={seoDescription}
+        url={canonicalUrl}
+        image={socialImage}
+        type="article"
+        jsonLd={articleJsonLd}
       />
       <article className="container section" style={{ maxWidth: '800px', margin: '0 auto' }}>
       <Link to="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-primary)', textDecoration: 'none', marginBottom: '2rem', fontWeight: '500' }}>
@@ -56,10 +88,10 @@ export default function BlogPost() {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--color-primary)', background: 'var(--color-bg)', padding: '6px 12px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600' }}>
           <Tag size={16} /> {post.category}
         </div>
-        <h1 style={{ fontSize: '2.5rem', lineHeight: '1.2', marginBottom: '1.5rem', color: 'var(--color-secondary)' }}>
+        <h1 className="blog-post-title" style={{ lineHeight: '1.2', marginBottom: '1.5rem', color: 'var(--color-secondary)' }}>
           {post.title}
         </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', color: 'var(--color-text-light)', borderBottom: '1px solid var(--color-border)', paddingBottom: '1.5rem' }}>
+        <div className="blog-post-meta" style={{ color: 'var(--color-text-light)', borderBottom: '1px solid var(--color-border)', paddingBottom: '1.5rem' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Calendar size={18} />
             {new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -72,13 +104,28 @@ export default function BlogPost() {
       </div>
 
       {post.image_url && (
-        <div style={{ marginBottom: '3rem', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
-          <img src={post.image_url} alt={post.title} style={{ width: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+        <div className="blog-post-hero" style={{ marginBottom: '3rem', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+          <img src={post.image_url} alt={post.image_alt || post.title} />
         </div>
       )}
 
       <div className="blog-content" style={{ fontSize: '1.1rem', lineHeight: '1.8', color: 'var(--color-text)' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>{post.content}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeSanitize]}
+          components={{
+            table: ({ node, ...props }) => {
+              void node;
+              return (
+                <div className="blog-table-scroll" role="region" aria-label="Tableau de l'article" tabIndex="0">
+                  <table {...props} />
+                </div>
+              );
+            },
+          }}
+        >
+          {post.content}
+        </ReactMarkdown>
       </div>
 
       <div style={{ marginTop: '4rem', padding: '2rem', background: 'var(--color-secondary)', borderRadius: '16px', color: 'white', textAlign: 'center' }}>

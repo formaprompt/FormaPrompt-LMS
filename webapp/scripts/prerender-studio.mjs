@@ -19,6 +19,18 @@ const pages = [
     ],
   },
   {
+    name: 'Article générateurs de prompts 2026',
+    url: `http://${host}:${port}/blog/meilleur-generateur-prompts-comparatif-2026`,
+    outputPath: path.resolve('dist', 'blog', 'meilleur-generateur-prompts-comparatif-2026.html'),
+    heading: /quel est le meilleur générateur de prompts en 2026/i,
+    markers: [
+      'meilleur générateur de prompts en 2026 : comparatif',
+      'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+      'https://schema.org',
+      'comparatif des générateurs de prompts en 2026',
+    ],
+  },
+  {
     name: 'Accueil',
     url: `http://${host}:${port}/`,
     outputPath: path.resolve('dist', 'index.html'),
@@ -81,6 +93,7 @@ try {
     serializedHtml = serializedHtml
       .replace(applicationScript[0], delayedApplicationScript)
       .replace('<title>FormaPrompt</title>', '')
+      .replace(/<link rel="canonical"\s*\/?>\s*/g, '')
       .replace(/<script id="vite-plugin-pwa:register-sw"[^>]*><\/script>/, '');
 
     await mkdir(path.dirname(pageConfig.outputPath), { recursive: true });
