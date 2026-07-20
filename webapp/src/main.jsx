@@ -6,7 +6,11 @@ import App from './App.jsx';
 import { registerFormaPromptServiceWorker } from './pwa/registerServiceWorker.js';
 import './index.css';
 
-registerFormaPromptServiceWorker();
+const isPublicStudio = window.location.pathname === '/studio' || window.location.pathname === '/studio/';
+
+// Le Studio est déjà pré-rendu et n'a pas besoin d'un rechargement lié à
+// l'installation du service worker pendant la saisie d'un brouillon local.
+if (!isPublicStudio) registerFormaPromptServiceWorker();
 
 const app = (
   <React.StrictMode>
@@ -19,7 +23,6 @@ const app = (
 );
 
 async function renderApplication() {
-  const isPublicStudio = window.location.pathname === '/studio' || window.location.pathname === '/studio/';
   let application = app;
 
   if (!isPublicStudio) {

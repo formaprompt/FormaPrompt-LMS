@@ -1,18 +1,20 @@
-import { AlertTriangle, ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Layers3 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Layers3, ShieldCheck } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FieldValues } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { CategorySelector } from './components/CategorySelector';
+import { DraftNotice } from './components/DraftNotice';
 import { PromptResult } from './components/PromptResult';
 import { StudioForm } from './components/StudioForm';
-import {
-  getAvailableStudioCategory,
-  studioCategoryCatalog,
-  studioCategoryFamilies,
-} from './categories/registry';
+import { StudioProgress } from './components/StudioProgress';
+import { loadStudioCategory } from './categories/loadCategory';
+import { studioCategoryCatalog, studioCategoryFamilies } from './categories/registry';
 import { calculateCategoryScore } from './engine/scoreCategory';
-import type { StudioCategoryId, StudioResult } from './types';
+import { clearStudioDraft, loadStudioDraft, saveStudioDraft, STUDIO_DRAFT_VERSION } from './draft';
+import { studioLandingContent } from './landingContent';
+import { calculateStudioProgress } from './progress';
+import type { StudioCategoryConfig, StudioCategoryFamilyId, StudioCategoryId, StudioResult } from './types';
 import './studio.css';
 
 const studioUrl = 'https://formaprompt.com/studio/';
@@ -21,7 +23,7 @@ const studioImageUrl = 'https://formaprompt.com/assets/logo-new.png';
 const studioFaq = [
   {
     question: 'Le Studio enregistre-t-il mes informations ?',
-    answer: 'Non. Cette première version fonctionne dans votre navigateur, sans compte et sans stockage. La saisie disparaît lorsque vous quittez ou rechargez la page.',
+    answer: 'Le Studio conserve automatiquement un brouillon uniquement dans votre navigateur. Aucune saisie n’est envoyée à un serveur et vous pouvez effacer ce brouillon à tout moment.',
   },
   {
     question: 'Le score garantit-il un bon résultat ?',
@@ -74,31 +76,160 @@ const studioStructuredData = {
 };
 
 export default function StudioPage() {
-  const [selectedCategoryId, setSelectedCategoryId] = useState<StudioCategoryId>('professional-email');
+  const [restoredDraft] = useState(() => loadStudioDraft());
+  const [selectedCategoryId, setSelectedCategoryId] = useState<StudioCategoryId | null>(restoredDraft?.categoryId ?? null);
+  const [activeFamily, setActiveFamily] = useState<StudioCategoryFamilyId | null>(restoredDraft?.activeFamily ?? null);
+  const [initialValues, setInitialValues] = useState<FieldValues | undefined>(restoredDraft?.values);
+  const [currentValues, setCurrentValues] = useState<FieldValues>(restoredDraft?.values ?? {});
+  const [draftStatus, setDraftStatus] = useState<'restored' | 'deleted' | null>(restoredDraft ? 'restored' : null);
+  const [category, setCategory] = useState<StudioCategoryConfig<FieldValues> | null>(null);
+  const [isCategoryLoading, setIsCategoryLoading] = useState(Boolean(restoredDraft));
   const [result, setResult] = useState<StudioResult<FieldValues> | null>(null);
   const [isResultStale, setIsResultStale] = useState(false);
-  const category = getAvailableStudioCategory(selectedCategoryId);
+  const [selectionAnnouncement, setSelectionAnnouncement] = useState('');
+  const draftTimerRef = useRef<number | null>(null);
+  const categoryRequestRef = useRef(0);
+  const shouldFocusFormRef = useRef(false);
+  const contentScoreRules = category?.scoreRules ?? studioLandingContent.scoreRules;
+  const contentBeforeAfter = category?.beforeAfter ?? studioLandingContent.beforeAfter;
+  const contentExamples = category?.examples ?? studioLandingContent.examples;
 
-  const selectCategory = (categoryId: StudioCategoryId) => {
-    if (!getAvailableStudioCategory(categoryId)) return;
+  const persistDraft = useCallback((draftCategory: StudioCategoryConfig<FieldValues>, family: StudioCategoryFamilyId | null, values: FieldValues) => {
+    const progress = calculateStudioProgress(draftCategory, values, false);
+    saveStudioDraft({
+      version: STUDIO_DRAFT_VERSION,
+      updatedAt: new Date().toISOString(),
+      categoryId: draftCategory.id,
+      activeFamily: family,
+      values: Object.fromEntries(Object.entries(values).filter((entry): entry is [string, string] => typeof entry[1] === 'string')),
+      progress,
+    });
+  }, []);
+
+  const selectCategory = async (categoryId: StudioCategoryId, family: StudioCategoryFamilyId | null) => {
+    const requestId = ++categoryRequestRef.current;
+    if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
     setSelectedCategoryId(categoryId);
+    setActiveFamily(family);
+    setCategory(null);
+    setIsCategoryLoading(true);
+    setInitialValues(undefined);
+    setCurrentValues({});
     setResult(null);
     setIsResultStale(false);
+    setDraftStatus(null);
+    try {
+      const nextCategory = await loadStudioCategory(categoryId);
+      if (categoryRequestRef.current !== requestId) return;
+      setCategory(nextCategory);
+      setCurrentValues(nextCategory.defaultValues);
+      setSelectionAnnouncement(`${nextCategory.label} sélectionné. Le formulaire a été adapté.`);
+      shouldFocusFormRef.current = true;
+      persistDraft(nextCategory, family, nextCategory.defaultValues);
+    } catch {
+      if (categoryRequestRef.current !== requestId) return;
+      setSelectedCategoryId(null);
+      setSelectionAnnouncement('Le formulaire n’a pas pu être préparé. Réessayez en sélectionnant le cas d’usage.');
+    } finally {
+      if (categoryRequestRef.current === requestId) setIsCategoryLoading(false);
+    }
   };
 
-  const markResultAsStale = useCallback(() => {
-    setIsResultStale((current) => (result ? true : current));
-  }, [result]);
+  useEffect(() => {
+    if (!restoredDraft) return;
+    const requestId = ++categoryRequestRef.current;
+    loadStudioCategory(restoredDraft.categoryId)
+      .then((restoredCategory) => {
+        if (categoryRequestRef.current !== requestId) return;
+        setCategory(restoredCategory);
+      })
+      .catch(() => {
+        if (categoryRequestRef.current !== requestId) return;
+        clearStudioDraft();
+        setSelectedCategoryId(null);
+        setInitialValues(undefined);
+        setCurrentValues({});
+        setDraftStatus(null);
+        setSelectionAnnouncement('Le brouillon local n’a pas pu être restauré et a été ignoré.');
+      })
+      .finally(() => {
+        if (categoryRequestRef.current === requestId) setIsCategoryLoading(false);
+      });
+  }, [restoredDraft]);
 
-  if (!category) return null;
+  const handleValuesChange = useCallback((values: FieldValues) => {
+    setCurrentValues(values);
+    setIsResultStale((current) => (result ? true : current));
+    if (!selectedCategoryId || !category) return;
+    if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = window.setTimeout(() => {
+      const progress = calculateStudioProgress(category, values, Boolean(result));
+      saveStudioDraft({
+        version: STUDIO_DRAFT_VERSION,
+        updatedAt: new Date().toISOString(),
+        categoryId: selectedCategoryId,
+        activeFamily,
+        values: Object.fromEntries(Object.entries(values).filter((entry): entry is [string, string] => typeof entry[1] === 'string')),
+        progress,
+      });
+    }, 650);
+  }, [activeFamily, category, result, selectedCategoryId]);
+
+  useEffect(() => () => {
+    if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCategoryId || !shouldFocusFormRef.current) return;
+    shouldFocusFormRef.current = false;
+    window.requestAnimationFrame(() => {
+      document.getElementById('studio-form-start')?.focus({ preventScroll: true });
+      document.getElementById('studio-form')?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+  }, [selectedCategoryId]);
+
+  const progress = useMemo(() => {
+    if (!category) return { activeStep: 1, completedSections: [] };
+    return calculateStudioProgress(category, currentValues, Boolean(result) && !isResultStale);
+  }, [category, currentValues, isResultStale, result]);
+
+  const removeDraft = useCallback(() => {
+    if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
+    clearStudioDraft();
+    setDraftStatus('deleted');
+  }, []);
+
+  const restartStudio = () => {
+    categoryRequestRef.current += 1;
+    removeDraft();
+    setSelectedCategoryId(null);
+    setActiveFamily(null);
+    setCategory(null);
+    setIsCategoryLoading(false);
+    setInitialValues(undefined);
+    setCurrentValues({});
+    setResult(null);
+    setIsResultStale(false);
+    setSelectionAnnouncement('Le Studio est prêt pour un nouveau cas d’usage.');
+  };
+
+  const editInformation = () => {
+    document.getElementById('studio-form-start')?.focus({ preventScroll: true });
+    document.getElementById('studio-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   const buildResult = (values: FieldValues) => {
+    if (!category) return;
     setResult({
       values,
       prompt: category.buildPrompt(values),
       diagnostic: calculateCategoryScore(category, values),
     });
     setIsResultStale(false);
+    handleValuesChange(values);
   };
 
   return (
@@ -135,7 +266,7 @@ export default function StudioPage() {
             <h2>Un diagnostic déterministe</h2>
             <ul>
               <li><CheckCircle2 aria-hidden="true" /> Aucun appel à un fournisseur externe</li>
-              <li><CheckCircle2 aria-hidden="true" /> Aucune saisie enregistrée</li>
+              <li><CheckCircle2 aria-hidden="true" /> Brouillon conservé uniquement dans ce navigateur</li>
               <li><CheckCircle2 aria-hidden="true" /> Une grille CROP documentée sur 100 points</li>
             </ul>
           </aside>
@@ -150,36 +281,60 @@ export default function StudioPage() {
             <p>Les champs obligatoires permettent de construire le prompt. Les champs facultatifs améliorent son diagnostic.</p>
           </div>
 
-          <div className="studio-privacy-warning" role="note" aria-label="Avertissement sur les informations sensibles">
-            <AlertTriangle aria-hidden="true" />
-            <div>
-              <h3>Protégez vos informations</h3>
-              <p>{category.messages.privacy}</p>
-            </div>
-          </div>
-
           <CategorySelector
             categories={studioCategoryCatalog}
             families={studioCategoryFamilies}
             value={selectedCategoryId}
+            initialFamily={activeFamily}
             onChange={selectCategory}
+            onFamilyChange={setActiveFamily}
           />
 
-          <StudioForm
-            key={category.id}
-            category={category}
-            hasResult={Boolean(result)}
-            onSubmit={buildResult}
-            onValuesChange={markResultAsStale}
-          />
+          <p className="studio-selection-announcement sr-only" aria-live="polite">{selectionAnnouncement}</p>
 
-          {result && (
+          {isCategoryLoading && (
+            <div className="studio-category-loading" role="status">
+              <span aria-hidden="true" /> Préparation du formulaire…
+            </div>
+          )}
+
+          {category && (
+            <>
+              <StudioProgress progress={progress} />
+
+              <div className="studio-privacy-warning" role="note" aria-label="Avertissement sur les informations sensibles">
+                <ShieldCheck aria-hidden="true" />
+                <div>
+                  <h3>Préservez la confidentialité</h3>
+                  <p>Ne saisissez pas de données personnelles, confidentielles, médicales, financières ou sensibles. Votre brouillon est conservé uniquement dans ce navigateur.</p>
+                  <small>{category.messages.privacy}</small>
+                </div>
+              </div>
+
+              <DraftNotice status={draftStatus} onClear={removeDraft} />
+
+              <StudioForm
+                key={category.id}
+                category={category}
+                examples={studioCategoryCatalog.find((item) => item.id === category.id)?.examples ?? []}
+                initialValues={initialValues}
+                hasResult={Boolean(result)}
+                onSubmit={buildResult}
+                onValuesChange={handleValuesChange}
+              />
+            </>
+          )}
+
+          {result && category && (
             <PromptResult
               prompt={result.prompt}
               diagnostic={result.diagnostic}
               isStale={isResultStale}
               resultHelp={category.messages.resultHelp}
               recommendations={category.recommendations}
+              onEdit={editInformation}
+              onRestart={restartStudio}
+              onClearDraft={removeDraft}
             />
           )}
         </div>
@@ -193,7 +348,7 @@ export default function StudioPage() {
             <p>Chaque partie répond à une question simple et contribue au score de qualité.</p>
           </div>
           <div className="studio-crop-grid">
-            {category.scoreRules.map((rule) => (
+            {contentScoreRules.map((rule) => (
               <article key={rule.id}>
                 <strong>{rule.label.slice(0, 1)}</strong>
                 <h3>{rule.label}</h3>
@@ -219,14 +374,14 @@ export default function StudioPage() {
             <article className="is-before">
               <span>Avant</span>
               <h3>Demande imprécise</h3>
-              <blockquote>{category.beforeAfter.vagueRequest}</blockquote>
-              <p>{category.beforeAfter.missingDescription}</p>
+              <blockquote>{contentBeforeAfter.vagueRequest}</blockquote>
+              <p>{contentBeforeAfter.missingDescription}</p>
             </article>
             <article className="is-after">
               <span>Après</span>
               <h3>Prompt structuré</h3>
-              <blockquote>{category.beforeAfter.structuredPrompt}</blockquote>
-              <p>{category.beforeAfter.benefit}</p>
+              <blockquote>{contentBeforeAfter.structuredPrompt}</blockquote>
+              <p>{contentBeforeAfter.benefit}</p>
             </article>
           </div>
         </div>
@@ -239,7 +394,7 @@ export default function StudioPage() {
             <h2 id="examples-title">Exemples de prompts à préparer</h2>
           </div>
           <div className="studio-use-case-grid">
-            {category.examples.map((example) => (
+            {contentExamples.map((example) => (
               <article key={example.title}>
                 <ClipboardCheck aria-hidden="true" />
                 <h3>{example.title}</h3>

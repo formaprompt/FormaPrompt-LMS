@@ -1,24 +1,23 @@
-import { analysisSynthesisCategory } from './analysisSynthesis';
-import { aiAgentCategory } from './aiAgent';
-import { audioCategory } from './audio';
-import { codeCategory } from './code';
-import { editorialContentCategory } from './editorialContent';
-import { imageCreationCategory } from './imageCreation';
-import { marketingCommunicationCategory } from './marketingCommunication';
-import { officeDataCategory } from './officeData';
-import { presentationCategory } from './presentation';
-import { professionalEmailCategory } from './professionalEmail';
-import { professionalDocumentsCategory } from './professionalDocuments';
-import { productivityCategory } from './productivity';
-import { researchCategory } from './research';
-import { socialMediaCategory } from './socialMedia';
-import { trainingCategory } from './training';
-import { videoCategory } from './video';
-import type { FieldValues } from 'react-hook-form';
+import {
+  AudioLines,
+  Bot,
+  Code2,
+  FileText,
+  GraduationCap,
+  Image,
+  ListChecks,
+  Mail,
+  Megaphone,
+  Newspaper,
+  Presentation as PresentationIcon,
+  ScanText,
+  Search,
+  Share2,
+  Table2,
+  Video,
+} from 'lucide-react';
 import type {
-  StudioCategoryConfig,
   StudioCategoryFamilySummary,
-  StudioCategoryId,
   StudioCategorySummary,
 } from '../types';
 
@@ -35,48 +34,196 @@ export const studioCategoryCatalog: StudioCategorySummary[] = [
     id: 'professional-email',
     family: 'write',
     label: 'Courriel professionnel',
-    description: 'Structurer un prompt pour préparer un courriel professionnel.',
-    available: true,
+    description: 'Rédiger, répondre ou améliorer un message professionnel.',
+    keywords: ['mail', 'email', 'message', 'réponse', 'relance', 'prospect', 'réclamation'],
+    icon: Mail,
+    popular: true,
+    examples: [
+      { title: 'Demander un rendez-vous à un prospect', values: { need: 'Préparer un courriel pour proposer un rendez-vous à un prospect.', objective: 'Obtenir une réponse avec une proposition de créneau.' } },
+      { title: 'Relancer un devis sans réponse', values: { need: 'Relancer avec tact un devis resté sans réponse.', objective: 'Savoir si le devis est toujours à l’étude et proposer un échange.' } },
+      { title: 'Répondre à une réclamation client', values: { need: 'Répondre de façon professionnelle à une réclamation client.', objective: 'Accuser réception, clarifier la situation et présenter la prochaine étape.' } },
+      { title: 'Informer une équipe d’un changement', values: { need: 'Informer une équipe d’un changement d’organisation.', objective: 'Faire comprendre ce qui change, quand et comment se préparer.' } },
+      { title: 'Remercier après un entretien', values: { need: 'Rédiger un message de remerciement après un entretien.', objective: 'Remercier, confirmer son intérêt et rester disponible.' } },
+    ],
   },
-  { id: 'professional-documents', family: 'write', label: 'Documents professionnels', description: 'Préparer un rapport, un compte rendu, une procédure ou un autre document structuré.', available: true },
-  { id: 'editorial-content', family: 'write', label: 'Articles et contenus éditoriaux', description: 'Préparer un article de blog, technique, d’actualité ou de fond avec un angle et des sources explicites.', available: true },
-  { id: 'social-media', family: 'write', label: 'Réseaux sociaux', description: 'Préparer une publication adaptée à une plateforme, un public et un objectif.', available: true },
-  { id: 'marketing-communication', family: 'write', label: 'Marketing et communication', description: 'Cadrer un contenu, une campagne ou un argumentaire crédible et adapté à son public.', available: true },
-  { id: 'training', family: 'transmit', label: 'Formation', description: 'Concevoir une activité, une séquence ou une ressource pédagogique.', available: true },
-  { id: 'presentation', family: 'transmit', label: 'Présentation', description: 'Structurer un diaporama, son message, sa progression visuelle et sa prise de parole.', available: true },
-  { id: 'research', family: 'analyze', label: 'Recherche', description: 'Cadrer une recherche documentaire, vérifier les sources et produire une restitution traçable.', available: true },
-  { id: 'analysis-synthesis', family: 'analyze', label: 'Analyse et synthèse', description: 'Examiner des informations et produire une synthèse vérifiable.', available: true },
-  { id: 'office-data', family: 'analyze', label: 'Bureautique et données', description: 'Préparer un traitement de données, un tableau ou une automatisation bureautique.', available: true },
-  { id: 'image-creation', family: 'create', label: 'Création d’image', description: 'Structurer une consigne visuelle adaptée à un support et un public.', available: true },
-  { id: 'video', family: 'create', label: 'Vidéo', description: 'Structurer un scénario, un storyboard ou un brief vidéo adapté au public, au format et à l’outil.', available: true },
-  { id: 'audio', family: 'create', label: 'Audio', description: 'Structurer un podcast, une voix off, une interview ou un contenu sonore accessible et vérifiable.', available: true },
-  { id: 'code', family: 'build', label: 'Code', description: 'Cadrer une création, une correction ou une revue de code avec des tests explicites.', available: true },
-  { id: 'productivity', family: 'build', label: 'Productivité', description: 'Organiser une tâche, simplifier un processus et définir des contrôles humains.', available: true },
-  { id: 'ai-agent', family: 'build', label: 'Agent IA', description: 'Cadrer la mission, l’autonomie, les outils, les données et les contrôles humains d’un futur agent.', available: true },
+  {
+    id: 'professional-documents', family: 'write', label: 'Documents professionnels',
+    description: 'Préparer un rapport, une procédure, un compte rendu ou une note.',
+    keywords: ['rapport', 'procédure', 'compte rendu', 'note', 'cahier des charges', 'proposition'], icon: FileText,
+    examples: [
+      { title: 'Rédiger un compte rendu de réunion', values: { documentContext: 'Préparer le compte rendu structuré d’une réunion à partir de notes génériques.', documentObjective: 'Restituer les décisions, les actions, les responsables et les échéances.' } },
+      { title: 'Créer une procédure interne', values: { documentContext: 'Formaliser une procédure interne simple et vérifiable.', documentObjective: 'Permettre à un nouveau collaborateur d’appliquer chaque étape.' } },
+      { title: 'Préparer une note de synthèse', values: { documentContext: 'Préparer une note de synthèse à partir de plusieurs informations autorisées.', documentObjective: 'Présenter les constats utiles et les points de décision.' } },
+      { title: 'Construire un cahier des charges', values: { documentContext: 'Structurer le cahier des charges d’un projet fictif.', documentObjective: 'Définir le besoin, le périmètre, les contraintes et les critères de réception.' } },
+      { title: 'Rédiger une proposition commerciale', values: { documentContext: 'Préparer une proposition commerciale sobre pour une prestation fictive.', documentObjective: 'Expliquer la réponse au besoin, les étapes et les conditions sans promesse exagérée.' } },
+    ],
+  },
+  {
+    id: 'editorial-content', family: 'write', label: 'Articles et contenus éditoriaux',
+    description: 'Rédiger ou structurer un article, un dossier ou un contenu long.',
+    keywords: ['article', 'blog', 'dossier', 'contenu long', 'réécriture', 'éditorial'], icon: Newspaper,
+    examples: [
+      { title: 'Rédiger un article de blog', values: { editorialContext: 'Préparer un article de blog professionnel sur un sujet clairement délimité.', editorialGoal: 'Informer un public débutant avec des explications concrètes et vérifiables.' } },
+      { title: 'Construire le plan d’un dossier', values: { editorialContext: 'Construire le plan détaillé d’un dossier professionnel.', editorialGoal: 'Organiser les informations dans une progression claire.' } },
+      { title: 'Réécrire un contenu pour le rendre plus clair', values: { editorialContext: 'Réécrire un contenu générique afin d’en améliorer la clarté.', editorialGoal: 'Simplifier la lecture sans modifier le sens ni inventer d’information.' } },
+      { title: 'Transformer des notes en article', values: { editorialContext: 'Transformer des notes génériques en article structuré.', editorialGoal: 'Relier les idées, hiérarchiser les informations et signaler les éléments à vérifier.' } },
+      { title: 'Adapter un texte à un public débutant', values: { editorialContext: 'Adapter un texte professionnel à un public débutant.', editorialGoal: 'Expliquer les notions indispensables avec des exemples simples.' } },
+    ],
+  },
+  {
+    id: 'social-media', family: 'write', label: 'Réseaux sociaux',
+    description: 'Créer des publications adaptées à LinkedIn, Facebook et aux autres plateformes.',
+    keywords: ['LinkedIn', 'Facebook', 'Instagram', 'post', 'publication', 'calendrier éditorial'], icon: Share2, popular: true,
+    examples: [
+      { title: 'Rédiger un post LinkedIn', values: { contentContext: 'Préparer un post LinkedIn consacré à une pratique professionnelle utile.', platform: 'LinkedIn', communicationObjective: 'Partager un conseil concret et inviter à consulter une ressource.' } },
+      { title: 'Créer une publication Facebook', values: { contentContext: 'Préparer une publication Facebook claire et accessible.', platform: 'Facebook', communicationObjective: 'Informer la communauté et susciter une action simple.' } },
+      { title: 'Préparer un calendrier éditorial', values: { contentContext: 'Préparer les thèmes d’un calendrier éditorial mensuel pour des réseaux sociaux.', communicationObjective: 'Organiser des publications cohérentes avec les besoins du public.' } },
+      { title: 'Transformer un article en publication', values: { contentContext: 'Transformer les idées principales d’un article en publication courte.', communicationObjective: 'Donner envie de consulter l’article sans en déformer le contenu.' } },
+      { title: 'Rédiger une accroche engageante', values: { contentContext: 'Préparer plusieurs accroches sobres pour une publication professionnelle.', communicationObjective: 'Faire comprendre immédiatement le sujet et son bénéfice concret.' } },
+    ],
+  },
+  {
+    id: 'marketing-communication', family: 'write', label: 'Marketing et communication',
+    description: 'Construire un message commercial, une campagne ou un argumentaire.',
+    keywords: ['publicité', 'campagne', 'argumentaire', 'persona', 'newsletter', 'vente'], icon: Megaphone,
+    examples: [
+      { title: 'Créer un argumentaire commercial', values: { campaignContext: 'Préparer un argumentaire pour une offre professionnelle fictive.', communicationGoal: 'Présenter la valeur réelle de l’offre et répondre aux objections sans exagération.' } },
+      { title: 'Définir une campagne publicitaire', values: { campaignContext: 'Cadrer une campagne publicitaire pour un service professionnel.', communicationGoal: 'Faire connaître le service auprès d’un public précisément défini.' } },
+      { title: 'Rédiger une page de vente', values: { campaignContext: 'Structurer une page de présentation d’une offre professionnelle.', communicationGoal: 'Expliquer le besoin traité, les modalités et la prochaine étape.' } },
+      { title: 'Construire un persona client', values: { campaignContext: 'Construire un persona à partir d’hypothèses génériques à valider.', communicationGoal: 'Mieux comprendre les besoins, freins et critères de décision du public.' } },
+      { title: 'Préparer une newsletter', values: { campaignContext: 'Préparer une newsletter professionnelle centrée sur une information utile.', communicationGoal: 'Informer les abonnés et proposer une action claire.' } },
+    ],
+  },
+  {
+    id: 'training', family: 'transmit', label: 'Formation',
+    description: 'Concevoir un cours, une activité, un exercice ou une évaluation.',
+    keywords: ['cours', 'pédagogie', 'exercice', 'quiz', 'évaluation', 'objectifs pédagogiques'], icon: GraduationCap, popular: true,
+    examples: [
+      { title: 'Construire un déroulé pédagogique', values: { trainingContext: 'Construire le déroulé pédagogique d’une séquence pour adultes.', learningObjective: 'Permettre aux participants de réaliser une tâche observable en fin de séquence.' } },
+      { title: 'Rédiger des objectifs pédagogiques', values: { trainingContext: 'Formuler des objectifs pédagogiques pour une formation professionnelle.', learningObjective: 'Décrire des compétences observables et évaluables adaptées au public.' } },
+      { title: 'Créer un exercice pratique', values: { trainingContext: 'Créer un exercice pratique progressif pour des adultes débutants.', learningObjective: 'Faire appliquer une méthode dans une situation professionnelle fictive.' } },
+      { title: 'Adapter un cours à un public débutant', values: { trainingContext: 'Adapter un cours existant à des adultes débutants.', learningObjective: 'Rendre les notions compréhensibles et permettre une première mise en pratique.' } },
+      { title: 'Préparer un quiz d’évaluation', values: { trainingContext: 'Préparer un quiz d’évaluation pour une séquence professionnelle.', learningObjective: 'Vérifier la compréhension et fournir un retour pédagogique utile.' } },
+    ],
+  },
+  {
+    id: 'presentation', family: 'transmit', label: 'Présentation',
+    description: 'Préparer un diaporama, un pitch, une soutenance ou un webinaire.',
+    keywords: ['PowerPoint', 'diaporama', 'pitch', 'soutenance', 'webinaire', 'slides'], icon: PresentationIcon,
+    examples: [
+      { title: 'Créer le plan d’un PowerPoint', values: { presentationContext: 'Créer le plan d’une présentation PowerPoint professionnelle.', presentationGoal: 'Faire comprendre le sujet avec une progression claire et peu chargée.' } },
+      { title: 'Préparer une soutenance', values: { presentationContext: 'Préparer la structure d’une soutenance professionnelle.', presentationGoal: 'Présenter la démarche, les résultats et les limites dans le temps imparti.' } },
+      { title: 'Construire un pitch professionnel', values: { presentationContext: 'Construire un pitch professionnel court pour présenter un projet.', presentationGoal: 'Faire comprendre le problème, la solution et la prochaine étape.' } },
+      { title: 'Préparer un webinaire', values: { presentationContext: 'Préparer le déroulé d’un webinaire interactif.', presentationGoal: 'Transmettre les points essentiels et maintenir l’attention du public.' } },
+      { title: 'Transformer un rapport en présentation', values: { presentationContext: 'Transformer un rapport générique en présentation synthétique.', presentationGoal: 'Mettre en évidence les constats utiles sans déformer les sources.' } },
+    ],
+  },
+  {
+    id: 'research', family: 'analyze', label: 'Recherche',
+    description: 'Organiser une recherche, définir des axes et identifier les sources nécessaires.',
+    keywords: ['recherche documentaire', 'sources', 'mots-clés', 'veille', 'bibliographie'], icon: Search,
+    examples: [
+      { title: 'Définir une question de recherche', values: { researchContext: 'Cadrer une recherche professionnelle sur un sujet public.', researchQuestion: 'Quelle question précise et délimitée permettra de guider la recherche ?' } },
+      { title: 'Préparer une recherche documentaire', values: { researchContext: 'Préparer une recherche documentaire traçable.', researchQuestion: 'Quelles informations vérifiées sont nécessaires pour répondre au besoin ?' } },
+      { title: 'Identifier des mots-clés pertinents', values: { researchContext: 'Identifier les mots-clés et synonymes utiles pour une recherche.', researchQuestion: 'Quels termes permettent de couvrir le sujet sans élargir inutilement le périmètre ?' } },
+      { title: 'Comparer plusieurs sources', values: { researchContext: 'Préparer la comparaison de plusieurs sources publiques.', researchQuestion: 'Quels constats sont concordants, contradictoires ou encore incertains ?' } },
+      { title: 'Construire une méthode de veille', values: { researchContext: 'Construire une méthode de veille professionnelle simple.', researchQuestion: 'Comment repérer, vérifier et classer les évolutions utiles au fil du temps ?' } },
+    ],
+  },
+  {
+    id: 'analysis-synthesis', family: 'analyze', label: 'Analyse et synthèse',
+    description: 'Résumer, comparer, extraire ou interpréter des informations.',
+    keywords: ['résumé', 'synthèse', 'comparaison', 'risques', 'opportunités', 'idées principales'], icon: ScanText,
+    examples: [
+      { title: 'Résumer un document', values: { analysisContext: 'Résumer un document générique sans perdre les idées essentielles.', mainQuestion: 'Quels sont les messages principaux, les preuves et les limites du document ?' } },
+      { title: 'Comparer deux textes', values: { analysisContext: 'Comparer deux textes portant sur un même sujet.', mainQuestion: 'Quels points convergent, divergent ou nécessitent une vérification ?' } },
+      { title: 'Extraire les idées principales', values: { analysisContext: 'Extraire les idées principales d’un ensemble de notes génériques.', mainQuestion: 'Quelles idées structurent le contenu et comment sont-elles reliées ?' } },
+      { title: 'Identifier les risques et opportunités', values: { analysisContext: 'Analyser une situation professionnelle fictive.', mainQuestion: 'Quels risques et opportunités sont réellement appuyés par les informations disponibles ?' } },
+      { title: 'Produire une synthèse structurée', values: { analysisContext: 'Produire une synthèse structurée à partir de sources décrites.', mainQuestion: 'Quels constats faut-il retenir pour éclairer la décision ?' } },
+    ],
+  },
+  {
+    id: 'office-data', family: 'analyze', label: 'Bureautique et données',
+    description: 'Travailler avec Excel, Word, PowerPoint ou des données structurées.',
+    keywords: ['Excel', 'Word', 'PowerPoint', 'tableau', 'formule', 'données', 'tableau croisé dynamique'], icon: Table2,
+    examples: [
+      { title: 'Créer une formule Excel', values: { officeContext: 'Créer une formule Excel à partir d’un besoin décrit avec des données fictives.', taskObjective: 'Obtenir un calcul exact et expliquer comment le vérifier.' } },
+      { title: 'Analyser un tableau de données', values: { officeContext: 'Analyser un tableau de données fictives.', taskObjective: 'Identifier les tendances utiles, les anomalies et les limites des données.' } },
+      { title: 'Préparer un tableau croisé dynamique', values: { officeContext: 'Préparer un tableau croisé dynamique dans Excel.', taskObjective: 'Synthétiser des données fictives par catégorie et par période.' } },
+      { title: 'Structurer un document Word', values: { officeContext: 'Structurer un document professionnel dans Word.', taskObjective: 'Obtenir des titres cohérents, une navigation claire et une mise en page accessible.' } },
+      { title: 'Construire le plan d’une présentation PowerPoint', values: { officeContext: 'Construire le plan d’une présentation PowerPoint.', taskObjective: 'Répartir les idées en diapositives lisibles et cohérentes.' } },
+    ],
+  },
+  {
+    id: 'image-creation', family: 'create', label: 'Création d’image',
+    description: 'Construire un prompt visuel détaillé pour générer une image.',
+    keywords: ['image', 'visuel', 'illustration', 'infographie', 'couverture', 'photoréaliste'], icon: Image, popular: true,
+    examples: [
+      { title: 'Créer une image photoréaliste', values: { visualNeed: 'Créer une scène professionnelle photoréaliste avec un sujet clairement identifiable.', visualObjective: 'Obtenir une image crédible, sobre et adaptée au support.' } },
+      { title: 'Concevoir un visuel LinkedIn', values: { visualNeed: 'Concevoir un visuel professionnel pour accompagner une publication LinkedIn.', visualObjective: 'Faire comprendre le sujet immédiatement sur téléphone.' } },
+      { title: 'Produire une infographie pédagogique', values: { visualNeed: 'Produire une infographie pédagogique présentant une méthode simple.', visualObjective: 'Permettre à un public débutant de mémoriser les étapes essentielles.' } },
+      { title: 'Créer une couverture de formation', values: { visualNeed: 'Créer une couverture sobre pour une formation professionnelle.', visualObjective: 'Identifier clairement le thème sans promesse exagérée.' } },
+      { title: 'Générer une illustration professionnelle', values: { visualNeed: 'Générer une illustration professionnelle pour un contenu pédagogique.', visualObjective: 'Soutenir la compréhension sans ajouter d’éléments décoratifs inutiles.' } },
+    ],
+  },
+  {
+    id: 'video', family: 'create', label: 'Vidéo',
+    description: 'Préparer un script, un storyboard ou les scènes d’une vidéo.',
+    keywords: ['vidéo', 'script', 'storyboard', 'scènes', 'capsule', 'promotionnelle'], icon: Video,
+    examples: [
+      { title: 'Écrire un script vidéo', values: { videoContext: 'Écrire le script d’une courte vidéo professionnelle.', communicationGoal: 'Faire comprendre un message unique avec une progression simple.' } },
+      { title: 'Préparer un storyboard', values: { videoContext: 'Préparer le storyboard d’une vidéo professionnelle.', communicationGoal: 'Décrire chaque scène, son rôle et sa durée.' } },
+      { title: 'Définir les scènes d’une capsule pédagogique', values: { videoContext: 'Définir les scènes d’une capsule pédagogique pour adultes débutants.', communicationGoal: 'Expliquer une méthode puis montrer son application.' } },
+      { title: 'Créer le script d’une vidéo promotionnelle', values: { videoContext: 'Préparer le script sobre d’une vidéo promotionnelle.', communicationGoal: 'Présenter un bénéfice concret et une action sans exagération.' } },
+      { title: 'Adapter un article en vidéo', values: { videoContext: 'Adapter les idées principales d’un article en vidéo courte.', communicationGoal: 'Restituer fidèlement le contenu dans un format visuel et oral.' } },
+    ],
+  },
+  {
+    id: 'audio', family: 'create', label: 'Audio',
+    description: 'Rédiger un podcast, une voix off ou une trame d’interview.',
+    keywords: ['podcast', 'voix off', 'interview', 'narration', 'audio', 'son'], icon: AudioLines,
+    examples: [
+      { title: 'Écrire un script de podcast', values: { audioContext: 'Écrire le script d’un podcast professionnel.', communicationGoal: 'Transmettre un message clair avec une structure adaptée à l’écoute.' } },
+      { title: 'Préparer une voix off', values: { audioContext: 'Préparer une voix off pour une courte ressource pédagogique.', communicationGoal: 'Expliquer le sujet avec des phrases courtes et un rythme accessible.' } },
+      { title: 'Structurer une interview', values: { audioContext: 'Structurer une interview professionnelle fictive.', communicationGoal: 'Obtenir des réponses concrètes tout en respectant le temps prévu.' } },
+      { title: 'Créer une introduction audio', values: { audioContext: 'Créer l’introduction d’un contenu audio professionnel.', communicationGoal: 'Présenter immédiatement le sujet, le public et la promesse éditoriale réelle.' } },
+      { title: 'Adapter un texte pour une narration', values: { audioContext: 'Adapter un texte générique pour une narration audio.', communicationGoal: 'Rendre le contenu naturel à l’oral sans en modifier le sens.' } },
+    ],
+  },
+  {
+    id: 'code', family: 'build', label: 'Code',
+    description: 'Générer, corriger, expliquer ou améliorer du code informatique.',
+    keywords: ['code', 'programmation', 'développement', 'fonction', 'erreur', 'bug', 'tests'], icon: Code2,
+    examples: [
+      { title: 'Générer une fonction', values: { developmentContext: 'Créer une fonction ciblée dans un projet fictif.', technicalGoal: 'Produire un comportement précis avec des entrées, sorties et tests explicites.' } },
+      { title: 'Corriger une erreur', values: { developmentContext: 'Diagnostiquer et corriger une erreur reproductible dans un exemple de code fictif.', technicalGoal: 'Identifier la cause puis proposer une correction minimale et testée.' } },
+      { title: 'Expliquer un code existant', values: { developmentContext: 'Expliquer le fonctionnement d’un extrait de code générique.', technicalGoal: 'Rendre la logique compréhensible sans inventer le contexte manquant.' } },
+      { title: 'Améliorer les performances d’un composant', values: { developmentContext: 'Analyser les performances d’un composant fictif.', technicalGoal: 'Réduire le travail inutile sans modifier son comportement observable.' } },
+      { title: 'Créer des tests automatisés', values: { developmentContext: 'Créer des tests automatisés pour une fonctionnalité ciblée.', technicalGoal: 'Couvrir le parcours nominal, les erreurs et les cas limites importants.' } },
+    ],
+  },
+  {
+    id: 'productivity', family: 'build', label: 'Productivité',
+    description: 'Organiser un projet, prioriser des tâches ou créer un plan d’action.',
+    keywords: ['productivité', 'plan d’action', 'tâches', 'priorités', 'projet', 'réunion', 'suivi'], icon: ListChecks,
+    examples: [
+      { title: 'Construire un plan d’action', values: { workContext: 'Construire un plan d’action pour un projet fictif.', mainGoal: 'Définir des étapes, responsables, délais et points de contrôle.' } },
+      { title: 'Prioriser une liste de tâches', values: { workContext: 'Prioriser une liste de tâches professionnelles génériques.', mainGoal: 'Distinguer l’urgent, l’important et ce qui peut attendre.' } },
+      { title: 'Organiser un projet', values: { workContext: 'Organiser un projet simple avec plusieurs intervenants fictifs.', mainGoal: 'Clarifier les livrables, dépendances et responsabilités.' } },
+      { title: 'Préparer une réunion', values: { workContext: 'Préparer une réunion de travail courte et utile.', mainGoal: 'Définir l’objectif, l’ordre du jour et les décisions attendues.' } },
+      { title: 'Créer une méthode de suivi', values: { workContext: 'Créer une méthode de suivi simple pour une activité récurrente.', mainGoal: 'Rendre l’avancement, les blocages et les validations visibles.' } },
+    ],
+  },
+  {
+    id: 'ai-agent', family: 'build', label: 'Agent IA',
+    description: 'Définir le rôle, les règles, les outils et les limites d’un agent IA.',
+    keywords: ['agent', 'assistant', 'autonomie', 'outils', 'instructions', 'contrôle humain'], icon: Bot,
+    examples: [
+      { title: 'Définir le rôle d’un agent', values: { agentContext: 'Cadrer un futur agent pour un besoin professionnel fictif.', mission: 'Définir une mission limitée, observable et soumise à validation humaine.' } },
+      { title: 'Rédiger ses instructions principales', values: { agentContext: 'Préparer les instructions principales d’un futur agent.', mission: 'Décrire ce qu’il doit préparer, vérifier et refuser.' } },
+      { title: 'Définir les outils qu’il peut utiliser', values: { agentContext: 'Définir les outils autorisés pour un futur agent fictif.', mission: 'Limiter chaque outil à un usage précis avec permissions minimales.' } },
+      { title: 'Préciser ses limites et ses interdictions', values: { agentContext: 'Préciser les limites d’action d’un futur agent.', mission: 'Interdire les actions sensibles et imposer un arrêt en cas de doute.' } },
+      { title: 'Concevoir un processus de contrôle humain', values: { agentContext: 'Concevoir le contrôle humain d’un futur agent.', mission: 'Définir les validations obligatoires, la traçabilité et la procédure d’arrêt.' } },
+    ],
+  },
 ];
-
-export const availableStudioCategories = {
-  'professional-email': professionalEmailCategory,
-  'professional-documents': professionalDocumentsCategory,
-  'editorial-content': editorialContentCategory,
-  training: trainingCategory,
-  'social-media': socialMediaCategory,
-  'image-creation': imageCreationCategory,
-  'analysis-synthesis': analysisSynthesisCategory,
-  'office-data': officeDataCategory,
-  presentation: presentationCategory,
-  'marketing-communication': marketingCommunicationCategory,
-  research: researchCategory,
-  productivity: productivityCategory,
-  code: codeCategory,
-  video: videoCategory,
-  audio: audioCategory,
-  'ai-agent': aiAgentCategory,
-} as const;
-
-export function getAvailableStudioCategory(categoryId: StudioCategoryId) {
-  const category = availableStudioCategories[categoryId as keyof typeof availableStudioCategories];
-  return category
-    ? category as unknown as StudioCategoryConfig<FieldValues>
-    : null;
-}

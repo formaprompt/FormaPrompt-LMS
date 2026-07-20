@@ -6,6 +6,18 @@ async function acceptCookieNotice(page: import('@playwright/test').Page) {
   if (await acceptButton.isVisible()) await acceptButton.click();
 }
 
+async function selectStudioCategory(
+  page: import('@playwright/test').Page,
+  label: string,
+) {
+  const changeButton = page.getByRole('button', { name: /Changer de cas d.usage/ });
+  if (await changeButton.isVisible()) await changeButton.click();
+
+  const search = page.getByLabel(/Rechercher un cas d.usage/);
+  await search.fill(label);
+  await page.locator(`.studio-category-card[aria-label="${label}"]`).click();
+}
+
 test.describe('FormaPrompt Studio', () => {
   test('parcours clavier, diagnostic, amélioration et copie', async ({ page }) => {
     await page.goto('/studio');
@@ -42,6 +54,8 @@ test.describe('FormaPrompt Studio', () => {
 
     await acceptCookieNotice(page);
 
+    await selectStudioCategory(page, 'Courriel professionnel');
+
     await page.getByLabel('Décrivez votre besoin').fill(
       'Préparer un rappel avant une classe virtuelle fictive organisée la semaine prochaine.',
     );
@@ -76,7 +90,7 @@ test.describe('FormaPrompt Studio', () => {
     expect(improvedScore).toBeGreaterThan(initialScore);
 
     await page.getByRole('button', { name: 'Copier le prompt' }).click();
-    await expect(page.getByText('Le prompt a été copié dans le presse-papiers.')).toBeVisible();
+    await expect(page.getByText('Prompt copié dans le presse-papiers.')).toBeVisible();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('## Précisions');
 
     const pageWidth = await page.evaluate(() => ({
@@ -86,12 +100,61 @@ test.describe('FormaPrompt Studio', () => {
     expect(pageWidth.scroll).toBe(pageWidth.client);
   });
 
+  test('parcours principal Sprint 1 avec recherche, exemple, copie et restauration', async ({ page }) => {
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+
+    await page.getByLabel(/Rechercher un cas d.usage/).fill('LinkedIn');
+    await page.locator('.studio-category-card[aria-label="Réseaux sociaux"]').click();
+    await page.getByRole('button', { name: 'Rédiger un post LinkedIn' }).click();
+
+    await page.getByLabel('Décrivez le sujet et son contexte').fill(
+      'Présenter une méthode simple pour améliorer les consignes professionnelles.',
+    );
+    await page.getByLabel('À quel public s’adresse la publication ?').fill(
+      'professionnels débutants qui souhaitent structurer leurs demandes',
+    );
+    await page.getByLabel('Rôle donné à l’assistant').fill(
+      'Rédacteur LinkedIn pédagogique et attentif à la clarté',
+    );
+    await page.getByLabel('Objectif de la publication').fill(
+      'Expliquer un bénéfice concret et inviter à tester la méthode CROP.',
+    );
+    await page.getByLabel('Critères de réussite éditoriaux').fill(
+      'Le bénéfice, la méthode et la prochaine action sont immédiatement compréhensibles.',
+    );
+    await page.getByLabel('Message essentiel à retenir').fill(
+      'Une consigne structurée réduit les ambiguïtés et facilite la vérification du résultat.',
+    );
+    await page.getByLabel('Contraintes et éléments à éviter').fill(
+      'Moins de 1 200 caractères, aucun chiffre inventé et trois mots-dièse maximum.',
+    );
+    await page.getByRole('button', { name: 'Construire mon prompt' }).click();
+
+    expect(Number(await page.locator('.studio-score-value strong').innerText())).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Copier le prompt' }).click();
+    await expect(page.getByText('Prompt copié dans le presse-papiers.')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => {
+      const storedDraft = localStorage.getItem('formaprompt-studio-draft-v1');
+      return storedDraft ? JSON.parse(storedDraft).values?.contentContext : null;
+    })).toBe('Présenter une méthode simple pour améliorer les consignes professionnelles.');
+
+    await page.reload();
+    await expect(page.getByText('Votre brouillon a été restauré depuis ce navigateur.')).toBeVisible();
+    await expect(page.getByLabel('Décrivez le sujet et son contexte')).toHaveValue(
+      'Présenter une méthode simple pour améliorer les consignes professionnelles.',
+    );
+    await page.getByRole('button', { name: 'Effacer mon brouillon' }).click();
+    await expect(page.getByText('Le brouillon a été supprimé de ce navigateur.')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('formaprompt-studio-draft-v1'))).toBeNull();
+  });
+
   test('sélectionne Formation et produit un prompt pédagogique structuré', async ({ page }) => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('training');
-    await expect(page.getByText('Concevoir une activité, une séquence ou une ressource pédagogique.')).toBeVisible();
+    await selectStudioCategory(page, 'Formation');
+    await expect(page.getByText('Concevoir un cours, une activité, un exercice ou une évaluation.')).toBeVisible();
     await expect(page.getByLabel('Décrivez le besoin de formation')).toBeVisible();
     await expect(page.getByLabel('Décrivez votre besoin')).toHaveCount(0);
 
@@ -138,8 +201,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('social-media');
-    await expect(page.getByText('Préparer une publication adaptée à une plateforme, un public et un objectif.')).toBeVisible();
+    await selectStudioCategory(page, 'Réseaux sociaux');
+    await expect(page.getByText('Créer des publications adaptées à LinkedIn, Facebook et aux autres plateformes.')).toBeVisible();
     await expect(page.getByLabel('Plateforme principale')).toHaveValue('LinkedIn');
 
     await page.getByLabel('Décrivez le sujet et son contexte').fill(
@@ -188,8 +251,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('professional-documents');
-    await expect(page.getByText(/Préparer un rapport, un compte rendu, une procédure/)).toBeVisible();
+    await selectStudioCategory(page, 'Documents professionnels');
+    await expect(page.getByText('Préparer un rapport, une procédure, un compte rendu ou une note.')).toBeVisible();
     await expect(page.getByLabel('Type de document')).toHaveValue('rapport professionnel');
 
     await page.getByLabel('Sujet et contexte du document').fill(
@@ -238,8 +301,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('editorial-content');
-    await expect(page.getByText('Préparer un article de blog, technique, d’actualité ou de fond avec un angle et des sources explicites.')).toBeVisible();
+    await selectStudioCategory(page, 'Articles et contenus éditoriaux');
+    await expect(page.getByText('Rédiger ou structurer un article, un dossier ou un contenu long.')).toBeVisible();
     await page.getByLabel('Type d’article ou de contenu').selectOption('article d’actualité ou de veille');
 
     await page.getByLabel('Sujet, contexte et besoin éditorial').fill(
@@ -298,8 +361,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('analysis-synthesis');
-    await expect(page.getByText('Examiner des informations et produire une synthèse vérifiable.')).toBeVisible();
+    await selectStudioCategory(page, 'Analyse et synthèse');
+    await expect(page.getByText('Résumer, comparer, extraire ou interpréter des informations.')).toBeVisible();
     await expect(page.getByLabel('Type d’analyse')).toHaveValue('analyse thématique structurée');
 
     await page.getByLabel('Sujet et contexte de l’analyse').fill(
@@ -349,8 +412,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('office-data');
-    await expect(page.getByText('Préparer un traitement de données, un tableau ou une automatisation bureautique.')).toBeVisible();
+    await selectStudioCategory(page, 'Bureautique et données');
+    await expect(page.getByText('Travailler avec Excel, Word, PowerPoint ou des données structurées.')).toBeVisible();
     await expect(page.getByLabel('Outil et version visés')).toHaveValue('Microsoft Excel pour Microsoft 365');
 
     await page.getByLabel('Situation et besoin bureautique').fill(
@@ -397,8 +460,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('presentation');
-    await expect(page.getByText('Structurer un diaporama, son message, sa progression visuelle et sa prise de parole.')).toBeVisible();
+    await selectStudioCategory(page, 'Présentation');
+    await expect(page.getByText('Préparer un diaporama, un pitch, une soutenance ou un webinaire.')).toBeVisible();
     await expect(page.getByLabel('Durée de prise de parole')).toHaveValue('10 minutes de présentation puis questions');
     await expect(page.getByLabel('Application ou outil visé')).toHaveValue('Microsoft PowerPoint');
 
@@ -459,8 +522,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('marketing-communication');
-    await expect(page.getByText('Cadrer un contenu, une campagne ou un argumentaire crédible et adapté à son public.')).toBeVisible();
+    await selectStudioCategory(page, 'Marketing et communication');
+    await expect(page.getByText('Construire un message commercial, une campagne ou un argumentaire.')).toBeVisible();
     await expect(page.getByLabel('Type de contenu marketing ou de communication')).toHaveValue('page de présentation d’une offre ou d’un service');
 
     await page.getByLabel('Situation et contexte de communication').fill(
@@ -519,8 +582,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('research');
-    await expect(page.getByText('Cadrer une recherche documentaire, vérifier les sources et produire une restitution traçable.')).toBeVisible();
+    await selectStudioCategory(page, 'Recherche');
+    await expect(page.getByText('Organiser une recherche, définir des axes et identifier les sources nécessaires.')).toBeVisible();
     await expect(page.getByLabel('Type de recherche')).toHaveValue('recherche documentaire générale');
 
     await page.getByLabel('Sujet et contexte de la recherche').fill(
@@ -575,8 +638,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('productivity');
-    await expect(page.getByText('Organiser une tâche, simplifier un processus et définir des contrôles humains.')).toBeVisible();
+    await selectStudioCategory(page, 'Productivité');
+    await expect(page.getByText('Organiser un projet, prioriser des tâches ou créer un plan d’action.')).toBeVisible();
     await expect(page.getByLabel('Type de besoin de productivité')).toHaveValue('organisation et priorisation d’une charge de travail');
 
     await page.getByLabel('Situation de travail et difficulté rencontrée').fill(
@@ -641,8 +704,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('code');
-    await expect(page.getByText('Cadrer une création, une correction ou une revue de code avec des tests explicites.')).toBeVisible();
+    await selectStudioCategory(page, 'Code');
+    await expect(page.getByText('Générer, corriger, expliquer ou améliorer du code informatique.')).toBeVisible();
     await expect(page.getByLabel('Type de besoin technique')).toHaveValue('création d’une fonctionnalité ciblée');
 
     await page.getByLabel('Contexte technique et problème rencontré').fill(
@@ -710,8 +773,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('video');
-    await expect(page.getByText('Structurer un scénario, un storyboard ou un brief vidéo adapté au public, au format et à l’outil.')).toBeVisible();
+    await selectStudioCategory(page, 'Vidéo');
+    await expect(page.getByText('Préparer un script, un storyboard ou les scènes d’une vidéo.')).toBeVisible();
     await expect(page.getByLabel('Durée cible')).toHaveValue('entre 1 et 3 minutes');
     await expect(page.getByLabel('Format et ratio')).toHaveValue('horizontal 16:9 pour écran et plateforme vidéo');
 
@@ -771,8 +834,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('image-creation');
-    await expect(page.getByText('Structurer une consigne visuelle adaptée à un support et un public.')).toBeVisible();
+    await selectStudioCategory(page, 'Création d’image');
+    await expect(page.getByText('Construire un prompt visuel détaillé pour générer une image.')).toBeVisible();
     await expect(page.getByLabel('Format et ratio')).toHaveValue('format horizontal 16:9');
     await expect(page.getByLabel('Outil visé')).toHaveValue('ChatGPT Images');
 
@@ -825,8 +888,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('audio');
-    await expect(page.getByText('Structurer un podcast, une voix off, une interview ou un contenu sonore accessible et vérifiable.')).toBeVisible();
+    await selectStudioCategory(page, 'Audio');
+    await expect(page.getByText('Rédiger un podcast, une voix off ou une trame d’interview.')).toBeVisible();
     await expect(page.getByLabel('Durée cible')).toHaveValue('entre 3 et 10 minutes');
 
     await page.getByLabel('Sujet, situation et usage prévu du contenu audio').fill('Capsule intégrée à une formation pour expliquer comment vérifier une source avant de la citer.');
@@ -845,8 +908,8 @@ test.describe('FormaPrompt Studio', () => {
     await page.goto('/studio');
     await acceptCookieNotice(page);
 
-    await page.getByLabel('Cas d’usage').selectOption('ai-agent');
-    await expect(page.getByText('Cadrer la mission, l’autonomie, les outils, les données et les contrôles humains d’un futur agent.')).toBeVisible();
+    await selectStudioCategory(page, 'Agent IA');
+    await expect(page.getByText('Définir le rôle, les règles, les outils et les limites d’un agent IA.')).toBeVisible();
     await expect(page.getByLabel('Niveau d’autonomie maximal')).toHaveValue('proposer uniquement, sans exécuter d’action externe');
 
     await page.getByLabel('Situation, besoin et problème à résoudre').fill('Une équipe prépare des réponses à partir d’une base documentaire validée et souhaite mieux tracer les contrôles humains.');
@@ -873,7 +936,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(results.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('training');
+    await selectStudioCategory(page, 'Formation');
     await expect(page.getByLabel('Décrivez le besoin de formation')).toBeVisible();
 
     const trainingResults = await new AxeBuilder({ page })
@@ -882,7 +945,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(trainingResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('social-media');
+    await selectStudioCategory(page, 'Réseaux sociaux');
     await expect(page.getByLabel('Décrivez le sujet et son contexte')).toBeVisible();
 
     const socialMediaResults = await new AxeBuilder({ page })
@@ -891,7 +954,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(socialMediaResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('professional-documents');
+    await selectStudioCategory(page, 'Documents professionnels');
     await expect(page.getByLabel('Sujet et contexte du document')).toBeVisible();
 
     const professionalDocumentsResults = await new AxeBuilder({ page })
@@ -900,7 +963,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(professionalDocumentsResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('editorial-content');
+    await selectStudioCategory(page, 'Articles et contenus éditoriaux');
     await expect(page.getByLabel('Sujet, contexte et besoin éditorial')).toBeVisible();
 
     const editorialContentResults = await new AxeBuilder({ page })
@@ -909,7 +972,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(editorialContentResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('analysis-synthesis');
+    await selectStudioCategory(page, 'Analyse et synthèse');
     await expect(page.getByLabel('Sujet et contexte de l’analyse')).toBeVisible();
 
     const analysisSynthesisResults = await new AxeBuilder({ page })
@@ -918,7 +981,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(analysisSynthesisResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('office-data');
+    await selectStudioCategory(page, 'Bureautique et données');
     await expect(page.getByLabel('Situation et besoin bureautique')).toBeVisible();
 
     const officeDataResults = await new AxeBuilder({ page })
@@ -927,7 +990,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(officeDataResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('presentation');
+    await selectStudioCategory(page, 'Présentation');
     await expect(page.getByLabel('Sujet, situation et enjeux de la présentation')).toBeVisible();
 
     const presentationResults = await new AxeBuilder({ page })
@@ -936,7 +999,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(presentationResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('marketing-communication');
+    await selectStudioCategory(page, 'Marketing et communication');
     await expect(page.getByLabel('Situation et contexte de communication')).toBeVisible();
 
     const marketingCommunicationResults = await new AxeBuilder({ page })
@@ -945,7 +1008,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(marketingCommunicationResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('research');
+    await selectStudioCategory(page, 'Recherche');
     await expect(page.getByLabel('Sujet et contexte de la recherche')).toBeVisible();
 
     const researchResults = await new AxeBuilder({ page })
@@ -954,7 +1017,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(researchResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('productivity');
+    await selectStudioCategory(page, 'Productivité');
     await expect(page.getByLabel('Situation de travail et difficulté rencontrée')).toBeVisible();
 
     const productivityResults = await new AxeBuilder({ page })
@@ -963,7 +1026,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(productivityResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('code');
+    await selectStudioCategory(page, 'Code');
     await expect(page.getByLabel('Contexte technique et problème rencontré')).toBeVisible();
 
     const codeResults = await new AxeBuilder({ page })
@@ -972,7 +1035,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(codeResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('video');
+    await selectStudioCategory(page, 'Vidéo');
     await expect(page.getByLabel('Sujet, situation et usage prévu de la vidéo')).toBeVisible();
 
     const videoResults = await new AxeBuilder({ page })
@@ -981,7 +1044,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(videoResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('image-creation');
+    await selectStudioCategory(page, 'Création d’image');
     await expect(page.getByLabel('Sujet principal')).toBeVisible();
 
     const imageCreationResults = await new AxeBuilder({ page })
@@ -990,7 +1053,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(imageCreationResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('audio');
+    await selectStudioCategory(page, 'Audio');
     await expect(page.getByLabel('Sujet, situation et usage prévu du contenu audio')).toBeVisible();
 
     const audioResults = await new AxeBuilder({ page })
@@ -999,7 +1062,7 @@ test.describe('FormaPrompt Studio', () => {
 
     expect(audioResults.violations).toEqual([]);
 
-    await page.getByLabel('Cas d’usage').selectOption('ai-agent');
+    await selectStudioCategory(page, 'Agent IA');
     await expect(page.getByLabel('Situation, besoin et problème à résoudre')).toBeVisible();
 
     const aiAgentResults = await new AxeBuilder({ page })

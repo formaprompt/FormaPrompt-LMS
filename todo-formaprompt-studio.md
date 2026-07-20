@@ -4,10 +4,10 @@
 
 - Tranche verticale « courriel professionnel » développée dans l'application React/Vite existante.
 - Seize catégories déterministes sont désormais développées, dont « Articles et contenus éditoriaux », « Recherche », « Productivité », « Code », « Vidéo », « Audio » et « Agent IA », avec des sources vérifiables, des contrôles humains et des validations techniques explicites.
-- MVP public, déterministe, sans stockage, sans authentification et sans appel à un fournisseur d'IA.
+- MVP public, déterministe, sans stockage distant, sans authentification et sans appel à un fournisseur d'IA. Le Sprint 1 ajoute uniquement un brouillon local dans le navigateur.
 - Aucun schéma Supabase, produit Stripe ou migration n'a été créé ou modifié pour le Studio.
 - Le brief de démarrage est disponible dans `brief-formaprompt-studio-2026.md`.
-- Le dernier socle FormaPrompt validé correspond au commit `19614bc feat: finaliser la formation IA Act`.
+- Le Sprint 1 UX part du commit de référence `86a1bc7 fix: fiabiliser l'aperçu Meta du Studio`.
 
 ## Phase 0 — audit et décisions
 
@@ -61,3 +61,16 @@ Ces phases devront être confirmées après l'audit.
 - Contrôle visuel mobile réel effectué, sans débordement ni erreur navigateur.
 - Lighthouse local sur le build : mobile 97 performance, 99 accessibilité, 100 bonnes pratiques, 100 SEO ; ordinateur 100, 99, 100, 100.
 - Aucun commit, push ou déploiement réalisé.
+
+## Sprint 1 — refonte UX de la version gratuite — 20 juillet 2026
+
+- [x] Remplacer le sélecteur historique par les seize cartes regroupées en cinq familles.
+- [x] Ajouter la recherche, les quatre raccourcis populaires et les exemples contextualisés.
+- [x] Rendre la sélection compacte après le choix d'un cas d'usage.
+- [x] Ajouter la progression et améliorer les aides et erreurs CROP.
+- [x] Ajouter un brouillon local versionné, restaurable et supprimable, sans stockage distant.
+- [x] Clarifier le résultat et rendre la confirmation de copie accessible.
+- [x] Préserver les identifiants, les constructeurs de prompts et les calculs de score existants.
+- [x] Valider TypeScript, lint, 124 tests, 40 scénarios navigateur et le build de production.
+- [x] Déployer sur IONOS et comparer les 152 fichiers par SHA-256.
+- [x] Vérifier l'accueil, `/studio/`, les fichiers principaux, le sitemap et `robots.txt` en production.

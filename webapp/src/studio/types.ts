@@ -1,4 +1,5 @@
 import type { FieldValues, Path } from 'react-hook-form';
+import type { LucideIcon } from 'lucide-react';
 import type { ZodType } from 'zod';
 
 export type CropSection = 'context' | 'role' | 'objective' | 'precisions';
@@ -79,6 +80,11 @@ export interface StudioExample {
   prompt: string;
 }
 
+export interface StudioPromptExample {
+  title: string;
+  values: Record<string, string>;
+}
+
 export interface StudioBeforeAfter {
   vagueRequest: string;
   missingDescription: string;
@@ -111,7 +117,10 @@ export interface StudioCategorySummary {
   family: StudioCategoryFamilyId;
   label: string;
   description: string;
-  available: boolean;
+  keywords: string[];
+  examples: StudioPromptExample[];
+  icon: LucideIcon;
+  popular?: boolean;
 }
 
 export interface StudioCategoryFamilySummary {

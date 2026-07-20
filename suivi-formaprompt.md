@@ -290,6 +290,18 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - L'accueil, `/studio/`, les scripts et styles principaux, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local. L'accueil annonce seize usages et le Studio expose « Audio », « Agent IA » et la méthode CROP.
 - Aucun appel à un fournisseur externe, aucun stockage et aucune modification de Supabase, Stripe, de l'authentification, des migrations ou des données Qualiopi n'ont été ajoutés pendant cette publication.
 
+## Sprint 1 — refonte UX de la version gratuite — 20 juillet 2026
+
+- Le sélecteur historique est remplacé par des cartes accessibles regroupant les seize catégories dans cinq familles, avec recherche sans distinction de casse ou d'accent, quatre raccourcis populaires et un résumé compact après sélection.
+- Chaque catégorie propose cinq exemples contextualisés modifiables. Le parcours CROP dispose d'un indicateur de progression, d'aides pédagogiques et de messages d'erreur reliés aux champs.
+- Le brouillon est sauvegardé uniquement dans `localStorage`, avec validation, expiration, restauration et suppression. Aucune saisie n'est transmise à un serveur.
+- La zone de résultat distingue le prompt, le score, les critères, les éléments manquants, les recommandations et les actions. La copie fournit un retour accessible et une solution de repli en cas d'échec.
+- Le chargement différé des moteurs de catégorie réduit le JavaScript initial du Studio sans modifier les règles métier, les prompts ni les scores produits pour des données identiques.
+- Le typecheck, le lint, les 124 tests applicatifs, Stripe et Studio, les 40 scénarios navigateur ordinateur/mobile et le build de production ont été exécutés. Trente-neuf scénarios navigateur ont réussi et un scénario prévu par la configuration a été ignoré.
+- La publication IONOS a contrôlé les 152 fichiers du build par SHA-256 : 82 fichiers ont été transférés et 70 étaient déjà identiques, pour 141 285 644 octets vérifiés.
+- L'accueil, `/studio/`, le JavaScript et les styles du Studio, le sitemap et `robots.txt` répondent en HTTPS avec un contenu strictement identique au build local. L'URL canonique reste `https://formaprompt.com/studio/`.
+- Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n'a été modifié pendant ce sprint et cette publication.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
