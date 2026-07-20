@@ -16,6 +16,8 @@ const pages = [
       'méthode crop',
       'application/ld+json',
       'courriel professionnel',
+      'https://formaprompt.com/studio/',
+      'https://formaprompt.com/assets/logo-new.png',
     ],
   },
   {

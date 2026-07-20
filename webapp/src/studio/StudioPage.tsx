@@ -15,6 +15,9 @@ import { calculateCategoryScore } from './engine/scoreCategory';
 import type { StudioCategoryId, StudioResult } from './types';
 import './studio.css';
 
+const studioUrl = 'https://formaprompt.com/studio/';
+const studioImageUrl = 'https://formaprompt.com/assets/logo-new.png';
+
 const studioFaq = [
   {
     question: 'Le Studio enregistre-t-il mes informations ?',
@@ -40,7 +43,7 @@ const studioStructuredData = {
     {
       '@type': 'WebApplication',
       name: 'FormaPrompt Studio — Structurer un prompt avec la méthode CROP',
-      url: 'https://www.formaprompt.com/studio',
+      url: studioUrl,
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Navigateur web',
       inLanguage: 'fr-FR',
@@ -49,7 +52,7 @@ const studioStructuredData = {
       provider: {
         '@type': 'Organization',
         name: 'FormaPrompt',
-        url: 'https://www.formaprompt.com',
+        url: 'https://formaprompt.com/',
       },
     },
     {
@@ -63,8 +66,8 @@ const studioStructuredData = {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://www.formaprompt.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Studio', item: 'https://www.formaprompt.com/studio' },
+        { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://formaprompt.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Studio', item: studioUrl },
       ],
     },
   ],
@@ -103,8 +106,8 @@ export default function StudioPage() {
       <SEO
         title="FormaPrompt Studio – Structurer un prompt avec la méthode CROP"
         description="Structurez gratuitement vos prompts de courriels, documents, articles, recherches, analyses, productivité, code, bureautique, formations, présentations, marketing, publications, images, vidéos, contenus audio et agents avec la méthode CROP, un score expliqué et des recommandations."
-        url="https://www.formaprompt.com/studio"
-        image="https://www.formaprompt.com/assets/photo%20page%20d'accueil.png"
+        url={studioUrl}
+        image={studioImageUrl}
         type="website"
         jsonLd={studioStructuredData}
       />

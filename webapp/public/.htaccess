@@ -1,6 +1,9 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Une seule URL publique pour le Studio afin d'éviter les boucles de collecte Open Graph.
+  RewriteCond %{HTTP_HOST} ^www\.formaprompt\.com$ [NC]
+  RewriteRule ^studio/?$ https://formaprompt.com/studio/ [R=301,L]
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^(.+?)/?$ $1.html [L]

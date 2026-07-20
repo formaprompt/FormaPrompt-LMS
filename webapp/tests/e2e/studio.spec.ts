@@ -13,6 +13,27 @@ test.describe('FormaPrompt Studio', () => {
       level: 1,
       name: 'Construisez un prompt clair pour vos usages professionnels',
     })).toBeVisible();
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://formaprompt.com/studio/',
+    );
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      'content',
+      'FormaPrompt Studio – Structurer un prompt avec la méthode CROP',
+    );
+    await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+      'content',
+      /Structurez gratuitement vos prompts/,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      'content',
+      'https://formaprompt.com/assets/logo-new.png',
+    );
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute(
+      'content',
+      'https://formaprompt.com/studio/',
+    );
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
 
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name: 'Passer au contenu principal' })).toBeFocused();
