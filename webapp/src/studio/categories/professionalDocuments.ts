@@ -291,7 +291,7 @@ export const professionalDocumentsCategory: StudioCategoryConfig<ProfessionalDoc
       label: 'Informations sources autorisées',
       type: 'textarea',
       cropSection: 'context',
-      help: 'Listez uniquement des faits génériques ou anonymisés à reprendre. Ne collez aucun document confidentiel.',
+      help: 'Listez uniquement les faits utiles avec des termes génériques. Ne collez aucun document confidentiel.',
       placeholder: 'Exemple : trois étapes de validation, réponse attendue sous deux jours ouvrés et suivi dans un tableau partagé fictif.',
       required: false,
       maxLength: 900,
@@ -468,7 +468,7 @@ export const professionalDocumentsCategory: StudioCategoryConfig<ProfessionalDoc
   ],
   messages: {
     introduction: 'Choisissez le document, décrivez son lecteur et son usage, puis ajoutez les faits autorisés et les règles de rédaction.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Ne collez aucun contrat, dossier client ou document interne réel ; utilisez des informations génériques, fictives ou anonymisées.',
+    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Décrivez les informations utiles avec des termes génériques, sans coller de contrat, de dossier client ni de document interne.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations du formulaire Documents professionnels et sur une grille CROP déterministe documentée.',
   },
   beforeAfter: {
@@ -480,7 +480,7 @@ export const professionalDocumentsCategory: StudioCategoryConfig<ProfessionalDoc
   examples: [
     {
       title: 'Compte rendu opérationnel',
-      description: 'Transformer des notes anonymisées en décisions, actions, responsables génériques et échéances.',
+      description: 'Transformer des notes sans donnée personnelle en décisions, actions, responsables par fonction et échéances.',
       prompt: 'Prépare un compte rendu structuré pour une équipe projet. Distingue les décisions, les actions, les responsables par fonction et les échéances fictives. Signale toute information absente.',
     },
     {
@@ -495,7 +495,7 @@ export const professionalDocumentsCategory: StudioCategoryConfig<ProfessionalDoc
     },
   ],
   recommendations: [
-    'Remplacez toute donnée réelle par une formulation générique ou anonymisée avant la saisie.',
+    'Remplacez les noms, coordonnées et informations sensibles par des formulations génériques avant la saisie.',
     'Séparez clairement les faits fournis, les hypothèses et les informations à confirmer.',
     'Faites relire le document par une personne compétente avant toute décision, signature ou diffusion.',
   ],

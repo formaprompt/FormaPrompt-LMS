@@ -474,7 +474,7 @@ export const officeDataCategory: StudioCategoryConfig<OfficeDataValues> = {
   ],
   messages: {
     introduction: 'Décrivez la structure du fichier sans le transmettre, puis précisez le résultat, l’outil, les règles et les contrôles attendus.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Ne collez aucun fichier, tableau, liste de clients ou document réel ; utilisez uniquement des structures et exemples fictifs ou anonymisés.',
+    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Décrivez uniquement la structure utile, sans coller de fichier, de tableau, de liste de clients ni de document.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations du formulaire Bureautique et données et sur une grille CROP déterministe documentée.',
   },
   beforeAfter: {

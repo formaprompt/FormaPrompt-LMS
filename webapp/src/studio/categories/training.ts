@@ -465,7 +465,7 @@ export const trainingCategory: StudioCategoryConfig<TrainingValues> = {
   ],
   messages: {
     introduction: 'Décrivez le besoin pédagogique avant de préciser le livrable. Les champs facultatifs renforcent le diagnostic et la vérifiabilité du prompt.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible concernant des participants. Utilisez un public générique, fictif ou anonymisé.',
+    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible concernant des participants. Décrivez le public avec des termes génériques, sans nom ni coordonnée.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations du formulaire Formation et sur une grille CROP déterministe documentée.',
   },
   beforeAfter: {

@@ -544,7 +544,7 @@ export const researchCategory: StudioCategoryConfig<ResearchValues> = {
   ],
   messages: {
     introduction: 'Décrivez la recherche à préparer sans coller de document confidentiel. Le Studio construit une méthode de recherche ; il ne consulte aucune source et ne vérifie aucun fait.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Utilisez un sujet public, fictif, générique ou correctement anonymisé.',
+    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Utilisez un sujet public ou décrivez votre situation avec des termes génériques.',
     resultHelp: 'Le score évalue le cadrage du formulaire Recherche. Il ne prouve ni la fiabilité des futures sources, ni l’exactitude des résultats et ne remplace pas leur vérification humaine.',
   },
   beforeAfter: {

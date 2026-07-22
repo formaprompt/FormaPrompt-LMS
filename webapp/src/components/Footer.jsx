@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container grid grid-cols-4 footer-grid">
         <div className="footer-col">
           <Link to="/">
-            <img src="/assets/logo-new.png" alt="FormaPrompt Logo" style={{ height: '128px', objectFit: 'contain', marginBottom: '1rem' }} />
+            <img src="/assets/logo-new.png" alt={`Logo ${SITE_CONFIG.name}`} style={{ height: '128px', objectFit: 'contain', marginBottom: '1rem' }} />
           </Link>
           <p className="footer-text">
             Des formations claires, progressives et concrètes pour mieux maîtriser l’IA, la bureautique et les outils numériques.
@@ -45,7 +45,7 @@ export default function Footer() {
       </div>
       <div className="footer-bottom">
         <div className="container">
-          <p>{`© ${new Date().getFullYear()} FormaPrompt. Tous droits réservés.`}</p>
+          <p>{`© ${new Date().getFullYear()} ${SITE_CONFIG.name}. Tous droits réservés.`}</p>
         </div>
       </div>
     </footer>

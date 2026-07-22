@@ -3,6 +3,8 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { FieldValues } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
+import { STUDIO_PRIVACY_COPY } from '../config/studioPrivacy';
 import { CategorySelector } from './components/CategorySelector';
 import { DraftNotice } from './components/DraftNotice';
 import { EducationalContent } from './components/EducationalContent';
@@ -21,8 +23,8 @@ import { trackStudioEvent } from './analytics';
 import type { StudioCategoryConfig, StudioCategoryFamilyId, StudioCategoryId, StudioResult } from './types';
 import './studio.css';
 
-const studioUrl = 'https://formaprompt.com/studio/';
-const studioImageUrl = 'https://formaprompt.com/assets/logo-new.png';
+const studioUrl = SITE_CONFIG.urls.studio;
+const studioImageUrl = SITE_CONFIG.assets.logo;
 const StudioForm = lazy(() => import('./components/StudioForm').then((module) => ({ default: module.StudioForm })));
 const StudioLivePanel = lazy(() => import('./components/StudioLivePanel').then((module) => ({ default: module.StudioLivePanel })));
 const PromptResult = lazy(() => import('./components/PromptResult').then((module) => ({ default: module.PromptResult })));
@@ -30,15 +32,15 @@ const PromptResult = lazy(() => import('./components/PromptResult').then((module
 const studioFaq = [
   {
     question: 'Le Studio enregistre-t-il mes informations ?',
-    answer: 'Les informations saisies restent dans votre navigateur. Elles ne sont envoyées ni à FormaPrompt ni à un fournisseur d’intelligence artificielle. Le brouillon est enregistré automatiquement uniquement dans le stockage local de ce navigateur et peut être effacé à tout moment.',
+    answer: STUDIO_PRIVACY_COPY.storage,
   },
   {
     question: 'Le score garantit-il un bon résultat ?',
     answer: 'Non. Le score est un repère pédagogique fondé sur la grille CROP. Il mesure la présence d’informations utiles, pas la vérité ni la qualité finale du contenu obtenu.',
   },
   {
-    question: 'Puis-je saisir un contenu réel ou un dossier concernant une personne ?',
-    answer: 'Non. Utilisez uniquement une situation fictive ou générique. Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible.',
+    question: 'Puis-je décrire une situation professionnelle réelle ?',
+    answer: STUDIO_PRIVACY_COPY.safeSituation,
   },
   {
     question: 'À quoi sert la méthode CROP ?',
@@ -60,8 +62,8 @@ const studioStructuredData = {
       description: 'Outil pédagogique gratuit pour structurer et diagnostiquer des prompts de courriels, documents, articles, recherches, analyses, productivité, code, bureautique, formations, présentations, marketing, publications, images, vidéos, contenus audio et agents avec la méthode CROP.',
       provider: {
         '@type': 'Organization',
-        name: 'FormaPrompt',
-        url: 'https://formaprompt.com/',
+        name: SITE_CONFIG.name,
+        url: SITE_CONFIG.urls.home,
       },
     },
     {
@@ -75,7 +77,7 @@ const studioStructuredData = {
     {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://formaprompt.com/' },
+        { '@type': 'ListItem', position: 1, name: 'Accueil', item: SITE_CONFIG.urls.home },
         { '@type': 'ListItem', position: 2, name: 'Studio', item: studioUrl },
       ],
     },
@@ -93,11 +95,11 @@ export default function StudioPage() {
   const [isCategoryLoading, setIsCategoryLoading] = useState(Boolean(restoredDraft));
   const [result, setResult] = useState<StudioResult<FieldValues> | null>(null);
   const [isResultStale, setIsResultStale] = useState(false);
+  const [shouldFocusForm, setShouldFocusForm] = useState(false);
   const [selectionAnnouncement, setSelectionAnnouncement] = useState('');
   const [liveValues, flushLiveValues] = useDebouncedValue<FieldValues>(currentValues, 400);
   const draftTimerRef = useRef<number | null>(null);
   const categoryRequestRef = useRef(0);
-  const shouldFocusFormRef = useRef(false);
   const contentScoreRules = category?.scoreRules ?? studioLandingContent.scoreRules;
   const contentBeforeAfter = category?.beforeAfter ?? studioLandingContent.beforeAfter;
 
@@ -119,6 +121,7 @@ export default function StudioPage() {
     setSelectedCategoryId(categoryId);
     setActiveFamily(family);
     setCategory(null);
+    setShouldFocusForm(false);
     setIsCategoryLoading(true);
     setInitialValues(undefined);
     setCurrentValues({});
@@ -133,7 +136,7 @@ export default function StudioPage() {
       flushLiveValues(nextCategory.defaultValues);
       setSelectionAnnouncement(`${nextCategory.label} sélectionné. Le formulaire a été adapté.`);
       trackStudioEvent('category_selected', { categoryId, family: family ?? undefined });
-      shouldFocusFormRef.current = true;
+      setShouldFocusForm(true);
       persistDraft(nextCategory, family, nextCategory.defaultValues);
     } catch {
       if (categoryRequestRef.current !== requestId) return;
@@ -199,17 +202,9 @@ export default function StudioPage() {
     if (draftTimerRef.current) window.clearTimeout(draftTimerRef.current);
   }, []);
 
-  useEffect(() => {
-    if (!selectedCategoryId || !shouldFocusFormRef.current) return;
-    shouldFocusFormRef.current = false;
-    window.requestAnimationFrame(() => {
-      document.getElementById('studio-form-start')?.focus({ preventScroll: true });
-      document.getElementById('studio-form')?.scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-        block: 'start',
-      });
-    });
-  }, [selectedCategoryId]);
+  const completeFormFocus = useCallback(() => {
+    setShouldFocusForm(false);
+  }, []);
 
   const progress = useMemo(() => {
     if (!category) return { activeStep: 1, completedSections: [] };
@@ -233,6 +228,7 @@ export default function StudioPage() {
     setSelectedCategoryId(null);
     setActiveFamily(null);
     setCategory(null);
+    setShouldFocusForm(false);
     setIsCategoryLoading(false);
     setInitialValues(undefined);
     setCurrentValues({});
@@ -365,7 +361,8 @@ export default function StudioPage() {
                 <ShieldCheck aria-hidden="true" />
                 <div>
                   <h3>Préservez la confidentialité</h3>
-                  <p>Les informations saisies restent dans votre navigateur. Elles ne sont envoyées ni à FormaPrompt ni à un fournisseur d’intelligence artificielle. Le brouillon est enregistré automatiquement uniquement dans le stockage local de ce navigateur.</p>
+                  <p>{STUDIO_PRIVACY_COPY.storage}</p>
+                  <p>{STUDIO_PRIVACY_COPY.safeSituation}</p>
                   <small>{category.messages.privacy}</small>
                 </div>
               </div>
@@ -381,6 +378,8 @@ export default function StudioPage() {
                       examples={studioCategoryCatalog.find((item) => item.id === category.id)?.examples ?? []}
                       initialValues={initialValues}
                       hasResult={Boolean(result)}
+                      focusOnMount={shouldFocusForm}
+                      onFocusComplete={completeFormFocus}
                       onSubmit={buildResult}
                       onValuesChange={handleValuesChange}
                       onValuesCommit={handleValuesCommit}

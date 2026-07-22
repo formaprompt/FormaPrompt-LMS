@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
 
 export default function Legal() {
   return (
@@ -6,8 +7,8 @@ export default function Legal() {
       <SEO
         title="Mentions légales – FormaPrompt"
         description="Informations légales et politique de confidentialité de FormaPrompt."
-        url="https://www.formaprompt.com/mentions-legales"
-        image="https://www.formaprompt.com/assets/photo page d'accueil.png"
+        url={`${SITE_CONFIG.baseUrl}/mentions-legales`}
+        image={`${SITE_CONFIG.baseUrl}/assets/photo page d'accueil.png`}
       />
       <div className="container section">
       <h1 className="mb-4">Mentions Légales et Politique de Confidentialité</h1>
@@ -15,7 +16,7 @@ export default function Legal() {
       <div className="card mb-4">
         <h2>1. Éditeur du site</h2>
         <p className="mb-2"><strong>Statut juridique :</strong> Entreprise Individuelle (EI)</p>
-        <p className="mb-2"><strong>Nom officiel de l'entreprise :</strong> Thierry FREZARD EI</p>
+        <p className="mb-2"><strong>Nom officiel de l'entreprise :</strong> {SITE_CONFIG.legalBusinessName}</p>
         <p className="mb-2"><strong>Adresse :</strong> 6 rue Webster, 62100 CALAIS, France</p>
         <p className="mb-2"><strong>SIRET :</strong> 511 151 615 00016</p>
         <p className="mb-2"><strong>SIREN :</strong> 511 151 615</p>
@@ -25,7 +26,7 @@ export default function Legal() {
 
       <div className="card mb-4">
         <h2>2. Responsable de la publication</h2>
-        <p className="mb-2"><strong>Nom du responsable :</strong> Thierry FREZARD</p>
+        <p className="mb-2"><strong>Nom du responsable :</strong> {SITE_CONFIG.responsibleName}</p>
       </div>
 
       <div className="card mb-4">
@@ -59,7 +60,7 @@ export default function Legal() {
         <p className="mb-2"><strong>Caractère obligatoire :</strong> Les données requises lors d'une commande ou d'une demande de contact sont nécessaires pour leur traitement. Les données facultatives seront expressément mentionnées.</p>
         <p className="mb-2"><strong>Destinataires des données :</strong> Les données sont accessibles uniquement à Thierry FREZARD EI, aux personnes habilitées pour le suivi pédagogique et, dans la stricte limite nécessaire, aux prestataires techniques agissant pour FormaPrompt. Elles ne sont pas vendues à des tiers.</p>
         <p className="mb-2"><strong>Durée de conservation :</strong> Les données sont conservées pendant la durée nécessaire à leur finalité. Les résultats de positionnement sont conservés pour le suivi de la formation puis archivés pendant la durée nécessaire à la justification des engagements contractuels et qualité. Les pièces comptables peuvent être conservées 10 ans.</p>
-        <p className="mb-2"><strong>Droits des personnes :</strong> Conformément à la réglementation (RGPD et loi Informatique et Libertés), vous disposez d'un droit d'accès, de rectification, de portabilité, d'effacement de vos données ou d'une limitation du traitement. Vous pouvez exercer ce droit en nous contactant à l'adresse email : thierry@formaprompt.com.</p>
+        <p className="mb-2"><strong>Droits des personnes :</strong> Conformément à la réglementation (RGPD et loi Informatique et Libertés), vous disposez d'un droit d'accès, de rectification, de portabilité, d'effacement de vos données ou d'une limitation du traitement. Vous pouvez exercer ce droit en nous contactant à l'adresse électronique : <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="text-blue-500 hover:underline">{SITE_CONFIG.contactEmail}</a>.</p>
         <p className="mb-2">Vous avez également le droit d'introduire une réclamation auprès de la CNIL (www.cnil.fr).</p>
       </div>
 
@@ -71,7 +72,7 @@ export default function Legal() {
 
       <div className="card mb-4">
         <h2>9. Contact</h2>
-        <p className="mb-2"><strong>Email :</strong> <a href="mailto:thierry@formaprompt.com" className="text-blue-500 hover:underline">thierry@formaprompt.com</a></p>
+        <p className="mb-2"><strong>Courriel :</strong> <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="text-blue-500 hover:underline">{SITE_CONFIG.contactEmail}</a></p>
         <p className="mb-2"><strong>Téléphone :</strong> <a href="tel:+33612195381" className="text-blue-500 hover:underline">+33 (0)6 12 19 53 81</a></p>
       </div>
 
@@ -84,7 +85,7 @@ export default function Legal() {
         <p className="mb-2">49 rue de Ponthieu<br/>75 008 PARIS</p>
         <p className="mb-2"><strong>Tel :</strong> 01 89 47 00 14</p>
         <p className="mb-2"><strong>Site internet :</strong> <a href="https://www.cm2c.net/declarer-un-litige.php" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://www.cm2c.net/declarer-un-litige.php</a></p>
-        <p className="mb-2"><strong>Mail :</strong> <a href="mailto:litiges@cm2c.net" className="text-blue-500 hover:underline">litiges@cm2c.net</a></p>
+        <p className="mb-2"><strong>Courriel :</strong> <a href="mailto:litiges@cm2c.net" className="text-blue-500 hover:underline">litiges@cm2c.net</a></p>
       </div>
     </div>
     </>

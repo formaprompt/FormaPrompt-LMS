@@ -76,7 +76,7 @@ function evaluateContext(values: ProductivityValues): ScoreRuleResult {
     earnedPoints,
     present,
     missing,
-    recommendation: 'Décrivez la tâche, les personnes concernées et la méthode actuelle à partir d’une situation fictive ou générique.',
+    recommendation: 'Décrivez la tâche, les personnes concernées et la méthode actuelle avec des termes génériques, sans nom ni information sensible.',
   };
 }
 

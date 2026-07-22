@@ -77,7 +77,7 @@ function evaluateContext(values: AiAgentValues): ScoreRuleResult {
     earnedPoints,
     present,
     missing,
-    recommendation: 'Décrivez le besoin, les utilisateurs et le processus actuel à partir d’une situation fictive ou générique.',
+    recommendation: 'Décrivez le besoin, les utilisateurs et le processus actuel avec des termes génériques, sans nom ni information sensible.',
   };
 }
 

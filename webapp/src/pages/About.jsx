@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Award, Target, Users, BookOpen, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
 
 export default function About() {
   return (
@@ -8,8 +9,8 @@ export default function About() {
       <SEO
         title="À propos – FormaPrompt"
         description="Découvrez la mission, l'équipe et les valeurs de FormaPrompt pour rendre l'IA et la bureautique accessibles à tous."
-        url="https://www.formaprompt.com/a-propos"
-        image="https://www.formaprompt.com/assets/Photo_thierry_frezard.jpg"
+        url={SITE_CONFIG.urls.about}
+        image={SITE_CONFIG.assets.portrait}
       />
       <div className="container section">
       {/* Hero Section */}
@@ -60,7 +61,7 @@ export default function About() {
       <div className="card mb-8" style={{ background: 'var(--color-bg-white)', border: '1px solid var(--color-border)' }}>
         <div className="grid grid-cols-2" style={{ gap: '3rem' }}>
           <div>
-            <h2 className="mb-3" style={{ fontSize: '1.8rem' }}>Thierry FREZARD</h2>
+            <h2 className="mb-3" style={{ fontSize: '1.8rem' }}>{SITE_CONFIG.responsibleName}</h2>
             <h3 className="mb-4" style={{ color: 'var(--color-text-light)', fontSize: '1.1rem', fontWeight: '500' }}>
               Formateur Professionnel d'Adultes & Fondateur de FormaPrompt
             </h3>

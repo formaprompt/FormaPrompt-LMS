@@ -92,3 +92,18 @@ Ces phases devront être confirmées après l'audit.
 - [ ] Effectuer une dernière vérification visuelle humaine sur téléphone réel avant publication.
 - [x] Déployer sur IONOS, puis effectuer le commit et le push après autorisation explicite de Thierry.
 - [x] Vérifier par SHA-256 les 161 fichiers publiés et contrôler que `/studio/` sert un HTML strictement identique au build local avec la canonical attendue.
+
+## Sprint 1.1.1 — cohérence, confidentialité et validation — 22 juillet 2026
+
+- [x] Harmoniser les explications du brouillon local sur l’accueil, le Studio, la FAQ et la politique de confidentialité.
+- [x] Supprimer les références publiques à `formaprompt.fr` et centraliser le domaine, le courriel et l’identité publique dans `src/config/site.ts`.
+- [x] Autoriser la description d’une situation réelle avec des termes génériques, sans prétendre à une anonymisation automatique.
+- [x] Harmoniser « courriel » dans les contenus visibles du Studio.
+- [x] Fiabiliser le focus après le chargement différé d’une catégorie.
+- [x] Vérifier la prévisualisation et le score déterministes sur plusieurs familles de catégories.
+- [x] Tester les brouillons valides, corrompus, expirés et indisponibles, leur restauration et leur suppression sans appel réseau.
+- [x] Copier le prompt avant l’ouverture du service externe, sans prompt dans l’URL, et ne rien ouvrir si la copie échoue.
+- [x] Vérifier les largeurs de 320 à 1 920 px et les reflows équivalents aux zooms 125, 150 et 200 % sans débordement horizontal.
+- [x] Valider TypeScript, lint, 150 tests automatisés et les 44 parcours Chrome : 42 réussis et 2 ignorés par la matrice.
+- [ ] Effectuer une dernière vérification visuelle humaine sur téléphone et tablette réels avant publication.
+- [x] Déployer sur IONOS, puis effectuer le commit et le push après autorisation explicite de Thierry : 161 fichiers vérifiés par SHA-256, 90 transférés, 71 déjà identiques et aucune divergence.

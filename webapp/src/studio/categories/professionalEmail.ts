@@ -408,11 +408,11 @@ export const professionalEmailCategory: StudioCategoryConfig<ProfessionalEmailVa
   ],
   messages: {
     introduction: 'Répondez aux questions dans l’ordre. Les champs facultatifs améliorent la précision du prompt et son score de qualité.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Utilisez des situations génériques, fictives ou anonymisées.',
+    privacy: 'Vous pouvez décrire une situation réelle avec des termes génériques. Ne saisissez aucun nom, aucune coordonnée ni donnée personnelle, confidentielle, médicale, financière ou sensible.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations présentes dans le formulaire et sur une grille CROP documentée.',
   },
   beforeAfter: {
-    vagueRequest: '« Rédige un mail pour rappeler une réunion. »',
+    vagueRequest: '« Rédige un courriel pour rappeler une réunion. »',
     missingDescription: 'Le destinataire, le résultat attendu, le ton et les informations pratiques ne sont pas définis.',
     structuredPrompt: '« Contexte : rappel destiné à des participants adultes. Rôle : assistant de communication pédagogique. Objectif : rappeler les modalités et obtenir une confirmation. Précisions : ton cordial, moins de 180 mots, objet clair, date fictive et action attendue explicite. »',
     benefit: 'Le résultat peut être relu à partir d’éléments observables.',

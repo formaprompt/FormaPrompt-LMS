@@ -17,6 +17,11 @@ test.describe('Page d’accueil FormaPrompt', () => {
     const studioLink = page.getByRole('link', { name: 'Essayer gratuitement le Studio' });
     await expect(studioLink).toHaveAttribute('href', '/studio');
     await expect(page.getByText('Seize cas d’usage pour écrire, transmettre, analyser, créer et construire.')).toBeVisible();
+    await expect(page.getByText('Votre brouillon est conservé uniquement dans votre navigateur. Aucune saisie n’est envoyée à FormaPrompt ou à un fournisseur d’intelligence artificielle.')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'thierry@formaprompt.com' })).toHaveAttribute(
+      'href',
+      'mailto:thierry@formaprompt.com',
+    );
 
     await expect(page).toHaveTitle('FormaPrompt | Formations IA, prompts et bureautique');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(

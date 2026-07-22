@@ -63,6 +63,7 @@ describe('Sprint 1 UX du Studio', () => {
     expect(screen.getAllByRole('heading', { name: 'Formation' }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: 'Changer de cas d’usage' })).toBeInTheDocument();
     expect(await screen.findByLabelText(/^Décrivez le besoin de formation/)).toBeInTheDocument();
+    await waitFor(() => expect(document.getElementById('studio-form-start')).toHaveFocus());
     expect(JSON.parse(window.localStorage.getItem(STUDIO_DRAFT_KEY) ?? '{}')).toMatchObject({ categoryId: 'training' });
   });
 
@@ -161,6 +162,10 @@ describe('Sprint 1 UX du Studio', () => {
     const firstRender = renderStudio();
     await chooseCategory(user, 'Courriel professionnel');
     await user.type(screen.getByLabelText(/^Décrivez votre besoin/), 'Préparer un message professionnel fictif suffisamment détaillé.');
+    await user.click(screen.getByRole('button', { name: /Score actuel.*Voir mon prompt en cours/ }));
+
+    const previewBeforeReload = screen.getByLabelText('Prévisualisation du prompt en cours').textContent;
+    const scoreBeforeReload = screen.getByLabelText(/^Score actuel : \d+ sur 100$/).getAttribute('aria-label');
 
     await waitFor(() => {
       const savedDraft = JSON.parse(window.localStorage.getItem(STUDIO_DRAFT_KEY) ?? '{}');
@@ -172,9 +177,18 @@ describe('Sprint 1 UX du Studio', () => {
     renderStudio();
     expect(await screen.findByText('Votre brouillon a été restauré depuis ce navigateur.')).toBeInTheDocument();
     expect(await screen.findByLabelText(/^Décrivez votre besoin/)).toHaveValue('Préparer un message professionnel fictif suffisamment détaillé.');
+    expect(screen.getByLabelText('Prévisualisation du prompt en cours').textContent?.replace(/\s+/g, ' ').trim())
+      .toBe(previewBeforeReload?.replace(/\s+/g, ' ').trim());
+    expect(screen.getByLabelText(/^Score actuel : \d+ sur 100$/)).toHaveAttribute('aria-label', scoreBeforeReload);
+    await user.type(screen.getByLabelText(/^Décrivez votre besoin/), ' Suite modifiable.');
+    expect((screen.getByLabelText(/^Décrivez votre besoin/) as HTMLTextAreaElement).value).toContain('Suite modifiable');
     await user.click(screen.getByRole('button', { name: 'Effacer mon brouillon' }));
     expect(window.localStorage.getItem(STUDIO_DRAFT_KEY)).toBeNull();
     expect(screen.getByText('Le brouillon a été supprimé de ce navigateur.')).toBeInTheDocument();
+
+    cleanup();
+    renderStudio();
+    expect(screen.queryByLabelText(/^Décrivez votre besoin/)).not.toBeInTheDocument();
   });
 
   it('ignore et retire un brouillon corrompu', () => {
@@ -187,6 +201,7 @@ describe('Sprint 1 UX du Studio', () => {
 
   it('conserve le moteur, le score et le prompt pour les mêmes données puis copie le résultat', async () => {
     const user = userEvent.setup();
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: clipboardWrite },
@@ -211,11 +226,14 @@ describe('Sprint 1 UX du Studio', () => {
     expect(clipboardWrite).toHaveBeenCalledWith(professionalEmailCategory.buildPrompt(values));
     expect(screen.getByText('Prompt copié dans le presse-papiers.')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Tester dans mon IA' }));
+    await user.click(await screen.findByRole('button', { name: 'Tester dans mon IA' }));
     await user.click(screen.getByRole('button', { name: /^ChatGPT/ }));
-    const externalLink = await screen.findByRole('link', { name: /Ouvrir ChatGPT/ });
+    const externalLink = await screen.findByRole('link', { name: /Rouvrir ChatGPT/ });
     expect(externalLink).toHaveAttribute('href', 'https://chatgpt.com/');
     expect(externalLink.getAttribute('href')).not.toContain(encodeURIComponent(values.need));
+    expect(openSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).toHaveBeenCalledWith('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
+    expect(screen.getByText(/Votre prompt a été copié.*s’ouvre dans un nouvel onglet/)).toBeInTheDocument();
   });
 
   it('propose une solution de repli lorsque la copie échoue', async () => {
@@ -233,6 +251,32 @@ describe('Sprint 1 UX du Studio', () => {
     await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
     await user.click(screen.getByRole('button', { name: 'Copier le prompt' }));
     expect(await screen.findByRole('button', { name: 'Sélectionner le prompt pour le copier manuellement' })).toBeInTheDocument();
+  });
+
+  it('n’ouvre pas le service externe si sa copie échoue et propose un lien manuel', async () => {
+    const user = userEvent.setup();
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    const failingClipboard = vi.fn().mockRejectedValue(new Error('clipboard unavailable'));
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: failingClipboard },
+    });
+    renderStudio();
+    await chooseCategory(user, 'Courriel professionnel');
+    await user.type(await screen.findByLabelText(/^Décrivez votre besoin/), 'Préparer un rappel professionnel générique suffisamment détaillé.');
+    await user.type(await screen.findByLabelText(/^À qui s’adresse le courriel \?/), 'participants adultes à une formation');
+    await user.type(await screen.findByLabelText(/^Objectif du courriel/), 'Rappeler les modalités pratiques et demander une confirmation explicite.');
+    await user.click(screen.getByRole('button', { name: 'Construire mon prompt' }));
+    await user.click(await screen.findByRole('button', { name: 'Tester dans mon IA' }));
+    await user.click(screen.getByRole('button', { name: /^ChatGPT/ }));
+
+    await waitFor(() => expect(failingClipboard).toHaveBeenCalled(), { timeout: 2_000 });
+    await waitFor(() => {
+      expect(document.querySelector('.studio-external-status')).toHaveTextContent('La copie a échoué');
+      expect(document.querySelector('.studio-external-status')).toHaveTextContent('lien ci-dessous');
+    }, { timeout: 5_000 });
+    expect(screen.getByRole('link', { name: /Ouvrir ChatGPT manuellement/ })).toHaveAttribute('href', 'https://chatgpt.com/');
+    expect(openSpy).not.toHaveBeenCalled();
   });
 
   it('relie les erreurs aux champs et annonce la progression', async () => {

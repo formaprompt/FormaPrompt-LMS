@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import { SITE_CONFIG } from '../config/site'
 import { useAuth } from '../contexts/useAuth'
 import { getBookingUrl } from '../data/bookingCatalog'
 import { supabase } from '../lib/supabaseClient'
@@ -170,8 +171,8 @@ export default function FormationIA() {
       <SEO
         title="Formation IA générative de 10 heures | FormaPrompt"
         description="Formation professionnelle de 10 heures pour comprendre l'IA générative, développer des usages concrets, vérifier les résultats et protéger les données."
-        url="https://www.formaprompt.fr/formation-ia-generative"
-        image="https://www.formaprompt.fr/assets/acculturation-ia.png"
+        url={`${SITE_CONFIG.baseUrl}/formation-ia-generative`}
+        image={`${SITE_CONFIG.baseUrl}/assets/acculturation-ia.png`}
       />
 
       <main className="generative-ai-page">

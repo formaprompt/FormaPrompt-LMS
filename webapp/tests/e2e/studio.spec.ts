@@ -19,7 +19,7 @@ async function selectStudioCategory(
 }
 
 test.describe('FormaPrompt Studio', () => {
-  test('parcours clavier, diagnostic, amélioration et copie', async ({ page }) => {
+  test('parcours clavier, diagnostic, amélioration, copie et service externe', async ({ page, context }) => {
     await page.goto('/studio');
     await expect(page.getByRole('heading', {
       level: 1,
@@ -92,6 +92,21 @@ test.describe('FormaPrompt Studio', () => {
     await page.getByLabel('Votre prompt structuré').getByRole('button', { name: 'Copier le prompt' }).click();
     await expect(page.getByText('Prompt copié dans le presse-papiers.')).toBeVisible();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('## Précisions');
+
+    await context.route('https://chatgpt.com/**', (route) => route.fulfill({
+      contentType: 'text/html',
+      body: '<!doctype html><title>ChatGPT test</title>',
+    }));
+    await page.getByRole('button', { name: 'Tester dans mon IA' }).click();
+    const externalPagePromise = context.waitForEvent('page');
+    await page.getByRole('button', { name: /^ChatGPT/ }).click();
+    const externalPage = await externalPagePromise;
+    await externalPage.waitForLoadState();
+    expect(new URL(externalPage.url()).origin).toBe('https://chatgpt.com');
+    expect(new URL(externalPage.url()).search).toBe('');
+    expect(new URL(externalPage.url()).hash).toBe('');
+    await expect(page.getByText(/Votre prompt a été copié.*s’ouvre dans un nouvel onglet/)).toBeVisible();
+    await externalPage.close();
 
     const pageWidth = await page.evaluate(() => ({
       client: document.documentElement.clientWidth,
@@ -953,6 +968,48 @@ test.describe('FormaPrompt Studio', () => {
     await expect(page.getByLabel('Prompt final à copier')).toContainText('## Garde-fous obligatoires');
     await expect(page.getByLabel('Prompt final à copier')).toContainText('Tu n’exécutes aucune action');
     await expect(page.getByText(/Le Studio ne vérifie aucun accès/)).toBeVisible();
+  });
+
+  test('reste lisible sans débordement aux largeurs mobile, tablette et ordinateur', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'ordinateur', 'La matrice de largeurs est exécutée une seule fois.');
+    test.setTimeout(90_000);
+    await page.goto('/studio');
+    await acceptCookieNotice(page);
+    await selectStudioCategory(page, 'Formation');
+
+    for (const width of [320, 360, 390, 430, 768, 1024, 1280, 1440, 1920]) {
+      await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+      await expect(page.getByLabel('Décrivez le besoin de formation')).toBeVisible();
+      const dimensions = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(dimensions.scroll, `débordement horizontal à ${width}px`).toBe(dimensions.client);
+
+      const toggle = page.getByRole('button', { name: /Score actuel.*Voir mon prompt en cours/ });
+      if (width < 1120) {
+        await expect(toggle).toBeVisible();
+      } else {
+        await expect(toggle).toBeHidden();
+        const livePanelStyle = await page.locator('.studio-live-panel-wrapper').evaluate((element) => {
+          const style = window.getComputedStyle(element);
+          return { position: style.position, overflowY: style.overflowY, maxHeight: style.maxHeight };
+        });
+        expect(livePanelStyle.position).toBe('sticky');
+        expect(livePanelStyle.overflowY).toBe('auto');
+        expect(livePanelStyle.maxHeight).not.toBe('none');
+      }
+    }
+
+    const desktopWidth = 1440;
+    for (const zoom of [1.25, 1.5, 2]) {
+      await page.setViewportSize({ width: Math.floor(desktopWidth / zoom), height: 900 });
+      const dimensions = await page.evaluate(() => ({
+        client: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+      }));
+      expect(dimensions.scroll, `débordement horizontal au reflow équivalent à un zoom de ${zoom * 100}%`).toBe(dimensions.client);
+    }
   });
 
   test('respecte les contrôles WCAG automatisables', async ({ page }) => {

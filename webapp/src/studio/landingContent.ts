@@ -106,7 +106,7 @@ export const studioLandingContent = {
     { id: 'precisions', label: 'Précisions', maxPoints: 35, description: 'Définition du ton, du format, des éléments obligatoires et des limites.' },
   ],
   beforeAfter: {
-    vagueRequest: '« Rédige un mail pour rappeler une réunion. »',
+    vagueRequest: '« Rédige un courriel pour rappeler une réunion. »',
     missingDescription: 'Le destinataire, le résultat attendu, le ton et les informations pratiques ne sont pas définis.',
     structuredPrompt: '« Contexte : rappel destiné à des participants adultes. Rôle : assistant de communication pédagogique. Objectif : rappeler les modalités et obtenir une confirmation. Précisions : ton cordial, moins de 180 mots, objet clair, date fictive et action attendue explicite. »',
     benefit: 'Le résultat peut être relu à partir d’éléments observables.',

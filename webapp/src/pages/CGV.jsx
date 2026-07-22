@@ -1,4 +1,5 @@
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
 
 export default function CGV() {
   return (
@@ -6,8 +7,8 @@ export default function CGV() {
       <SEO
         title="Conditions Générales de Vente – FormaPrompt"
         description="Conditions Générales de Vente (CGV) des formations FormaPrompt."
-        url="https://www.formaprompt.com/cgv"
-        image="https://www.formaprompt.com/assets/photo page d'accueil.png"
+        url={`${SITE_CONFIG.baseUrl}/cgv`}
+        image={`${SITE_CONFIG.baseUrl}/assets/photo page d'accueil.png`}
       />
       <div className="container section">
       <h1 className="mb-4">Conditions Générales de Vente (CGV)</h1>
@@ -20,7 +21,7 @@ export default function CGV() {
         <ul className="list-disc pl-5 mb-2">
           <li><strong>Siège :</strong> 6 rue Webster, 62100 CALAIS, France</li>
           <li><strong>SIRET :</strong> 511 151 615 00016</li>
-          <li><strong>Email :</strong> <a href="mailto:thierry@formaprompt.com" className="text-blue-500 hover:underline">thierry@formaprompt.com</a></li>
+          <li><strong>Courriel :</strong> <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="text-blue-500 hover:underline">{SITE_CONFIG.contactEmail}</a></li>
           <li><strong>Téléphone :</strong> <a href="tel:+33612195381" className="text-blue-500 hover:underline">+33 (0)6 12 19 53 81</a></li>
         </ul>
       </div>
@@ -71,7 +72,7 @@ export default function CGV() {
 
       <div className="card mb-4">
         <h2>Article 8 : Confidentialité et Données Personnelles (RGPD)</h2>
-        <p className="mb-2">Les informations à caractère personnel communiquées par le Client à Thierry FREZARD EI sont utiles pour le traitement de l'inscription ainsi que pour la constitution d'un fichier clientèle pour des prospections commerciales. Conformément à la loi Informatique et Libertés et au RGPD, le Client dispose d'un droit d'accès, de rectification et de suppression des données le concernant en écrivant à : <a href="mailto:thierry@formaprompt.com" className="text-blue-500 hover:underline">thierry@formaprompt.com</a>.</p>
+        <p className="mb-2">Les informations à caractère personnel communiquées par le Client à {SITE_CONFIG.legalBusinessName} sont utiles pour le traitement de l'inscription ainsi que pour la constitution d'un fichier clientèle pour des prospections commerciales. Conformément à la loi Informatique et Libertés et au RGPD, le Client dispose d'un droit d'accès, de rectification et de suppression des données le concernant en écrivant à : <a href={`mailto:${SITE_CONFIG.contactEmail}`} className="text-blue-500 hover:underline">{SITE_CONFIG.contactEmail}</a>.</p>
       </div>
 
       <div className="card mb-4">
@@ -85,7 +86,7 @@ export default function CGV() {
         <p className="mb-2">49 rue de Ponthieu, 75 008 PARIS</p>
         <p className="mb-2">Tel : 01 89 47 00 14</p>
         <p className="mb-2">Site internet : <a href="https://www.cm2c.net/declarer-un-litige.php" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">https://www.cm2c.net/declarer-un-litige.php</a></p>
-        <p className="mb-2">Mail : <a href="mailto:litiges@cm2c.net" className="text-blue-500 hover:underline">litiges@cm2c.net</a></p>
+        <p className="mb-2">Courriel : <a href="mailto:litiges@cm2c.net" className="text-blue-500 hover:underline">litiges@cm2c.net</a></p>
         <p className="mb-2">À défaut de résolution amiable, tout litige relèvera de la compétence des tribunaux compétents du siège social de Thierry FREZARD EI (sauf disposition légale contraire en matière de droit de la consommation).</p>
       </div>
     </div>

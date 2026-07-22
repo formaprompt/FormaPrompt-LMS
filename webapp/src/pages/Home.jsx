@@ -4,47 +4,49 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import './Home.css';
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
+import { STUDIO_PRIVACY_COPY } from '../config/studioPrivacy';
 
-const SUPERPROF_PROFILE_URL = 'https://www.superprof.fr/formez-prompt-engineering-revolutionnez-facon-dinteragir-lia.html';
+const SUPERPROF_PROFILE_URL = SITE_CONFIG.socialProfiles.superprof;
 
 const homeStructuredData = {
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': 'EducationalOrganization',
-      '@id': 'https://formaprompt.com/#organization',
-      name: 'FormaPrompt',
-      url: 'https://formaprompt.com/',
-      logo: 'https://formaprompt.com/assets/logo-new.png',
+      '@id': `${SITE_CONFIG.baseUrl}/#organization`,
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.urls.home,
+      logo: SITE_CONFIG.assets.logo,
       description: 'Organisme de formation professionnelle en intelligence artificielle générative, prompt engineering et outils bureautiques.',
       founder: {
         '@type': 'Person',
-        name: 'Thierry FREZARD',
+        name: SITE_CONFIG.responsibleName,
       },
       sameAs: [SUPERPROF_PROFILE_URL],
     },
     {
       '@type': 'WebSite',
-      '@id': 'https://formaprompt.com/#website',
-      name: 'FormaPrompt',
-      url: 'https://formaprompt.com/',
+      '@id': `${SITE_CONFIG.baseUrl}/#website`,
+      name: SITE_CONFIG.name,
+      url: SITE_CONFIG.urls.home,
       inLanguage: 'fr-FR',
       publisher: {
-        '@id': 'https://formaprompt.com/#organization',
+        '@id': `${SITE_CONFIG.baseUrl}/#organization`,
       },
     },
     {
       '@type': 'WebApplication',
-      '@id': 'https://formaprompt.com/studio/#application',
+      '@id': `${SITE_CONFIG.urls.studio}#application`,
       name: 'FormaPrompt Studio',
-      url: 'https://formaprompt.com/studio/',
+      url: SITE_CONFIG.urls.studio,
       applicationCategory: 'BusinessApplication',
       operatingSystem: 'Navigateur web',
       inLanguage: 'fr-FR',
       isAccessibleForFree: true,
       description: 'Outil pédagogique gratuit pour structurer un prompt avec la méthode CROP, obtenir un score expliqué et repérer les informations manquantes.',
       publisher: {
-        '@id': 'https://formaprompt.com/#organization',
+        '@id': `${SITE_CONFIG.baseUrl}/#organization`,
       },
     },
   ],
@@ -118,8 +120,8 @@ export default function Home() {
       <SEO
         title="FormaPrompt | Formations IA, prompts et bureautique"
         description="Formations professionnelles en IA générative, prompt engineering et bureautique. Testez gratuitement FormaPrompt Studio pour structurer vos prompts."
-        url="https://formaprompt.com/"
-        image="https://formaprompt.com/assets/logo-new.png"
+        url={SITE_CONFIG.urls.home}
+        image={SITE_CONFIG.assets.logo}
         jsonLd={homeStructuredData}
       />
       <div className="home">
@@ -181,7 +183,7 @@ export default function Home() {
                 <ul className="home-studio-benefits">
                   <li><CheckCircle size={20} aria-hidden="true" /> Seize cas d’usage pour écrire, transmettre, analyser, créer et construire.</li>
                   <li><CheckCircle size={20} aria-hidden="true" /> Un diagnostic déterministe, sans appel à un fournisseur externe.</li>
-                  <li><CheckCircle size={20} aria-hidden="true" /> Brouillon automatique conservé uniquement dans votre navigateur.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> {STUDIO_PRIVACY_COPY.home}</li>
                 </ul>
                 <div className="home-studio-actions">
                   <Link to="/studio" className="btn btn-primary">Essayer gratuitement le Studio</Link>

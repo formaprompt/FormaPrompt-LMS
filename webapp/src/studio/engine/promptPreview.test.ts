@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { professionalEmailCategory } from '../categories/professionalEmail';
+import { loadStudioCategory } from '../categories/loadCategory';
+import type { StudioCategoryId } from '../types';
+import { getPrioritySuggestions } from './improvementSuggestions';
 import { calculateCategoryScore } from './scoreCategory';
 import { buildFinalPrompt, buildPromptPreview, PROMPT_PREVIEW_MARKER } from './promptPreview';
 
@@ -47,5 +50,38 @@ describe('prévisualisation déterministe du prompt', () => {
     expect(liveDiagnostic).toEqual(finalDiagnostic);
     expect(liveDiagnostic.criteria.map((criterion) => criterion.maxPoints)).toEqual([25, 15, 25, 35]);
     expect(liveDiagnostic.maxTotal).toBe(100);
+  });
+
+  it.each<StudioCategoryId>([
+    'professional-email',
+    'training',
+    'analysis-synthesis',
+    'image-creation',
+    'code',
+    'ai-agent',
+  ])('reste cohérente avec le résultat et le score final pour %s', async (categoryId) => {
+    const category = await loadStudioCategory(categoryId);
+    const values = { ...category.defaultValues };
+
+    for (const field of category.fields) {
+      if (String(values[field.name] ?? '').trim()) continue;
+      values[field.name] = field.type === 'select'
+        ? (field.options?.[0]?.value ?? '')
+        : `Information professionnelle générique suffisamment précise pour le champ ${field.label}, sans donnée personnelle ni information confidentielle.`;
+    }
+
+    const preview = buildPromptPreview(category, values);
+    const finalPrompt = buildFinalPrompt(category, values);
+    const liveDiagnostic = calculateCategoryScore(category, values);
+    const finalDiagnostic = calculateCategoryScore(category, values);
+
+    expect(preview.missingFields).toHaveLength(0);
+    expect(preview.prompt).toBe(finalPrompt);
+    expect(finalPrompt).not.toContain(PROMPT_PREVIEW_MARKER);
+    expect(liveDiagnostic).toEqual(finalDiagnostic);
+    expect(liveDiagnostic.total).toBeGreaterThanOrEqual(0);
+    expect(liveDiagnostic.total).toBeLessThanOrEqual(100);
+    expect(liveDiagnostic.maxTotal).toBe(100);
+    expect(getPrioritySuggestions(category, values).length).toBeLessThanOrEqual(3);
   });
 });

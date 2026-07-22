@@ -4,6 +4,8 @@ import { trackStudioEvent } from '../analytics';
 import {
   copyPromptForExternalService,
   EXTERNAL_AI_SERVICES,
+  getExternalAiService,
+  openExternalAiService,
   type ExternalAiService,
   type ExternalAiServiceId,
 } from '../externalAi';
@@ -14,9 +16,11 @@ export function ExternalAiLauncher({ prompt }: { prompt: string }) {
   const [status, setStatus] = useState<'idle' | 'ready' | 'error'>('idle');
 
   const prepareService = async (serviceId: ExternalAiServiceId) => {
-    setPreparedService(null);
+    const selectedService = getExternalAiService(serviceId) ?? null;
+    setPreparedService(selectedService);
     try {
       const service = await copyPromptForExternalService(prompt, serviceId);
+      openExternalAiService(service);
       setPreparedService(service);
       setStatus('ready');
       trackStudioEvent('external_service_selected', { actionType: serviceId });
@@ -58,15 +62,21 @@ export function ExternalAiLauncher({ prompt }: { prompt: string }) {
       <div className="studio-external-status" aria-live="polite">
         {status === 'ready' && preparedService && (
           <div>
-            <p><Check aria-hidden="true" /> Votre prompt a été copié. Le service sélectionné peut maintenant s’ouvrir dans un nouvel onglet. Vous pourrez y coller votre prompt.</p>
+            <p><Check aria-hidden="true" /> Votre prompt a été copié. Le service sélectionné s’ouvre dans un nouvel onglet. Vous pourrez y coller votre prompt.</p>
             <a href={preparedService.url} target="_blank" rel="noopener noreferrer">
-              Ouvrir {preparedService.label} <ExternalLink aria-hidden="true" />
+              Rouvrir {preparedService.label} <ExternalLink aria-hidden="true" />
               <span className="sr-only"> dans un nouvel onglet — service externe</span>
             </a>
           </div>
         )}
-        {status === 'error' && (
-          <p>La copie a échoué. Copiez d’abord le prompt avec le bouton principal avant d’ouvrir un service externe.</p>
+        {status === 'error' && preparedService && (
+          <div>
+            <p>La copie a échoué. Copiez le prompt avec le bouton principal, puis ouvrez le service externe avec le lien ci-dessous.</p>
+            <a href={preparedService.url} target="_blank" rel="noopener noreferrer">
+              Ouvrir {preparedService.label} manuellement <ExternalLink aria-hidden="true" />
+              <span className="sr-only"> dans un nouvel onglet — service externe</span>
+            </a>
+          </div>
         )}
       </div>
     </section>

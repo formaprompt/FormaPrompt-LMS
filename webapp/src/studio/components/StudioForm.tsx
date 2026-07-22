@@ -12,6 +12,7 @@ import { CROP_SECTION_LABELS, type CropSection, type StudioCategoryConfig } from
 import type { StudioPromptExample } from '../types';
 import { ContextualHelp } from './ContextualHelp';
 import { PromptExamples } from './PromptExamples';
+import { STUDIO_PRIVACY_COPY } from '../../config/studioPrivacy';
 
 const SECTION_ORDER: CropSection[] = ['context', 'role', 'objective', 'precisions'];
 
@@ -20,6 +21,8 @@ interface StudioFormProps<TValues extends FieldValues> {
   examples: StudioPromptExample[];
   initialValues?: Partial<TValues>;
   hasResult: boolean;
+  focusOnMount?: boolean;
+  onFocusComplete?: () => void;
   onSubmit: (values: TValues) => void;
   onValuesChange: (values: TValues) => void;
   onValuesCommit: (values: TValues) => void;
@@ -57,6 +60,8 @@ export function StudioForm<TValues extends FieldValues>({
   examples,
   initialValues,
   hasResult,
+  focusOnMount = false,
+  onFocusComplete,
   onSubmit,
   onValuesChange,
   onValuesCommit,
@@ -75,6 +80,18 @@ export function StudioForm<TValues extends FieldValues>({
     mode: 'onBlur',
     shouldFocusError: true,
   });
+
+  useEffect(() => {
+    if (!focusOnMount) return;
+    document.getElementById('studio-form-start')?.focus({ preventScroll: true });
+    window.requestAnimationFrame(() => {
+      document.getElementById('studio-form')?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start',
+      });
+    });
+    onFocusComplete?.();
+  }, [focusOnMount, onFocusComplete]);
   const watchedValues = useWatch({ control });
   const serializedValues = useMemo(() => JSON.stringify(watchedValues), [watchedValues]);
   const previousValuesRef = useRef(serializedValues);
@@ -237,7 +254,7 @@ export function StudioForm<TValues extends FieldValues>({
         <button type="submit" className="btn btn-primary studio-primary-action" disabled={isSubmitting}>
           {hasResult ? 'Recalculer le score et le prompt' : 'Construire mon prompt'}
         </button>
-        <p>Les informations saisies restent dans ce navigateur et ne sont transmises à aucun service.</p>
+        <p>{STUDIO_PRIVACY_COPY.form} Le brouillon reste uniquement dans ce navigateur.</p>
       </div>
     </form>
   );

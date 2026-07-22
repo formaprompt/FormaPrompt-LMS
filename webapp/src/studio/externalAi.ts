@@ -18,6 +18,28 @@ interface ClipboardWriter {
   writeText: (text: string) => Promise<void>;
 }
 
+type ExternalWindowOpener = (
+  url?: string | URL,
+  target?: string,
+  features?: string,
+) => Window | null;
+
+export function getExternalAiService(serviceId: ExternalAiServiceId) {
+  return EXTERNAL_AI_SERVICES.find((candidate) => candidate.id === serviceId);
+}
+
+export function openExternalAiService(
+  service: ExternalAiService,
+  opener: ExternalWindowOpener = window.open,
+) {
+  const destination = new URL(service.url);
+  if (destination.protocol !== 'https:' || destination.search || destination.hash) {
+    throw new Error('Adresse du service externe non autorisée.');
+  }
+
+  opener(destination.toString(), '_blank', 'noopener,noreferrer');
+}
+
 export async function copyPromptToClipboard(prompt: string, clipboard: ClipboardWriter = navigator.clipboard) {
   await clipboard.writeText(prompt);
 }
@@ -27,7 +49,7 @@ export async function copyPromptForExternalService(
   serviceId: ExternalAiServiceId,
   clipboard: ClipboardWriter = navigator.clipboard,
 ) {
-  const service = EXTERNAL_AI_SERVICES.find((candidate) => candidate.id === serviceId);
+  const service = getExternalAiService(serviceId);
   if (!service) throw new Error('Service externe inconnu.');
   await copyPromptToClipboard(prompt, clipboard);
   return service;

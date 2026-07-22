@@ -340,7 +340,7 @@ export const presentationCategory: StudioCategoryConfig<PresentationValues> = {
       type: 'textarea',
       cropSection: 'context',
       help: 'Décrivez le sujet, le moment de diffusion et ce qui motive la présentation, sans données sensibles.',
-      placeholder: 'Exemple : présenter à une équipe les résultats anonymisés d’un projet fictif et les prochaines étapes à valider.',
+      placeholder: 'Exemple : présenter à une équipe des résultats sans donnée personnelle et les prochaines étapes à valider.',
       required: true,
       maxLength: 900,
       rows: 4,
@@ -378,8 +378,8 @@ export const presentationCategory: StudioCategoryConfig<PresentationValues> = {
       label: 'Documents et informations disponibles',
       type: 'textarea',
       cropSection: 'context',
-      help: 'Décrivez uniquement les sources utilisables, sous forme anonymisée ou fictive, sans transmettre de document réel.',
-      placeholder: 'Exemple : synthèse anonymisée, trois indicateurs validés et charte graphique interne fictive.',
+      help: 'Décrivez uniquement les sources utilisables avec des termes génériques, sans transmettre de document.',
+      placeholder: 'Exemple : synthèse sans donnée personnelle, trois indicateurs validés et charte graphique d’exemple.',
       required: false,
       maxLength: 700,
       rows: 3,
@@ -666,7 +666,7 @@ export const presentationCategory: StudioCategoryConfig<PresentationValues> = {
   ],
   messages: {
     introduction: 'Commencez par le public et le message à retenir, puis cadrez le temps, la progression, les visuels et la prise de parole.',
-    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Décrivez uniquement des situations, chiffres et sources fictifs, publics ou anonymisés.',
+    privacy: 'Ne saisissez aucune donnée personnelle, confidentielle, médicale, financière ou sensible. Décrivez les situations, chiffres et sources avec des termes génériques ou à partir d’informations publiques.',
     resultHelp: 'Le diagnostic du prompt repose uniquement sur les informations du formulaire Présentation et sur une grille CROP déterministe documentée.',
   },
   beforeAfter: {

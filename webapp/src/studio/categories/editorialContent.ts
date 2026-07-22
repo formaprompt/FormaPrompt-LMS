@@ -481,7 +481,7 @@ export const editorialContentCategory: StudioCategoryConfig<EditorialContentValu
       type: 'textarea',
       cropSection: 'precisions',
       help: 'Listez les ressources réellement disponibles sans coller de contenu confidentiel ni de donnée personnelle.',
-      placeholder: 'Exemple : documentation officielle datée, note interne anonymisée et deux statistiques dont la source reste à vérifier.',
+      placeholder: 'Exemple : documentation officielle datée, note interne sans donnée personnelle et deux statistiques dont la source reste à vérifier.',
       required: false,
       maxLength: 800,
       rows: 3,

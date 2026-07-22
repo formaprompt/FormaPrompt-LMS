@@ -319,6 +319,21 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - La page publique répond en HTTPS avec un HTML strictement identique au build local, les nouveaux styles sont chargés et l’URL canonique reste `https://formaprompt.com/studio/`. Aucun schéma, migration ou donnée Supabase, Stripe ou Qualiopi n’a été modifié.
 - Point de vigilance pour les prochaines publications : la procédure SFTP doit inclure tous les fichiers `index.html` imbriqués, notamment `dist/studio/index.html`, et conserver uniquement `dist/index.html` comme dernier fichier transféré.
 
+## Sprint 1.1.1 — cohérence, confidentialité et validation — 22 juillet 2026
+
+- Les textes publics décrivent désormais le fonctionnement réel : le brouillon reste dans le stockage local du navigateur, peut être supprimé et aucune saisie n’est envoyée à FormaPrompt ni à un fournisseur d’intelligence artificielle.
+- Les coordonnées publiques utiles sont centralisées dans `webapp/src/config/site.ts` avec le domaine `formaprompt.com`, l’adresse `thierry@formaprompt.com` et l’identité du responsable. Aucune référence publique à `formaprompt.fr` ne subsiste.
+- Le Studio accepte une situation professionnelle réelle décrite avec des termes génériques. Les contenus ne prétendent plus qu’une fonction d’anonymisation automatique existe et le vocabulaire visible privilégie « courriel ».
+- Le focus vers le formulaire attend maintenant son chargement différé réel. La navigation clavier et les annonces accessibles restent fonctionnelles.
+- La prévisualisation et le score en direct ont été comparés au résultat final sur les catégories Courriel, Formation, Analyse et synthèse, Création d’image, Code et Agent IA sans modification des moteurs ni du barème.
+- Le brouillon versionné est couvert pour la sauvegarde, la restauration, la poursuite de saisie, la suppression, les données corrompues ou expirées et l’indisponibilité de `localStorage`, sans appel réseau.
+- « Tester dans mon IA » copie le prompt puis ouvre l’adresse HTTPS officielle dans un nouvel onglet, sans paramètre ni fragment. En cas d’échec de copie, aucun onglet n’est ouvert et un lien manuel est proposé.
+- Les contrôles Chrome couvrent les 16 catégories, les règles WCAG automatisables, les largeurs de 320 à 1 920 px et les reflows équivalents aux zooms 125, 150 et 200 %, sans débordement horizontal.
+- TypeScript et lint réussissent. Les 39 tests applicatifs, 10 tests Stripe et 101 tests Studio réussissent, soit 150 tests. Les 44 scénarios Chrome donnent 42 réussites et 2 scénarios ignorés volontairement par la matrice ordinateur/mobile.
+- Aucun schéma, migration ou donnée Supabase, Stripe ou Qualiopi n’a été modifié.
+- Après autorisation explicite de Thierry, la version Sprint 1.1.1 a été déployée sur IONOS le 22 juillet 2026. Les 161 fichiers du build, soit 141 324 936 octets, ont été comparés par SHA-256 : 90 fichiers ont été transférés, 71 étaient déjà identiques et aucune divergence n’a été détectée. L’accueil et `/studio/` répondent en HTTPS avec un contenu strictement identique au build local ; les URL canoniques restent `https://formaprompt.com/` et `https://formaprompt.com/studio/`.
+- Le commit et le push de clôture ont été réalisés après la même autorisation explicite.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

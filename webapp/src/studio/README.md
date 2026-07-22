@@ -61,7 +61,7 @@ Prévoir un registre technique minimisé par compte et par période. Il devra co
 
 Créer une passerelle serveur dédiée, avec validation Zod côté serveur, limites de taille, limitation de débit, délais d'attente, budget maximal et secrets dans les variables d'environnement. Le navigateur ne devra jamais recevoir une clé privée. Le fournisseur sera placé derrière une interface pour permettre son remplacement.
 
-Le Sprint 1.1 ajoute uniquement une aide au lancement de services externes : le prompt est copié localement puis l’utilisateur choisit d’ouvrir le site officiel. Aucun texte n’est ajouté à l’adresse et aucune requête n’est envoyée par le Studio.
+Le Studio propose uniquement une aide au lancement de services externes : après une copie locale réussie, le site officiel choisi s’ouvre dans un nouvel onglet. Aucun texte n’est ajouté à l’adresse et aucune requête contenant le prompt n’est envoyée par le Studio. Si la copie échoue, aucun onglet n’est ouvert et un lien manuel est proposé.
 
 ### Mesure d’usage
 
