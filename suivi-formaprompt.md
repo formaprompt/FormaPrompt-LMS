@@ -334,6 +334,18 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Après autorisation explicite de Thierry, la version Sprint 1.1.1 a été déployée sur IONOS le 22 juillet 2026. Les 161 fichiers du build, soit 141 324 936 octets, ont été comparés par SHA-256 : 90 fichiers ont été transférés, 71 étaient déjà identiques et aucune divergence n’a été détectée. L’accueil et `/studio/` répondent en HTTPS avec un contenu strictement identique au build local ; les URL canoniques restent `https://formaprompt.com/` et `https://formaprompt.com/studio/`.
 - Le commit et le push de clôture ont été réalisés après la même autorisation explicite.
 
+## Correction du formulaire de contact — 27 juillet 2026
+
+- Les journaux Supabase ont confirmé deux refus `403` sur `contact_requests` : l’interface acceptait un message non vide alors que la règle de sécurité appliquée exige au moins 10 caractères.
+- Le formulaire valide désormais le nom, l’adresse électronique et le message avant tout appel réseau, avec les mêmes longueurs que la base. Les données sont normalisées et le statut `pending` est transmis explicitement.
+- Les erreurs sont affichées près du champ concerné, reliées par `aria-describedby`, annoncées aux technologies d’assistance et le focus rejoint le premier champ à corriger.
+- En cas d’indisponibilité réelle, les saisies restent à l’écran et un lien direct vers `thierry@formaprompt.com` est proposé. La confirmation de réussite est également annoncée.
+- La page Contact a été réorganisée en deux colonnes sobres sur ordinateur et une colonne sur mobile, avec coordonnées directes, information de confidentialité et zones tactiles adaptées.
+- Le contrôle local à 390 px ne présente aucun débordement horizontal. Le message « essai » est maintenant refusé localement avec une explication précise, sans requête Supabase.
+- TypeScript, lint, les 39 tests applicatifs, 10 tests Stripe et 104 tests Vitest réussissent, soit 153 tests. Le build et les pré-rendus publics réussissent.
+- Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n’ont été modifiés.
+- Après autorisation explicite de Thierry, la correction a été déployée sur IONOS le 27 juillet 2026. Le contrôle final confirme que les 165 fichiers du build, soit 141 335 346 octets, correspondent à la version distante : 164 fichiers vérifiés par SHA-256, la vidéo inchangée vérifiée par sa taille et aucune divergence détectée. Les routes `/contact` avec et sans `www` répondent en HTTPS ; les fichiers JavaScript et CSS Contact sont strictement identiques au build local.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
