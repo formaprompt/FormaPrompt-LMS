@@ -17,6 +17,7 @@ import { SITE_CONFIG } from '../config/site'
 import { useAuth } from '../contexts/useAuth'
 import { getBookingUrl } from '../data/bookingCatalog'
 import { supabase } from '../lib/supabaseClient'
+import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import './FormationIA.css'
 
 const COURSE_ID = 'formation-ia'
@@ -122,16 +123,9 @@ export default function FormationIA() {
         return
       }
 
-      const { data } = await supabase
-        .from('course_access')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('course_id', COURSE_ID)
-        .eq('status', 'active')
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .limit(1)
+      const { data } = await fetchActiveCourseAccess(user.id, COURSE_ID)
 
-      setHasPurchased(Boolean(data?.length))
+      setHasPurchased(Boolean(data))
       setLoading(false)
     }
 

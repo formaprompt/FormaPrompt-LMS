@@ -9,6 +9,7 @@ import { courseCatalog } from '../data/courseCatalog';
 import { DEMO_LEARNING_PATH_SLUG } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
+import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import './Dashboard.css';
 
@@ -65,12 +66,7 @@ export default function Dashboard() {
         exerciseReviewsResult,
         attestationsResult,
       ] = await Promise.all([
-        supabase
-          .from('course_access')
-          .select('id, course_id, granted_at, access_source')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
+        fetchActiveCourseAccesses({ userId: user.id }),
         supabase
           .from('course_booking_requests')
           .select(`

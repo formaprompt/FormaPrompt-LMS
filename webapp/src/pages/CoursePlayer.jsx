@@ -6,6 +6,7 @@ import PrerequisiteQuiz from '../components/PrerequisiteQuiz';
 import { useAuth } from '../contexts/useAuth';
 import { courseCatalog } from '../data/courseCatalog';
 import { calculateCourseProgress } from '../lib/courseProgress';
+import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { FINAL_PROJECT_REVIEW_FIELDS } from '../lib/finalProjectEvaluation';
 import { supabase } from '../lib/supabaseClient';
 import './CoursePlayer.css';
@@ -65,14 +66,7 @@ export default function CoursePlayer() {
 
       setAccessError('');
       const [accessResult, positioningResult] = await Promise.all([
-        supabase
-          .from('course_access')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('course_id', id)
-          .eq('status', 'active')
-          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-          .limit(1),
+        fetchActiveCourseAccess(user.id, id),
         supabase
           .from('course_positioning_assessments')
           .select('id')
@@ -86,7 +80,7 @@ export default function CoursePlayer() {
       if (accessResult.error) {
         console.error("Erreur lors de la vérification de l'accès :", accessResult.error);
         setAccessError("Impossible de vérifier votre accès pour le moment. Réessayez dans quelques instants.");
-      } else if (!accessResult.data?.length) {
+      } else if (!accessResult.data) {
         navigate(course.landingPath);
       } else if (positioningResult.error) {
         console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);

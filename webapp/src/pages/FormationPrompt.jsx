@@ -14,6 +14,7 @@ import {
 import SEO from '../components/SEO'
 import { useAuth } from '../contexts/useAuth'
 import { supabase } from '../lib/supabaseClient'
+import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import { getBookingUrl } from '../data/bookingCatalog'
 import './FormationPrompt.css'
 
@@ -56,16 +57,9 @@ export default function FormationPrompt() {
         return
       }
 
-      const { data, error } = await supabase
-        .from('course_access')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('course_id', COURSE_ID)
-        .eq('status', 'active')
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .limit(1)
+      const { data, error } = await fetchActiveCourseAccess(user.id, COURSE_ID)
 
-      if (!error && data?.length > 0) setHasPurchased(true)
+      if (!error && data) setHasPurchased(true)
       setLoading(false)
     }
 

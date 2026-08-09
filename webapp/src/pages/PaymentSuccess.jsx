@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, Clock3, TriangleAlert } from 'lucide-react';
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/useAuth';
-import { supabase } from '../lib/supabaseClient';
+import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
 
 export default function PaymentSuccess() {
@@ -24,14 +24,7 @@ export default function PaymentSuccess() {
 
     async function checkAccess() {
       attempts += 1;
-      const { data, error } = await supabase
-        .from('course_access')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('course_id', courseId)
-        .eq('status', 'active')
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .maybeSingle();
+      const { data, error } = await fetchActiveCourseAccess(user.id, courseId);
 
       if (stopped) return;
 

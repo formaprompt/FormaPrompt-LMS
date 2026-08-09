@@ -6,6 +6,7 @@ import SignaturePad from '../components/SignaturePad'
 import { useAuth } from '../contexts/useAuth'
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog'
 import { supabase } from '../lib/supabaseClient'
+import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import {
   createBookingCandidates,
   createSplitDayBookingCandidates,
@@ -86,14 +87,7 @@ export default function CourseBooking() {
     setFeedback('')
 
     const [accessResult, bookingResult, slotsResult] = await Promise.all([
-      supabase
-        .from('course_access')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('course_id', courseId)
-        .eq('status', 'active')
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .maybeSingle(),
+      fetchActiveCourseAccess(user.id, courseId),
       supabase
         .from('course_booking_requests')
         .select(`

@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { courseCatalog } from '../data/courseCatalog';
 import { createAvailabilitySlots, createInitialAvailabilityForm, formatDateInput } from '../lib/availabilitySlots';
 import { groupBookedSessions } from '../lib/courseBookingSlots';
@@ -784,10 +785,7 @@ export default function AdminDashboard() {
         setPurchases(purchasesData || []);
       }
 
-      const { data: courseAccessData, error: courseAccessLoadError } = await supabase
-        .from('course_access')
-        .select('id, user_id, course_id, status, access_source, purchase_id, granted_at, expires_at')
-        .order('granted_at', { ascending: false });
+      const { data: courseAccessData, error: courseAccessLoadError } = await fetchActiveCourseAccesses();
 
       if (courseAccessLoadError) {
         console.error('Erreur lors du chargement des droits de formation :', courseAccessLoadError);

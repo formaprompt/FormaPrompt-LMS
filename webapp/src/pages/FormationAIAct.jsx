@@ -14,6 +14,7 @@ import {
 import SEO from '../components/SEO';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import './FormationAIAct.css';
 
 const officialSources = [
@@ -88,16 +89,9 @@ export default function FormationAIAct() {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('course_access')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('course_id', 'formation-ia-act')
-        .eq('status', 'active')
-        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
-        .limit(1);
+      const { data, error } = await fetchActiveCourseAccess(user.id, 'formation-ia-act');
 
-      if (!error && data?.length > 0) setHasPurchased(true);
+      if (!error && data) setHasPurchased(true);
       setLoading(false);
     }
 
