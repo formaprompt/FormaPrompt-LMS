@@ -3,36 +3,35 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
+import { AuthProvider } from './contexts/AuthContext';
 import { registerFormaPromptServiceWorker } from './pwa/registerServiceWorker.js';
 import './index.css';
 
-const isPublicStudio = window.location.pathname === '/studio' || window.location.pathname === '/studio/';
-
-// Le Studio est déjà pré-rendu et n'a pas besoin d'un rechargement lié à
-// l'installation du service worker pendant la saisie d'un brouillon local.
-if (!isPublicStudio) registerFormaPromptServiceWorker();
+registerFormaPromptServiceWorker();
 
 const app = (
   <React.StrictMode>
     <HelmetProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </AuthProvider>
     </HelmetProvider>
   </React.StrictMode>
 );
 
-async function renderApplication() {
-  let application = app;
-
-  if (!isPublicStudio) {
-    const { AuthProvider } = await import('./contexts/AuthContext');
-    application = <AuthProvider>{app}</AuthProvider>;
-  }
-
+function renderApplication() {
   const rootElement = document.getElementById('root');
 
-  ReactDOM.createRoot(rootElement).render(application);
+  // Le build public contient des balises SEO sérialisées par le prérendu.
+  // Elles doivent être retirées avant que React 19 ne crée ses propres balises
+  // dans <head>, sinon deux propriétaires tentent de supprimer les mêmes nœuds.
+  document.head
+    .querySelectorAll('[data-formaprompt-seo="true"]')
+    .forEach((element) => element.remove());
+
+  ReactDOM.createRoot(rootElement).render(app);
 }
 
 renderApplication();

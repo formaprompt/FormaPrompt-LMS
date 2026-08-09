@@ -8,7 +8,7 @@ export default function CGV() {
         title="Conditions Générales de Vente – FormaPrompt"
         description="Conditions Générales de Vente (CGV) des formations FormaPrompt."
         url={`${SITE_CONFIG.baseUrl}/cgv`}
-        image={`${SITE_CONFIG.baseUrl}/assets/photo page d'accueil.png`}
+        image={`${SITE_CONFIG.baseUrl}/assets/photo%20page%20d%27accueil.png?v=20260809`}
       />
       <div className="container section">
       <h1 className="mb-4">Conditions Générales de Vente (CGV)</h1>

@@ -2,6 +2,21 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 test.describe('Page d’accueil FormaPrompt', () => {
+  test('charge les images principales de l’accueil et de la page À propos', async ({ page }) => {
+    await page.goto('/');
+
+    const heroImage = page.getByRole('img', { name: 'Session de formation FormaPrompt' });
+    await expect.poll(() => heroImage.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+
+    const audienceImage = page.getByRole('img', { name: 'Public visé par les formations FormaPrompt' });
+    await audienceImage.scrollIntoViewIfNeeded();
+    await expect.poll(() => audienceImage.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+
+    await page.goto('/a-propos');
+    const portrait = page.getByRole('img', { name: 'Thierry FREZARD, Formateur Expert' });
+    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  });
+
   test('annonce le Studio avec un SEO cohérent et un affichage accessible', async ({ page }) => {
     await page.goto('/');
 

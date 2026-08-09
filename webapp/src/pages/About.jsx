@@ -44,7 +44,7 @@ export default function About() {
             zIndex: '-1' 
           }}></div>
           <img 
-            src="/assets/Photo_thierry_frezard.jpg" 
+            src="/assets/Photo_thierry_frezard.jpg?v=20260809"
             alt="Thierry FREZARD, Formateur Expert" 
             style={{ 
               width: '100%', 

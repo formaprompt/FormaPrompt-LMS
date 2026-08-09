@@ -27,7 +27,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --host 127.0.0.1 --port ${studioTestPort} --strictPort --force`,
+    command: `npm run build && npm run preview -- --host 127.0.0.1 --port ${studioTestPort} --strictPort`,
     url: `http://127.0.0.1:${studioTestPort}/studio`,
     reuseExistingServer: false,
     timeout: 120_000,

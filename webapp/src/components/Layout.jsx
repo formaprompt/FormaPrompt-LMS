@@ -6,7 +6,25 @@ import SEO from './SEO';
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const pageProvidesDedicatedSeo = pathname === '/' || pathname.startsWith('/studio');
+  const dedicatedSeoRoutes = [
+    '/',
+    '/a-propos',
+    '/blog',
+    '/cgv',
+    '/contact',
+    '/disponibilites',
+    '/faq',
+    '/feedback',
+    '/formation-',
+    '/guide-gpt-',
+    '/mentions-legales',
+    '/paiement-reussi',
+    '/reservation-formation',
+    '/studio',
+  ];
+  const pageProvidesDedicatedSeo = dedicatedSeoRoutes.some((route) => (
+    route === '/' ? pathname === '/' : pathname.startsWith(route)
+  ));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

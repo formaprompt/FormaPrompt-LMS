@@ -13,7 +13,7 @@ export const SITE_CONFIG = {
   },
   assets: {
     logo: 'https://formaprompt.com/assets/logo-new.png',
-    portrait: 'https://formaprompt.com/assets/Photo_thierry_frezard.jpg',
+    portrait: 'https://formaprompt.com/assets/Photo_thierry_frezard.jpg?v=20260809',
   },
   socialProfiles: {
     superprof: 'https://www.superprof.fr/formez-prompt-engineering-revolutionnez-facon-dinteragir-lia.html',

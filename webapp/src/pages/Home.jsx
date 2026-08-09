@@ -152,7 +152,7 @@ export default function Home() {
                   zIndex: '0'
                 }}></div>
                 <img
-                  src="/assets/photo page d'accueil.png"
+                  src="/assets/photo page d'accueil.png?v=20260809"
                   alt="Session de formation FormaPrompt"
                   style={{
                     width: '100%',
@@ -290,7 +290,7 @@ export default function Home() {
               </div>
               <div style={{ textAlign: 'center' }}>
                 <img
-                  src="/assets/a_qui_sadresse_nos_formations.png"
+                  src="/assets/a_qui_sadresse_nos_formations.png?v=20260809"
                   alt="Public visé par les formations FormaPrompt"
                   loading="lazy"
                   style={{ maxWidth: '100%', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}

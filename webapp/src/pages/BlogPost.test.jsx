@@ -57,12 +57,6 @@ describe('article de blog et métadonnées SEO', () => {
   });
 
   it('utilise les champs SEO, le texte alternatif et un balisage Article', async () => {
-    document.head.insertAdjacentHTML('beforeend', `
-      <meta name="description" content="Ancienne description">
-      <meta property="og:type" content="website">
-      <link rel="canonical" href="https://www.formaprompt.com/">
-    `);
-
     renderBlogPost();
 
     expect(await screen.findByRole('heading', {

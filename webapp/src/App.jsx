@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
@@ -17,6 +17,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Legal = lazy(() => import("./pages/Legal"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 const CGV = lazy(() => import("./pages/CGV"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Feedback = lazy(() => import("./pages/Feedback"));
@@ -37,35 +38,9 @@ const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
 
 function App() {
-  const { pathname } = useLocation();
-  const isPublicStudio = pathname === '/studio' || pathname === '/studio/';
-
   return (
     <>
       <ScrollToTop />
-      {isPublicStudio ? (
-        <Suspense
-          fallback={
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "100vh",
-                color: "var(--color-primary)"
-              }}
-            >
-              Chargement du Studio…
-            </div>
-          }
-        >
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
-            </Route>
-          </Routes>
-        </Suspense>
-      ) : (
       <Suspense
         fallback={
           <div
@@ -84,6 +59,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout/>}>
             <Route index element={<Home />} />
+            <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
             <Route path="formation-ia-generative" element={<FormationIA />} />
             <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
@@ -94,6 +70,7 @@ function App() {
             <Route path="blog/:slug" element={<BlogPost />} />
             <Route path="contact" element={<Contact />} />
             <Route path="mentions-legales" element={<Legal />} />
+            <Route path="privacy" element={<Privacy />} />
             <Route path="cgv" element={<CGV />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="feedback" element={<Feedback />} />
@@ -115,9 +92,7 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
-      )}
 
-      {!isPublicStudio && (
       <Suspense fallback={null}>
       <CookieConsent
         location="bottom"
@@ -152,7 +127,6 @@ function App() {
         </a>
       </CookieConsent>
       </Suspense>
-      )}
     </>
   );
 }

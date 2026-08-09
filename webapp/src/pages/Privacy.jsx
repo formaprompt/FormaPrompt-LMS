@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { SITE_CONFIG } from '../config/site';
 import { STUDIO_PRIVACY_COPY } from '../config/studioPrivacy';
-import './Privacy.css';
 
 export default function Privacy() {
   return (

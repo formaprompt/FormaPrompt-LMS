@@ -10,7 +10,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       workbox: {
         cleanupOutdatedCaches: true,
-        navigateFallbackDenylist: [/^\/blog\/[^/?#]+\/?$/],
+        // Les routes sont servies par l'hébergement. Ne jamais substituer
+        // l'index mis en cache à une navigation : cela peut laisser l'URL et
+        // le contenu en désaccord jusqu'au rechargement suivant.
+        navigateFallback: null,
       },
       manifest: {
         name: 'FormaPrompt',

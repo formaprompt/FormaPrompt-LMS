@@ -8,7 +8,7 @@ export default function Legal() {
         title="Mentions légales – FormaPrompt"
         description="Informations légales et politique de confidentialité de FormaPrompt."
         url={`${SITE_CONFIG.baseUrl}/mentions-legales`}
-        image={`${SITE_CONFIG.baseUrl}/assets/photo page d'accueil.png`}
+        image={`${SITE_CONFIG.baseUrl}/assets/photo%20page%20d%27accueil.png?v=20260809`}
       />
       <div className="container section">
       <h1 className="mb-4">Mentions Légales et Politique de Confidentialité</h1>
