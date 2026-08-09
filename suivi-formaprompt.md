@@ -360,6 +360,8 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Le contrôle de production a révélé que le dossier physique `blog/` interceptait la route React `/blog` et provoquait un `403`. La règle IONOS dirige maintenant explicitement cette route vers l'application, sans modifier les articles pré-rendus.
 - Après autorisation explicite de Thierry, la version a été déployée sur IONOS le 9 août 2026. Les 170 fichiers publiés ont été contrôlés : 169 par SHA-256, la vidéo inchangée par sa taille, et aucune divergence n'a été détectée. L'image de blog non suivie et sans rapport avec cette livraison a été exclue.
 - Les routes publiques principales, la route profonde protégée et les quatre ressources critiques répondent en HTTPS. Les contrôles Chrome réels sur ordinateur et mobile confirment la navigation au premier clic, le retour navigateur et le chargement des images de l'accueil et de la page À propos.
+- L'audit final des droits Supabase a détecté des privilèges de table hérités trop larges sur `course_lesson_progress`. La migration `20260809101109_restrict_course_lesson_progress_privileges.sql` a été appliquée le 9 août 2026 : `anon` n'a plus aucun droit et `authenticated` conserve uniquement `SELECT`, `INSERT` et `UPDATE`. RLS et les politiques limitant chaque compte à sa propre progression restent actives.
+- Cette correction concerne uniquement PostgreSQL et ne modifie aucun fichier du build public ; aucun nouveau déploiement IONOS n'est nécessaire.
 
 ## Commandes utiles
 
