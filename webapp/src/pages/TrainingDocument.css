@@ -1,0 +1,43 @@
+.training-document-page { max-width: 1050px; margin: 0 auto; padding: 2rem 1rem 4rem; background: #eef2f7; }
+.training-document-actions { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.training-document-back { color: #047857; background: white; border: 1px solid #047857; }
+.training-document-error { padding: 1rem; color: #991b1b; background: #fee2e2; border: 1px solid #f87171; border-radius: 10px; }
+.training-document-paper { min-height: 1120px; padding: clamp(1.5rem, 5vw, 4rem); color: #172033; background: #fff; box-shadow: 0 16px 45px rgba(15, 23, 42, .15); font-family: Arial, sans-serif; }
+.training-document-paper > header { display: flex; justify-content: space-between; gap: 2rem; padding-bottom: 1.5rem; border-bottom: 4px solid #07815f; }
+.training-document-paper h1 { max-width: 650px; margin: .25rem 0 0; font-size: clamp(1.75rem, 4vw, 2.6rem); color: #0f172a; }
+.training-document-paper h2 { margin: 0 0 .75rem; color: #065f46; font-size: 1.15rem; }
+.training-document-paper h3 { color: #0f172a; }
+.training-document-paper p, .training-document-paper li { line-height: 1.55; }
+.training-document-paper section { margin-top: 1.75rem; }
+.training-document-brand { margin: 0; color: #07815f; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
+.training-document-reference { margin: 0; flex: 0 0 auto; }
+.training-document-reference div { margin-bottom: .5rem; }
+.training-document-reference dt { color: #64748b; font-size: .75rem; text-transform: uppercase; }
+.training-document-reference dd { margin: .1rem 0 0; font-weight: 800; }
+.training-document-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+.training-document-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.training-document-details div { padding: .75rem; background: #f1f5f9; }
+.training-document-details dt { color: #64748b; font-size: .78rem; text-transform: uppercase; }
+.training-document-details dd { margin: .2rem 0 0; font-weight: 700; }
+.training-document-callout { padding: 1rem; overflow-wrap: anywhere; background: #ecfdf5; border-left: 4px solid #10b981; }
+.training-document-signatures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; margin-top: 3rem !important; }
+.training-document-signatures div { min-height: 140px; padding: 1rem; border: 1px solid #94a3b8; }
+.training-document-signatures span { display: block; margin-top: .5rem; color: #64748b; font-size: .85rem; }
+.training-document-certificate { padding: 1.5rem; font-size: 1.1rem; text-align: center; background: #f0fdf4; border: 2px solid #16a34a; }
+.training-document-paper footer { margin-top: 3rem; padding-top: 1rem; color: #64748b; border-top: 1px solid #cbd5e1; font-size: .78rem; }
+@media (max-width: 680px) {
+  .training-document-actions, .training-document-paper > header { flex-direction: column; }
+  .training-document-actions .btn { width: 100%; }
+  .training-document-columns, .training-document-details, .training-document-signatures { grid-template-columns: 1fr; }
+  .training-document-paper { min-height: 0; }
+}
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: white !important; }
+  body > * { visibility: hidden; }
+  .training-document-page, .training-document-page * { visibility: visible; }
+  .training-document-page { position: absolute; inset: 0; max-width: none; padding: 0; background: white; }
+  .training-document-actions { display: none; }
+  .training-document-paper { min-height: auto; padding: 0; box-shadow: none; }
+  .training-document-paper section, .training-document-paper li, .training-document-paper p { break-inside: avoid; }
+}

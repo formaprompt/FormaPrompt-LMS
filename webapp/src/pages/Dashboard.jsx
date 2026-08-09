@@ -11,6 +11,7 @@ import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
 import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
+import { keepOwnVisibleAdministrativeDocuments } from '../lib/administrativeDocuments';
 import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
@@ -29,6 +30,12 @@ const bookingStatusLabels = {
   completed: 'Accompagnement réalisé',
 };
 
+const administrativeDocumentLabels = {
+  training_agreement: 'Convention ou contrat de formation',
+  convocation: 'Convocation',
+  completion_certificate: 'Attestation de fin de formation',
+};
+
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -44,6 +51,8 @@ export default function Dashboard() {
   const [progressAvailable, setProgressAvailable] = useState(true);
   const [attestations, setAttestations] = useState([]);
   const [attestationsAvailable, setAttestationsAvailable] = useState(true);
+  const [administrativeDocuments, setAdministrativeDocuments] = useState([]);
+  const [administrativeDocumentsAvailable, setAdministrativeDocumentsAvailable] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -57,6 +66,7 @@ export default function Dashboard() {
       setSurveyLoadError(false);
       setProgressAvailable(true);
       setAttestationsAvailable(true);
+      setAdministrativeDocumentsAvailable(true);
 
       const [
         accessesResult,
@@ -65,6 +75,7 @@ export default function Dashboard() {
         exerciseResponsesResult,
         exerciseReviewsResult,
         attestationsResult,
+        administrativeDocumentsResult,
       ] = await Promise.all([
         fetchActiveCourseAccesses({ userId: user.id }),
         supabase
@@ -95,6 +106,14 @@ export default function Dashboard() {
           .select('id, reference, course_id, document_type, issued_at')
           .eq('user_id', user.id)
           .order('issued_at', { ascending: false }),
+        supabase
+          .from('training_documents')
+          .select('id, enrollment_id, user_id, course_id, document_type, status, visible_to_learner, generated_at')
+          .eq('user_id', user.id)
+          .eq('visible_to_learner', true)
+          .neq('status', 'missing')
+          .in('document_type', ['training_agreement', 'convocation', 'completion_certificate'])
+          .order('generated_at', { ascending: false }),
       ]);
 
       if (accessesResult.error) {
@@ -136,6 +155,17 @@ export default function Dashboard() {
         setAttestationsAvailable(false);
       } else {
         setAttestations(attestationsResult.data ?? []);
+      }
+
+      if (administrativeDocumentsResult.error) {
+        if (!['42P01', 'PGRST205'].includes(administrativeDocumentsResult.error.code)) {
+          console.error('Erreur lors du chargement des documents administratifs :', administrativeDocumentsResult.error);
+        }
+        setAdministrativeDocumentsAvailable(false);
+      } else {
+        setAdministrativeDocuments(
+          keepOwnVisibleAdministrativeDocuments(administrativeDocumentsResult.data, user.id),
+        );
       }
       setLoading(false);
     }
@@ -280,6 +310,32 @@ export default function Dashboard() {
                 </section>
               );
             })}
+
+            {administrativeDocumentsAvailable && administrativeDocuments.length > 0 && (
+              <section className="learner-attestations" aria-labelledby="learner-administrative-documents-title">
+                <div className="learner-attestations__heading">
+                  <FileCheck2 aria-hidden="true" />
+                  <div>
+                    <p>Dossier de formation</p>
+                    <h2 id="learner-administrative-documents-title">Mes documents administratifs</h2>
+                  </div>
+                </div>
+                <div className="learner-attestations__grid">
+                  {administrativeDocuments.map((document) => (
+                    <article key={document.id} className="learner-attestation-card">
+                      <div>
+                        <h3>{administrativeDocumentLabels[document.document_type] || 'Document de formation'}</h3>
+                        <p>{courseNames[document.course_id] || document.course_id}</p>
+                        <span>Mis à disposition le {new Date(document.generated_at).toLocaleDateString('fr-FR')}</span>
+                      </div>
+                      <Link to={`/dossiers/${document.enrollment_id}/documents/${document.document_type}`} className="btn learner-attestation-card__action">
+                        Consulter et imprimer
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {attestationsAvailable && attestations.length > 0 && (
               <section className="learner-attestations" aria-labelledby="learner-attestations-title">

@@ -38,6 +38,8 @@ const CourseBooking = lazy(() => import("./pages/CourseBooking"));
 const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
 const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
+const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
+const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
 
 function App() {
   return (
@@ -84,6 +86,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/emargements" element={<AttendanceSheets />} />
+            <Route path="admin/dossiers" element={<RequireAuth><AdminEnrollments /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
             <Route
               path="parcours/:slug/:lessonId?"
@@ -95,6 +98,7 @@ function App() {
             <Route path="admin/emargements/:bookingId" element={<AttendanceSheet />} />
             <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
             <Route path="attestations/:issuanceId" element={<IssuedAttestationDocument />} />
+            <Route path="dossiers/:enrollmentId/documents/:documentType" element={<RequireAuth><TrainingDocument /></RequireAuth>} />
           </Route>
         </Routes>
       </Suspense>

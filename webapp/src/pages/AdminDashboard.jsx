@@ -1529,6 +1529,13 @@ export default function AdminDashboard() {
       <div className="admin-dashboard__quick-actions" aria-label="Outils du formateur">
         <button
           type="button"
+          onClick={() => navigate('/admin/dossiers')}
+          className="btn btn-primary"
+        >
+          Dossiers OF / OPCO
+        </button>
+        <button
+          type="button"
           onClick={() => navigate('/admin/emargements')}
           className="btn btn-primary"
         >
