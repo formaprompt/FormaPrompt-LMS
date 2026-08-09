@@ -375,7 +375,9 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Le test OPCO a réutilisé sans le modifier l’accès administratif existant de `thierry270363@gmail.com`. Le test manuel a créé exactement un accès `manual` à Prompt Engineering – Niveau 1 pour `marie@miss-ronde.fr`, avec un dossier validé et cinq documents associés.
 - Les migrations `20260809152720_add_of_opco_training_files.sql` et `20260809154058_index_of_opco_training_files.sql` ont été appliquées. La fonction sécurisée `admin-manage-enrollment` a été déployée sur Supabase avec vérification JWT.
 - La validation locale par Thierry est réussie. TypeScript, lint, les tests applicatifs, Stripe et Studio, les 52 scénarios Playwright ordinateur/mobile et le build de production réussissent ; trois scénarios de la matrice sont ignorés volontairement.
-- Aucun déploiement IONOS et aucune fusion dans `main` n’ont encore été effectués.
+- Après validation explicite de Thierry, la version a été déployée sur IONOS le 9 août 2026. Les 176 fichiers du build, soit 143 167 567 octets, correspondent à la version distante : 100 fichiers transférés, 76 déjà identiques, 175 contrôlés par SHA-256 et la vidéo inchangée contrôlée par sa taille, sans divergence.
+- Les routes `/`, `/dashboard`, `/admin/dossiers`, `/dossiers/...` et `/studio/` répondent en HTTPS avec un statut 200. L’index public et les bundles critiques contrôlés correspondent exactement au build local.
+- Les trois commits fonctionnels et documentaires ont été poussés sur `origin/feat/of-opco-documents`. Aucune fusion dans `main` n’a été effectuée.
 
 ## Commandes utiles
 
