@@ -292,3 +292,24 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.learner-demo-path {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid #34d399;
+  border-radius: 12px;
+  background: rgba(6, 95, 70, .22);
+}
+
+.learner-demo-path h3 { color: #fff; margin: .25rem 0 .5rem; }
+.learner-demo-path p { color: #d1fae5; margin: 0; }
+.learner-demo-path__eyebrow { color: #6ee7b7 !important; font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.learner-demo-path .btn { flex: 0 0 auto; text-align: center; }
+
+@media (max-width: 680px) {
+  .learner-demo-path { align-items: stretch; flex-direction: column; }
+  .learner-demo-path .btn { width: 100%; }
+}

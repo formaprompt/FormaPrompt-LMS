@@ -6,6 +6,7 @@ import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'luci
 import CourseProgress from '../components/CourseProgress';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
+import { DEMO_LEARNING_PATH_SLUG } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
@@ -162,6 +163,17 @@ export default function Dashboard() {
         <p style={{ color: '#aaa', marginTop: '1rem', marginBottom: '2rem' }}>
           Vous retrouverez ici toutes les formations que vous avez achetées ou qui vous ont été attribuées.
         </p>
+
+        <section className="learner-demo-path" aria-labelledby="learner-demo-path-title">
+          <div>
+            <p className="learner-demo-path__eyebrow">Premier parcours persistant</p>
+            <h3 id="learner-demo-path-title">Introduction au Prompt Engineering</h3>
+            <p>Cinq modules courts pour tester la progression et la reprise automatique dans votre espace apprenant.</p>
+          </div>
+          <Link to={`/parcours/${DEMO_LEARNING_PATH_SLUG}`} className="btn btn-primary">
+            Commencer ou reprendre
+          </Link>
+        </section>
         
         {loading ? (
           <p>Chargement de vos formations...</p>

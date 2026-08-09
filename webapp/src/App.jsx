@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
+import RequireAuth from "./components/RequireAuth";
 import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
 // Lazy‑loaded pages
 const StudioPage = lazy(() => import("./studio/StudioPage"));
@@ -29,6 +30,7 @@ const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
+const LearningPath = lazy(() => import("./pages/LearningPath"));
 const AttendanceSheets = lazy(() => import("./pages/AttendanceSheets"));
 const GuideGPT56 = lazy(() => import("./pages/GuideGPT56"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
@@ -83,6 +85,10 @@ function App() {
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/emargements" element={<AttendanceSheets />} />
             <Route path="course/:id" element={<CoursePlayer />} />
+            <Route
+              path="parcours/:slug/:lessonId?"
+              element={<RequireAuth><LearningPath /></RequireAuth>}
+            />
             <Route path="guide-gpt-5-6-codex" element={<GuideGPT56 />} />
             <Route path="paiement-reussi" element={<PaymentSuccess />} />
             <Route path="reservation-formation" element={<CourseBooking />} />

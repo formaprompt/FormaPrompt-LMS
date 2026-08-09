@@ -346,6 +346,19 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n’ont été modifiés.
 - Après autorisation explicite de Thierry, la correction a été déployée sur IONOS le 27 juillet 2026. Le contrôle final confirme que les 165 fichiers du build, soit 141 335 346 octets, correspondent à la version distante : 164 fichiers vérifiés par SHA-256, la vidéo inchangée vérifiée par sa taille et aucune divergence détectée. Les routes `/contact` avec et sans `www` répondent en HTTPS ; les fichiers JavaScript et CSS Contact sont strictement identiques au build local.
 
+## Navigation stable et premier parcours persistant — 9 août 2026
+
+- La cause du double clic était une double gestion du `<head>` : le composant SEO supprimait manuellement des balises que React 19 devait ensuite retirer, provoquant `Cannot read properties of null (reading 'removeChild')`. Les balises SEO prérendues sont maintenant identifiées puis retirées avant le montage React, et React reste leur seul propriétaire pendant la navigation.
+- La navigation utilise désormais un arbre de routes et un `AuthProvider` uniques. Les métadonnées SEO ne sont plus rendues en double par le layout et les pages.
+- Le service worker ne remplace plus une navigation par un ancien `index.html` en cache et ne force plus de rechargement lors d'un changement de contrôleur.
+- Les images principales de l'accueil et de la page À propos conservent leurs chemins historiques pour les anciennes pages encore en cache, avec une version d'URL qui force leur rechargement dans le nouveau build. Un test E2E vérifie leur largeur réelle sur ordinateur et mobile.
+- Les scénarios Accueil, Studio, formations, Blog, retour navigateur, URL profonde et menu mobile passent au premier clic sur les profils ordinateur et mobile.
+- Le parcours privé « Introduction au Prompt Engineering » propose cinq modules, une progression visible, la complétion et la reprise automatique du dernier module consulté.
+- La table Supabase `course_lesson_progress` est la source de vérité. RLS autorise uniquement la lecture et l'écriture de la progression du compte connecté ; les futurs parcours payants sont reliés à l'accès existant `purchases`.
+- La migration `20260809090000_add_course_lesson_progress.sql` a été appliquée au projet Supabase FormaPrompt. Le test à deux comptes confirme qu'aucun compte ne voit la progression de l'autre ; les lignes techniques ont été supprimées après contrôle.
+- Les 41 tests applicatifs, 10 tests Stripe, 106 tests Vitest, TypeScript, lint et le build réussissent. Les tests navigateur démarrent désormais le build prérendu de production et échouent en cas d'erreur JavaScript ; les 50 scénarios donnent 47 réussites et 3 scénarios ignorés volontairement par la matrice ordinateur/mobile.
+- Aucun déploiement ni push n'a été effectué. Le commit local reste soumis à une confirmation explicite distincte.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

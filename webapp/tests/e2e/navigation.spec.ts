@@ -16,6 +16,13 @@ async function revealResourcesOnDesktop(page: Page, projectName: string) {
 }
 
 test.describe('Navigation au premier clic', () => {
+  test('protège une URL profonde du parcours apprenant', async ({ page }) => {
+    await page.goto('/parcours/introduction-prompt-engineering/definir-un-role');
+
+    await expect(page).toHaveURL(/\/login\?redirect=/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Bon retour !' })).toBeVisible();
+  });
+
   test('enchaîne les pages publiques, le retour navigateur et une URL profonde', async ({ page }, testInfo) => {
     const pageErrors: Error[] = [];
     page.on('pageerror', (error) => pageErrors.push(error));
