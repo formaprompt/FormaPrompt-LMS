@@ -5,6 +5,8 @@
   RewriteCond %{HTTP_HOST} ^www\.formaprompt\.com$ [NC]
   RewriteRule ^studio/?$ https://formaprompt.com/studio/ [R=301,L]
   RewriteRule ^index\.html$ - [L]
+  # Le dossier de pré-rendu des articles ne doit pas intercepter la route React /blog.
+  RewriteRule ^blog/?$ /index.html [L]
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^(.+?)/?$ $1.html [L]
   RewriteCond %{REQUEST_FILENAME} !-f

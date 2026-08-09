@@ -357,7 +357,9 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - La table Supabase `course_lesson_progress` est la source de vérité. RLS autorise uniquement la lecture et l'écriture de la progression du compte connecté ; les futurs parcours payants sont reliés à l'accès existant `purchases`.
 - La migration `20260809090000_add_course_lesson_progress.sql` a été appliquée au projet Supabase FormaPrompt. Le test à deux comptes confirme qu'aucun compte ne voit la progression de l'autre ; les lignes techniques ont été supprimées après contrôle.
 - Les 41 tests applicatifs, 10 tests Stripe, 106 tests Vitest, TypeScript, lint et le build réussissent. Les tests navigateur démarrent désormais le build prérendu de production et échouent en cas d'erreur JavaScript ; les 50 scénarios donnent 47 réussites et 3 scénarios ignorés volontairement par la matrice ordinateur/mobile.
-- Aucun déploiement ni push n'a été effectué. Le commit local reste soumis à une confirmation explicite distincte.
+- Le contrôle de production a révélé que le dossier physique `blog/` interceptait la route React `/blog` et provoquait un `403`. La règle IONOS dirige maintenant explicitement cette route vers l'application, sans modifier les articles pré-rendus.
+- Après autorisation explicite de Thierry, la version a été déployée sur IONOS le 9 août 2026. Les 170 fichiers publiés ont été contrôlés : 169 par SHA-256, la vidéo inchangée par sa taille, et aucune divergence n'a été détectée. L'image de blog non suivie et sans rapport avec cette livraison a été exclue.
+- Les routes publiques principales, la route profonde protégée et les quatre ressources critiques répondent en HTTPS. Les contrôles Chrome réels sur ordinateur et mobile confirment la navigation au premier clic, le retour navigateur et le chargement des images de l'accueil et de la page À propos.
 
 ## Commandes utiles
 
