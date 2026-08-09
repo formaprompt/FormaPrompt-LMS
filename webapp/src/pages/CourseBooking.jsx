@@ -85,8 +85,15 @@ export default function CourseBooking() {
     setLoading(true)
     setFeedback('')
 
-    const [purchaseResult, bookingResult, slotsResult] = await Promise.all([
-      supabase.from('purchases').select('id').eq('user_id', user.id).eq('course_id', courseId).maybeSingle(),
+    const [accessResult, bookingResult, slotsResult] = await Promise.all([
+      supabase
+        .from('course_access')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+        .maybeSingle(),
       supabase
         .from('course_booking_requests')
         .select(`
@@ -111,16 +118,16 @@ export default function CourseBooking() {
         .order('starts_at'),
     ])
 
-    if (purchaseResult.error || bookingResult.error || slotsResult.error) {
+    if (accessResult.error || bookingResult.error || slotsResult.error) {
       console.error('Chargement des réservations impossible :', {
-        purchase: purchaseResult.error,
+        access: accessResult.error,
         booking: bookingResult.error,
         slots: slotsResult.error,
       })
       setFeedback('Impossible de charger les disponibilités pour le moment.')
     }
 
-    setHasAccess(Boolean(purchaseResult.data))
+    setHasAccess(Boolean(accessResult.data))
     setBooking(bookingResult.data || null)
     setSlots(slotsResult.data || [])
     setLoading(false)

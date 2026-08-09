@@ -64,12 +64,14 @@ export default function CoursePlayer() {
       }
 
       setAccessError('');
-      const [purchaseResult, positioningResult] = await Promise.all([
+      const [accessResult, positioningResult] = await Promise.all([
         supabase
-          .from('purchases')
+          .from('course_access')
           .select('id')
           .eq('user_id', user.id)
           .eq('course_id', id)
+          .eq('status', 'active')
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
           .limit(1),
         supabase
           .from('course_positioning_assessments')
@@ -81,10 +83,10 @@ export default function CoursePlayer() {
           .limit(1),
       ]);
 
-      if (purchaseResult.error) {
-        console.error("Erreur lors de la vérification de l'accès :", purchaseResult.error);
+      if (accessResult.error) {
+        console.error("Erreur lors de la vérification de l'accès :", accessResult.error);
         setAccessError("Impossible de vérifier votre accès pour le moment. Réessayez dans quelques instants.");
-      } else if (!purchaseResult.data?.length) {
+      } else if (!accessResult.data?.length) {
         navigate(course.landingPath);
       } else if (positioningResult.error) {
         console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);

@@ -89,10 +89,12 @@ export default function FormationAIAct() {
       }
 
       const { data, error } = await supabase
-        .from('purchases')
+        .from('course_access')
         .select('id')
         .eq('user_id', user.id)
         .eq('course_id', 'formation-ia-act')
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .limit(1);
 
       if (!error && data?.length > 0) setHasPurchased(true);

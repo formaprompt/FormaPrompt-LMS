@@ -31,7 +31,7 @@ const bookingStatusLabels = {
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [purchases, setPurchases] = useState([]);
+  const [courseAccesses, setCourseAccesses] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ export default function Dashboard() {
       setAttestationsAvailable(true);
 
       const [
-        purchasesResult,
+        accessesResult,
         bookingResult,
         surveyResult,
         exerciseResponsesResult,
@@ -66,9 +66,11 @@ export default function Dashboard() {
         attestationsResult,
       ] = await Promise.all([
         supabase
-          .from('purchases')
-          .select('id, course_id, purchased_at')
-          .eq('user_id', user.id),
+          .from('course_access')
+          .select('id, course_id, granted_at, access_source')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`),
         supabase
           .from('course_booking_requests')
           .select(`
@@ -99,11 +101,11 @@ export default function Dashboard() {
           .order('issued_at', { ascending: false }),
       ]);
 
-      if (purchasesResult.error) {
-        console.error('Erreur lors du chargement des formations :', purchasesResult.error);
+      if (accessesResult.error) {
+        console.error('Erreur lors du chargement des formations :', accessesResult.error);
         setLoadError("Impossible de charger vos formations pour le moment. Veuillez réessayer ultérieurement.");
       } else {
-        setPurchases(purchasesResult.data ?? []);
+        setCourseAccesses(accessesResult.data ?? []);
       }
 
       if (bookingResult.error) {
@@ -147,7 +149,7 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const bookablePurchases = purchases.filter((purchase) => BOOKING_COURSES[purchase.course_id]);
+  const bookableAccesses = courseAccesses.filter((access) => BOOKING_COURSES[access.course_id]);
   const pendingSatisfactionBookings = surveyLoadError ? [] : bookings.filter((booking) => (
     BOOKING_COURSES[booking.course_id]
     && hasLearnerSignedLastSession(booking)
@@ -181,7 +183,7 @@ export default function Dashboard() {
           <div role="alert" style={{ padding: '1rem', border: '1px solid #f87171', borderRadius: '8px', background: '#3f1d24', color: '#fecaca' }}>
             {loadError}
           </div>
-        ) : purchases.length === 0 ? (
+        ) : courseAccesses.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1rem 0' }}>
             <h3 style={{ marginBottom: '1rem', color: '#fff', fontSize: '1.5rem' }}>Vous n'avez pas encore de formation</h3>
             <p style={{ color: '#aaa', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
@@ -244,13 +246,13 @@ export default function Dashboard() {
               );
             })}
 
-            {bookablePurchases.map((purchase) => {
-              const course = BOOKING_COURSES[purchase.course_id];
-              const currentBooking = bookings.find((item) => item.course_id === purchase.course_id);
+            {bookableAccesses.map((access) => {
+              const course = BOOKING_COURSES[access.course_id];
+              const currentBooking = bookings.find((item) => item.course_id === access.course_id);
               const hasActiveBooking = currentBooking && !['cancelled', 'rejected'].includes(currentBooking.status);
               return (
                 <section
-                  key={`booking-${purchase.course_id}`}
+                  key={`booking-${access.course_id}`}
                   className={`booking-next-step ${hasActiveBooking ? 'booking-next-step--registered' : ''}`}
                   aria-live="polite"
                 >
@@ -276,7 +278,7 @@ export default function Dashboard() {
                       </p>
                     )}
                   </div>
-                  <Link to={getBookingUrl(purchase.course_id)} className="btn booking-next-step__action">
+                  <Link to={getBookingUrl(access.course_id)} className="btn booking-next-step__action">
                     {hasActiveBooking ? 'Voir mes séances' : 'Choisir mes horaires'}
                   </Link>
                 </section>
@@ -313,21 +315,21 @@ export default function Dashboard() {
             )}
 
             <div className="learner-course-grid">
-              {purchases.map((purchase) => {
-                const purchasedCourse = courseCatalog[purchase.course_id];
+              {courseAccesses.map((access) => {
+                const purchasedCourse = courseCatalog[access.course_id];
                 const progress = calculateCourseProgress(
                   purchasedCourse?.exercises,
-                  exerciseResponses.filter((response) => response.course_id === purchase.course_id),
-                  exerciseReviews.filter((review) => review.course_id === purchase.course_id),
+                  exerciseResponses.filter((response) => response.course_id === access.course_id),
+                  exerciseReviews.filter((review) => review.course_id === access.course_id),
                 );
 
                 return (
-                  <article key={purchase.id} className="learner-course-card">
-                    <h3>{courseNames[purchase.course_id] || purchase.course_id}</h3>
+                  <article key={access.id} className="learner-course-card">
+                    <h3>{courseNames[access.course_id] || access.course_id}</h3>
                     {progressAvailable && (
                       <CourseProgress progress={progress} compact headingLevel={4} />
                     )}
-                    <Link to={`/course/${purchase.course_id}`} className="btn btn-primary learner-course-card__action">
+                    <Link to={`/course/${access.course_id}`} className="btn btn-primary learner-course-card__action">
                       ▶ Voir la formation
                     </Link>
                   </article>

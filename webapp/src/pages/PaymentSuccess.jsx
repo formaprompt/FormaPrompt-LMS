@@ -25,10 +25,12 @@ export default function PaymentSuccess() {
     async function checkAccess() {
       attempts += 1;
       const { data, error } = await supabase
-        .from('purchases')
+        .from('course_access')
         .select('id')
         .eq('user_id', user.id)
         .eq('course_id', courseId)
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
         .maybeSingle();
 
       if (stopped) return;

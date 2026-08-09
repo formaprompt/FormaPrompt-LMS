@@ -604,6 +604,7 @@ export default function AdminDashboard() {
   const [finalProjectReviewsError, setFinalProjectReviewsError] = useState('');
   const [purchases, setPurchases] = useState([]);
   const [purchasesError, setPurchasesError] = useState('');
+  const [courseAccesses, setCourseAccesses] = useState([]);
   const [selectedCourseByUser, setSelectedCourseByUser] = useState({});
   const [grantingAccess, setGrantingAccess] = useState('');
   const [grantFeedback, setGrantFeedback] = useState(null);
@@ -781,6 +782,17 @@ export default function AdminDashboard() {
         setPurchasesError("Les achats ne peuvent pas être chargés pour le moment.");
       } else {
         setPurchases(purchasesData || []);
+      }
+
+      const { data: courseAccessData, error: courseAccessLoadError } = await supabase
+        .from('course_access')
+        .select('id, user_id, course_id, status, access_source, purchase_id, granted_at, expires_at')
+        .order('granted_at', { ascending: false });
+
+      if (courseAccessLoadError) {
+        console.error('Erreur lors du chargement des droits de formation :', courseAccessLoadError);
+      } else {
+        setCourseAccesses(courseAccessData || []);
       }
 
       // Fetch contacts
@@ -981,8 +993,11 @@ export default function AdminDashboard() {
     if (!courseId || role !== 'admin') return;
 
     const courseLabel = COURSE_LABELS[courseId] || courseId;
-    const alreadyGranted = purchases.some(
-      (purchase) => purchase.user_id === learner.id && purchase.course_id === courseId,
+    const alreadyGranted = courseAccesses.some(
+      (access) => access.user_id === learner.id
+        && access.course_id === courseId
+        && access.status === 'active'
+        && (!access.expires_at || new Date(access.expires_at) > new Date()),
     );
 
     if (alreadyGranted) {
@@ -1010,10 +1025,10 @@ export default function AdminDashboard() {
         message: "La formation n'a pas pu être attribuée. Vérifiez votre connexion puis réessayez.",
       });
     } else {
-      if (data?.purchase) {
-        setPurchases((currentPurchases) => {
-          const withoutDuplicate = currentPurchases.filter((purchase) => purchase.id !== data.purchase.id);
-          return [data.purchase, ...withoutDuplicate];
+      if (data?.access) {
+        setCourseAccesses((currentAccesses) => {
+          const withoutDuplicate = currentAccesses.filter((access) => access.id !== data.access.id);
+          return [data.access, ...withoutDuplicate];
         });
       }
 
@@ -1754,8 +1769,11 @@ export default function AdminDashboard() {
                                 >
                                   <option value="">Choisir une formation</option>
                                   {COURSE_OPTIONS.map((course) => {
-                                    const learnerHasAccess = purchases.some(
-                                      (purchase) => purchase.user_id === u.id && purchase.course_id === course.id,
+                                    const learnerHasAccess = courseAccesses.some(
+                                      (access) => access.user_id === u.id
+                                        && access.course_id === course.id
+                                        && access.status === 'active'
+                                        && (!access.expires_at || new Date(access.expires_at) > new Date()),
                                     );
                                     return (
                                       <option key={course.id} value={course.id} disabled={learnerHasAccess}>
@@ -1770,9 +1788,11 @@ export default function AdminDashboard() {
                                   disabled={
                                     !selectedCourseByUser[u.id]
                                     || Boolean(grantingAccess)
-                                    || purchases.some(
-                                      (purchase) => purchase.user_id === u.id
-                                        && purchase.course_id === selectedCourseByUser[u.id],
+                                    || courseAccesses.some(
+                                      (access) => access.user_id === u.id
+                                        && access.course_id === selectedCourseByUser[u.id]
+                                        && access.status === 'active'
+                                        && (!access.expires_at || new Date(access.expires_at) > new Date()),
                                     )
                                   }
                                   onClick={() => handleGrantCourse(u)}
