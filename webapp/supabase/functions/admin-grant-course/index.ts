@@ -78,29 +78,31 @@ Deno.serve(async (request) => {
     }
 
     const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
-      .from('purchases')
-      .select('id, user_id, course_id, amount_total, currency, payment_status, customer_phone, purchased_at')
+      .from('course_access')
+      .select('id, user_id, course_id, status, access_source, purchase_id, granted_at, expires_at')
       .eq('user_id', targetUserId)
       .eq('course_id', courseId)
       .maybeSingle();
 
     if (existingAccessError) throw existingAccessError;
-    if (existingAccess) {
-      return jsonResponse({ alreadyGranted: true, purchase: existingAccess });
+    if (existingAccess?.status === 'active'
+      && (!existingAccess.expires_at || new Date(existingAccess.expires_at) > new Date())) {
+      return jsonResponse({ alreadyGranted: true, access: existingAccess });
     }
 
     const { data: grantedAccess, error: grantError } = await supabaseAdmin
-      .from('purchases')
-      .insert({
+      .from('course_access')
+      .upsert({
         user_id: targetUserId,
         course_id: courseId,
-        amount_total: null,
-        currency: null,
-        payment_status: 'granted_by_admin',
-        customer_phone: null,
-        purchased_at: new Date().toISOString(),
-      })
-      .select('id, user_id, course_id, amount_total, currency, payment_status, customer_phone, purchased_at')
+        status: 'active',
+        access_source: 'admin',
+        purchase_id: existingAccess?.purchase_id ?? null,
+        granted_at: new Date().toISOString(),
+        expires_at: null,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,course_id' })
+      .select('id, user_id, course_id, status, access_source, granted_at, expires_at')
       .single();
 
     if (grantError) {
@@ -116,7 +118,7 @@ Deno.serve(async (request) => {
       courseId,
     });
 
-    return jsonResponse({ granted: true, purchase: grantedAccess }, 201);
+    return jsonResponse({ granted: true, access: grantedAccess }, 201);
   } catch (error) {
     console.error('admin-grant-course:', error);
     return jsonResponse({ error: "L'accès ne peut pas être attribué pour le moment." }, 500);

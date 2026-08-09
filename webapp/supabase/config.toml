@@ -10,6 +10,11 @@ verify_jwt = true
 [functions.create-course-booking]
 verify_jwt = true
 
+# Ancien point d'entrée conservé uniquement pour répondre 410. Il ne traite
+# plus aucun événement et ne peut donc plus créer d'accès sans signature.
+[functions.stripe-webhook]
+verify_jwt = false
+
 # Stripe signe lui-même les requêtes envoyées à ce point d'entrée.
 [functions.stripe-webhook-ai-act]
 verify_jwt = false

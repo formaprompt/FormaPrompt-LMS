@@ -64,17 +64,30 @@ Deno.serve(async (request) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    const { data: existingAccess, error: accessError } = await supabaseAdmin
+      .from('course_access')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('course_id', purchase.courseId)
+      .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+      .maybeSingle();
+
+    if (accessError) throw accessError;
+    if (existingAccess) {
+      return jsonResponse({ alreadyPurchased: true });
+    }
+
+    // Une preuve de paiement existante bloque également un second débit, même
+    // si un administrateur a ensuite suspendu le droit fonctionnel.
     const { data: existingPurchase, error: purchaseError } = await supabaseAdmin
       .from('purchases')
       .select('id')
       .eq('user_id', user.id)
       .eq('course_id', purchase.courseId)
       .maybeSingle();
-
     if (purchaseError) throw purchaseError;
-    if (existingPurchase) {
-      return jsonResponse({ alreadyPurchased: true });
-    }
+    if (existingPurchase) return jsonResponse({ alreadyPurchased: true });
 
     const priceId = requiredEnv(purchase.priceEnvName);
     const stripe = new Stripe(stripeSecretKey);
