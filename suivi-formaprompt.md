@@ -363,6 +363,20 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - L'audit final des droits Supabase a détecté des privilèges de table hérités trop larges sur `course_lesson_progress`. La migration `20260809101109_restrict_course_lesson_progress_privileges.sql` a été appliquée le 9 août 2026 : `anon` n'a plus aucun droit et `authenticated` conserve uniquement `SELECT`, `INSERT` et `UPDATE`. RLS et les politiques limitant chaque compte à sa propre progression restent actives.
 - Cette correction concerne uniquement PostgreSQL et ne modifie aucun fichier du build public ; aucun nouveau déploiement IONOS n'est nécessaire.
 
+## Sprint OF/OPCO et automatisation documentaire — 9 août 2026
+
+- Le workflow administratif réutilise le système de droits `course_access` : une inscription manuelle, entreprise, OPCO ou gratuite aboutit au même accès LMS que Stripe, sans créer de mécanisme parallèle.
+- Les tables privées `training_enrollments` et `training_documents` enregistrent le dossier, la source, le financement, les dates et cinq types de documents. RLS limite les apprenants à leurs propres documents publiés et réserve la gestion globale aux rôles autorisés.
+- L’administration `/admin/dossiers` permet de sélectionner ou inviter un apprenant, choisir la formation et la source, créer ou modifier le dossier, attribuer l’accès, régénérer les documents et clôturer la formation.
+- La convention, la convocation et l’attestation de fin de formation sont des pages HTML imprimables. Elles reposent sur des snapshots structurés privés dans PostgreSQL ; aucune URL publique permanente et aucune infrastructure PDF lourde n’ont été ajoutées.
+- La feuille d’émargement et le questionnaire de satisfaction réutilisent les modules Qualiopi existants lorsqu’une réservation compatible existe. Les pièces absentes restent clairement signalées et invisibles pour l’apprenant.
+- La clôture avant la date de fin est refusée. La modification d’un dossier terminé régénère aussi son attestation afin de conserver des informations cohérentes.
+- Une fuite d’affichage propre aux comptes administrateurs a été corrigée : l’espace apprenant filtre désormais explicitement les documents sur le compte connecté, en complément de RLS. Le propriétaire voit ses documents publiés et un autre apprenant en voit zéro.
+- Le test OPCO a réutilisé sans le modifier l’accès administratif existant de `thierry270363@gmail.com`. Le test manuel a créé exactement un accès `manual` à Prompt Engineering – Niveau 1 pour `marie@miss-ronde.fr`, avec un dossier validé et cinq documents associés.
+- Les migrations `20260809152720_add_of_opco_training_files.sql` et `20260809154058_index_of_opco_training_files.sql` ont été appliquées. La fonction sécurisée `admin-manage-enrollment` a été déployée sur Supabase avec vérification JWT.
+- La validation locale par Thierry est réussie. TypeScript, lint, les tests applicatifs, Stripe et Studio, les 52 scénarios Playwright ordinateur/mobile et le build de production réussissent ; trois scénarios de la matrice sont ignorés volontairement.
+- Aucun déploiement IONOS et aucune fusion dans `main` n’ont encore été effectués.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
