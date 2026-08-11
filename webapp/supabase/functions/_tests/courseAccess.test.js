@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   buildStripeCourseAccess,
   COURSE_ACCESS_CONFLICT_TARGET,
+  shouldCreateStripeCourseAccess,
 } from '../_shared/courseAccess.js';
 
 const input = {
@@ -41,4 +42,12 @@ test('refuse de créer un droit Stripe sans preuve de paiement', () => {
     () => buildStripeCourseAccess({ ...input, purchaseId: '' }),
     /Données insuffisantes/,
   );
+});
+
+test('une relivraison Stripe ne réactive aucun droit existant', () => {
+  assert.equal(shouldCreateStripeCourseAccess(null), true);
+  assert.equal(shouldCreateStripeCourseAccess({ status: 'active' }), false);
+  assert.equal(shouldCreateStripeCourseAccess({ status: 'suspended' }), false);
+  assert.equal(shouldCreateStripeCourseAccess({ status: 'revoked' }), false);
+  assert.equal(shouldCreateStripeCourseAccess({ status: 'refunded' }), false);
 });

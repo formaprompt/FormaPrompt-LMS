@@ -1541,6 +1541,15 @@ export default function AdminDashboard() {
         >
           Feuilles d’émargement
         </button>
+        {role === 'admin' && (
+          <button
+            type="button"
+            onClick={() => navigate('/admin/acces-incidents')}
+            className="btn btn-primary"
+          >
+            Accès & incidents
+          </button>
+        )}
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>

@@ -1,0 +1,138 @@
+.access-admin-page {
+  min-height: 70vh;
+  padding: 3rem 1rem 5rem;
+  color: #e5e7eb;
+}
+
+.access-admin-header,
+.access-admin-toolbar,
+.access-card header,
+.incident-card header,
+.access-card-actions,
+.incident-actions,
+.access-dialog-actions,
+.incident-badges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.access-admin-header { margin-bottom: 1.5rem; }
+.access-admin-header h1 { margin: 0.2rem 0; }
+.access-admin-header p { max-width: 760px; color: #cbd5e1; }
+.access-admin-eyebrow,
+.incident-reference { margin: 0; color: #5eead4; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.access-admin-secondary { border: 1px solid #64748b; color: #fff; }
+
+.access-admin-feedback,
+.access-admin-alert {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 8px;
+}
+.access-admin-feedback.is-success { border: 1px solid #34d399; background: #064e3b; }
+.access-admin-feedback.is-error,
+.access-admin-alert { border: 1px solid #f87171; background: #451a1a; color: #fecaca; }
+
+.access-admin-tabs { display: flex; gap: 0.5rem; margin: 1.5rem 0; border-bottom: 1px solid #475569; }
+.access-admin-tabs button { padding: 0.85rem 1rem; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #cbd5e1; cursor: pointer; }
+.access-admin-tabs button.is-active { border-bottom-color: #2dd4bf; color: #fff; font-weight: 800; }
+
+.access-admin-toolbar { margin-bottom: 1.25rem; }
+.access-admin-toolbar h2 { margin-bottom: 0.25rem; }
+.access-admin-toolbar p { margin: 0; color: #94a3b8; }
+.access-admin-toolbar label { min-width: min(100%, 340px); font-weight: 700; }
+.access-admin-toolbar input { width: 100%; margin-top: 0.4rem; }
+
+.access-card-list,
+.incident-card-list { display: grid; gap: 1rem; }
+.access-card,
+.incident-card { padding: 1.25rem; border: 1px solid #475569; border-radius: 12px; background: #1e293b; }
+.access-card h3,
+.incident-card h3 { margin: 0; overflow-wrap: anywhere; }
+.access-card header p,
+.incident-card header p { margin: 0.3rem 0 0; color: #cbd5e1; }
+.access-card dl,
+.incident-card dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+.access-card dl div,
+.incident-card dl div { padding: 0.75rem; border-radius: 8px; background: #0f172a; }
+.access-card dt,
+.incident-card dt { color: #94a3b8; font-size: 0.8rem; }
+.access-card dd,
+.incident-card dd { margin: 0.2rem 0 0; overflow-wrap: anywhere; }
+
+.access-status-badge,
+.incident-badges span { display: inline-flex; padding: 0.35rem 0.65rem; border: 1px solid currentColor; border-radius: 999px; font-size: 0.82rem; font-weight: 800; }
+.access-status-badge.is-active { color: #6ee7b7; }
+.access-status-badge.is-suspended { color: #fbbf24; }
+.access-status-badge.is-revoked,
+.access-status-badge.is-refunded { color: #fca5a5; }
+.access-status-badge.is-expired { color: #cbd5e1; }
+.incident-badges span.is-critical { color: #fca5a5; }
+.incident-badges span.is-high { color: #fdba74; }
+.incident-badges span.is-medium { color: #fde68a; }
+.incident-badges span.is-low { color: #86efac; }
+
+.access-card-actions,
+.incident-actions { justify-content: flex-start; margin: 1rem 0; }
+.access-card-actions button,
+.incident-actions button,
+.access-dialog button { padding: 0.7rem 1rem; border: 1px solid #64748b; border-radius: 8px; background: #334155; color: #fff; font-weight: 700; cursor: pointer; }
+button.is-danger { border-color: #ef4444; background: #7f1d1d; }
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+.access-history { margin-top: 0.75rem; border-top: 1px solid #475569; padding-top: 0.75rem; }
+.access-history summary { cursor: pointer; font-weight: 700; }
+.access-history li { margin: 0.75rem 0; }
+.access-history li span { display: block; color: #94a3b8; font-size: 0.82rem; }
+.access-history li p { margin: 0.2rem 0; }
+
+.incident-facts { margin: 1rem 0; padding: 1rem; border-left: 4px solid #64748b; background: #0f172a; }
+.incident-facts h4,
+.incident-facts p { margin: 0.25rem 0; }
+.incident-workflow-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.incident-workflow-grid .is-wide { grid-column: 1 / -1; }
+
+.access-admin-page label,
+.access-dialog label { display: grid; gap: 0.35rem; color: #e2e8f0; font-weight: 700; }
+.access-admin-page input,
+.access-admin-page select,
+.access-admin-page textarea,
+.access-dialog input,
+.access-dialog select,
+.access-dialog textarea { box-sizing: border-box; width: 100%; padding: 0.7rem; border: 1px solid #64748b; border-radius: 7px; background: #0f172a; color: #fff; font: inherit; }
+.access-admin-page input:focus-visible,
+.access-admin-page select:focus-visible,
+.access-admin-page textarea:focus-visible,
+.access-admin-page button:focus-visible,
+.access-admin-page a:focus-visible { outline: 3px solid #5eead4; outline-offset: 3px; }
+
+.access-dialog-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(2 6 23 / 86%); }
+.access-dialog { width: min(680px, 100%); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.5rem; border: 1px solid #64748b; border-radius: 12px; background: #1e293b; box-shadow: 0 24px 80px rgb(0 0 0 / 55%); }
+.access-dialog form { display: grid; gap: 1rem; }
+.access-dialog h2 { margin: 0; }
+.access-dialog p { margin: 0; }
+.access-dialog-warning,
+.access-dialog-information { padding: 0.9rem; border-radius: 8px; }
+.access-dialog-warning { border: 1px solid #f87171; background: #451a1a; color: #fecaca; }
+.access-dialog-information { border: 1px solid #60a5fa; background: #172554; color: #dbeafe; }
+.access-dialog-actions { justify-content: flex-end; }
+
+@media (max-width: 760px) {
+  .access-admin-page { padding-top: 1.5rem; }
+  .access-admin-header,
+  .access-admin-toolbar { align-items: stretch; flex-direction: column; }
+  .access-admin-tabs { overflow-x: auto; }
+  .access-admin-tabs button { flex: 0 0 auto; }
+  .access-card dl,
+  .incident-card dl,
+  .incident-workflow-grid { grid-template-columns: 1fr; }
+  .incident-workflow-grid .is-wide { grid-column: auto; }
+  .access-card-actions button,
+  .incident-actions button { flex: 1 1 100%; }
+  .access-dialog { padding: 1rem; }
+  .access-dialog-actions { align-items: stretch; flex-direction: column-reverse; }
+  .access-dialog-actions button { width: 100%; }
+}

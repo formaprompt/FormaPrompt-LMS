@@ -70,6 +70,10 @@ export function accessSourceForEnrollment(source) {
   return source === 'opco' ? 'opco' : 'manual';
 }
 
+export function shouldCreateEnrollmentCourseAccess(existingAccess) {
+  return !existingAccess;
+}
+
 export function validateAdministrativeEnrollment(input = {}) {
   const course = ADMINISTRATIVE_COURSES[input.courseId];
   if (!course) throw new Error('Formation invalide.');

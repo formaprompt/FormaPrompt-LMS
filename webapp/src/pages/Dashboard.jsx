@@ -9,7 +9,8 @@ import { courseCatalog } from '../data/courseCatalog';
 import { DEMO_LEARNING_PATH_SLUG } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
-import { fetchActiveCourseAccesses } from '../lib/courseAccess';
+import { fetchCourseAccesses } from '../lib/courseAccess';
+import { isCourseAccessOpen, learnerAccessMessage } from '../lib/courseAccessLifecycle';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import { keepOwnVisibleAdministrativeDocuments } from '../lib/administrativeDocuments';
 import './Dashboard.css';
@@ -77,7 +78,7 @@ export default function Dashboard() {
         attestationsResult,
         administrativeDocumentsResult,
       ] = await Promise.all([
-        fetchActiveCourseAccesses({ userId: user.id }),
+        fetchCourseAccesses({ userId: user.id }),
         supabase
           .from('course_booking_requests')
           .select(`
@@ -175,7 +176,9 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const bookableAccesses = courseAccesses.filter((access) => BOOKING_COURSES[access.course_id]);
+  const activeCourseAccesses = courseAccesses.filter((access) => isCourseAccessOpen(access));
+  const blockedCourseAccesses = courseAccesses.filter((access) => !isCourseAccessOpen(access));
+  const bookableAccesses = activeCourseAccesses.filter((access) => BOOKING_COURSES[access.course_id]);
   const pendingSatisfactionBookings = surveyLoadError ? [] : bookings.filter((booking) => (
     BOOKING_COURSES[booking.course_id]
     && hasLearnerSignedLastSession(booking)
@@ -245,6 +248,17 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            {blockedCourseAccesses.map((access) => (
+              <section key={`blocked-${access.id}`} className="learner-access-notice" role="status">
+                <div>
+                  <p className="learner-access-notice__status">Accès indisponible</p>
+                  <h3>{courseNames[access.course_id] || access.course_id}</h3>
+                  <p>{learnerAccessMessage(access.status)}</p>
+                </div>
+                <Link to="/contact" className="btn learner-access-notice__action">Contacter FormaPrompt</Link>
+              </section>
+            ))}
+
             {pendingSatisfactionBookings.map((booking) => {
               const course = BOOKING_COURSES[booking.course_id];
               return (
@@ -367,7 +381,7 @@ export default function Dashboard() {
             )}
 
             <div className="learner-course-grid">
-              {courseAccesses.map((access) => {
+              {activeCourseAccesses.map((access) => {
                 const purchasedCourse = courseCatalog[access.course_id];
                 const progress = calculateCourseProgress(
                   purchasedCourse?.exercises,

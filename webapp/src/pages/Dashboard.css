@@ -313,3 +313,46 @@
   .learner-demo-path { align-items: stretch; flex-direction: column; }
   .learner-demo-path .btn { width: 100%; }
 }
+.learner-access-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin: 1.25rem 0;
+  padding: 1.25rem;
+  border: 1px solid #64748b;
+  border-radius: 12px;
+  background: #1f2937;
+  color: #e2e8f0;
+}
+
+.learner-access-notice h3,
+.learner-access-notice p {
+  margin: 0.25rem 0;
+}
+
+.learner-access-notice__status {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.learner-access-notice__action {
+  flex: 0 0 auto;
+  border: 1px solid #94a3b8;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .learner-access-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .learner-access-notice__action {
+    text-align: center;
+    width: 100%;
+  }
+}

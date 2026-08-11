@@ -8,7 +8,7 @@ import {
 } from '../_shared/purchaseConfig.js';
 import {
   buildStripeCourseAccess,
-  COURSE_ACCESS_CONFLICT_TARGET,
+  shouldCreateStripeCourseAccess,
 } from '../_shared/courseAccess.js';
 
 function requiredEnv(name: string) {
@@ -164,20 +164,29 @@ Deno.serve(async (request) => {
 
     if (purchaseError) throw purchaseError;
 
-    const { error: accessError } = await supabaseAdmin
+    const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
       .from('course_access')
-      .upsert(buildStripeCourseAccess({
-        userId: session.metadata!.user_id,
-        courseId: purchase.courseId,
-        purchaseId: savedPurchase.id,
-        grantedAt: purchasedAt,
-        updatedAt: new Date().toISOString(),
-      }), { onConflict: COURSE_ACCESS_CONFLICT_TARGET });
+      .select('id')
+      .eq('user_id', session.metadata!.user_id)
+      .eq('course_id', purchase.courseId)
+      .maybeSingle();
+    if (existingAccessError) throw existingAccessError;
 
-    // Une réponse 500 demande à Stripe de retenter l'événement. L'upsert sur
-    // les deux tables rend cette reprise idempotente, y compris si l'achat a
-    // été enregistré juste avant une erreur d'écriture du droit d'accès.
-    if (accessError) throw accessError;
+    if (shouldCreateStripeCourseAccess(existingAccess)) {
+      const { error: accessError } = await supabaseAdmin
+        .from('course_access')
+        .insert(buildStripeCourseAccess({
+          userId: session.metadata!.user_id,
+          courseId: purchase.courseId,
+          purchaseId: savedPurchase.id,
+          grantedAt: purchasedAt,
+          updatedAt: new Date().toISOString(),
+        }));
+
+      // Une livraison concurrente peut avoir créé le même droit entre la
+      // lecture et l'insert. Elle reste idempotente sans réactiver un droit.
+      if (accessError && accessError.code !== '23505') throw accessError;
+    }
   } catch (error) {
     console.error(`Enregistrement de l’achat ${event.id} impossible :`, error);
     return new Response('Enregistrement de l’achat impossible.', { status: 500 });

@@ -44,6 +44,7 @@ Deno.serve(async (request) => {
 
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
     });
     const { data: authData, error: authError } = await supabaseAuth.auth.getUser(accessToken);
 
@@ -77,37 +78,16 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Le compte apprenant est introuvable.' }, 404);
     }
 
-    const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
-      .from('course_access')
-      .select('id, user_id, course_id, status, access_source, purchase_id, granted_at, expires_at')
-      .eq('user_id', targetUserId)
-      .eq('course_id', courseId)
-      .maybeSingle();
-
-    if (existingAccessError) throw existingAccessError;
-    if (existingAccess?.status === 'active'
-      && (!existingAccess.expires_at || new Date(existingAccess.expires_at) > new Date())) {
-      return jsonResponse({ alreadyGranted: true, access: existingAccess });
-    }
-
-    const { data: grantedAccess, error: grantError } = await supabaseAdmin
-      .from('course_access')
-      .upsert({
-        user_id: targetUserId,
-        course_id: courseId,
-        status: 'active',
-        access_source: 'admin',
-        purchase_id: existingAccess?.purchase_id ?? null,
-        granted_at: new Date().toISOString(),
-        expires_at: null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,course_id' })
-      .select('id, user_id, course_id, status, access_source, granted_at, expires_at')
-      .single();
+    const { data: grantedAccess, error: grantError } = await supabaseAuth
+      .rpc('admin_grant_course_access', {
+        p_target_user_id: targetUserId,
+        p_course_id: courseId,
+        p_reason: 'Attribution administrative depuis FormaPrompt',
+      });
 
     if (grantError) {
-      if (grantError.code === '23505') {
-        return jsonResponse({ alreadyGranted: true });
+      if (grantError.message?.includes('Un droit existe déjà')) {
+        return jsonResponse({ error: grantError.message }, 409);
       }
       throw grantError;
     }

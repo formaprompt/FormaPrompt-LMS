@@ -39,6 +39,7 @@ const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
 const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
 const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
+const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
 
 function App() {
@@ -87,6 +88,7 @@ function App() {
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/emargements" element={<AttendanceSheets />} />
             <Route path="admin/dossiers" element={<RequireAuth><AdminEnrollments /></RequireAuth>} />
+            <Route path="admin/acces-incidents" element={<RequireAuth><AdminAccessIncidents /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
             <Route
               path="parcours/:slug/:lessonId?"

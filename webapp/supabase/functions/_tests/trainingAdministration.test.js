@@ -4,6 +4,7 @@ import {
   accessSourceForEnrollment,
   buildAdministrativeDocument,
   documentRowsForValidatedEnrollment,
+  shouldCreateEnrollmentCourseAccess,
   validateAdministrativeEnrollment,
 } from '../_shared/trainingAdministration.js';
 
@@ -58,6 +59,13 @@ test('une inscription OPCO utilise le droit existant avec la source opco', () =>
   assert.equal(accessSourceForEnrollment('manual'), 'manual');
   assert.equal(accessSourceForEnrollment('company'), 'manual');
   assert.equal(accessSourceForEnrollment('free'), 'manual');
+});
+
+test('un dossier OF ou OPCO ne réactive pas un droit existant', () => {
+  assert.equal(shouldCreateEnrollmentCourseAccess(null), true);
+  assert.equal(shouldCreateEnrollmentCourseAccess({ status: 'active' }), false);
+  assert.equal(shouldCreateEnrollmentCourseAccess({ status: 'suspended' }), false);
+  assert.equal(shouldCreateEnrollmentCourseAccess({ status: 'revoked' }), false);
 });
 
 test('les données administratives utiles sont normalisées sans ajouter de données sensibles', () => {

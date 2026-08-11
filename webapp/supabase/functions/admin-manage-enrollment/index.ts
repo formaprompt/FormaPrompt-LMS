@@ -4,6 +4,7 @@ import {
   accessSourceForEnrollment,
   buildAdministrativeDocument,
   documentRowsForValidatedEnrollment,
+  shouldCreateEnrollmentCourseAccess,
   validateAdministrativeEnrollment,
 } from '../_shared/trainingAdministration.js';
 
@@ -122,25 +123,23 @@ Deno.serve(async (request) => {
       if (existingAccessError) throw existingAccessError;
 
       const now = new Date().toISOString();
-      const accessIsActive = existingAccess?.status === 'active'
-        && (!existingAccess.expires_at || new Date(existingAccess.expires_at) > new Date());
       let courseAccess = existingAccess;
 
-      if (!accessIsActive) {
+      // Un dossier administratif ne réactive jamais silencieusement un droit
+      // suspendu, révoqué, remboursé ou expiré.
+      if (shouldCreateEnrollmentCourseAccess(existingAccess)) {
         const { data: grantedAccess, error: grantError } = await supabaseAdmin
           .from('course_access')
-          .upsert({
+          .insert({
             user_id: learnerId,
             course_id: input.courseId,
             status: 'active',
-            access_source: existingAccess?.purchase_id
-              ? existingAccess.access_source
-              : accessSourceForEnrollment(input.enrollmentSource),
-            purchase_id: existingAccess?.purchase_id ?? null,
+            access_source: accessSourceForEnrollment(input.enrollmentSource),
+            purchase_id: null,
             granted_at: now,
             expires_at: null,
             updated_at: now,
-          }, { onConflict: 'user_id,course_id' })
+          })
           .select('id, status, access_source, purchase_id, granted_at, expires_at')
           .single();
         if (grantError) throw grantError;

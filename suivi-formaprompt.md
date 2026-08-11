@@ -379,6 +379,17 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Les routes `/`, `/dashboard`, `/admin/dossiers`, `/dossiers/...` et `/studio/` répondent en HTTPS avec un statut 200. L’index public et les bundles critiques contrôlés correspondent exactement au build local.
 - Les trois commits fonctionnels et documentaires ont été poussés sur `origin/feat/of-opco-documents`. Aucune fusion dans `main` n’a été effectuée.
 
+## Sprint LMS 1 — accès, incidents et audit — 11 août 2026
+
+- La branche locale `feat/access-incidents-audit` étend `course_access` sans créer de second système de droits : `active`, `suspended`, `revoked`, `refunded` et le statut historique `expired`. `completed` reste exclusivement pédagogique.
+- Une absence d’échéance reste contrôlée par le statut. Le scénario critique `expires_at IS NULL` avec un accès suspendu est refusé par RLS.
+- L’administration locale gère suspension, réactivation, révocation, historique, incidents, décision humaine et entretiens, avec confirmations contextualisées et affichage mobile accessible.
+- Les incidents, entretiens et journaux d’audit sont réservés au rôle `admin` côté PostgreSQL. Le journal est append-only raisonnablement protégé.
+- Stripe et OF/OPCO ne réactivent plus un accès existant lors d’une relivraison ou d’une nouvelle attribution. Aucun workflow de paiement ou remboursement n’a été refondu.
+- Le futur workflow RGPD d’effacement/anonymisation et sa matrice de dépendances sont documentés dans `docs/technical/sprint-1/README.md`. Aucune purge ni cascade globale n’est implémentée.
+- Validation locale : 26 assertions pgTAP, 176 tests unitaires/intégration, 49 scénarios Playwright réussis et 3 ignorés volontairement, lint, TypeScript, build et pré-rendus réussis.
+- Aucune migration de production, aucun déploiement IONOS, aucun commit, push ou merge n’a été réalisé à ce stade.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :
