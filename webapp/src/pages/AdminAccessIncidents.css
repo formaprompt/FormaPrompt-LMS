@@ -136,8 +136,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .access-admin-page { padding-top: 1.5rem; }
   .access-admin-header,
   .access-admin-toolbar { align-items: stretch; flex-direction: column; }
-  .access-admin-tabs { overflow-x: auto; }
-  .access-admin-tabs button { flex: 0 0 auto; }
+  .access-admin-tabs { overflow-x: visible; }
+  .access-admin-tabs button { flex: 1 1 0; padding-inline: 0.5rem; white-space: normal; }
   .access-card dl,
   .incident-card dl,
   .incident-workflow-grid { grid-template-columns: 1fr; }
