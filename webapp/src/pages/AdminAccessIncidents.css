@@ -54,6 +54,7 @@
 .incident-card h3 { margin: 0; overflow-wrap: anywhere; }
 .access-card header p,
 .incident-card header p { margin: 0.3rem 0 0; color: #cbd5e1; }
+.access-card .access-learner-email { color: #fff; font-weight: 700; overflow-wrap: anywhere; }
 .access-card dl,
 .incident-card dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
 .access-card dl div,
@@ -118,6 +119,15 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .access-dialog-information { padding: 0.9rem; border-radius: 8px; }
 .access-dialog-warning { border: 1px solid #f87171; background: #451a1a; color: #fecaca; }
 .access-dialog-information { border: 1px solid #60a5fa; background: #172554; color: #dbeafe; }
+.access-dialog-target { padding: 1rem; border: 2px solid #5eead4; border-radius: 10px; background: #0f172a; }
+.access-dialog-target h3,
+.access-dialog-target p { overflow-wrap: anywhere; }
+.access-dialog-target h3 { margin: 0; font-size: 1.2rem; }
+.access-dialog-target p { margin-top: 0.25rem; font-weight: 800; }
+.access-dialog-target dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 0; }
+.access-dialog-target dl div { padding: 0.7rem; border-radius: 7px; background: #1e293b; }
+.access-dialog-target dt { color: #94a3b8; font-size: 0.8rem; }
+.access-dialog-target dd { margin: 0.2rem 0 0; font-weight: 800; overflow-wrap: anywhere; }
 .access-dialog-actions { justify-content: flex-end; }
 
 @media (max-width: 760px) {
@@ -133,6 +143,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .access-card-actions button,
   .incident-actions button { flex: 1 1 100%; }
   .access-dialog { padding: 1rem; }
+  .access-dialog-target dl { grid-template-columns: 1fr; }
   .access-dialog-actions { align-items: stretch; flex-direction: column-reverse; }
   .access-dialog-actions button { width: 100%; }
 }

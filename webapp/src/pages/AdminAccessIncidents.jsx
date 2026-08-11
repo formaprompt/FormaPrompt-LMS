@@ -2,6 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import {
+  accessAuditSentence,
+  buildAdministrativeIdentityMap,
+  createAccessActionTarget,
+  filterAdministrativeAccesses,
+  isAccessActionTargetConsistent,
+} from '../lib/accessAdministration';
 import { COURSE_ACCESS_STATUS_LABELS } from '../lib/courseAccessLifecycle';
 import './AdminAccessIncidents.css';
 
@@ -41,6 +48,7 @@ const ACTION_LABELS = {
   suspend: 'Suspendre l’accès',
   reactivate: 'Réactiver l’accès',
   revoke: 'Révoquer l’accès',
+  restore: 'Restaurer l’accès',
 };
 
 function localDateTime(value = new Date()) {
@@ -53,10 +61,6 @@ function formatDate(value) {
   return value
     ? new Date(value).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })
     : 'Non renseigné';
-}
-
-function normalizeSearch(value) {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
 function createIncidentForm(access) {
@@ -90,6 +94,8 @@ export default function AdminAccessIncidents() {
   const firstDialogFieldRef = useRef(null);
   const [section, setSection] = useState('accesses');
   const [profiles, setProfiles] = useState([]);
+  const [trainingIdentities, setTrainingIdentities] = useState([]);
+  const [positioningIdentities, setPositioningIdentities] = useState([]);
   const [accesses, setAccesses] = useState([]);
   const [incidents, setIncidents] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -111,8 +117,24 @@ export default function AdminAccessIncidents() {
   const loadData = useCallback(async () => {
     if (!user || role !== 'admin') return;
     setLoading(true);
-    const [profilesResult, accessesResult, incidentsResult, categoriesResult, auditResult] = await Promise.all([
-      supabase.from('profiles').select('id, email, role').eq('role', 'user').order('email'),
+    const [
+      profilesResult,
+      trainingIdentitiesResult,
+      positioningIdentitiesResult,
+      accessesResult,
+      incidentsResult,
+      categoriesResult,
+      auditResult,
+    ] = await Promise.all([
+      supabase.from('profiles').select('id, email, role').order('email'),
+      supabase
+        .from('training_enrollments')
+        .select('user_id, learner_first_name, learner_last_name, updated_at')
+        .order('updated_at', { ascending: false }),
+      supabase
+        .from('course_positioning_assessments')
+        .select('user_id, learner_name, submitted_at')
+        .order('submitted_at', { ascending: false }),
       supabase
         .from('course_access')
         .select('id, user_id, course_id, status, access_source, granted_at, expires_at, status_changed_at, suspension_ends_at')
@@ -129,13 +151,16 @@ export default function AdminAccessIncidents() {
         .limit(250),
     ]);
 
-    const error = profilesResult.error || accessesResult.error || incidentsResult.error
+    const error = profilesResult.error || trainingIdentitiesResult.error
+      || positioningIdentitiesResult.error || accessesResult.error || incidentsResult.error
       || categoriesResult.error || auditResult.error;
     if (error) {
       console.error('Chargement accès et incidents impossible :', error);
       setFeedback({ type: 'error', message: 'Les données administratives ne peuvent pas être chargées.' });
     } else {
       setProfiles(profilesResult.data || []);
+      setTrainingIdentities(trainingIdentitiesResult.data || []);
+      setPositioningIdentities(positioningIdentitiesResult.data || []);
       setAccesses(accessesResult.data || []);
       setIncidents(incidentsResult.data || []);
       setCategories(categoriesResult.data || []);
@@ -179,28 +204,43 @@ export default function AdminAccessIncidents() {
     return () => document.removeEventListener('keydown', closeOnEscape);
   }, [accessAction, hearingIncident, incidentDialogOpen]);
 
-  const profileById = useMemo(
-    () => new Map(profiles.map((profile) => [profile.id, profile])),
+  const identityByUserId = useMemo(
+    () => buildAdministrativeIdentityMap(profiles, trainingIdentities, positioningIdentities),
+    [positioningIdentities, profiles, trainingIdentities],
+  );
+
+  const learnerProfiles = useMemo(
+    () => profiles.filter((profile) => profile.role === 'user'),
     [profiles],
   );
 
-  const filteredAccesses = useMemo(() => {
-    const term = normalizeSearch(search);
-    if (!term) return accesses;
-    return accesses.filter((access) => normalizeSearch([
-      profileById.get(access.user_id)?.email,
-      COURSE_LABELS[access.course_id],
-      COURSE_ACCESS_STATUS_LABELS[access.status],
-    ].filter(Boolean).join(' ')).includes(term));
-  }, [accesses, profileById, search]);
+  const filteredAccesses = useMemo(
+    () => filterAdministrativeAccesses(
+      accesses,
+      identityByUserId,
+      search,
+      COURSE_LABELS,
+      COURSE_ACCESS_STATUS_LABELS,
+    ),
+    [accesses, identityByUserId, search],
+  );
 
-  const matchingIncidents = accessAction
-    ? incidents.filter((incident) => incident.learner_user_id === accessAction.access.user_id
-      && incident.course_id === accessAction.access.course_id)
+  const selectedAccess = accessAction
+    ? accesses.find((access) => access.id === accessAction.accessId)
+    : null;
+
+  const selectedAccessIsConsistent = isAccessActionTargetConsistent(accessAction, selectedAccess);
+  const selectedIdentity = selectedAccessIsConsistent
+    ? identityByUserId.get(selectedAccess.user_id)
+    : null;
+
+  const matchingIncidents = selectedAccessIsConsistent
+    ? incidents.filter((incident) => incident.learner_user_id === selectedAccess.user_id
+      && incident.course_id === selectedAccess.course_id)
     : [];
 
   function openAccessAction(type, access) {
-    setAccessAction({ type, access });
+    setAccessAction(createAccessActionTarget(type, access));
     setActionReason('');
     setSuspensionEndsAt('');
     setLinkedIncidentId('');
@@ -217,10 +257,16 @@ export default function AdminAccessIncidents() {
 
   async function submitAccessAction(event) {
     event.preventDefault();
-    if (!accessAction) return;
+    if (!accessAction || !selectedAccessIsConsistent) {
+      setAccessAction(null);
+      setFeedback({ type: 'error', message: 'La cible de cette action a changé. Rechargez les accès puis recommencez.' });
+      return;
+    }
     setSubmitting(true);
-    const { error } = await supabase.rpc('admin_change_course_access', {
-      p_access_id: accessAction.access.id,
+    const { data, error } = await supabase.rpc('admin_change_course_access', {
+      p_access_id: selectedAccess.id,
+      p_expected_user_id: selectedAccess.user_id,
+      p_expected_course_id: selectedAccess.course_id,
       p_action: accessAction.type,
       p_reason: actionReason.trim(),
       p_suspension_ends_at: accessAction.type === 'suspend' && suspensionEndsAt
@@ -231,6 +277,12 @@ export default function AdminAccessIncidents() {
     setSubmitting(false);
     if (error) {
       setFeedback({ type: 'error', message: error.message });
+      return;
+    }
+    if (!data?.ok) {
+      setAccessAction(null);
+      setFeedback({ type: 'error', message: data?.message || 'La modification a été refusée car la cible est incohérente.' });
+      await loadData();
       return;
     }
     setAccessAction(null);
@@ -363,20 +415,31 @@ export default function AdminAccessIncidents() {
             </div>
             <label>
               Rechercher un apprenant ou une formation
-              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setAccessAction(null);
+                }}
+              />
             </label>
           </div>
 
           <div className="access-card-list">
             {filteredAccesses.map((access) => {
-              const learner = profileById.get(access.user_id);
+              const learner = identityByUserId.get(access.user_id) || {
+                fullName: 'Nom non renseigné',
+                email: 'Adresse e-mail non renseignée',
+              };
               const history = auditEntries.filter((entry) => entry.target_type === 'course_access' && entry.target_id === access.id);
               const relatedIncidents = incidents.filter((incident) => incident.learner_user_id === access.user_id && incident.course_id === access.course_id);
               return (
                 <article key={access.id} className="access-card">
                   <header>
                     <div>
-                      <h3>{learner?.email || access.user_id}</h3>
+                      <h3>{learner.fullName}</h3>
+                      <p className="access-learner-email">{learner.email}</p>
                       <p>{COURSE_LABELS[access.course_id] || access.course_id}</p>
                     </div>
                     <span className={`access-status-badge is-${access.status}`}>
@@ -392,6 +455,7 @@ export default function AdminAccessIncidents() {
                   <div className="access-card-actions">
                     {access.status === 'active' && <button type="button" onClick={() => openAccessAction('suspend', access)}>Suspendre</button>}
                     {access.status === 'suspended' && <button type="button" onClick={() => openAccessAction('reactivate', access)}>Réactiver</button>}
+                    {access.status === 'revoked' && <button type="button" onClick={() => openAccessAction('restore', access)}>Restaurer l’accès</button>}
                     {['active', 'suspended'].includes(access.status) && <button type="button" className="is-danger" onClick={() => openAccessAction('revoke', access)}>Révoquer</button>}
                     <button type="button" onClick={() => openIncidentDialog(access)}>Créer un incident</button>
                   </div>
@@ -401,9 +465,15 @@ export default function AdminAccessIncidents() {
                       <ol>
                         {history.map((entry) => (
                           <li key={entry.id}>
-                            <strong>{entry.action_type}</strong>
-                            <span>{formatDate(entry.created_at)}</span>
-                            {entry.reason && <p>{entry.reason}</p>}
+                            <strong>{formatDate(entry.created_at)}</strong>
+                            <span>{learner.fullName} — {learner.email}</span>
+                            <p>{accessAuditSentence(entry.action_type, COURSE_LABELS[access.course_id] || access.course_id)}</p>
+                            <p>
+                              Par : {identityByUserId.get(entry.actor_user_id)?.fullName || 'Administrateur'}
+                              {' — '}
+                              {identityByUserId.get(entry.actor_user_id)?.email || 'Compte administrateur non disponible'}
+                            </p>
+                            {entry.reason && <p>Motif : {entry.reason}</p>}
                           </li>
                         ))}
                       </ol>
@@ -427,13 +497,14 @@ export default function AdminAccessIncidents() {
           <div className="incident-card-list">
             {incidents.length === 0 ? <p>Aucun incident enregistré.</p> : incidents.map((incident) => {
               const draft = incidentDrafts[incident.id] || {};
-              const learner = profileById.get(incident.learner_user_id);
+              const learner = identityByUserId.get(incident.learner_user_id);
               return (
                 <article key={incident.id} className="incident-card">
                   <header>
                     <div>
                       <p className="incident-reference">Dossier {incident.id.slice(0, 8).toUpperCase()}</p>
-                      <h3>{learner?.email || incident.learner_user_id}</h3>
+                      <h3>{learner?.fullName || 'Nom non renseigné'}</h3>
+                      <p>{learner?.email || 'Adresse e-mail non renseignée'}</p>
                       <p>{COURSE_LABELS[incident.course_id] || incident.course_id}</p>
                     </div>
                     <div className="incident-badges">
@@ -493,13 +564,20 @@ export default function AdminAccessIncidents() {
         </section>
       )}
 
-      {accessAction && (
+      {accessAction && selectedAccessIsConsistent && (
         <div className="access-dialog-backdrop" role="presentation">
           <section className="access-dialog" role="dialog" aria-modal="true" aria-labelledby="access-action-title">
             <form onSubmit={submitAccessAction}>
               <h2 id="access-action-title">{ACTION_LABELS[accessAction.type]}</h2>
-              <p><strong>Apprenant :</strong> {profileById.get(accessAction.access.user_id)?.email}</p>
-              <p><strong>Formation :</strong> {COURSE_LABELS[accessAction.access.course_id]}</p>
+              <p>Vous êtes sur le point de <strong>{ACTION_LABELS[accessAction.type].toLowerCase()}</strong> pour :</p>
+              <section className="access-dialog-target" aria-label="Accès concerné">
+                <h3>{selectedIdentity?.fullName || 'Nom non renseigné'}</h3>
+                <p>{selectedIdentity?.email || 'Adresse e-mail non renseignée'}</p>
+                <dl>
+                  <div><dt>Formation</dt><dd>{COURSE_LABELS[selectedAccess.course_id] || selectedAccess.course_id}</dd></div>
+                  <div><dt>Statut actuel</dt><dd>{COURSE_ACCESS_STATUS_LABELS[selectedAccess.status] || selectedAccess.status}</dd></div>
+                </dl>
+              </section>
               {accessAction.type === 'revoke' && (
                 <div className="access-dialog-warning">
                   Cette action retirera l’accès de l’apprenant à cette formation. Les données pédagogiques et l’historique seront conservés conformément aux règles applicables.
@@ -508,6 +586,11 @@ export default function AdminAccessIncidents() {
               {accessAction.type === 'suspend' && (
                 <div className="access-dialog-information">
                   La suspension est temporaire et réversible. Lorsqu’elle est liée à un incident, une mesure conservatoire n’est pas une sanction définitive.
+                </div>
+              )}
+              {accessAction.type === 'restore' && (
+                <div className="access-dialog-information">
+                  La révocation restera visible dans l’historique. Cette restauration rendra de nouveau la formation accessible et sera journalisée avec son propre motif.
                 </div>
               )}
               <label>Motif obligatoire
@@ -527,7 +610,9 @@ export default function AdminAccessIncidents() {
               <div className="access-dialog-actions">
                 <button type="button" onClick={() => setAccessAction(null)}>Annuler</button>
                 <button type="submit" className={accessAction.type === 'revoke' ? 'is-danger' : ''} disabled={submitting || actionReason.trim().length < 5}>
-                  {submitting ? 'Enregistrement…' : ACTION_LABELS[accessAction.type]}
+                  {submitting
+                    ? 'Enregistrement…'
+                    : `${ACTION_LABELS[accessAction.type]} de ${selectedIdentity?.email || 'l’apprenant identifié ci-dessus'}`}
                 </button>
               </div>
             </form>
@@ -544,7 +629,14 @@ export default function AdminAccessIncidents() {
               <label>Apprenant
                 <select ref={firstDialogFieldRef} required value={incidentForm.learnerUserId} onChange={(event) => setIncidentForm({ ...incidentForm, learnerUserId: event.target.value })}>
                   <option value="">Sélectionner</option>
-                  {profiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.email}</option>)}
+                  {learnerProfiles.map((profile) => {
+                    const identity = identityByUserId.get(profile.id);
+                    return (
+                      <option key={profile.id} value={profile.id}>
+                        {identity?.fullName || 'Nom non renseigné'} — {identity?.email || profile.email}
+                      </option>
+                    );
+                  })}
                 </select>
               </label>
               <label>Formation

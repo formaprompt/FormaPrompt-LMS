@@ -6,13 +6,13 @@ SET LOCAL search_path = public, extensions;
 SELECT plan(26);
 
 INSERT INTO auth.users (
-  id, aud, role, email, encrypted_password, email_confirmed_at,
+  id, aud, role, email, encrypted_password,
   raw_app_meta_data, raw_user_meta_data, is_super_admin, created_at, updated_at
 ) VALUES
-  ('10000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'admin.sprint1@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
-  ('10000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'marie.sprint1@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
-  ('10000000-0000-0000-0000-000000000003', 'authenticated', 'authenticated', 'paul.sprint1@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
-  ('10000000-0000-0000-0000-000000000004', 'authenticated', 'authenticated', 'employee.sprint1@example.test', '', now(), '{"provider":"email","providers":["email"]}', '{}', false, now(), now());
+  ('10000000-0000-0000-0000-000000000001', 'authenticated', 'authenticated', 'admin.sprint1@example.test', '', '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
+  ('10000000-0000-0000-0000-000000000002', 'authenticated', 'authenticated', 'marie.sprint1@example.test', '', '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
+  ('10000000-0000-0000-0000-000000000003', 'authenticated', 'authenticated', 'paul.sprint1@example.test', '', '{"provider":"email","providers":["email"]}', '{}', false, now(), now()),
+  ('10000000-0000-0000-0000-000000000004', 'authenticated', 'authenticated', 'employee.sprint1@example.test', '', '{"provider":"email","providers":["email"]}', '{}', false, now(), now());
 
 INSERT INTO public.profiles (id, email, role) VALUES
   ('10000000-0000-0000-0000-000000000001', 'admin.sprint1@example.test', 'admin'),
@@ -55,7 +55,8 @@ SELECT is(
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 SELECT lives_ok(
   $$SELECT public.admin_change_course_access(
-    '20000000-0000-0000-0000-000000000001', 'suspend',
+    '20000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000002', 'formation-ia-act', 'suspend',
     'Mesure temporaire testée côté serveur', NULL, NULL
   )$$,
   'B - un admin suspend le droit'
@@ -81,7 +82,8 @@ SELECT is(
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 SELECT lives_ok(
   $$SELECT public.admin_change_course_access(
-    '20000000-0000-0000-0000-000000000001', 'reactivate',
+    '20000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000002', 'formation-ia-act', 'reactivate',
     'Réactivation explicite après vérification', NULL, NULL
   )$$,
   'C - un admin réactive le droit suspendu'
@@ -97,7 +99,8 @@ SELECT lives_ok(
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
 SELECT lives_ok(
   $$SELECT public.admin_change_course_access(
-    '20000000-0000-0000-0000-000000000001', 'suspend',
+    '20000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000002', 'formation-ia-act', 'suspend',
     'Nouvelle suspension conservée dans l historique', NULL, NULL
   )$$,
   'Une nouvelle suspension est historisée sans effacer la précédente'
@@ -105,7 +108,8 @@ SELECT lives_ok(
 
 SELECT lives_ok(
   $$SELECT public.admin_change_course_access(
-    '20000000-0000-0000-0000-000000000001', 'revoke',
+    '20000000-0000-0000-0000-000000000001',
+    '10000000-0000-0000-0000-000000000002', 'formation-ia-act', 'revoke',
     'Décision technique explicite de révocation', NULL, NULL
   )$$,
   'D - la révocation peut suivre une suspension'
@@ -172,7 +176,8 @@ SELECT is(
 SELECT set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000004', true);
 SELECT throws_ok(
   $$SELECT public.admin_change_course_access(
-    '20000000-0000-0000-0000-000000000002', 'suspend',
+    '20000000-0000-0000-0000-000000000002',
+    '10000000-0000-0000-0000-000000000003', 'formation-ia-act', 'suspend',
     'Tentative employé devant être refusée', NULL, NULL
   )$$,
   '42501',
@@ -202,7 +207,8 @@ SELECT is(
 SELECT lives_ok(
   format(
     $$SELECT public.admin_change_course_access(
-      '20000000-0000-0000-0000-000000000002', 'suspend',
+      '20000000-0000-0000-0000-000000000002',
+      '10000000-0000-0000-0000-000000000003', 'formation-ia-act', 'suspend',
       'Mesure conservatoire distincte de la décision finale', NULL, %L
     )$$,
     (SELECT incident_id FROM sprint1_test_context)
