@@ -1,6 +1,7 @@
 .access-admin-page {
   min-height: 70vh;
   padding: 3rem 1rem 5rem;
+  background: #0f172a;
   color: #e5e7eb;
 }
 
@@ -20,7 +21,7 @@
 }
 
 .access-admin-header { margin-bottom: 1.5rem; }
-.access-admin-header h1 { margin: 0.2rem 0; }
+.access-admin-header h1 { margin: 0.2rem 0; color: #fff; }
 .access-admin-header p { max-width: 760px; color: #cbd5e1; }
 .access-admin-eyebrow,
 .incident-reference { margin: 0; color: #5eead4; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -41,7 +42,7 @@
 .access-admin-tabs button.is-active { border-bottom-color: #2dd4bf; color: #fff; font-weight: 800; }
 
 .access-admin-toolbar { margin-bottom: 1.25rem; }
-.access-admin-toolbar h2 { margin-bottom: 0.25rem; }
+.access-admin-toolbar h2 { margin-bottom: 0.25rem; color: #fff; }
 .access-admin-toolbar p { margin: 0; color: #94a3b8; }
 .access-admin-toolbar label { min-width: min(100%, 340px); font-weight: 700; }
 .access-admin-toolbar input { width: 100%; margin-top: 0.4rem; }
@@ -51,7 +52,7 @@
 .access-card,
 .incident-card { padding: 1.25rem; border: 1px solid #475569; border-radius: 12px; background: #1e293b; }
 .access-card h3,
-.incident-card h3 { margin: 0; overflow-wrap: anywhere; }
+.incident-card h3 { margin: 0; color: #fff; overflow-wrap: anywhere; }
 .access-card header p,
 .incident-card header p { margin: 0.3rem 0 0; color: #cbd5e1; }
 .access-card .access-learner-email { color: #fff; font-weight: 700; overflow-wrap: anywhere; }
@@ -112,6 +113,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .access-dialog-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(2 6 23 / 86%); }
 .access-dialog { width: min(680px, 100%); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.5rem; border: 1px solid #64748b; border-radius: 12px; background: #1e293b; box-shadow: 0 24px 80px rgb(0 0 0 / 55%); }
+.access-dialog h2 { color: #fff; }
 .access-dialog form { display: grid; gap: 1rem; }
 .access-dialog h2 { margin: 0; }
 .access-dialog p { margin: 0; }
