@@ -151,7 +151,7 @@ function AttendanceSessionAdmin({ booking, session, attendance, draft, sessionFe
                 id={`meeting-url-${session.id}`}
                 type="url"
                 inputMode="url"
-                placeholder="https://meet.google.com/… ou lien Teams/Zoom"
+                placeholder="https://meet.google.com/… ou lien Microsoft Teams"
                 value={draft.meeting_url}
                 onChange={(event) => onDraftChange('meeting_url', event.target.value)}
               />

@@ -212,7 +212,7 @@ export default function PrerequisiteQuiz({
           Pour assurer le suivi pédagogique et constituer la preuve du positionnement préalable, FormaPrompt
           enregistre votre nom, vos réponses, votre score, la formation concernée et la date de réalisation.
           Ces informations sont accessibles uniquement à l'apprenant et aux personnes autorisées dans
-          l'administration. <a href="/mentions-legales">En savoir plus sur vos données personnelles</a>.
+          l'administration. <a href="/politique-confidentialite">En savoir plus sur vos données personnelles</a>.
         </p>
         <button type="submit" className="btn btn-primary" disabled={submitting}>
           {submitting ? 'Enregistrement…' : 'Enregistrer mon positionnement'}

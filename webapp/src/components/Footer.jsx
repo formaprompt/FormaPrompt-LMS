@@ -32,7 +32,12 @@ export default function Footer() {
             <li><Link to="/faq">FAQ</Link></li>
             <li><Link to="/contact">Contact / Devis</Link></li>
             <li><Link to="/mentions-legales">Mentions légales</Link></li>
-            <li><Link to="/cgv">CGV</Link></li>
+            <li><Link to="/cgv-particuliers">CGV particuliers</Link></li>
+            <li><Link to="/cgv-professionnels">CGV professionnels</Link></li>
+            <li><Link to="/politique-confidentialite">Confidentialité</Link></li>
+            <li><Link to="/reglement-interieur">Règlement intérieur</Link></li>
+            <li><Link to="/informations-precontractuelles">Informations précontractuelles</Link></li>
+            <li><Link to="/retractation">Renoncer au contrat ici</Link></li>
           </ul>
         </div>
         

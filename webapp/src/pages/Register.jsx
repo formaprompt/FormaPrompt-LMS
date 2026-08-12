@@ -115,6 +115,11 @@ export default function Register() {
           </button>
         </form>
 
+        <p className="auth-privacy-note">
+          Les informations nécessaires à votre compte sont traitées selon notre{' '}
+          <Link to="/politique-confidentialite">politique de confidentialité</Link>.
+        </p>
+
         <div className="auth-links">
           <p>Déjà un compte ? <Link to="/login">Se connecter</Link></p>
         </div>

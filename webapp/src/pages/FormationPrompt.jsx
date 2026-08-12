@@ -12,8 +12,8 @@ import {
   Users,
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import CommercialCheckout from '../components/CommercialCheckout'
 import { useAuth } from '../contexts/useAuth'
-import { supabase } from '../lib/supabaseClient'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import { getBookingUrl } from '../data/bookingCatalog'
 import './FormationPrompt.css'
@@ -47,8 +47,6 @@ export default function FormationPrompt() {
   const { user } = useAuth()
   const [hasPurchased, setHasPurchased] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [checkoutError, setCheckoutError] = useState('')
 
   useEffect(() => {
     async function checkPurchase() {
@@ -65,36 +63,6 @@ export default function FormationPrompt() {
 
     checkPurchase()
   }, [user])
-
-  async function startCheckout() {
-    if (!user || checkoutLoading) return
-
-    setCheckoutLoading(true)
-    setCheckoutError('')
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { course_id: COURSE_ID },
-      })
-
-      if (error) throw error
-      if (data?.alreadyPurchased) {
-        setHasPurchased(true)
-        return
-      }
-
-      const checkoutUrl = new URL(data?.url)
-      if (checkoutUrl.protocol !== 'https:') throw new Error('URL Stripe invalide.')
-      window.location.assign(checkoutUrl.toString())
-    } catch (error) {
-      console.error('Ouverture de Stripe Checkout impossible :', error)
-      setCheckoutError(
-        'Le paiement ne peut pas être ouvert pour le moment. Réessayez dans quelques instants ou contactez FormaPrompt.',
-      )
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }
 
   return (
     <>
@@ -244,20 +212,21 @@ export default function FormationPrompt() {
             <div className="prompt-price-card">
               <p className="prompt-price">343 €</p>
               <p className="prompt-price-note">par apprenant · soit 49 € par heure</p>
-              {!loading && hasPurchased ? (
-                <div className="prompt-price-actions">
-                  <Link to={`/course/${COURSE_ID}`} className="btn btn-primary">Accéder à ma formation</Link>
-                  <Link to={getBookingUrl(COURSE_ID)} className="btn prompt-secondary-btn">Réserver mes 7 heures</Link>
-                </div>
-              ) : user ? (
-                <button type="button" className="btn btn-primary" onClick={startCheckout} disabled={loading || checkoutLoading}>
-                  {checkoutLoading ? 'Ouverture du paiement sécurisé…' : 'Acheter la formation – 343 €'}
-                </button>
-              ) : (
-                <Link to="/login" className="btn btn-primary">Se connecter pour acheter</Link>
-              )}
-              {checkoutError && <p className="prompt-error" role="alert">{checkoutError}</p>}
-              <p>Paiement sécurisé par Stripe. L’accès est activé après confirmation du paiement.</p>
+              <CommercialCheckout
+                courseId={COURSE_ID}
+                user={user}
+                accessLoading={loading}
+                hasActiveAccess={hasPurchased}
+                priceLabel="343 €"
+                activeAccessActions={(
+                  <div className="prompt-price-actions">
+                    <Link to={`/course/${COURSE_ID}`} className="btn btn-primary">Accéder à ma formation</Link>
+                    <Link to={getBookingUrl(COURSE_ID)} className="btn prompt-secondary-btn">Réserver mes 7 heures</Link>
+                  </div>
+                )}
+              />
+              <p>Lorsqu’il est disponible, le paiement est sécurisé par Stripe et suit le parcours contractuel affiché avant la redirection.</p>
+              <p>Avant tout achat, consultez les <Link to="/cgv-particuliers">CGV particuliers</Link>, le <Link to="/reglement-interieur">règlement intérieur</Link> et les <Link to="/informations-precontractuelles">informations précontractuelles</Link>.</p>
               <p>
                 Présentiel dans un rayon maximal de 100 km autour de Calais : déplacement inclus pour la journée
                 complète ; participation unique de 30 € pour deux demi-journées, après validation de la distance.

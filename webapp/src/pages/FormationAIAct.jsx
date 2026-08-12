@@ -12,8 +12,8 @@ import {
   Users,
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import CommercialCheckout from '../components/CommercialCheckout';
 import { useAuth } from '../contexts/useAuth';
-import { supabase } from '../lib/supabaseClient';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import './FormationAIAct.css';
 
@@ -79,8 +79,6 @@ export default function FormationAIAct() {
   const { user } = useAuth();
   const [hasPurchased, setHasPurchased] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState('');
 
   useEffect(() => {
     async function checkPurchase() {
@@ -97,36 +95,6 @@ export default function FormationAIAct() {
 
     checkPurchase();
   }, [user]);
-
-  async function startCheckout() {
-    if (!user || checkoutLoading) return;
-
-    setCheckoutLoading(true);
-    setCheckoutError('');
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { course_id: 'formation-ia-act' },
-      });
-
-      if (error) throw error;
-      if (data?.alreadyPurchased) {
-        setHasPurchased(true);
-        return;
-      }
-
-      const checkoutUrl = new URL(data?.url);
-      if (checkoutUrl.protocol !== 'https:') throw new Error('URL Stripe invalide.');
-      window.location.assign(checkoutUrl.toString());
-    } catch (error) {
-      console.error('Ouverture de Stripe Checkout impossible :', error);
-      setCheckoutError(
-        "Le paiement ne peut pas être ouvert pour le moment. Vérifiez votre connexion ou réessayez dans quelques instants.",
-      );
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }
 
   return (
     <>
@@ -301,34 +269,30 @@ export default function FormationAIAct() {
               <p className="ai-act-old-price">Tarif habituel : <span>320 €</span></p>
               <p className="ai-act-price">187 €</p>
               <p className="ai-act-price-note">Tarif promotionnel</p>
-              {!loading && hasPurchased ? (
-                <div style={{ display: 'grid', gap: '0.75rem' }}>
-                  <Link to="/course/formation-ia-act" className="btn btn-primary">
-                    Accéder à ma formation
-                  </Link>
-                  <Link to="/reservation-formation" className="btn ai-act-secondary-btn">
-                    Réserver mes 4 heures
-                  </Link>
-                </div>
-              ) : user ? (
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={startCheckout}
-                  disabled={loading || checkoutLoading}
-                >
-                  {checkoutLoading ? 'Ouverture du paiement sécurisé…' : 'Acheter la formation – 187 €'}
-                </button>
-              ) : (
-                <Link to="/login" className="btn btn-primary">
-                  Se connecter pour acheter
-                </Link>
-              )}
-              {checkoutError && (
-                <p className="ai-act-checkout-error" role="alert">{checkoutError}</p>
-              )}
+              <CommercialCheckout
+                courseId="formation-ia-act"
+                user={user}
+                accessLoading={loading}
+                hasActiveAccess={hasPurchased}
+                priceLabel="187 €"
+                activeAccessActions={(
+                  <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    <Link to="/course/formation-ia-act" className="btn btn-primary">
+                      Accéder à ma formation
+                    </Link>
+                    <Link to="/reservation-formation" className="btn ai-act-secondary-btn">
+                      Réserver mes 4 heures
+                    </Link>
+                  </div>
+                )}
+              />
               <p className="ai-act-contact-note">
-                Paiement sécurisé par Stripe. L'accès est activé automatiquement après confirmation.
+                Lorsqu’il est disponible, le paiement est sécurisé par Stripe et suit le parcours contractuel affiché avant la redirection.
+              </p>
+              <p className="ai-act-contact-note">
+                Avant tout achat, consultez les <Link to="/cgv-particuliers">CGV particuliers</Link>, le{' '}
+                <Link to="/reglement-interieur">règlement intérieur</Link> et les{' '}
+                <Link to="/informations-precontractuelles">informations précontractuelles</Link>.
               </p>
               <p className="ai-act-contact-note">
                 En présentiel dans un rayon maximal de 100 km autour de Calais : déplacement inclus pour 1 × 4 h ;

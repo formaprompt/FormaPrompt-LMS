@@ -1,7 +1,43 @@
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
-import { getPurchaseConfig } from '../_shared/purchaseConfig.js';
+import {
+  CONSENT_TYPES,
+  getCommercialRoute,
+  getConsentDocumentVersion,
+  getPurchaseConfig,
+  getRequiredConsentTypes,
+  validateCommercialCheckoutRequest,
+} from '../_shared/purchaseConfig.js';
+
+const CONSENT_DOCUMENT_TYPES = Object.freeze({
+  [CONSENT_TYPES.EARLY_SERVICE_START]: 'early_service_start_statement',
+  [CONSENT_TYPES.DIGITAL_CONTENT_START]: 'digital_content_start_statement',
+  [CONSENT_TYPES.DIGITAL_CONTENT_WITHDRAWAL_ACKNOWLEDGEMENT]: 'digital_content_withdrawal_acknowledgement',
+});
+
+type ConsentType =
+  | 'cgv_acceptance'
+  | 'early_service_start'
+  | 'digital_content_start'
+  | 'digital_content_withdrawal_acknowledgement';
+
+type CommercialRoute = {
+  salesContext: string;
+  offerClassification: string;
+  accessActivationPolicy: string;
+  cgvDocumentType: string;
+  cgvVersion: string;
+  requiredConsentTypes: ConsentType[];
+};
+
+type RequiredDocumentPair = {
+  consentType: ConsentType;
+  documentType: string;
+  version: string;
+};
+
+type LegalDocument = { id: string; document_type: string; version: string };
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -61,6 +97,20 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Session utilisateur invalide ou expirée.' }, 401);
     }
 
+    const checkoutContext = body.checkout_context;
+    const commercialRoute = getCommercialRoute(purchase, checkoutContext) as CommercialRoute | null;
+    const commercialValidationError = validateCommercialCheckoutRequest(
+      purchase,
+      checkoutContext,
+      body.consents,
+    );
+    if (commercialValidationError) {
+      return jsonResponse({ error: commercialValidationError }, 400);
+    }
+    if (!commercialRoute) {
+      return jsonResponse({ error: 'Le contexte commercial est absent ou invalide.' }, 400);
+    }
+
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -89,6 +139,64 @@ Deno.serve(async (request) => {
     if (purchaseError) throw purchaseError;
     if (existingPurchase) return jsonResponse({ alreadyPurchased: true });
 
+    const requiredConsentTypes = getRequiredConsentTypes(commercialRoute) as ConsentType[];
+    const requiredDocumentPairs: RequiredDocumentPair[] = requiredConsentTypes.map((consentType: ConsentType) => ({
+      consentType,
+      documentType: consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+        ? commercialRoute.cgvDocumentType
+        : CONSENT_DOCUMENT_TYPES[consentType as keyof typeof CONSENT_DOCUMENT_TYPES],
+      version: getConsentDocumentVersion(purchase, commercialRoute, consentType),
+    }));
+    const { data: legalDocuments, error: legalDocumentsError } = await supabaseAdmin
+      .from('legal_document_versions')
+      .select('id, document_type, version')
+      .eq('status', 'published')
+      .in('document_type', requiredDocumentPairs.map(({ documentType }: RequiredDocumentPair) => documentType));
+    if (legalDocumentsError) throw legalDocumentsError;
+
+    const consentDocuments = requiredDocumentPairs.map((required: RequiredDocumentPair) => ({
+      ...required,
+      document: (legalDocuments as LegalDocument[] | null)?.find((document: LegalDocument) => (
+        document.document_type === required.documentType && document.version === required.version
+      )),
+    }));
+    if (consentDocuments.some(({ document }: { document?: LegalDocument }) => !document)) {
+      return jsonResponse({ error: 'Une version juridique applicable est introuvable ou non publiée.' }, 409);
+    }
+
+    const cgvDocument = consentDocuments.find(({ consentType }: RequiredDocumentPair) => (
+      consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+    ))!.document!;
+    const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
+      .from('commercial_checkout_intents')
+      .insert({
+        user_id: user.id,
+        course_id: purchase.courseId,
+        offer_classification: commercialRoute.offerClassification,
+        sales_context: commercialRoute.salesContext,
+        access_start_choice: checkoutContext.access_start_choice,
+        access_activation_policy: commercialRoute.accessActivationPolicy,
+        beneficiary_email: checkoutContext.beneficiary_email,
+        buyer_organization_name: checkoutContext.buyer_organization_name,
+        cgv_document_version_id: cgvDocument.id,
+      })
+      .select('id')
+      .single();
+    if (checkoutIntentError) throw checkoutIntentError;
+
+    const { error: consentInsertError } = await supabaseAdmin
+      .from('commercial_consents')
+      .insert(consentDocuments.map(({ consentType, document }) => ({
+        checkout_intent_id: checkoutIntent.id,
+        user_id: user.id,
+        course_id: purchase.courseId,
+        consent_type: consentType,
+        granted: true,
+        legal_document_version_id: document!.id,
+        source: 'web_checkout',
+      })));
+    if (consentInsertError) throw consentInsertError;
+
     const priceId = requiredEnv(purchase.priceEnvName);
     const stripe = new Stripe(stripeSecretKey);
     const price = await stripe.prices.retrieve(priceId);
@@ -104,35 +212,60 @@ Deno.serve(async (request) => {
     }
 
     const siteUrl = getSiteUrl();
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      client_reference_id: user.id,
-      customer_email: user.email,
-      customer_creation: 'always',
-      phone_number_collection: { enabled: true },
-      allow_promotion_codes: false,
-      automatic_tax: { enabled: false },
-      consent_collection: { terms_of_service: 'required' },
-      invoice_creation: { enabled: true },
-      locale: 'fr',
-      metadata: {
-        user_id: user.id,
-        course_id: purchase.courseId,
-        price_id: priceId,
-      },
-      payment_intent_data: {
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        client_reference_id: user.id,
+        customer_email: user.email,
+        customer_creation: 'always',
+        phone_number_collection: { enabled: true },
+        allow_promotion_codes: false,
+        automatic_tax: { enabled: false },
+        invoice_creation: { enabled: true },
+        locale: 'fr',
         metadata: {
+          checkout_intent_id: checkoutIntent.id,
           user_id: user.id,
           course_id: purchase.courseId,
+          price_id: priceId,
+          sales_context: commercialRoute.salesContext,
+          access_activation_policy: commercialRoute.accessActivationPolicy,
         },
-      },
-      success_url: `${siteUrl}/paiement-reussi?course=${encodeURIComponent(purchase.courseId)}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${siteUrl}${purchase.landingPath}`,
-    });
+        payment_intent_data: {
+          metadata: {
+            checkout_intent_id: checkoutIntent.id,
+            user_id: user.id,
+            course_id: purchase.courseId,
+            sales_context: commercialRoute.salesContext,
+          },
+        },
+        success_url: `${siteUrl}/paiement-reussi?course=${encodeURIComponent(purchase.courseId)}&activation=${encodeURIComponent(commercialRoute.accessActivationPolicy)}&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}${purchase.landingPath}`,
+      });
+    } catch (stripeError) {
+      await supabaseAdmin
+        .from('commercial_checkout_intents')
+        .update({ status: 'failed', failure_code: 'stripe_session_creation_failed', updated_at: new Date().toISOString() })
+        .eq('id', checkoutIntent.id)
+        .eq('status', 'created');
+      throw stripeError;
+    }
 
     if (!session.url) throw new Error('Stripe n’a pas retourné d’URL Checkout.');
+    const { error: intentUpdateError } = await supabaseAdmin
+      .from('commercial_checkout_intents')
+      .update({
+        status: 'stripe_session_created',
+        stripe_checkout_session_id: session.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', checkoutIntent.id)
+      .eq('status', 'created');
+    if (intentUpdateError) throw intentUpdateError;
+
     return jsonResponse({ url: session.url });
   } catch (error) {
     console.error('create-checkout:', error);

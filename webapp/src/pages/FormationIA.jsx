@@ -13,10 +13,10 @@ import {
   Users,
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import CommercialCheckout from '../components/CommercialCheckout'
 import { SITE_CONFIG } from '../config/site'
 import { useAuth } from '../contexts/useAuth'
 import { getBookingUrl } from '../data/bookingCatalog'
-import { supabase } from '../lib/supabaseClient'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import './FormationIA.css'
 
@@ -112,8 +112,6 @@ export default function FormationIA() {
   const { user } = useAuth()
   const [hasPurchased, setHasPurchased] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [checkoutError, setCheckoutError] = useState('')
 
   useEffect(() => {
     async function checkPurchase() {
@@ -131,36 +129,6 @@ export default function FormationIA() {
 
     checkPurchase()
   }, [user])
-
-  async function startCheckout() {
-    if (!user || checkoutLoading) return
-
-    setCheckoutLoading(true)
-    setCheckoutError('')
-
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { course_id: COURSE_ID },
-      })
-
-      if (error) throw error
-      if (data?.alreadyPurchased) {
-        setHasPurchased(true)
-        return
-      }
-
-      const checkoutUrl = new URL(data?.url)
-      if (checkoutUrl.protocol !== 'https:') throw new Error('URL Stripe invalide.')
-      window.location.assign(checkoutUrl.toString())
-    } catch (error) {
-      console.error('Ouverture de Stripe Checkout impossible :', error)
-      setCheckoutError(
-        'Le paiement ne peut pas être ouvert pour le moment. Réessayez dans quelques instants ou contactez FormaPrompt.',
-      )
-    } finally {
-      setCheckoutLoading(false)
-    }
-  }
 
   return (
     <>
@@ -363,20 +331,21 @@ export default function FormationIA() {
             <div className="generative-ai-price-card">
               <p className="generative-ai-price">497 €</p>
               <p className="generative-ai-price-note">par apprenant · 10 heures accompagnées</p>
-              {!loading && hasPurchased ? (
-                <div className="generative-ai-price-actions">
-                  <Link to={`/course/${COURSE_ID}`} className="btn btn-primary">Accéder à ma formation</Link>
-                  <Link to={getBookingUrl(COURSE_ID)} className="btn generative-ai-secondary-btn">Réserver mes 10 heures</Link>
-                </div>
-              ) : user ? (
-                <button type="button" className="btn btn-primary" onClick={startCheckout} disabled={loading || checkoutLoading}>
-                  {checkoutLoading ? 'Ouverture du paiement sécurisé…' : loading ? 'Vérification de votre accès…' : 'Acheter la formation – 497 €'}
-                </button>
-              ) : (
-                <Link to="/login" className="btn btn-primary">Se connecter pour acheter</Link>
-              )}
-              {checkoutError && <p className="generative-ai-error" role="alert">{checkoutError}</p>}
-              <p>Paiement sécurisé par Stripe. L’accès est activé après confirmation du paiement.</p>
+              <CommercialCheckout
+                courseId={COURSE_ID}
+                user={user}
+                accessLoading={loading}
+                hasActiveAccess={hasPurchased}
+                priceLabel="497 €"
+                activeAccessActions={(
+                  <div className="generative-ai-price-actions">
+                    <Link to={`/course/${COURSE_ID}`} className="btn btn-primary">Accéder à ma formation</Link>
+                    <Link to={getBookingUrl(COURSE_ID)} className="btn generative-ai-secondary-btn">Réserver mes 10 heures</Link>
+                  </div>
+                )}
+              />
+              <p>Lorsqu’il est disponible, le paiement est sécurisé par Stripe et suit le parcours contractuel affiché avant la redirection.</p>
+              <p>Avant tout achat, consultez les <Link to="/cgv-particuliers">CGV particuliers</Link>, le <Link to="/reglement-interieur">règlement intérieur</Link> et les <Link to="/informations-precontractuelles">informations précontractuelles</Link>.</p>
               <p>Présentiel possible dans un rayon maximal de 100 km autour de Calais, après validation de la distance.</p>
               <p>Une participation unique de 30 € est prévue pour le second déplacement en présentiel.</p>
               <p>Au-delà de 100 km, la formation est proposée à distance ou sur devis.</p>

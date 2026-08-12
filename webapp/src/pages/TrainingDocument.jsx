@@ -99,6 +99,7 @@ export default function TrainingDocument() {
             <p><strong>{snapshot.provider.legalName}</strong> — {snapshot.provider.tradeName}</p>
             <p>{snapshot.provider.address}</p>
             <p>SIRET : {snapshot.provider.siret} · Déclaration d’activité : {snapshot.provider.activityDeclaration}</p>
+            {snapshot.provider.taxStatement && <p>{snapshot.provider.taxStatement}</p>}
             <p>{snapshot.provider.email} · {snapshot.provider.phone}</p>
           </section>
 

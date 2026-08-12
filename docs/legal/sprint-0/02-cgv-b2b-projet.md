@@ -56,7 +56,7 @@ Le client garantit l'exactitude des informations qu'il communique et signale tou
 
 ## Article 6 — Prix, facturation et financement
 
-Les prix sont indiqués dans le devis ou la convention. La TVA est traitée selon la situation fiscale en vigueur à la date de facturation.
+Les prix sont indiqués dans le devis ou la convention. Situation fiscale actuelle : TVA non applicable - article 293 B du CGI. Cette référence est conservée tant que Thierry FREZARD ne demande pas explicitement sa modification.
 
 Sauf conditions particulières, les factures sont payables à trente jours à compter de leur date d'émission, par virement bancaire.
 
