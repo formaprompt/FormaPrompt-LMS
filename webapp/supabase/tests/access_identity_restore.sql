@@ -16,7 +16,10 @@ INSERT INTO auth.users (
 INSERT INTO public.profiles (id, email, role) VALUES
   ('11000000-0000-0000-0000-000000000001', 'admin.correctif@example.test', 'admin'),
   ('11000000-0000-0000-0000-000000000002', 'thierry227.correctif@example.test', 'user'),
-  ('11000000-0000-0000-0000-000000000003', 'thierry270363.correctif@example.test', 'user');
+  ('11000000-0000-0000-0000-000000000003', 'thierry270363.correctif@example.test', 'user')
+ON CONFLICT (id) DO UPDATE
+SET email = EXCLUDED.email,
+    role = EXCLUDED.role;
 
 INSERT INTO public.course_access (id, user_id, course_id, status, access_source, expires_at) VALUES
   ('21000000-0000-0000-0000-000000000001', '11000000-0000-0000-0000-000000000002', 'formation-ia', 'active', 'admin', NULL),

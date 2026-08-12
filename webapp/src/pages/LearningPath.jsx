@@ -4,6 +4,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import CourseProgress from '../components/CourseProgress';
 import { useAuth } from '../contexts/useAuth';
 import { learningPathCatalog } from '../data/learningPathCatalog';
+import { fetchCourseAccessEntitlement } from '../lib/courseAccess';
+import { isCourseAccessOpen, learnerAccessMessage } from '../lib/courseAccessLifecycle';
 import { getLearningPathProgress, getResumeLessonId } from '../lib/learningProgress';
 import { supabase } from '../lib/supabaseClient';
 import './LearningPath.css';
@@ -17,6 +19,8 @@ export default function LearningPath() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [courseAccess, setCourseAccess] = useState(null);
+  const [accessChecked, setAccessChecked] = useState(false);
 
   const currentLessonIndex = course?.lessons.findIndex((lesson) => lesson.id === lessonId) ?? -1;
   const currentLesson = currentLessonIndex >= 0 ? course.lessons[currentLessonIndex] : null;
@@ -37,6 +41,29 @@ export default function LearningPath() {
     async function loadProgress() {
       setLoading(true);
       setError('');
+      setAccessChecked(false);
+
+      const { data: entitlement, error: accessError } = await fetchCourseAccessEntitlement({
+        userId: user.id,
+        courseId: course.requiredCourseAccessId,
+      });
+
+      if (!active) return;
+      setCourseAccess(entitlement);
+      setAccessChecked(true);
+
+      if (accessError) {
+        console.error("Vérification du droit d'accès impossible :", accessError);
+        setError("Votre droit d'accès n'a pas pu être vérifié. Réessayez dans quelques instants.");
+        setLoading(false);
+        return;
+      }
+
+      if (!isCourseAccessOpen(entitlement)) {
+        setLoading(false);
+        return;
+      }
+
       const { data, error: loadError } = await supabase
         .from('course_lesson_progress')
         .select('course_id, lesson_id, status, progress_percent, last_viewed_at, completed_at')
@@ -67,7 +94,7 @@ export default function LearningPath() {
   }, [course, lessonId, navigate, user.id]);
 
   useEffect(() => {
-    if (loading || !currentLesson || error) return;
+    if (loading || !currentLesson || error || !isCourseAccessOpen(courseAccess)) return;
 
     const existing = progressRows.find((row) => row.lesson_id === currentLesson.id);
     const viewedAt = new Date().toISOString();
@@ -97,10 +124,10 @@ export default function LearningPath() {
       });
   // La consultation est enregistrée uniquement lors du changement de leçon.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course?.id, currentLesson?.id, loading, user.id]);
+  }, [course?.id, courseAccess, currentLesson?.id, error, loading, user.id]);
 
   async function markCompleted() {
-    if (!currentLesson || saving) return;
+    if (!currentLesson || saving || !isCourseAccessOpen(courseAccess)) return;
     setSaving(true);
     setError('');
     const completedAt = new Date().toISOString();
@@ -129,8 +156,33 @@ export default function LearningPath() {
     setSaving(false);
   }
 
-  if (!course || loading || !currentLesson) {
+  if (!course || loading) {
     return <div className="container section" role="status">Chargement de votre parcours…</div>;
+  }
+
+  if (error) {
+    return <div className="container section" role="alert">{error}</div>;
+  }
+
+  if (accessChecked && !isCourseAccessOpen(courseAccess)) {
+    const deniedStatus = courseAccess?.status === 'active' ? 'expired' : courseAccess?.status;
+    return (
+      <div className="container learning-path">
+        <section className="learning-path__access-denied" role="alert">
+          <p className="learning-path__eyebrow">Accès indisponible</p>
+          <h1>{course.title}</h1>
+          <p>{learnerAccessMessage(deniedStatus) || "Vous ne disposez pas d’un droit d’accès actif à cette formation."}</p>
+          <div className="learning-path__access-actions">
+            <Link className="btn btn-primary" to="/dashboard">Retour à mon espace apprenant</Link>
+            <Link className="btn btn-outline" to="/contact">Contacter FormaPrompt</Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (!currentLesson) {
+    return <div className="container section" role="alert">Ce module est indisponible.</div>;
   }
 
   const previousLesson = course.lessons[currentLessonIndex - 1];
@@ -144,7 +196,7 @@ export default function LearningPath() {
 
       <header className="learning-path__header">
         <div>
-          <p className="learning-path__eyebrow">Parcours de démonstration</p>
+          <p className="learning-path__eyebrow">Parcours de formation</p>
           <h1>{course.title}</h1>
           <p>{course.description}</p>
         </div>

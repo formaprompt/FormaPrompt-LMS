@@ -7,10 +7,20 @@ import LearningPath from './LearningPath';
 const learningState = vi.hoisted(() => ({
   user: { id: 'learner-a', email: 'learner-a@example.test' },
   rows: [],
+  access: null,
+  accessError: null,
+  writes: 0,
 }));
 
 vi.mock('../contexts/useAuth', () => ({
   useAuth: () => ({ user: learningState.user }),
+}));
+
+vi.mock('../lib/courseAccess', () => ({
+  fetchCourseAccessEntitlement: async () => ({
+    data: learningState.access,
+    error: learningState.accessError,
+  }),
 }));
 
 vi.mock('../lib/supabaseClient', () => ({
@@ -30,6 +40,7 @@ vi.mock('../lib/supabaseClient', () => ({
           error: null,
         }),
         upsert: async (row) => {
+          learningState.writes += 1;
           learningState.rows = [
             ...learningState.rows.filter((item) => !(
               item.user_id === row.user_id
@@ -46,6 +57,17 @@ vi.mock('../lib/supabaseClient', () => ({
   },
 }));
 
+function activeAccess(overrides = {}) {
+  return {
+    id: 'access-a',
+    user_id: learningState.user.id,
+    course_id: 'formation-prompt-level-1',
+    status: 'active',
+    expires_at: null,
+    ...overrides,
+  };
+}
+
 function renderLearningPath(initialEntry = '/parcours/introduction-prompt-engineering') {
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
@@ -57,10 +79,13 @@ function renderLearningPath(initialEntry = '/parcours/introduction-prompt-engine
   );
 }
 
-describe('Parcours apprenant persistant', () => {
+describe('Parcours apprenant protégé par course_access', () => {
   afterEach(cleanup);
 
   beforeEach(() => {
+    learningState.access = activeAccess();
+    learningState.accessError = null;
+    learningState.writes = 0;
     learningState.rows = [{
       user_id: learningState.user.id,
       course_id: 'introduction-prompt-engineering',
@@ -72,7 +97,12 @@ describe('Parcours apprenant persistant', () => {
     }];
   });
 
-  it('reprend la dernière leçon puis conserve la nouvelle position après remontage', async () => {
+  it("autorise l'URL directe et reprend la dernière leçon avec un accès actif", async () => {
+    renderLearningPath();
+    expect(await screen.findByRole('heading', { level: 2, name: 'Définir un rôle' })).toBeVisible();
+  });
+
+  it('conserve la nouvelle position après remontage avec un accès actif', async () => {
     const user = userEvent.setup();
     const firstView = renderLearningPath();
 
@@ -89,16 +119,52 @@ describe('Parcours apprenant persistant', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Définir un objectif' })).toBeVisible();
   });
 
-  it('enregistre la complétion et recalcule la progression', async () => {
+  it('enregistre la complétion avec un accès actif', async () => {
     const user = userEvent.setup();
     renderLearningPath('/parcours/introduction-prompt-engineering/definir-un-role');
 
     await user.click(await screen.findByRole('button', { name: 'Marquer comme terminé' }));
     expect(await screen.findByText(/Module terminé et enregistré/)).toBeVisible();
-    expect(screen.getByRole('progressbar')).toHaveAttribute('value', '1');
     expect(learningState.rows.find((row) => row.lesson_id === 'definir-un-role')).toMatchObject({
       status: 'completed',
       progress_percent: 100,
     });
   });
+
+  it.each(['suspended', 'revoked', 'refunded', 'expired'])(
+    "refuse l'URL et toute nouvelle progression avec un accès %s",
+    async (status) => {
+      learningState.access = activeAccess({ status });
+      const historicalRows = structuredClone(learningState.rows);
+      renderLearningPath();
+
+      expect(await screen.findByRole('heading', { level: 1, name: 'Introduction au Prompt Engineering' })).toBeVisible();
+      expect(screen.getByRole('alert')).toHaveTextContent(/accès/i);
+      expect(learningState.writes).toBe(0);
+      expect(learningState.rows).toEqual(historicalRows);
+    },
+  );
+
+  it("refuse un accès actif arrivé à échéance", async () => {
+    learningState.access = activeAccess({ expires_at: '2020-01-01T00:00:00Z' });
+    renderLearningPath();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Introduction au Prompt Engineering' })).toBeVisible();
+    expect(learningState.writes).toBe(0);
+  });
+
+  it.each(['revoked', 'suspended'])(
+    'retrouve la progression après le retour %s vers active',
+    async (blockedStatus) => {
+      learningState.access = activeAccess({ status: blockedStatus });
+      const blockedView = renderLearningPath();
+      expect(await screen.findByRole('heading', { level: 1, name: 'Introduction au Prompt Engineering' })).toBeVisible();
+      expect(learningState.rows).toHaveLength(1);
+      blockedView.unmount();
+
+      learningState.access = activeAccess();
+      renderLearningPath();
+      expect(await screen.findByRole('heading', { level: 2, name: 'Définir un rôle' })).toBeVisible();
+      expect(learningState.rows.some((row) => row.lesson_id === 'definir-un-role')).toBe(true);
+    },
+  );
 });

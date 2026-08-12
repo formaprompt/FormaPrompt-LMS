@@ -1,11 +1,12 @@
 export const DEMO_LEARNING_PATH_SLUG = 'introduction-prompt-engineering';
+export const PROMPT_ENGINEERING_LEVEL_ONE_COURSE_ID = 'formation-prompt-level-1';
 
 export const learningPathCatalog = {
   [DEMO_LEARNING_PATH_SLUG]: {
     id: DEMO_LEARNING_PATH_SLUG,
     title: 'Introduction au Prompt Engineering',
     description: 'Un parcours court pour structurer une demande claire avec la méthode CROP.',
-    accessMode: 'authenticated-demo',
+    requiredCourseAccessId: PROMPT_ENGINEERING_LEVEL_ONE_COURSE_ID,
     lessons: [
       {
         id: 'comprendre-un-prompt',

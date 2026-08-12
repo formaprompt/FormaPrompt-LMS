@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
+import LearningPathAccessCard from '../components/LearningPathAccessCard';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
-import { DEMO_LEARNING_PATH_SLUG } from '../data/learningPathCatalog';
+import { DEMO_LEARNING_PATH_SLUG, learningPathCatalog } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
-import { fetchCourseAccesses } from '../lib/courseAccess';
+import { fetchCourseAccessEntitlement, fetchCourseAccesses } from '../lib/courseAccess';
 import { isCourseAccessOpen, learnerAccessMessage } from '../lib/courseAccessLifecycle';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import { keepOwnVisibleAdministrativeDocuments } from '../lib/administrativeDocuments';
@@ -41,6 +42,7 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [courseAccesses, setCourseAccesses] = useState([]);
+  const [learningPathAccess, setLearningPathAccess] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,7 @@ export default function Dashboard() {
 
       const [
         accessesResult,
+        learningPathAccessResult,
         bookingResult,
         surveyResult,
         exerciseResponsesResult,
@@ -79,6 +82,10 @@ export default function Dashboard() {
         administrativeDocumentsResult,
       ] = await Promise.all([
         fetchCourseAccesses({ userId: user.id }),
+        fetchCourseAccessEntitlement({
+          userId: user.id,
+          courseId: learningPathCatalog[DEMO_LEARNING_PATH_SLUG].requiredCourseAccessId,
+        }),
         supabase
           .from('course_booking_requests')
           .select(`
@@ -122,6 +129,13 @@ export default function Dashboard() {
         setLoadError("Impossible de charger vos formations pour le moment. Veuillez réessayer ultérieurement.");
       } else {
         setCourseAccesses(accessesResult.data ?? []);
+      }
+
+      if (learningPathAccessResult.error) {
+        console.error("Erreur lors de la vérification du droit d'accès au parcours :", learningPathAccessResult.error);
+        setLearningPathAccess(null);
+      } else {
+        setLearningPathAccess(learningPathAccessResult.data);
       }
 
       if (bookingResult.error) {
@@ -195,16 +209,11 @@ export default function Dashboard() {
           Vous retrouverez ici toutes les formations que vous avez achetées ou qui vous ont été attribuées.
         </p>
 
-        <section className="learner-demo-path" aria-labelledby="learner-demo-path-title">
-          <div>
-            <p className="learner-demo-path__eyebrow">Premier parcours persistant</p>
-            <h3 id="learner-demo-path-title">Introduction au Prompt Engineering</h3>
-            <p>Cinq modules courts pour tester la progression et la reprise automatique dans votre espace apprenant.</p>
-          </div>
-          <Link to={`/parcours/${DEMO_LEARNING_PATH_SLUG}`} className="btn btn-primary">
-            Commencer ou reprendre
-          </Link>
-        </section>
+        <LearningPathAccessCard
+          course={learningPathCatalog[DEMO_LEARNING_PATH_SLUG]}
+          access={learningPathAccess}
+          loading={loading || Boolean(loadError)}
+        />
         
         {loading ? (
           <p>Chargement de vos formations...</p>

@@ -18,7 +18,10 @@ INSERT INTO public.profiles (id, email, role) VALUES
   ('10000000-0000-0000-0000-000000000001', 'admin.sprint1@example.test', 'admin'),
   ('10000000-0000-0000-0000-000000000002', 'marie.sprint1@example.test', 'user'),
   ('10000000-0000-0000-0000-000000000003', 'paul.sprint1@example.test', 'user'),
-  ('10000000-0000-0000-0000-000000000004', 'employee.sprint1@example.test', 'employee');
+  ('10000000-0000-0000-0000-000000000004', 'employee.sprint1@example.test', 'employee')
+ON CONFLICT (id) DO UPDATE
+SET email = EXCLUDED.email,
+    role = EXCLUDED.role;
 
 INSERT INTO public.course_access (
   id, user_id, course_id, status, access_source, expires_at
