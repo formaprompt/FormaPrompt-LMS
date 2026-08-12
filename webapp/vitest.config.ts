@@ -8,6 +8,7 @@ export default defineConfig({
     include: [
       'src/studio/**/*.test.{ts,tsx}',
       'src/pages/**/*.test.{js,jsx}',
+      'src/components/**/*.test.{js,jsx}',
     ],
     setupFiles: ['./src/studio/test/setup.ts'],
     testTimeout: 45_000,

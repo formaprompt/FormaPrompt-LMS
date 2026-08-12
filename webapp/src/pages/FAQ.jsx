@@ -17,7 +17,7 @@ const faqs = [
       },
       {
         q: "Comment se déroulent les formations (présentiel ou distanciel) ?",
-        a: "Nous intervenons principalement en distanciel via Teams ou Zoom, mais des sessions en présentiel sont possibles dans la région Hauts-de-France (ou ailleurs sur devis)."
+        a: "Nous intervenons principalement en distanciel via Google Meet ou Microsoft Teams, mais des sessions en présentiel sont possibles dans la région Hauts-de-France (ou ailleurs sur devis)."
       }
     ]
   },

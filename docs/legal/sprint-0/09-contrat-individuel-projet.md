@@ -101,7 +101,7 @@ Pour chaque intervenant :
 
 ## Article 8 — Prix et échéancier légal
 
-Prix total convenu : `[montant]` euros `[TTC / TVA non applicable selon situation vérifiée]`.
+Prix total convenu : `[montant]` euros — TVA non applicable - article 293 B du CGI.
 
 Conformément à L6353-6 :
 

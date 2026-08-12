@@ -1,3 +1,5 @@
+import { FORMAPROMPT_TAX } from './legalBusiness.js';
+
 export const ADMINISTRATIVE_COURSES = {
   'formation-ia': {
     title: 'IA générative : comprendre, pratiquer et sécuriser ses usages',
@@ -44,6 +46,7 @@ const PROVIDER = {
   activityDeclaration: '32620346362',
   email: 'thierry@formaprompt.com',
   phone: '+33 (0)6 12 19 53 81',
+  taxStatement: FORMAPROMPT_TAX.statement,
 };
 
 function requiredText(value, label, maximum = 200) {

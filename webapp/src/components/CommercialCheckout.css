@@ -1,0 +1,103 @@
+.commercial-checkout,
+.commercial-checkout-review {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.commercial-checkout__group {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+}
+
+.commercial-checkout__group legend {
+  padding: 0 0.35rem;
+  font-weight: 700;
+}
+
+.commercial-checkout__choice {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  text-align: left;
+}
+
+.commercial-checkout__choice input,
+.commercial-checkout__consent input {
+  accent-color: #0f766e;
+}
+
+.commercial-checkout__administrative,
+.commercial-checkout__beneficiary {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.commercial-checkout__beneficiary label {
+  display: grid;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.commercial-checkout__beneficiary input {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #64748b;
+  border-radius: 0.5rem;
+}
+
+.commercial-checkout-review {
+  padding: 1rem;
+  border: 1px solid #b7791f;
+  border-radius: 0.75rem;
+  background: #fffaf0;
+  color: #4a2c0a;
+}
+
+.commercial-checkout__consent {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr;
+  gap: 0.65rem;
+  align-items: start;
+  text-align: left;
+}
+
+.commercial-checkout__consent input {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+}
+
+.commercial-checkout input:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 3px;
+}
+
+.commercial-checkout__error {
+  margin: 0;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.commercial-checkout__information {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 390px) {
+  .commercial-checkout-review,
+  .commercial-checkout {
+    min-width: 0;
+  }
+
+  .commercial-checkout .btn,
+  .commercial-checkout-review .btn {
+    width: 100%;
+    white-space: normal;
+  }
+}

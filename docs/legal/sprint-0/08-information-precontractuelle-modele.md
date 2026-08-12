@@ -104,7 +104,7 @@ La fiche doit fournir :
 Afficher avant la commande :
 
 - prix total TTC pour le consommateur ;
-- prix HT et TVA pour le professionnel, selon la situation fiscale applicable ;
+- prix et échéances pour le professionnel ; situation fiscale actuelle : TVA non applicable - article 293 B du CGI ;
 - contenu inclus et éventuels frais supplémentaires ;
 - échéancier ou conditions de paiement ;
 - prix total, montant financé et reste à charge en cas de financement ;

@@ -20,6 +20,11 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const CGV = lazy(() => import("./pages/CGV"));
+const CGVConsumer = lazy(() => import("./pages/CGVConsumer"));
+const CGVProfessional = lazy(() => import("./pages/CGVProfessional"));
+const InternalRules = lazy(() => import("./pages/InternalRules"));
+const PrecontractualInformation = lazy(() => import("./pages/PrecontractualInformation"));
+const WithdrawalRequest = lazy(() => import("./pages/WithdrawalRequest"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Feedback = lazy(() => import("./pages/Feedback"));
 const AvailabilityCalendar = lazy(() => import("./pages/AvailabilityCalendar"));
@@ -76,7 +81,13 @@ function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="mentions-legales" element={<Legal />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="politique-confidentialite" element={<Privacy />} />
             <Route path="cgv" element={<CGV />} />
+            <Route path="cgv-particuliers" element={<CGVConsumer />} />
+            <Route path="cgv-professionnels" element={<CGVProfessional />} />
+            <Route path="reglement-interieur" element={<InternalRules />} />
+            <Route path="informations-precontractuelles" element={<PrecontractualInformation />} />
+            <Route path="retractation" element={<WithdrawalRequest />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="feedback" element={<Feedback />} />
             <Route path="disponibilites" element={<AvailabilityCalendar />} />
@@ -130,9 +141,9 @@ function App() {
         }}
         expires={150}
       >
-        Ce site utilise des cookies pour améliorer votre expérience utilisateur et réaliser des statistiques de visites.{' '}
+        FormaPrompt utilise uniquement les stockages techniques nécessaires au fonctionnement et à la connexion. Aucun outil de mesure d’audience actif n’a été détecté.{' '}
         <a
-          href="/privacy"
+          href="/politique-confidentialite"
           style={{ color: "var(--color-primary-light)", textDecoration: "underline", textUnderlineOffset: "0.2em" }}
         >
           En savoir plus

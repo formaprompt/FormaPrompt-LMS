@@ -89,6 +89,7 @@ test('la convention et la convocation sont préremplies avec le même dossier', 
   assert.equal(agreement.learner.fullName, 'Camille Martin');
   assert.equal(agreement.course.title, 'IA : acculturation et préparation à la conformité AI Act');
   assert.equal(agreement.client.fundingReference, 'DOSSIER-2026-001');
+  assert.equal(agreement.provider.taxStatement, 'TVA non applicable - article 293 B du CGI');
   assert.equal(convocation.course.startsAt, validInput.startsAt);
   assert.match(convocation.instructions, /Connectez-vous/);
 });

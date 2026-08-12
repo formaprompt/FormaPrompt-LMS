@@ -15,7 +15,7 @@ Les présentes conditions générales de vente sont proposées par **Thierry FRE
 - numéro de déclaration d'activité : 32620346362 auprès du préfet de région Hauts-de-France ; cet enregistrement ne vaut pas agrément de l'État ;
 - courriel : thierry@formaprompt.com ;
 - téléphone : +33 (0)6 12 19 53 81 ;
-- TVA non applicable, article 293 B du code général des impôts.
+- TVA non applicable - article 293 B du CGI.
 
 **À CONFIRMER DOCUMENTAIREMENT** — Vérifier l'extrait Sirene/RNE, l'adresse professionnelle, le code APE, le récépissé NDA et la situation fiscale avant publication.
 

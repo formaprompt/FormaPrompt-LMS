@@ -3,7 +3,11 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import {
   getPurchaseConfig,
   IN_PERSON_TRAVEL_FEE,
+  validateCommercialConsentEvidence,
   validateCompletedCourseSession,
+  validateCompletedCourseSessionBase,
+  requiresLegacyPaymentReview,
+  shouldActivateCourseAccess,
   validateCompletedTravelFeeSession,
 } from '../_shared/purchaseConfig.js';
 import {
@@ -129,6 +133,47 @@ Deno.serve(async (request) => {
   const purchase = getPurchaseConfig(session.metadata?.course_id);
   if (!purchase) return new Response('Formation Stripe inconnue.', { status: 400 });
   const priceId = requiredEnv(purchase.priceEnvName);
+  const supabaseAdmin = createClient(
+    requiredEnv('SUPABASE_URL'),
+    requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+
+  if (requiresLegacyPaymentReview(session)) {
+    const legacyValidationError = validateCompletedCourseSessionBase(session, purchase, priceId);
+    if (legacyValidationError) {
+      console.error(`Ancienne session ${event.id} refusée : ${legacyValidationError}`);
+      return new Response(legacyValidationError, { status: 400 });
+    }
+
+    try {
+      const { data: historicalPurchase, error: historicalError } = await supabaseAdmin
+        .from('purchases')
+        .select('id')
+        .eq('stripe_checkout_session_id', session.id)
+        .maybeSingle();
+      if (historicalError) throw historicalError;
+      if (historicalPurchase) {
+        return Response.json({ received: true, alreadyProcessed: true });
+      }
+
+      const { error: reviewError } = await supabaseAdmin
+        .from('commercial_payment_reviews')
+        .upsert({
+          stripe_event_id: event.id,
+          stripe_checkout_session_id: session.id,
+          user_id: session.metadata!.user_id,
+          course_id: purchase.courseId,
+          reason: 'legacy_session_without_commercial_checkout_intent',
+        }, { onConflict: 'stripe_checkout_session_id', ignoreDuplicates: true });
+      if (reviewError) throw reviewError;
+      return Response.json({ received: true, administrativeReviewRequired: true });
+    } catch (error) {
+      console.error(`Mise en revue du paiement ${event.id} impossible :`, error);
+      return new Response('Mise en revue administrative impossible.', { status: 500 });
+    }
+  }
+
   const validationError = validateCompletedCourseSession(session, purchase, priceId);
 
   if (validationError) {
@@ -137,11 +182,37 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const supabaseAdmin = createClient(
-      requiredEnv('SUPABASE_URL'),
-      requiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
-      { auth: { persistSession: false, autoRefreshToken: false } },
+    const checkoutIntentId = session.metadata!.checkout_intent_id;
+    const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
+      .from('commercial_checkout_intents')
+      .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id')
+      .eq('id', checkoutIntentId)
+      .maybeSingle();
+    if (checkoutIntentError) throw checkoutIntentError;
+
+    const { data: consentRows, error: consentRowsError } = await supabaseAdmin
+      .from('commercial_consents')
+      .select(`
+        checkout_intent_id,
+        user_id,
+        course_id,
+        consent_type,
+        granted,
+        legal_document_versions!inner(version)
+      `)
+      .eq('checkout_intent_id', checkoutIntentId);
+    if (consentRowsError) throw consentRowsError;
+
+    const consentValidationError = validateCommercialConsentEvidence(
+      session,
+      purchase,
+      checkoutIntent,
+      consentRows,
     );
+    if (consentValidationError) {
+      console.error(`Événement ${event.id} sans preuve commerciale valide : ${consentValidationError}`);
+      return new Response(consentValidationError, { status: 400 });
+    }
 
     const purchasedAt = new Date(event.created * 1000).toISOString();
     const { data: savedPurchase, error: purchaseError } = await supabaseAdmin
@@ -164,29 +235,38 @@ Deno.serve(async (request) => {
 
     if (purchaseError) throw purchaseError;
 
-    const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
-      .from('course_access')
-      .select('id')
-      .eq('user_id', session.metadata!.user_id)
-      .eq('course_id', purchase.courseId)
-      .maybeSingle();
-    if (existingAccessError) throw existingAccessError;
-
-    if (shouldCreateStripeCourseAccess(existingAccess)) {
-      const { error: accessError } = await supabaseAdmin
+    if (shouldActivateCourseAccess(checkoutIntent)) {
+      const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
         .from('course_access')
-        .insert(buildStripeCourseAccess({
-          userId: session.metadata!.user_id,
-          courseId: purchase.courseId,
-          purchaseId: savedPurchase.id,
-          grantedAt: purchasedAt,
-          updatedAt: new Date().toISOString(),
-        }));
+        .select('id')
+        .eq('user_id', session.metadata!.user_id)
+        .eq('course_id', purchase.courseId)
+        .maybeSingle();
+      if (existingAccessError) throw existingAccessError;
 
-      // Une livraison concurrente peut avoir créé le même droit entre la
-      // lecture et l'insert. Elle reste idempotente sans réactiver un droit.
-      if (accessError && accessError.code !== '23505') throw accessError;
+      if (shouldCreateStripeCourseAccess(existingAccess)) {
+        const { error: accessError } = await supabaseAdmin
+          .from('course_access')
+          .insert(buildStripeCourseAccess({
+            userId: session.metadata!.user_id,
+            courseId: purchase.courseId,
+            purchaseId: savedPurchase.id,
+            grantedAt: purchasedAt,
+            updatedAt: new Date().toISOString(),
+          }));
+
+        // Une livraison concurrente peut avoir créé le même droit entre la
+        // lecture et l'insert. Elle reste idempotente sans réactiver un droit.
+        if (accessError && accessError.code !== '23505') throw accessError;
+      }
     }
+
+    const { error: intentPaidError } = await supabaseAdmin
+      .from('commercial_checkout_intents')
+      .update({ status: 'paid', updated_at: new Date().toISOString() })
+      .eq('id', checkoutIntentId)
+      .in('status', ['stripe_session_created', 'paid']);
+    if (intentPaidError) throw intentPaidError;
   } catch (error) {
     console.error(`Enregistrement de l’achat ${event.id} impossible :`, error);
     return new Response('Enregistrement de l’achat impossible.', { status: 500 });

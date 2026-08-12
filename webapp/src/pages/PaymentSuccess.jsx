@@ -10,13 +10,18 @@ export default function PaymentSuccess() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedCourseId = searchParams.get('course') || DEFAULT_BOOKING_COURSE_ID;
+  const activationPolicy = searchParams.get('activation');
+  const activationDeferred = [
+    'deferred_after_withdrawal_period',
+    'deferred_beneficiary_assignment',
+  ].includes(activationPolicy);
   const courseId = BOOKING_COURSES[requestedCourseId] ? requestedCourseId : DEFAULT_BOOKING_COURSE_ID;
   const course = getBookingCourse(courseId);
   const [activationStatus, setActivationStatus] = useState('checking');
-  const status = user ? activationStatus : 'login-required';
+  const status = user ? (activationDeferred ? 'deferred' : activationStatus) : 'login-required';
 
   useEffect(() => {
-    if (!user) return undefined;
+    if (!user || activationDeferred) return undefined;
 
     let stopped = false;
     let timer;
@@ -52,7 +57,7 @@ export default function PaymentSuccess() {
       stopped = true;
       window.clearTimeout(timer);
     };
-  }, [user, courseId]);
+  }, [activationDeferred, user, courseId]);
 
   const messages = {
     checking: {
@@ -64,6 +69,11 @@ export default function PaymentSuccess() {
       icon: <CheckCircle size={42} aria-hidden="true" />,
       title: 'Votre formation est disponible',
       text: `L'achat a bien été enregistré et votre accès à « ${course.shortTitle} » est maintenant actif.`,
+    },
+    deferred: {
+      icon: <Clock3 size={42} aria-hidden="true" />,
+      title: 'Paiement reçu, accès pédagogique différé',
+      text: 'Votre achat est enregistré. Aucun second paiement n’est nécessaire. FormaPrompt activera le droit course_access selon le parcours choisi.',
     },
     pending: {
       icon: <Clock3 size={42} aria-hidden="true" />,
@@ -108,7 +118,7 @@ export default function PaymentSuccess() {
           {status === 'login-required' && (
             <Link to="/login" className="btn btn-primary">Se connecter</Link>
           )}
-          {['checking', 'pending', 'error'].includes(status) && (
+          {['checking', 'pending', 'error', 'deferred'].includes(status) && (
             <Link to="/dashboard" className="btn btn-primary">Consulter mon espace apprenant</Link>
           )}
         </section>
