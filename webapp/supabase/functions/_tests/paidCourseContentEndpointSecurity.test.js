@@ -79,6 +79,7 @@ test('la vidéo IONOS utilise une URL HMAC courte après le contrôle serveur', 
   assert.doesNotMatch(endpoint, /courseVideoObjectPath|createSignedUrl\([^)]*video/s);
   assert.match(client, /method: 'POST'/);
   assert.match(client, /credentials: 'include'/);
+  assert.match(player, /source src=\{course\.videoUrl \|\| module\.lesson\.video\.url\}/);
   assert.doesNotMatch(client, /searchParams.*(?:sig|signature)|[?&]sig=/);
   assert.match(ionGateway, /hash_hmac\('sha256'/);
   assert.match(ionGateway, /hash_equals/);

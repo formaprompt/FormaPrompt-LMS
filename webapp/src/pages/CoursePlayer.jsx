@@ -587,7 +587,7 @@ export default function CoursePlayer() {
                               className="course-video"
                               aria-label={module.lesson.video.title}
                             >
-                              <source src={module.lesson.video.url} type="video/mp4" />
+                              <source src={course.videoUrl || module.lesson.video.url} type="video/mp4" />
                               Votre navigateur ne permet pas de lire cette vidéo.
                             </video>
                           </div>
