@@ -40,3 +40,35 @@ test('les erreurs serveur sont présentées sans charge utile technique', async 
     return true;
   });
 });
+
+test('le grant vidéo est échangé par POST sans placer la signature dans l URL', async (t) => {
+  const grant = {
+    endpoint: 'https://formaprompt.com/paid-video.php',
+    courseId: 'formation-prompt-level-1',
+    expiresAt: 1786795200,
+    signature: 'a'.repeat(64),
+  };
+  const requests = [];
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    requests.push({ url: String(url), options });
+    return { ok: true };
+  });
+  const supabase = {
+    functions: {
+      invoke: t.mock.fn(async () => ({ data: { course: { title: 'Cours', videoGrant: grant } }, error: null })),
+    },
+  };
+
+  const course = await fetchPaidCourseContent(supabase, 'formation-prompt-level-1');
+  assert.equal(course.videoUrl, grant.endpoint);
+  assert.equal('videoGrant' in course, false);
+  assert.equal(requests[0].url, grant.endpoint);
+  assert.equal(requests[0].options.method, 'POST');
+  assert.equal(requests[0].options.credentials, 'include');
+  assert.doesNotMatch(requests[0].url, /sig=|signature/);
+  assert.deepEqual(JSON.parse(requests[0].options.body), {
+    course: grant.courseId,
+    exp: grant.expiresAt,
+    sig: grant.signature,
+  });
+});

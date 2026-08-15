@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const endpoint = readFileSync(resolve('supabase/functions/paid-course-content/index.ts'), 'utf8');
@@ -8,16 +8,28 @@ const accessHelper = readFileSync(resolve('supabase/functions/_shared/paidCourse
 const player = readFileSync(resolve('src/pages/CoursePlayer.jsx'), 'utf8');
 const publicCatalog = readFileSync(resolve('src/data/courseCatalog.js'), 'utf8');
 const admin = readFileSync(resolve('src/pages/AdminDashboard.jsx'), 'utf8');
+const client = readFileSync(resolve('src/lib/paidCourseContent.js'), 'utf8');
+const ionGateway = readFileSync(resolve('public/paid-video.php'), 'utf8');
+const htaccess = readFileSync(resolve('public/.htaccess'), 'utf8');
+
+function listFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const target = resolve(directory, entry.name);
+    return entry.isDirectory() ? listFiles(target) : [target];
+  });
+}
 
 test('l identité puis course_access sont vérifiés avant toute URL signée', () => {
   const identityCheck = endpoint.indexOf('auth.getUser(token)');
   const accessCheck = endpoint.indexOf(".from('course_access')");
   const accessGuard = endpoint.indexOf('hasUsableCourseAccess(access)');
   const protectedContentDelivery = endpoint.indexOf('signCourseResources(adminClient, courseId, sourceCourse)');
+  const protectedVideoDelivery = endpoint.indexOf('createIonVideoGrant(courseId)');
   assert.ok(identityCheck >= 0);
   assert.ok(accessCheck > identityCheck);
   assert.ok(accessGuard > accessCheck);
   assert.ok(protectedContentDelivery > accessGuard);
+  assert.ok(protectedVideoDelivery > accessGuard);
   assert.doesNotMatch(endpoint, /from\(['"]purchases['"]\)/);
   assert.match(endpoint, /hasUsableCourseAccess\(access\)/);
 });
@@ -41,7 +53,7 @@ test('le frontend public ne contient plus les leçons ni les URL permanentes', (
   assert.doesNotMatch(player, /getPublicUrl|createPublicUrl/);
 });
 
-test('les supports payants ont quitté public et sont présents dans le seed privé', () => {
+test('les 16 documents ont quitté public et sont présents dans le seed privé', () => {
   const privateSeed = resolve('supabase/seed/paid-course-content');
   const privateFiles = [
     'formation-ia/resources/guide-pratique-ia-generative-formaprompt.pdf',
@@ -49,13 +61,33 @@ test('les supports payants ont quitté public et sont présents dans le seed pri
     'formation-prompt-level-1/resources/guide-pratique-prompt-engineering-niveau-1-formaprompt.pdf',
     'formation-prompt-level-1/resources/creation-prompt-efficace-chatgpt.pdf',
     'formation-prompt-level-1/resources/Formation IA pour formateur finale 3J.docx',
-    'formation-prompt-level-1/videos/FP_-_Capsule_001_-_Rediger_un_bon_prompt_finale_with_captions.mp4',
   ];
   for (const relativePath of privateFiles) assert.equal(existsSync(resolve(privateSeed, relativePath)), true, relativePath);
+  const seedFiles = listFiles(privateSeed);
+  assert.equal(seedFiles.length, 16);
+  assert.equal(seedFiles.some((file) => file.toLowerCase().endsWith('.mp4')), false);
   assert.equal(existsSync(resolve('public/assets/guide-pratique-ia-generative-formaprompt.pdf')), false);
   assert.equal(existsSync(resolve('public/assets/creation-prompt-efficace-chatgpt.pdf')), false);
   assert.equal(existsSync(resolve('public/assets/Formation IA pour formateur finale 3J.docx')), false);
   assert.equal(existsSync(resolve('vidéo/FP_-_Capsule_001_-_Rédiger_un_bon_prompt_finale_with_captions.mp4')), false);
+});
+
+test('la vidéo IONOS utilise une URL HMAC courte après le contrôle serveur', () => {
+  assert.match(endpoint, /PAID_VIDEO_GATEWAY_URL/);
+  assert.match(endpoint, /PAID_VIDEO_SIGNING_SECRET/);
+  assert.match(endpoint, /crypto\.subtle\.sign\('HMAC'/);
+  assert.doesNotMatch(endpoint, /courseVideoObjectPath|createSignedUrl\([^)]*video/s);
+  assert.match(client, /method: 'POST'/);
+  assert.match(client, /credentials: 'include'/);
+  assert.doesNotMatch(client, /searchParams.*(?:sig|signature)|[?&]sig=/);
+  assert.match(ionGateway, /hash_hmac\('sha256'/);
+  assert.match(ionGateway, /hash_equals/);
+  assert.match(ionGateway, /httponly.*true/s);
+  assert.match(ionGateway, /samesite.*Strict/s);
+  assert.match(ionGateway, /HTTP_RANGE/);
+  assert.match(ionGateway, /Content-Range/);
+  assert.match(htaccess, /FilesMatch[^]*FP_-_Capsule_001_-_[^]*Require all denied/);
+  assert.doesNotMatch(publicCatalog, /Capsule_001|\.mp4/);
 });
 
 test('aucun secret ni détail de droit n est journalisé', () => {

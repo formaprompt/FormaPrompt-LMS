@@ -1,6 +1,7 @@
-// La vidéo est conservée dans le bucket privé. L'Edge Function remplace cette
-// valeur par une URL signée uniquement après contrôle de course_access.
-const promptEngineeringIntroVideoUrl = null;
+// La vidéo reste sur IONOS et n'entre jamais dans le catalogue public ni dans
+// Supabase Storage. L'Edge Function injecte une URL HMAC courte vers la
+// passerelle IONOS uniquement après contrôle de course_access.
+const serverControlledPromptEngineeringVideoUrl = null;
 
 const generativeAiVerificationGrid = {
   title: "Grille de vérification d'un contenu produit avec l'IA",
@@ -2229,7 +2230,7 @@ const promptLevelOneModules = [
       video: {
         title: 'Capsule : rédiger un bon prompt',
         description: 'Cette courte démonstration introduit les éléments essentiels d’une consigne structurée. Utilisez ensuite la méthode ci-dessous pour les appliquer à votre propre situation.',
-        url: promptEngineeringIntroVideoUrl,
+        url: serverControlledPromptEngineeringVideoUrl,
       },
       concepts: [
         {
@@ -3879,7 +3880,7 @@ export const courseCatalog = {
         'Les onglets Supports et liens, Exercices pratiques et Lexique restent disponibles en bas de la page.',
       ],
     },
-    videoUrl: promptEngineeringIntroVideoUrl,
+    videoUrl: serverControlledPromptEngineeringVideoUrl,
     quiz: promptLevelOneQuiz,
     positioningLevels: [
       { maximumRatio: 0.34, label: 'Niveau découverte' },

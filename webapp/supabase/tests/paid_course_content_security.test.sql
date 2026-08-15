@@ -12,18 +12,17 @@ SELECT ok(
 
 SELECT is(
   (SELECT file_size_limit FROM storage.buckets WHERE id = 'paid-course-content'),
-  104857600::bigint,
-  'La limite couvre la vidéo pédagogique sans accepter des fichiers arbitrairement volumineux'
+  10485760::bigint,
+  'La limite couvre les documents privés sans inclure les gros médias IONOS'
 );
 
 SELECT ok(
-  (SELECT allowed_mime_types @> ARRAY[
+  (SELECT allowed_mime_types = ARRAY[
       'application/pdf',
-      'video/mp4',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ]::text[]
    FROM storage.buckets WHERE id = 'paid-course-content'),
-  'Seuls PDF, MP4 et DOCX sont prévus dans le bucket'
+  'Seuls PDF et DOCX sont prévus dans le bucket'
 );
 
 SELECT ok(

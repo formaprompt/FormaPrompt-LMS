@@ -13,3 +13,9 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# La capsule payante reste physiquement sur IONOS mais n'est jamais servie
+# directement. paid-video.php la diffuse après validation d'une URL HMAC courte.
+<FilesMatch "^FP_-_Capsule_001_-_.*\.mp4$">
+  Require all denied
+</FilesMatch>

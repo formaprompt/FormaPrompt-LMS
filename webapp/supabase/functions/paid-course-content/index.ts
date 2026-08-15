@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { courseCatalog } from '../_shared/paidCourseCatalog.js';
 import {
-  courseVideoObjectPath,
+  courseHasIonVideo,
   hasUsableCourseAccess,
   PAID_COURSE_BUCKET,
   PAID_RESOURCE_URL_SECONDS,
@@ -26,6 +26,40 @@ function createServerClient(supabaseUrl: string, key: string) {
   return createClient(supabaseUrl, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+function bytesToHex(value: ArrayBuffer) {
+  return Array.from(new Uint8Array(value), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+async function createIonVideoGrant(courseId: string) {
+  const gatewayUrl = new URL(requiredEnv('PAID_VIDEO_GATEWAY_URL'));
+  if (
+    gatewayUrl.protocol !== 'https:'
+    || gatewayUrl.hostname !== 'formaprompt.com'
+    || gatewayUrl.username
+    || gatewayUrl.password
+    || gatewayUrl.search
+    || gatewayUrl.hash
+  ) {
+    throw new Error('Configuration serveur vidéo invalide.');
+  }
+  const expiresAt = Math.floor(Date.now() / 1000) + PAID_VIDEO_URL_SECONDS;
+  const payload = `${courseId}\n${expiresAt}`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(requiredEnv('PAID_VIDEO_SIGNING_SECRET')),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const signature = bytesToHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload)));
+  return {
+    endpoint: gatewayUrl.toString(),
+    courseId,
+    expiresAt,
+    signature,
+  };
 }
 
 type ServerClient = ReturnType<typeof createServerClient>;
@@ -110,9 +144,8 @@ Deno.serve(async (request) => {
     const sourceCourse = courseCatalog[courseId as keyof typeof courseCatalog];
     if (!sourceCourse) return jsonResponse({ error: 'Formation indisponible.' }, 404);
     const course = await signCourseResources(adminClient, courseId, sourceCourse) as Record<string, unknown>;
-    const videoObjectPath = courseVideoObjectPath(courseId);
-    if (videoObjectPath) {
-      course.videoUrl = await signUrl(adminClient, videoObjectPath, PAID_VIDEO_URL_SECONDS);
+    if (courseHasIonVideo(courseId)) {
+      course.videoGrant = await createIonVideoGrant(courseId);
     }
     return jsonResponse({ course });
   } catch (error) {

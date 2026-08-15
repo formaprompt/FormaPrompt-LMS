@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  courseVideoObjectPath,
+  courseHasIonVideo,
   hasUsableCourseAccess,
   paidResourceObjectPath,
   trainerGuideObjectPath,
@@ -44,7 +44,7 @@ test('les chemins Storage sont construits sans traversée', () => {
   assert.match(trainerGuideObjectPath('formation-ia-act'), /^formation-ia-act\/trainer\//);
 });
 
-test('la vidéo payante possède uniquement un chemin Storage interne', () => {
-  assert.equal(courseVideoObjectPath('formation-ia'), null);
-  assert.match(courseVideoObjectPath('formation-prompt-level-1'), /^formation-prompt-level-1\/videos\//);
+test('la vidéo Prompt reste signalée comme média IONOS hors Storage', () => {
+  assert.equal(courseHasIonVideo('formation-ia'), false);
+  assert.equal(courseHasIonVideo('formation-prompt-level-1'), true);
 });

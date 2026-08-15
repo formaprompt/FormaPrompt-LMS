@@ -43,7 +43,6 @@ export function trainerGuideObjectPath(courseId) {
   return `${validatedCourseId}/trainer/${fileNames[validatedCourseId]}`;
 }
 
-export function courseVideoObjectPath(courseId) {
-  if (validatePaidCourseId(courseId) !== 'formation-prompt-level-1') return null;
-  return 'formation-prompt-level-1/videos/FP_-_Capsule_001_-_Rediger_un_bon_prompt_finale_with_captions.mp4';
+export function courseHasIonVideo(courseId) {
+  return validatePaidCourseId(courseId) === 'formation-prompt-level-1';
 }

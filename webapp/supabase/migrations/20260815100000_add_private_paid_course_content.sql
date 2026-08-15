@@ -9,10 +9,9 @@ INSERT INTO storage.buckets (
   'paid-course-content',
   'paid-course-content',
   false,
-  104857600,
+  10485760,
   ARRAY[
     'application/pdf',
-    'video/mp4',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ]::text[]
 )

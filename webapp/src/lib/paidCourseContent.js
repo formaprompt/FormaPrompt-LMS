@@ -15,10 +15,33 @@ async function invokePaidCourseContent(supabase, body) {
   return data;
 }
 
+async function activateIonVideoGrant(grant) {
+  if (!grant || typeof grant !== 'object') return null;
+  const endpoint = new URL(grant.endpoint);
+  if (endpoint.protocol !== 'https:' || endpoint.hostname !== 'formaprompt.com') {
+    throw new Error('La vidéo pédagogique est indisponible.');
+  }
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      course: grant.courseId,
+      exp: grant.expiresAt,
+      sig: grant.signature,
+    }),
+  });
+  if (!response.ok) throw new Error('La vidéo pédagogique est indisponible.');
+  return endpoint.toString();
+}
+
 export async function fetchPaidCourseContent(supabase, courseId) {
   const result = await invokePaidCourseContent(supabase, { action: 'course', courseId });
   if (!result?.course) throw new Error('Le contenu pédagogique est indisponible.');
-  return result.course;
+  const videoUrl = await activateIonVideoGrant(result.course.videoGrant);
+  const course = { ...result.course };
+  delete course.videoGrant;
+  return videoUrl ? { ...course, videoUrl } : course;
 }
 
 export async function fetchTrainerGuideUrl(supabase, courseId) {
