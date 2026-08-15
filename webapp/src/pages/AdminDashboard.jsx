@@ -11,6 +11,7 @@ import {
   FINAL_PROJECT_REVIEW_FIELDS,
 } from '../lib/finalProjectEvaluation';
 import { buildAttestationDossier, formatAttestationDuration } from '../lib/attestationDossier';
+import { fetchTrainerGuideUrl } from '../lib/paidCourseContent';
 import SignaturePad from '../components/SignaturePad';
 import './AdminDashboard.css';
 
@@ -34,21 +35,57 @@ const TRAINER_GUIDES = [
     id: 'formation-ia',
     title: 'Guide formateur IA générative',
     description: 'Déroulés des trois rythmes de 10 heures, démonstrations, corrections, adaptations et preuves pédagogiques.',
-    href: '/assets/guide-formateur-ia-generative-formaprompt.pdf',
   },
   {
     id: 'formation-ia-act',
     title: 'Guide formateur IA Act',
     description: "Déroulés des trois formats de 4 heures guidées, exercices liés aux modules, évaluation finale et preuves pédagogiques.",
-    href: '/assets/guide-formateur-ia-act-formaprompt.pdf',
   },
   {
     id: 'formation-prompt-level-1',
     title: 'Guide formateur Prompt Engineering – Niveau 1',
     description: 'Déroulés des deux formats de 7 heures, six démonstrations, réponses attendues, corrections et preuves Qualiopi.',
-    href: '/assets/guide-formateur-prompt-engineering-niveau-1-formaprompt.pdf',
   },
 ];
+
+function TrainerGuideLink({ guide }) {
+  const [feedback, setFeedback] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function openGuide() {
+    setFeedback('');
+    const targetWindow = window.open('', '_blank');
+    if (!targetWindow) {
+      setFeedback('Autorisez l’ouverture d’un nouvel onglet puis réessayez.');
+      return;
+    }
+    targetWindow.opener = null;
+    setLoading(true);
+    try {
+      const signedUrl = await fetchTrainerGuideUrl(supabase, guide.id);
+      targetWindow.location.replace(signedUrl);
+    } catch (error) {
+      targetWindow.close();
+      setFeedback(error.message || 'Le guide ne peut pas être ouvert pour le moment.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="btn admin-dashboard__guide-link"
+        onClick={openGuide}
+        disabled={loading}
+      >
+        {loading ? 'Vérification…' : 'Ouvrir le guide PDF'}
+      </button>
+      {feedback && <p role="alert">{feedback}</p>}
+    </>
+  );
+}
 
 const EXERCISE_REVIEW_STATUS_LABELS = {
   needs_revision: 'À reprendre',
@@ -1542,13 +1579,22 @@ export default function AdminDashboard() {
           Feuilles d’émargement
         </button>
         {role === 'admin' && (
-          <button
-            type="button"
-            onClick={() => navigate('/admin/acces-incidents')}
-            className="btn btn-primary"
-          >
-            Accès & incidents
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => navigate('/admin/acces-incidents')}
+              className="btn btn-primary"
+            >
+              Accès & incidents
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/admin/demandes-rgpd')}
+              className="btn btn-primary"
+            >
+              Demandes RGPD
+            </button>
+          </>
         )}
       </div>
 
@@ -1686,14 +1732,7 @@ export default function AdminDashboard() {
                         <h3>{guide.title}</h3>
                         <p>{guide.description}</p>
                       </div>
-                      <a
-                        href={guide.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn admin-dashboard__guide-link"
-                      >
-                        Ouvrir le guide PDF
-                      </a>
+                      <TrainerGuideLink guide={guide} />
                     </article>
                   ))}
                 </div>

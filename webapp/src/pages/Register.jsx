@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
-import { getAuthRedirectUrl } from '../lib/authRedirect';
+import { secureSignup } from '../lib/passwordSecurity';
 import './Auth.css';
 
 export default function Register() {
@@ -26,23 +26,16 @@ export default function Register() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getAuthRedirectUrl('/dashboard'),
-      },
-    });
-
-    if (error) {
-      setError(error.message);
-    } else {
-      if (data?.user?.identities?.length === 0) {
-          setError('Cet email est déjà utilisé.');
-      } else {
-          setMessage('Inscription réussie ! Veuillez consulter votre boîte mail (et vos spams) pour confirmer votre compte avant de vous connecter.');
-          // On ne redirige plus automatiquement pour qu'ils aient le temps de lire
-      }
+    try {
+      const result = await secureSignup(supabase, email, password);
+      setPassword('');
+      setConfirmPassword('');
+      setMessage([
+        'Demande d’inscription enregistrée. Consultez votre boîte mail et vos spams pour confirmer votre compte.',
+        result.warning,
+      ].filter(Boolean).join(' '));
+    } catch (registrationError) {
+      setError(registrationError.message);
     }
     setLoading(false);
   };
@@ -77,7 +70,7 @@ export default function Register() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                minLength="6"
+                minLength="12"
                 required
               />
               <button 
@@ -88,6 +81,7 @@ export default function Register() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            <small>Utilisez au moins 12 caractères et un mot de passe unique.</small>
           </div>
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
@@ -98,7 +92,7 @@ export default function Register() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                minLength="6"
+                minLength="12"
                 required
               />
               <button 

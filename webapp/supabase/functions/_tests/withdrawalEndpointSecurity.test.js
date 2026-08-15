@@ -17,7 +17,7 @@ function sourceFiles(directory) {
 }
 
 test('enregistre la demande avant de tenter l accusé électronique', () => {
-  const insertPosition = endpointSource.indexOf(".from('withdrawal_requests')\n      .insert(");
+  const insertPosition = endpointSource.search(/\.from\('withdrawal_requests'\)\s*\.insert\(/);
   const emailPosition = endpointSource.indexOf('attemptWithdrawalReceiptDelivery(receipt)');
   assert.ok(insertPosition >= 0 && emailPosition > insertPosition);
 });

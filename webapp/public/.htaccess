@@ -7,9 +7,19 @@
   RewriteRule ^index\.html$ - [L]
   # Le dossier de pré-rendu des articles ne doit pas intercepter la route React /blog.
   RewriteRule ^blog/?$ /index.html [L]
+  # Les anciens supports désormais privés ne doivent pas retomber sur la SPA.
+  # Un futur document réellement présent reste servi normalement.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^assets/.*\.(?:pdf|docx)$ - [R=404,L,NC]
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^(.+?)/?$ $1.html [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule . /index.html [L]
 </IfModule>
+
+# La capsule payante reste physiquement sur IONOS mais n'est jamais servie
+# directement. paid-video.php la diffuse après validation d'une URL HMAC courte.
+<FilesMatch "^FP_-_Capsule_001_-_.*\.mp4$">
+  Require all denied
+</FilesMatch>
