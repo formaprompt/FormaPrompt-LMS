@@ -10,6 +10,20 @@ verify_jwt = true
 [functions.admin-manage-enrollment]
 verify_jwt = true
 
+[functions.admin-process-privacy-request]
+verify_jwt = true
+
+[functions.admin-disciplinary-files]
+verify_jwt = true
+
+# L inscription est publique. La mise à jour exige un JWT vérifié dans la
+# fonction avant tout appel Auth administrateur.
+[functions.secure-password-auth]
+verify_jwt = false
+
+[functions.paid-course-content]
+verify_jwt = true
+
 [functions.create-travel-fee-checkout]
 verify_jwt = true
 

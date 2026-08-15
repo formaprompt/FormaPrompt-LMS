@@ -8,6 +8,7 @@ const playerState = vi.hoisted(() => ({
   access: null,
   accessError: null,
   purchaseExists: false,
+  contentRequests: [],
   queriedTables: [],
 }));
 
@@ -20,13 +21,36 @@ vi.mock('../data/courseCatalog', () => ({
     'formation-prompt-level-1': {
       title: 'Formation Prompt Engineering – Niveau 1',
       landingPath: '/formation-prompt-engineering',
+      exercises: [],
+    },
+  },
+}));
+
+vi.mock('../lib/paidCourseContent', () => ({
+  fetchPaidCourseContent: async (_supabase, courseId) => {
+    playerState.contentRequests.push(courseId);
+    if (playerState.accessError) throw playerState.accessError;
+    const access = playerState.access;
+    const open = access
+      && access.course_id === courseId
+      && access.user_id === playerState.user.id
+      && access.status === 'active'
+      && (!access.expires_at || new Date(access.expires_at) > new Date());
+    if (!open) {
+      const error = new Error('Accès à la formation refusé.');
+      error.status = 403;
+      throw error;
+    }
+    return {
+      title: 'Formation Prompt Engineering – Niveau 1',
+      landingPath: '/formation-prompt-engineering',
       quiz: [],
       positioningDomains: [],
       positioningLevels: [],
       exercises: [],
       glossary: [],
       resources: [],
-    },
+    };
   },
 }));
 
@@ -53,19 +77,6 @@ vi.mock('../lib/supabaseClient', () => ({
         order: () => builder,
         limit: () => builder,
         then: (resolve) => {
-          if (table === 'course_access') {
-            if (playerState.accessError) {
-              return resolve({ data: null, error: playerState.accessError });
-            }
-            const access = playerState.access;
-            const open = access
-              && access.status === 'active'
-              && (!access.expires_at || new Date(access.expires_at) > new Date());
-            const matches = open
-              && (!filters.user_id || filters.user_id === access.user_id)
-              && (!filters.course_id || filters.course_id === access.course_id);
-            return resolve({ data: matches ? [access] : [], error: null });
-          }
           if (table === 'course_positioning_assessments') {
             return resolve({ data: [], error: null });
           }
@@ -109,13 +120,15 @@ describe('CoursePlayer fondé exclusivement sur course_access', () => {
     playerState.access = activeAccess();
     playerState.accessError = null;
     playerState.purchaseExists = false;
+    playerState.contentRequests = [];
     playerState.queriedTables = [];
   });
 
   it('autorise la formation avec un accès active sans échéance', async () => {
     renderPlayer();
     expect(await screen.findByRole('heading', { name: 'Quiz de positionnement sécurisé' })).toBeVisible();
-    expect(playerState.queriedTables).toContain('course_access');
+    expect(playerState.contentRequests).toEqual(['formation-prompt-level-1']);
+    expect(playerState.queriedTables).not.toContain('course_access');
     expect(playerState.queriedTables).not.toContain('purchases');
   });
 
@@ -134,15 +147,17 @@ describe('CoursePlayer fondé exclusivement sur course_access', () => {
     playerState.purchaseExists = true;
     renderPlayer();
     expect(await screen.findByRole('heading', { name: 'Présentation de la formation' })).toBeVisible();
-    expect(playerState.queriedTables).toEqual(expect.arrayContaining([
-      'course_access',
-      'course_positioning_assessments',
-    ]));
+    expect(playerState.contentRequests).toEqual(['formation-prompt-level-1']);
+    expect(playerState.queriedTables).toContain('course_positioning_assessments');
+    expect(playerState.queriedTables).not.toContain('course_access');
     expect(playerState.queriedTables).not.toContain('purchases');
   });
 
   it("échoue de manière fermée si course_access est indisponible", async () => {
-    playerState.accessError = { code: 'PGRST205', message: 'course_access unavailable' };
+    playerState.accessError = Object.assign(
+      new Error("Impossible de vérifier votre accès pour le moment."),
+      { status: 409 },
+    );
     playerState.purchaseExists = true;
     renderPlayer();
     expect(await screen.findByRole('alert')).toHaveTextContent(/Impossible de vérifier votre accès/);

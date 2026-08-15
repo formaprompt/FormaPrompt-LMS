@@ -6,8 +6,8 @@ import PrerequisiteQuiz from '../components/PrerequisiteQuiz';
 import { useAuth } from '../contexts/useAuth';
 import { courseCatalog } from '../data/courseCatalog';
 import { calculateCourseProgress } from '../lib/courseProgress';
-import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { FINAL_PROJECT_REVIEW_FIELDS } from '../lib/finalProjectEvaluation';
+import { fetchPaidCourseContent } from '../lib/paidCourseContent';
 import { supabase } from '../lib/supabaseClient';
 import './CoursePlayer.css';
 
@@ -28,7 +28,8 @@ export default function CoursePlayer() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const course = courseCatalog[id];
+  const courseDefinition = courseCatalog[id];
+  const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accessGranted, setAccessGranted] = useState(false);
   const [accessError, setAccessError] = useState('');
@@ -54,7 +55,7 @@ export default function CoursePlayer() {
 
   useEffect(() => {
     async function verifyAccess() {
-      if (!course) {
+      if (!courseDefinition) {
         navigate('/dashboard', { replace: true }); // Conserve l'apprenant dans son espace.
         return;
       }
@@ -65,8 +66,13 @@ export default function CoursePlayer() {
       }
 
       setAccessError('');
-      const [accessResult, positioningResult] = await Promise.all([
-        fetchActiveCourseAccess(user.id, id),
+      setAccessGranted(false);
+      setCourse(null);
+      setLoading(true);
+      const [contentResult, positioningResult] = await Promise.all([
+        fetchPaidCourseContent(supabase, id)
+          .then((data) => ({ data, error: null }))
+          .catch((error) => ({ data: null, error })),
         supabase
           .from('course_positioning_assessments')
           .select('id')
@@ -77,17 +83,19 @@ export default function CoursePlayer() {
           .limit(1),
       ]);
 
-      if (accessResult.error) {
-        console.error("Erreur lors de la vérification de l'accès :", accessResult.error);
-        setAccessError("Impossible de vérifier votre accès pour le moment. Réessayez dans quelques instants.");
-      } else if (!accessResult.data) {
-        navigate(course.landingPath);
+      if (contentResult.error) {
+        if (contentResult.error.status === 403) {
+          navigate(courseDefinition.landingPath, { replace: true });
+        } else {
+          setAccessError(contentResult.error.message);
+        }
       } else if (positioningResult.error) {
         console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);
         setAccessError(
           "Le suivi des positionnements n'est pas encore disponible. Contactez FormaPrompt si le problème persiste.",
         );
       } else {
+        setCourse(contentResult.data);
         setQuizCompleted(Boolean(positioningResult.data?.length));
         setAccessGranted(true);
       }
@@ -96,7 +104,7 @@ export default function CoursePlayer() {
     }
 
     verifyAccess();
-  }, [course, id, navigate, user]);
+  }, [courseDefinition, id, navigate, user]);
 
   useEffect(() => {
     async function loadLatestExerciseAnswers() {
