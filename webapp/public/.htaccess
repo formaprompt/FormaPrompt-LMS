@@ -7,6 +7,10 @@
   RewriteRule ^index\.html$ - [L]
   # Le dossier de pré-rendu des articles ne doit pas intercepter la route React /blog.
   RewriteRule ^blog/?$ /index.html [L]
+  # Les anciens supports désormais privés ne doivent pas retomber sur la SPA.
+  # Un futur document réellement présent reste servi normalement.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^assets/.*\.(?:pdf|docx)$ - [R=404,L,NC]
   RewriteCond %{REQUEST_FILENAME}.html -f
   RewriteRule ^(.+?)/?$ $1.html [L]
   RewriteCond %{REQUEST_FILENAME} !-f

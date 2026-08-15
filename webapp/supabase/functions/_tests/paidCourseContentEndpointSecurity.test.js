@@ -87,6 +87,7 @@ test('la vidéo IONOS utilise une URL HMAC courte après le contrôle serveur', 
   assert.match(ionGateway, /HTTP_RANGE/);
   assert.match(ionGateway, /Content-Range/);
   assert.match(htaccess, /FilesMatch[^]*FP_-_Capsule_001_-_[^]*Require all denied/);
+  assert.match(htaccess, /RewriteRule \^assets\/\.\*\\\.\(\?:pdf\|docx\)\$ - \[R=404,L,NC\]/);
   assert.doesNotMatch(publicCatalog, /Capsule_001|\.mp4/);
 });
 
