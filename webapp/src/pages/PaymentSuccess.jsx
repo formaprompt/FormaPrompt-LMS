@@ -100,6 +100,7 @@ export default function PaymentSuccess() {
         title="Confirmation du paiement – FormaPrompt"
         description="Confirmation et activation de votre formation FormaPrompt."
         url="https://formaprompt.com/paiement-reussi"
+        robots="noindex, nofollow"
       />
       <main className="container section" style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>
         <section

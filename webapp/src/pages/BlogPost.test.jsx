@@ -81,7 +81,7 @@ describe('article de blog et métadonnées SEO', () => {
       expect(document.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
       expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
         'href',
-        'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+        'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
       );
     });
 
@@ -90,7 +90,7 @@ describe('article de blog et métadonnées SEO', () => {
       '@type': 'Article',
       headline: 'Quel est le meilleur générateur de prompts en 2026 ?',
       author: { '@type': 'Person', name: 'Thierry FREZARD' },
-      mainEntityOfPage: 'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+      mainEntityOfPage: 'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
     });
   });
 });

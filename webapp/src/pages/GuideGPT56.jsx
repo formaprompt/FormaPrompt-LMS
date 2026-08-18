@@ -136,7 +136,7 @@ export default function GuideGPT56() {
       <SEO
         title="GPT-5.6 dans ChatGPT et Codex : quel modèle choisir ? – FormaPrompt"
         description="Guide visuel pour comprendre GPT-5.6 Sol, Terra et Luna dans ChatGPT, Codex et l’API, ainsi que les niveaux d’effort de raisonnement."
-        url="https://www.formaprompt.com/guide-gpt-5-6-codex"
+        url="https://formaprompt.com/guide-gpt-5-6-codex"
       />
 
       <div className="gpt-guide">

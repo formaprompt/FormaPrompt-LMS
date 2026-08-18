@@ -7,8 +7,8 @@ export default function FormationBureautique() {
       <SEO
         title="Formation Bureautique Pro – FormaPrompt"
         description="Maîtrisez Word, Excel, PowerPoint, Outlook et Teams pour gagner en productivité."
-        url="https://www.formaprompt.com/formation-bureautique"
-        image="https://www.formaprompt.com/assets/formation bureautique.png"
+        url="https://formaprompt.com/formation-bureautique"
+        image="https://formaprompt.com/assets/formation%20bureautique.png"
       />
       <div className="container section">
       <div className="grid grid-cols-2" style={{alignItems: 'center', marginBottom: '2rem'}}>
