@@ -38,6 +38,7 @@ export default function Layout() {
         <SEO
           title="FormaPrompt – Formations IA, Prompt Engineering, Bureautique"
           description="Plateforme professionnelle de formations en IA générative, prompt engineering et outils bureautiques."
+          robots="noindex, nofollow"
         />
       )}
       <main id="main-content" style={{ flexGrow: 1 }} tabIndex="-1">

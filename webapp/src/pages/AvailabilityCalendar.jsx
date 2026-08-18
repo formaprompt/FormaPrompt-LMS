@@ -301,7 +301,7 @@ export default function AvailabilityCalendar() {
       <SEO
         title="Disponibilités & Réservations – FormaPrompt"
         description="Consultez mes disponibilités et réservez des créneaux de formation."
-        url="https://www.formaprompt.com/disponibilites"
+        url="https://formaprompt.com/disponibilites"
       />
       <div className="container section">
       <div className="text-center mb-4">

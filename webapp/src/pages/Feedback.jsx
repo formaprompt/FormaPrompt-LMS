@@ -223,7 +223,8 @@ export default function Feedback() {
       <SEO
         title="Évaluation de fin de formation – FormaPrompt"
         description="Donnez-nous votre avis sur la formation que vous venez de suivre (Démarche Qualiopi)."
-        url="https://www.formaprompt.com/feedback"
+        url="https://formaprompt.com/feedback"
+        robots="noindex, nofollow"
       />
       <div className="container section" style={{maxWidth: '800px'}}>
         <h1 className="text-center mb-2">

@@ -47,6 +47,7 @@ const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
 const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const AdminPrivacyRequests = lazy(() => import("./pages/AdminPrivacyRequests"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   return (
@@ -114,6 +115,7 @@ function App() {
             <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
             <Route path="attestations/:issuanceId" element={<IssuedAttestationDocument />} />
             <Route path="dossiers/:enrollmentId/documents/:documentType" element={<RequireAuth><TrainingDocument /></RequireAuth>} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </Suspense>

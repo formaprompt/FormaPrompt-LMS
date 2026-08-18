@@ -390,6 +390,18 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Validation locale : 26 assertions pgTAP, 176 tests unitaires/intégration, 49 scénarios Playwright réussis et 3 ignorés volontairement, lint, TypeScript, build et pré-rendus réussis.
 - Aucune migration de production, aucun déploiement IONOS, aucun commit, push ou merge n’a été réalisé à ce stade.
 
+## Référencement FormaPrompt et Studio — 18 août 2026
+
+- La propriété de domaine `formaprompt.com` est validée dans Google Search Console grâce à un enregistrement DNS TXT IONOS. Le sitemap canonique a été soumis à nouveau après publication et contient 21 URL publiques.
+- Le diagnostic initial relevait 5 clics, 79 impressions, un CTR de 6,3 % et une position moyenne de 14,6 sur trois mois. Google distinguait encore les variantes `www` et sans `www`, plusieurs routes publiques renvoyaient le HTML générique de l’accueil et les URL inconnues produisaient une fausse page 200.
+- Le domaine canonique est désormais `https://formaprompt.com`. Les variantes HTTP, `www`, anciennes routes et extensions historiques sont redirigées en 301 vers leurs destinations canoniques.
+- Les 21 pages publiques du sitemap sont pré-rendues avec leur titre, description, URL canonique, contenu et H1 propres. Le Studio conserve `https://formaprompt.com/studio/`.
+- Les routes privées ou transactionnelles utilisent `noindex, nofollow`. Une page 404 accessible et une vraie réponse HTTP 404 remplacent le retour trompeur vers l’accueil pour les URL inconnues.
+- Validation locale réussie : TypeScript, lint, 64 tests applicatifs, 158 tests Studio, build complet et 48 scénarios Playwright ordinateur/mobile ; 2 scénarios sont ignorés volontairement.
+- Après autorisation explicite de Thierry, le build a été déployé sur IONOS : 199 fichiers et 50 750 060 octets contrôlés par SHA-256, dont 131 transférés et 68 déjà identiques, sans divergence.
+- Les contrôles de production confirment les statuts 200 des pages publiques, les redirections 301, la vraie 404, les métadonnées canoniques et l’identité du sitemap distant. L’indexation prioritaire du Studio a été demandée et confirmée dans Google Search Console.
+- Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n’ont été modifiés pendant ce chantier.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

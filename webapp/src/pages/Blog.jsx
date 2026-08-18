@@ -44,8 +44,8 @@ export default function Blog() {
       <SEO
         title="Blog – FormaPrompt"
         description="Actualités, conseils et analyses sur l'IA générative et la bureautique."
-        url="https://www.formaprompt.com/blog"
-        image="https://www.formaprompt.com/assets/blog-cover.png"
+        url="https://formaprompt.com/blog"
+        image="https://formaprompt.com/assets/blog-cover.png"
       />
       <div className="container section">
       <div className="text-center mb-8">

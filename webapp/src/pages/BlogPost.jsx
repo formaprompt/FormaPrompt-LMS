@@ -39,12 +39,12 @@ export default function BlogPost() {
     return <Navigate to="/blog" replace />;
   }
 
-  const canonicalUrl = `https://www.formaprompt.com/blog/${post.slug}`;
+  const canonicalUrl = `https://formaprompt.com/blog/${post.slug}`;
   const seoTitle = post.seo_title || `${post.title} – FormaPrompt`;
   const seoDescription = post.meta_description
     || post.excerpt
     || `Lisez l'article ${post.title} sur le blog de FormaPrompt.`;
-  const socialImage = post.image_url || 'https://www.formaprompt.com/assets/blog-cover.png';
+  const socialImage = post.image_url || 'https://formaprompt.com/assets/blog-cover.png';
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -64,7 +64,7 @@ export default function BlogPost() {
       name: 'FormaPrompt',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.formaprompt.com/assets/logo-new.png',
+        url: 'https://formaprompt.com/assets/logo-new.png',
       },
     },
   };

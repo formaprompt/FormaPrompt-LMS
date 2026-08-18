@@ -101,6 +101,7 @@ export default function WithdrawalRequest() {
         title="Exercer mon droit de rétractation – FormaPrompt"
         description="Fonctionnalité en ligne pour transmettre une demande de rétractation à FormaPrompt."
         url="https://formaprompt.com/retractation"
+        robots="noindex, nofollow"
       />
       <main className="container section withdrawal-page">
         <h1>Renoncer au contrat ici</h1>

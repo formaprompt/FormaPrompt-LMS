@@ -69,8 +69,8 @@ export default function FormationPrompt() {
       <SEO
         title="Formation Prompt Engineering – Niveau 1 | FormaPrompt"
         description="Formation de 7 heures pour apprendre à concevoir, tester et améliorer des prompts professionnels. Présentiel ou classe virtuelle."
-        url="https://www.formaprompt.com/formation-prompt-engineering"
-        image="https://www.formaprompt.com/assets/Formation%20prompt%20engineering.png"
+        url="https://formaprompt.com/formation-prompt-engineering"
+        image="https://formaprompt.com/assets/Formation%20prompt%20engineering.png"
       />
 
       <main className="prompt-page">

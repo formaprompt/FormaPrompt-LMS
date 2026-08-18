@@ -318,7 +318,7 @@ export default function CourseBooking() {
 
   return (
     <>
-      <SEO title={`Réserver – ${course.shortTitle} | FormaPrompt`} description="Choisissez les horaires et la modalité de votre formation FormaPrompt." url="https://formaprompt.com/reservation-formation" />
+      <SEO title={`Réserver – ${course.shortTitle} | FormaPrompt`} description="Choisissez les horaires et la modalité de votre formation FormaPrompt." url="https://formaprompt.com/reservation-formation" robots="noindex, nofollow" />
       <main className="booking-page container section">
         <header className="booking-hero">
           <CalendarClock size={42} aria-hidden="true" />

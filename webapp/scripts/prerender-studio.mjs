@@ -1,50 +1,67 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 import { preview } from 'vite';
 
 const host = '127.0.0.1';
 const port = 4175;
-const pages = [
-  {
-    name: 'Studio',
-    url: `http://${host}:${port}/studio`,
-    outputPath: path.resolve('dist', 'studio', 'index.html'),
-    heading: /construisez un prompt clair/i,
-    markers: [
-      'formaprompt studio',
-      'méthode crop',
-      'application/ld+json',
-      'courriel professionnel',
-      'https://formaprompt.com/studio/',
-      'https://formaprompt.com/assets/logo-new.png',
-    ],
-  },
-  {
-    name: 'Article générateurs de prompts 2026',
-    url: `http://${host}:${port}/blog/meilleur-generateur-prompts-comparatif-2026`,
-    outputPath: path.resolve('dist', 'blog', 'meilleur-generateur-prompts-comparatif-2026.html'),
-    heading: /quel est le meilleur générateur de prompts en 2026/i,
-    markers: [
-      'meilleur générateur de prompts en 2026 : comparatif',
-      'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
-      'https://schema.org',
-      'comparatif des générateurs de prompts en 2026',
-    ],
-  },
-  {
-    name: 'Accueil',
-    url: `http://${host}:${port}/`,
-    outputPath: path.resolve('dist', 'index.html'),
-    heading: /formations en ia, prompt engineering et bureautique/i,
-    markers: [
-      'formaprompt studio',
-      'educationalorganization',
-      'webapplication',
-      'https://formaprompt.com/',
-    ],
-  },
-];
+const canonicalOrigin = 'https://formaprompt.com';
+
+const publicPages = [
+  { name: 'Studio', route: '/studio/', canonical: `${canonicalOrigin}/studio/` },
+  { name: 'Formation IA générative', route: '/formation-ia-generative' },
+  { name: 'Formation IA Act', route: '/formation-ia-act-conformite' },
+  { name: 'Formation Prompt Engineering', route: '/formation-prompt-engineering' },
+  { name: 'Formation bureautique', route: '/formation-bureautique' },
+  { name: 'Formation organismes', route: '/formation-organismes' },
+  { name: 'À propos', route: '/a-propos' },
+  { name: 'Blog', route: '/blog' },
+  { name: 'Article générateurs de prompts 2026', route: '/blog/meilleur-generateur-prompts-comparatif-2026' },
+  { name: 'Contact', route: '/contact' },
+  { name: 'Disponibilités', route: '/disponibilites' },
+  { name: 'FAQ', route: '/faq' },
+  { name: 'Guide GPT-5.6', route: '/guide-gpt-5-6-codex' },
+  { name: 'Mentions légales', route: '/mentions-legales' },
+  { name: 'Conditions générales de vente', route: '/cgv' },
+  { name: 'CGV particuliers', route: '/cgv-particuliers' },
+  { name: 'CGV professionnels', route: '/cgv-professionnels' },
+  { name: 'Politique de confidentialité', route: '/politique-confidentialite' },
+  { name: 'Règlement intérieur', route: '/reglement-interieur' },
+  { name: 'Informations précontractuelles', route: '/informations-precontractuelles' },
+  // L'accueil est écrit en dernier car Vite l'utilise comme fallback pendant le pré-rendu.
+  { name: 'Accueil', route: '/', canonical: `${canonicalOrigin}/` },
+].map((page) => ({
+  ...page,
+  canonical: page.canonical ?? `${canonicalOrigin}${page.route}`,
+}));
+
+function outputPathFor(route) {
+  if (route === '/') return path.resolve('dist', 'index.html');
+  if (route === '/studio/') return path.resolve('dist', 'studio', 'index.html');
+  return path.resolve('dist', `${route.slice(1)}.html`);
+}
+
+function delayApplicationScript(html, pageName) {
+  const applicationScript = html.match(
+    /<script type="module" crossorigin(?:="")? src="([^"]+)"><\/script>/,
+  );
+
+  if (!applicationScript) {
+    throw new Error(`Le script principal de l'application est introuvable dans le pré-rendu ${pageName}.`);
+  }
+
+  const applicationScriptUrl = applicationScript[1];
+  const delayedApplicationScript = `<script>
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const applicationScript = document.createElement('script');
+      applicationScript.type = 'module';
+      applicationScript.src = '${applicationScriptUrl}';
+      document.head.appendChild(applicationScript);
+    }));
+  </script>`;
+
+  return html.replace(applicationScript[0], delayedApplicationScript);
+}
 
 const server = await preview({
   logLevel: 'error',
@@ -54,53 +71,56 @@ const server = await preview({
 let browser;
 
 try {
+  const initialShellPath = path.resolve('dist', 'index.html');
+  const initialShell = await readFile(initialShellPath, 'utf8');
+  await writeFile(path.resolve('dist', 'public-shell.html'), initialShell, 'utf8');
+  const privateAppShell = initialShell
+    .replace('<title>FormaPrompt</title>', '<title>Espace sécurisé – FormaPrompt</title>')
+    .replace('</head>', '  <meta name="robots" content="noindex, nofollow">\n  </head>');
+  await writeFile(path.resolve('dist', 'app-shell.html'), privateAppShell, 'utf8');
+
   browser = await chromium.launch({ channel: 'chrome', headless: true });
-  for (const pageConfig of pages) {
+
+  for (const pageConfig of publicPages) {
     const page = await browser.newPage();
-    await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded' });
-    await page.getByRole('heading', { level: 1, name: pageConfig.heading }).waitFor();
-    await page.waitForFunction(() => Boolean(document.querySelector('link[rel="canonical"]')));
-
-    const html = await page.content();
-    const normalizedHtml = html.toLocaleLowerCase('fr');
-
-    for (const marker of pageConfig.markers) {
-      if (!normalizedHtml.includes(marker)) {
-        throw new Error(`Le pré-rendu ${pageConfig.name} ne contient pas le marqueur attendu : ${marker}`);
-      }
-    }
-
-    let serializedHtml = html.trimStart().toLowerCase().startsWith('<!doctype')
-      ? html
-      : `<!doctype html>\n${html}`;
-
-    const applicationScript = serializedHtml.match(
-      /<script type="module" crossorigin="" src="([^"]+)"><\/script>/,
+    await page.goto(`http://${host}:${port}${pageConfig.route}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      (expectedCanonical) => document.querySelector('link[rel="canonical"]')?.href === expectedCanonical,
+      pageConfig.canonical,
     );
+    await page.locator('h1').first().waitFor({ state: 'visible' });
 
-    if (!applicationScript) {
-      throw new Error(`Le script principal de l'application est introuvable dans le pré-rendu ${pageConfig.name}.`);
+    const metadata = await page.evaluate(() => ({
+      canonical: document.querySelector('link[rel="canonical"]')?.href,
+      description: document.querySelector('meta[name="description"]')?.content,
+      robots: document.querySelector('meta[name="robots"]')?.content,
+      title: document.title,
+    }));
+
+    if (metadata.canonical !== pageConfig.canonical) {
+      throw new Error(`Canonical incorrecte pour ${pageConfig.name} : ${metadata.canonical ?? 'absente'}.`);
+    }
+    if (!metadata.title || metadata.title === 'FormaPrompt' || !metadata.description) {
+      throw new Error(`Métadonnées incomplètes pour ${pageConfig.name}.`);
+    }
+    if (metadata.robots?.includes('noindex')) {
+      throw new Error(`La page publique ${pageConfig.name} ne doit pas être en noindex.`);
     }
 
-    const applicationScriptUrl = applicationScript[1];
-    const delayedApplicationScript = `<script>
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const applicationScript = document.createElement('script');
-      applicationScript.type = 'module';
-      applicationScript.src = '${applicationScriptUrl}';
-      document.head.appendChild(applicationScript);
-    }));
-  </script>`;
+    const renderedHtml = await page.content();
+    let serializedHtml = renderedHtml.trimStart().toLowerCase().startsWith('<!doctype')
+      ? renderedHtml
+      : `<!doctype html>\n${renderedHtml}`;
 
-    serializedHtml = serializedHtml
-      .replace(applicationScript[0], delayedApplicationScript)
+    serializedHtml = delayApplicationScript(serializedHtml, pageConfig.name)
       .replace('<title>FormaPrompt</title>', '')
       .replace(/<link rel="canonical"\s*\/?>\s*/g, '')
       .replace(/<script id="vite-plugin-pwa:register-sw"[^>]*><\/script>/, '');
 
-    await mkdir(path.dirname(pageConfig.outputPath), { recursive: true });
-    await writeFile(pageConfig.outputPath, serializedHtml, 'utf8');
-    console.log(`Pré-rendu ${pageConfig.name} créé : ${pageConfig.outputPath}`);
+    const outputPath = outputPathFor(pageConfig.route);
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, serializedHtml, 'utf8');
+    console.log(`Pré-rendu créé : ${pageConfig.name} -> ${outputPath}`);
     await page.close();
   }
 } finally {

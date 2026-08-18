@@ -86,7 +86,7 @@ export default function FAQ() {
       <SEO
         title="FAQ (Foire Aux Questions) – FormaPrompt"
         description="Retrouvez toutes les réponses à vos questions concernant nos formations en IA, Prompt Engineering et Bureautique."
-        url="https://www.formaprompt.com/faq"
+        url="https://formaprompt.com/faq"
       />
       <div className="container section" style={{ maxWidth: '800px' }}>
         <div className="text-center mb-8">
