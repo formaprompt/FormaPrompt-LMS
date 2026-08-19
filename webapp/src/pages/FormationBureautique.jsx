@@ -1,14 +1,27 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { createCourseStructuredData } from '../lib/seoStructuredData';
 
 export default function FormationBureautique() {
   return (
     <>
       <SEO
-        title="Formation Bureautique Pro – FormaPrompt"
-        description="Maîtrisez Word, Excel, PowerPoint, Outlook et Teams pour gagner en productivité."
+        title="Formation bureautique Microsoft 365 – FormaPrompt"
+        description="Formations bureautiques sur mesure pour gagner en autonomie avec Excel, Word, PowerPoint, Outlook, Teams et Microsoft 365, du niveau débutant à avancé."
         url="https://formaprompt.com/formation-bureautique"
         image="https://formaprompt.com/assets/formation%20bureautique.png"
+        jsonLd={createCourseStructuredData({
+          name: 'Formation bureautique Microsoft 365',
+          description: 'Formations bureautiques sur mesure pour gagner en autonomie avec Excel, Word, PowerPoint, Outlook, Teams et Microsoft 365, du niveau débutant à avancé.',
+          url: 'https://formaprompt.com/formation-bureautique',
+          image: 'https://formaprompt.com/assets/formation%20bureautique.png',
+          audience: "Salariés, étudiants, demandeurs d'emploi et personnes en reconversion",
+          teaches: [
+            'Créer des documents, tableaux et présentations professionnels',
+            'Organiser les fichiers et les informations',
+            'Collaborer avec les outils Microsoft 365',
+          ],
+        })}
       />
       <div className="container section">
       <div className="grid grid-cols-2" style={{alignItems: 'center', marginBottom: '2rem'}}>

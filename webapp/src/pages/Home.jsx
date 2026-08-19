@@ -236,7 +236,7 @@ export default function Home() {
               <div className="card">
                 <ShieldCheck size={40} color="var(--color-primary)" className="mb-2" />
                 <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
-                <p className="mb-3">Comprendre les obligations essentielles et préparer un premier plan d'action avant l'échéance-clé du 2 août 2026.</p>
+                <p className="mb-3">Comprendre les obligations essentielles désormais applicables et préparer un premier plan d'action adapté à votre organisation.</p>
                 <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>
               </div>
             </div>

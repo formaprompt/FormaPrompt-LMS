@@ -18,6 +18,7 @@ import { SITE_CONFIG } from '../config/site'
 import { useAuth } from '../contexts/useAuth'
 import { getBookingUrl } from '../data/bookingCatalog'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
+import { createCourseStructuredData } from '../lib/seoStructuredData'
 import './FormationIA.css'
 
 const COURSE_ID = 'formation-ia'
@@ -133,10 +134,19 @@ export default function FormationIA() {
   return (
     <>
       <SEO
-        title="Formation IA générative de 10 heures | FormaPrompt"
+        title="Formation IA générative professionnelle – 10 h | FormaPrompt"
         description="Formation professionnelle de 10 heures pour comprendre l'IA générative, développer des usages concrets, vérifier les résultats et protéger les données."
         url={`${SITE_CONFIG.baseUrl}/formation-ia-generative`}
         image={`${SITE_CONFIG.baseUrl}/assets/acculturation-ia.png`}
+        jsonLd={createCourseStructuredData({
+          name: 'Formation IA générative professionnelle',
+          description: "Formation professionnelle de 10 heures pour comprendre l'IA générative, développer des usages concrets, vérifier les résultats et protéger les données.",
+          url: `${SITE_CONFIG.baseUrl}/formation-ia-generative`,
+          image: `${SITE_CONFIG.baseUrl}/assets/acculturation-ia.png`,
+          timeRequired: 'PT10H',
+          audience: 'Salariés, indépendants, dirigeants, formateurs et responsables pédagogiques',
+          teaches: objectives.map((objective) => objective.description),
+        })}
       />
 
       <main className="generative-ai-page">
@@ -349,6 +359,22 @@ export default function FormationIA() {
               <p>Présentiel possible dans un rayon maximal de 100 km autour de Calais, après validation de la distance.</p>
               <p>Une participation unique de 30 € est prévue pour le second déplacement en présentiel.</p>
               <p>Au-delà de 100 km, la formation est proposée à distance ou sur devis.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="container generative-ai-section">
+          <div className="generative-ai-introduction">
+            <div>
+              <p className="generative-ai-kicker">Pour approfondir</p>
+              <h2>Passer de l'acculturation à une méthode de prompting</h2>
+            </div>
+            <div>
+              <p>
+                La <Link to="/formation-prompt-engineering">formation Prompt Engineering</Link> approfondit la
+                conception et l'amélioration de prompts professionnels. Le <Link to="/studio/">Studio FormaPrompt</Link>
+                permet ensuite de s'entraîner avec la méthode CROP.
+              </p>
             </div>
           </div>
         </section>

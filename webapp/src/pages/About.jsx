@@ -2,22 +2,24 @@ import { Link } from 'react-router-dom';
 import { Award, Target, Users, BookOpen, CheckCircle } from 'lucide-react';
 import SEO from '../components/SEO';
 import { SITE_CONFIG } from '../config/site';
+import { createAboutStructuredData } from '../lib/seoStructuredData';
 
 export default function About() {
   return (
     <>
       <SEO
-        title="À propos – FormaPrompt"
-        description="Découvrez la mission, l'équipe et les valeurs de FormaPrompt pour rendre l'IA et la bureautique accessibles à tous."
+        title="Thierry FREZARD, formateur IA et bureautique | FormaPrompt"
+        description="Découvrez Thierry FREZARD, formateur professionnel d'adultes et fondateur de FormaPrompt, spécialisé en IA générative, Prompt Engineering et bureautique."
         url={SITE_CONFIG.urls.about}
         image={SITE_CONFIG.assets.portrait}
+        jsonLd={createAboutStructuredData()}
       />
       <div className="container section">
       {/* Hero Section */}
       <div className="grid grid-cols-2 mb-8" style={{ alignItems: 'center', gap: '4rem' }}>
         <div>
           <h1 className="mb-2" style={{ color: 'var(--color-primary)', fontSize: '2.5rem' }}>
-            Rendre l'IA accessible à tous
+            Thierry FREZARD, formateur IA et bureautique
           </h1>
           <p className="text-large mb-4" style={{ color: 'var(--color-text-light)', fontSize: '1.2rem', lineHeight: '1.6' }}>
             Derrière FormaPrompt se trouve une conviction forte : l'intelligence artificielle ne doit pas être réservée à une élite technique. Elle doit devenir un outil du quotidien, maîtrisé par tous les professionnels.
