@@ -1,14 +1,28 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { createCourseStructuredData } from '../lib/seoStructuredData';
 
 export default function FormationOF() {
   return (
     <>
       <SEO
         title="Formation IA pour Formateurs (RS6891) – FormaPrompt"
-        description="Certification RS6891 pour formateurs. Apprenez à produire et réviser des contenus pédagogiques avec l'IA."
+        description="Formation de 21 heures pour formateurs et responsables pédagogiques : produire et réviser des contenus avec l'IA et préparer la certification RS6891."
         url="https://formaprompt.com/formation-organismes"
         image="https://formaprompt.com/assets/ia-formateur.jpg"
+        jsonLd={createCourseStructuredData({
+          name: 'IA générative pour formateurs – préparation RS6891',
+          description: "Formation de 21 heures pour formateurs et responsables pédagogiques : produire et réviser des contenus avec l'IA et préparer la certification RS6891.",
+          url: 'https://formaprompt.com/formation-organismes',
+          image: 'https://formaprompt.com/assets/ia-formateur.jpg',
+          timeRequired: 'PT21H',
+          audience: 'Formateurs, ingénieurs pédagogiques, concepteurs et responsables pédagogiques',
+          teaches: [
+            "Sélectionner des outils d'IA adaptés à un besoin pédagogique",
+            'Produire et réviser des contenus pédagogiques avec une IA générative',
+            'Identifier les risques, les biais et les bonnes pratiques RGPD',
+          ],
+        })}
       />
       <div className="container section">
       <div className="grid grid-cols-2" style={{ alignItems: 'center', marginBottom: '2rem' }}>
@@ -143,6 +157,9 @@ export default function FormationOF() {
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to="/contact" className="btn btn-primary">
             Demander un devis
+          </Link>
+          <Link to="/studio/" className="btn" style={{ background: 'transparent', border: '1px solid var(--text-secondary)' }}>
+            Découvrir le Studio
           </Link>
           <Link to="/" className="btn" style={{ background: 'transparent', border: '1px solid var(--text-secondary)' }}>
             Retour à l'accueil

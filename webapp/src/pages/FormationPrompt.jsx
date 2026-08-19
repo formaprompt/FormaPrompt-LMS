@@ -16,6 +16,7 @@ import CommercialCheckout from '../components/CommercialCheckout'
 import { useAuth } from '../contexts/useAuth'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import { getBookingUrl } from '../data/bookingCatalog'
+import { createCourseStructuredData } from '../lib/seoStructuredData'
 import './FormationPrompt.css'
 
 const COURSE_ID = 'formation-prompt-level-1'
@@ -71,6 +72,19 @@ export default function FormationPrompt() {
         description="Formation de 7 heures pour apprendre à concevoir, tester et améliorer des prompts professionnels. Présentiel ou classe virtuelle."
         url="https://formaprompt.com/formation-prompt-engineering"
         image="https://formaprompt.com/assets/Formation%20prompt%20engineering.png"
+        jsonLd={createCourseStructuredData({
+          name: 'Formation Prompt Engineering – Niveau 1',
+          description: 'Formation de 7 heures pour apprendre à concevoir, tester et améliorer des prompts professionnels. Présentiel ou classe virtuelle.',
+          url: 'https://formaprompt.com/formation-prompt-engineering',
+          image: 'https://formaprompt.com/assets/Formation%20prompt%20engineering.png',
+          timeRequired: 'PT7H',
+          audience: 'Professionnels, formateurs et responsables pédagogiques',
+          teaches: [
+            'Structurer un prompt à partir d’un objectif, d’un contexte et de contraintes',
+            'Évaluer et améliorer les réponses d’une IA générative',
+            'Créer des modèles de prompts documentés et réutilisables',
+          ],
+        })}
       />
 
       <main className="prompt-page">
@@ -238,7 +252,10 @@ export default function FormationPrompt() {
 
         <section className="container prompt-level-two">
           <strong>Pour aller plus loin</strong>
-          <p>Un futur Niveau 2 abordera les agents, les automatisations et l’utilisation des API.</p>
+          <p>
+            Entraînez-vous gratuitement dans le <Link to="/studio/">Studio FormaPrompt</Link> avec la méthode CROP,
+            ou consolidez d'abord vos repères avec la <Link to="/formation-ia-generative">formation IA générative</Link>.
+          </p>
         </section>
       </main>
     </>

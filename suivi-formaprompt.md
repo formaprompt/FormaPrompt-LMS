@@ -416,6 +416,16 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Les contrôles de production confirment les statuts 200 des pages publiques, les redirections 301, la vraie 404, les métadonnées canoniques et l’identité du sitemap distant. L’indexation prioritaire du Studio a été demandée et confirmée dans Google Search Console.
 - Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n’ont été modifiés pendant ce chantier.
 
+## SEO éditorial des formations — 19 août 2026
+
+- Les cinq pages de formation exposent désormais des données structurées `Course`, `EducationalOrganization` et `BreadcrumbList`. La page À propos expose une fiche `Person` pour Thierry FREZARD.
+- Les titres et descriptions de la formation IA générative, de la bureautique, de la formation RS6891 et de la page À propos ont été précisés. Le maillage relie davantage les formations au Studio et entre elles.
+- Les textes AI Act ne présentent plus le 2 août 2026 comme une échéance future. Les faits, tarifs, certifications et règles métier existants ont été conservés.
+- Validation locale réussie : TypeScript, lint, 67 tests applicatifs, 158 tests Studio et build complet avec pré-rendu des pages publiques.
+- Après autorisation explicite de Thierry, le build a été déployé sur IONOS : 200 fichiers contrôlés par SHA-256, dont 126 transférés et 74 déjà identiques, sans divergence.
+- Les six pages prioritaires répondent en HTTPS avec un statut 200 et correspondent exactement au build local. Le nouveau bundle de données structurées correspond également au fichier publié.
+- Aucun schéma, aucune migration et aucune donnée Supabase, Stripe ou Qualiopi n’ont été modifiés.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

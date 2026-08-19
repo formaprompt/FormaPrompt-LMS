@@ -24,6 +24,8 @@ export default function SEO({
       <meta data-formaprompt-seo="true" name="robots" content={robots} />
       {url && <link data-formaprompt-seo="true" rel="canonical" href={url} />}
       {/* Open Graph */}
+      <meta data-formaprompt-seo="true" property="og:site_name" content="FormaPrompt" />
+      <meta data-formaprompt-seo="true" property="og:locale" content="fr_FR" />
       <meta data-formaprompt-seo="true" property="og:title" content={title} />
       <meta data-formaprompt-seo="true" property="og:description" content={description} />
       <meta data-formaprompt-seo="true" property="og:type" content={type} />

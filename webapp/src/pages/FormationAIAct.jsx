@@ -15,6 +15,7 @@ import SEO from '../components/SEO';
 import CommercialCheckout from '../components/CommercialCheckout';
 import { useAuth } from '../contexts/useAuth';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
+import { createCourseStructuredData } from '../lib/seoStructuredData';
 import './FormationAIAct.css';
 
 const officialSources = [
@@ -100,9 +101,22 @@ export default function FormationAIAct() {
     <>
       <SEO
         title="Formation AI Act : acculturation et préparation à la conformité – FormaPrompt"
-        description="Formation estimée à 4 h 45 pour comprendre l'AI Act, acculturer les équipes et préparer un premier plan d'action avant l'application générale du 2 août 2026."
+        description="Formation de 4 h 45 pour comprendre l'AI Act, développer la maîtrise de l'IA dans les équipes et préparer un premier plan d'action adapté."
         url="https://formaprompt.com/formation-ia-act-conformite"
         image="https://formaprompt.com/assets/IA%20ACT%20Blog.png"
+        jsonLd={createCourseStructuredData({
+          name: 'Formation AI Act : acculturation et préparation à la conformité',
+          description: "Formation de 4 h 45 pour comprendre l'AI Act, développer la maîtrise de l'IA dans les équipes et préparer un premier plan d'action adapté.",
+          url: 'https://formaprompt.com/formation-ia-act-conformite',
+          image: 'https://formaprompt.com/assets/IA%20ACT%20Blog.png',
+          timeRequired: 'PT4H45M',
+          audience: 'Dirigeants, managers, équipes RH, référents numériques, formateurs et salariés utilisant l’IA',
+          teaches: [
+            "Comprendre les principes et le calendrier d'application de l'AI Act",
+            "Identifier les usages de l'IA qui nécessitent davantage de vigilance",
+            "Préparer un plan d'acculturation et une première feuille de route",
+          ],
+        })}
       />
 
       <main className="ai-act-page">
@@ -119,7 +133,7 @@ export default function FormationAIAct() {
               <div className="ai-act-key-facts" aria-label="Informations principales">
                 <span><Clock size={19} aria-hidden="true" /> 4 h 45 estimées</span>
                 <span><MonitorPlay size={19} aria-hidden="true" /> Classe virtuelle ou présentiel</span>
-                <span><CalendarClock size={19} aria-hidden="true" /> Repère : 2 août 2026</span>
+                <span><CalendarClock size={19} aria-hidden="true" /> Application générale depuis le 2 août 2026</span>
               </div>
 
               <div className="ai-act-hero-actions">
@@ -130,10 +144,10 @@ export default function FormationAIAct() {
 
             <aside className="ai-act-deadline-card" aria-label="Repères réglementaires">
               <ShieldCheck size={44} aria-hidden="true" />
-              <p className="ai-act-deadline-label">Échéance-clé</p>
+              <p className="ai-act-deadline-label">Repère réglementaire</p>
               <p className="ai-act-deadline-date">2 août 2026</p>
               <p>
-                Date d'application générale de nombreuses dispositions du règlement, avec des exceptions et
+                De nombreuses dispositions du règlement sont désormais applicables, avec des exceptions et
                 des périodes transitoires selon les obligations concernées.
               </p>
               <div className="ai-act-already-active">
