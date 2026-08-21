@@ -29,7 +29,7 @@ jobs:
 
       - name: Reconstituer le schéma initial suivi dans le dépôt
         working-directory: webapp
-        run: cp supabase_schema.sql supabase/migrations/00000000000000_bootstrap_schema.sql
+        run: cat supabase_schema.sql ../.github/fixtures/v0_7_missing_baseline.sql > supabase/migrations/00000000000000_bootstrap_schema.sql
 
       - name: Démarrer PostgreSQL Supabase local et appliquer les migrations
         working-directory: webapp
