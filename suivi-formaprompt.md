@@ -390,6 +390,20 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Validation locale : 26 assertions pgTAP, 176 tests unitaires/intégration, 49 scénarios Playwright réussis et 3 ignorés volontairement, lint, TypeScript, build et pré-rendus réussis.
 - Aucune migration de production, aucun déploiement IONOS, aucun commit, push ou merge n’a été réalisé à ce stade.
 
+## Sprint 3 LMS — cycle commercial et communication — 21 août 2026
+
+- Branche dédiée : `feat/sprint-3-commercial-cycle`, créée depuis `main` au commit stable `698f9d46748c18cf9c196bcadc1d0a1f8643f13b`.
+- Le cycle réutilise `contact_requests`, `purchases`, `training_enrollments`, `admin-manage-enrollment` et `course_access`. Aucun second système de droits ou d'inscription n'est créé.
+- Les demandes distinguent particulier, professionnel, bénéficiaire et financement, avec sept statuts, qualification, notes minimisées et historique append-only.
+- Les devis ont une numérotation unique, un montant calculé, la mention de TVA 293 B, une validité et un snapshot figé lors de l'envoi. Le document HTML est imprimable ou enregistrable en PDF.
+- Les communications et relances sont privées, journalisées et idempotentes. Les relances restent planifiées ou déclenchées manuellement ; aucun automate d'envoi n'est ajouté.
+- L'Edge Function `admin-commercial-cycle` vérifie le JWT et le rôle du personnel. SMTP reste côté serveur et utilise exclusivement les variables d'environnement existantes.
+- La conversion Stripe vérifie l'achat payé et le `course_access` actif existants sans les modifier. La conversion administrative passe par `admin-manage-enrollment`, qui ne réactive jamais un accès suspendu, révoqué, remboursé ou expiré.
+- Validation locale réussie : 62 tests applicatifs, 98 tests serveur, 159 tests React/Studio, TypeScript, ESLint, deux `deno check` et `git diff --check`.
+- `vite build` réussit. Le pré-rendu complet expire sur l'attente du titre Studio ; le même échec est reproduit sur le `main` stable, avec la même configuration locale, ce qui isole un blocage de référence indépendant du Sprint 3.
+- Le test pgTAP Sprint 3 est ajouté mais non exécuté : Docker et Podman sont absents du PATH, et la sonde WSL n'a pas fourni d'environnement exploitable.
+- Aucune migration ou Edge Function n'a été déployée, aucune donnée réelle n'a été modifiée et aucun média n'a été transféré.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

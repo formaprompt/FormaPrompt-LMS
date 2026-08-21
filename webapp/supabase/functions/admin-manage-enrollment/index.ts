@@ -18,6 +18,13 @@ function safeErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'La demande administrative est invalide.';
 }
 
+function relatedProfileEmail(relation: unknown) {
+  const row = Array.isArray(relation) ? relation[0] : relation;
+  const value = row && typeof row === 'object' ? (row as { email?: unknown }).email : null;
+  if (typeof value !== 'string' || !value) throw new Error('Adresse e-mail du profil introuvable.');
+  return value;
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Méthode non autorisée.' }, 405);
@@ -56,6 +63,43 @@ Deno.serve(async (request) => {
 
     if (action === 'create_enrollment') {
       const input = validateAdministrativeEnrollment(body.enrollment);
+      const commercialRequestId = typeof body.commercialRequestId === 'string'
+        ? body.commercialRequestId.trim()
+        : '';
+      const commercialQuoteId = typeof body.commercialQuoteId === 'string'
+        ? body.commercialQuoteId.trim()
+        : '';
+      let commercialRequest = null;
+      let commercialQuote = null;
+
+      if (commercialQuoteId && !commercialRequestId) {
+        return jsonResponse({ error: 'La demande commerciale liée au devis est requise.' }, 400);
+      }
+      if (commercialRequestId) {
+        const { data, error } = await supabaseAdmin.from('contact_requests')
+          .select('*').eq('id', commercialRequestId).maybeSingle();
+        if (error) throw error;
+        if (!data || ['won', 'lost'].includes(data.status)) {
+          return jsonResponse({ error: 'La demande commerciale est introuvable ou déjà clôturée.' }, 409);
+        }
+        const expectedLearnerEmail = (data.beneficiary_email || data.email).toLowerCase();
+        if (expectedLearnerEmail !== input.learnerEmail || (data.course_id && data.course_id !== input.courseId)) {
+          return jsonResponse({ error: 'La demande commerciale ne correspond pas au bénéficiaire ou à la formation.' }, 400);
+        }
+        commercialRequest = data;
+      }
+      if (commercialQuoteId) {
+        const { data, error } = await supabaseAdmin.from('commercial_quotes')
+          .select('*').eq('id', commercialQuoteId).eq('contact_request_id', commercialRequestId).maybeSingle();
+        if (error) throw error;
+        if (!data || data.status !== 'accepted' || !data.sent_snapshot) {
+          return jsonResponse({ error: 'Un devis accepté et figé est requis pour cette conversion.' }, 409);
+        }
+        if (data.course_id !== input.courseId || data.total_price_cents !== input.priceAmountCents) {
+          return jsonResponse({ error: 'Le dossier ne correspond pas à la formation ou au montant du devis accepté.' }, 400);
+        }
+        commercialQuote = data;
+      }
       let learnerId = input.targetUserId;
       let invited = false;
 
@@ -182,6 +226,8 @@ Deno.serve(async (request) => {
           course_access_id: courseAccess?.id,
           booking_request_id: matchingBooking?.id ?? null,
           administrative_notes: input.administrativeNotes,
+          commercial_request_id: commercialRequest?.id ?? null,
+          commercial_quote_id: commercialQuote?.id ?? null,
           created_by: actor.id,
         })
         .select('*')
@@ -195,6 +241,30 @@ Deno.serve(async (request) => {
         .select('id, enrollment_id, document_type, status, visible_to_learner, generated_at');
       if (documentsError) throw documentsError;
 
+      if (commercialRequest) {
+        const convertedAt = new Date().toISOString();
+        const { error: conversionError } = await supabaseAdmin.from('contact_requests').update({
+          status: 'won',
+          converted_at: convertedAt,
+          conversion_kind: 'administrative',
+          converted_enrollment_id: enrollment.id,
+          updated_at: convertedAt,
+        }).eq('id', commercialRequest.id).neq('status', 'won');
+        if (conversionError) throw conversionError;
+        const { error: historyError } = await supabaseAdmin.from('commercial_request_history').insert({
+          contact_request_id: commercialRequest.id,
+          actor_user_id: actor.id,
+          event_type: 'converted',
+          previous_status: commercialRequest.status,
+          new_status: 'won',
+          details: {
+            kind: 'administrative', enrollmentId: enrollment.id,
+            quoteId: commercialQuote?.id ?? null, courseAccessId: courseAccess?.id ?? null,
+          },
+        });
+        if (historyError) throw historyError;
+      }
+
       console.info('Dossier de formation créé', {
         actorId: actor.id,
         learnerId,
@@ -202,7 +272,7 @@ Deno.serve(async (request) => {
         courseId: enrollment.course_id,
         source: enrollment.enrollment_source,
       });
-      return jsonResponse({ enrollment, documents, courseAccess, invited }, 201);
+      return jsonResponse({ enrollment, documents, courseAccess, invited, commercialConverted: Boolean(commercialRequest) }, 201);
     }
 
     if (action === 'regenerate_document') {
@@ -221,7 +291,7 @@ Deno.serve(async (request) => {
         return jsonResponse({ error: "L'attestation est réservée à une formation terminée." }, 409);
       }
       const generatedAt = new Date().toISOString();
-      const snapshot = buildAdministrativeDocument(documentType, enrollment, enrollment.profiles.email, generatedAt);
+      const snapshot = buildAdministrativeDocument(documentType, enrollment, relatedProfileEmail(enrollment.profiles), generatedAt);
       const { data: document, error: documentError } = await supabaseAdmin
         .from('training_documents')
         .upsert({
@@ -259,7 +329,7 @@ Deno.serve(async (request) => {
       if (input.targetUserId !== existingEnrollment.user_id || input.courseId !== existingEnrollment.course_id) {
         return jsonResponse({ error: "L'apprenant et la formation d'un dossier existant ne peuvent pas être remplacés." }, 400);
       }
-      if (existingEnrollment.profiles.email.toLowerCase() !== input.learnerEmail) {
+      if (relatedProfileEmail(existingEnrollment.profiles).toLowerCase() !== input.learnerEmail) {
         return jsonResponse({ error: "L'adresse e-mail ne correspond pas au compte du dossier." }, 400);
       }
 
@@ -302,7 +372,7 @@ Deno.serve(async (request) => {
         course_id: enrollment.course_id,
         document_type: documentType,
         status: 'ready',
-        content_snapshot: buildAdministrativeDocument(documentType, enrollment, enrollment.profiles.email, updatedAt),
+        content_snapshot: buildAdministrativeDocument(documentType, enrollment, relatedProfileEmail(enrollment.profiles), updatedAt),
         visible_to_learner: true,
         generated_by: actor.id,
         generated_at: updatedAt,
@@ -340,7 +410,7 @@ Deno.serve(async (request) => {
       const certificateSnapshot = buildAdministrativeDocument(
         'completion_certificate',
         enrollment,
-        enrollment.profiles.email,
+        relatedProfileEmail(enrollment.profiles),
         completedAt,
       );
       const { error: certificateError } = await supabaseAdmin.from('training_documents').upsert({

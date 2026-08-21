@@ -1013,10 +1013,24 @@ export default function AdminDashboard() {
   if (!user || (role !== 'admin' && role !== 'employee')) return null;
 
   const handleStatusChange = async (id, newStatus) => {
-    const { error } = await supabase
-      .from('contact_requests')
-      .update({ status: newStatus })
-      .eq('id', id);
+    const contact = contacts.find((item) => item.id === id);
+    if (!contact) return;
+    const { error } = await supabase.functions.invoke('admin-commercial-cycle', {
+      body: {
+        action: 'update_request',
+        requestId: id,
+        request: {
+          status: newStatus,
+          requestType: contact.request_type,
+          courseId: contact.course_id,
+          organizationName: contact.organization_name,
+          beneficiaryName: contact.beneficiary_name,
+          beneficiaryEmail: contact.beneficiary_email,
+          fundingRequested: contact.funding_requested,
+          administrativeNotes: contact.administrative_notes,
+        },
+      },
+    });
       
     if (!error) {
       setContacts(contacts.map(c => c.id === id ? { ...c, status: newStatus } : c));
@@ -1867,12 +1881,17 @@ export default function AdminDashboard() {
             {activeTab === 'contacts' && (
               <div>
                 <h2 style={{ marginBottom: '1.5rem' }}>Demandes de Devis et Contacts</h2>
+                <p style={{ marginBottom: '1.5rem' }}>
+                  <Link className="btn btn-primary" to="/admin/commercial">
+                    Ouvrir le cycle commercial complet
+                  </Link>
+                </p>
                 <div style={{ display: 'grid', gap: '1rem' }}>
                   {contacts.length === 0 ? (
                     <p style={{ color: '#888' }}>Aucune demande pour le moment.</p>
                   ) : (
                     contacts.map(c => (
-                      <div key={c.id} style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: `1px solid ${c.status === 'pending' ? '#f59e0b' : '#444'}`, position: 'relative' }}>
+                      <div key={c.id} style={{ padding: '1.5rem', background: '#2a2a2a', borderRadius: '8px', border: `1px solid ${c.status === 'new' ? '#f59e0b' : '#444'}`, position: 'relative' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                           <div>
                             <h3 style={{ margin: '0 0 0.25rem 0' }}>{c.name} <span style={{ color: '#aaa', fontSize: '1rem', fontWeight: 'normal' }}>({c.email})</span></h3>
@@ -1880,14 +1899,12 @@ export default function AdminDashboard() {
                             <p style={{ fontSize: '0.85rem', color: '#b6bbc4', marginTop: '0.25rem' }}>{new Date(c.created_at).toLocaleString()}</p>
                           </div>
                           <div>
-                            {c.status === 'pending' ? (
-                              <button onClick={() => handleStatusChange(c.id, 'processed')} style={{ padding: '0.5rem 1rem', background: '#f59e0b', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                Marquer Traité
+                            {c.status === 'new' ? (
+                              <button onClick={() => handleStatusChange(c.id, 'processing')} style={{ padding: '0.5rem 1rem', background: '#f59e0b', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Prendre en traitement
                               </button>
                             ) : (
-                              <button onClick={() => handleStatusChange(c.id, 'pending')} style={{ padding: '0.5rem 1rem', background: 'transparent', color: '#aaa', border: '1px solid #aaa', borderRadius: '4px', cursor: 'pointer' }}>
-                                Traité ✓
-                              </button>
+                              <span style={{ color: '#aaa' }}>{c.status}</span>
                             )}
                           </div>
                         </div>

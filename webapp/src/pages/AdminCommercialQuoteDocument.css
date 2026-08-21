@@ -1,0 +1,12 @@
+.quote-document { color: #111827; }
+.quote-document__actions { display: flex; justify-content: flex-end; gap: .75rem; margin-bottom: 1rem; }
+.quote-document__paper { max-width: 900px; margin: auto; padding: 3rem; background: white; border-radius: .5rem; box-shadow: 0 8px 30px #0004; }
+.quote-document__paper > header { display: flex; justify-content: space-between; border-bottom: 3px solid #2563eb; padding-bottom: 1rem; }
+.quote-document__paper header p { color: #2563eb; font-weight: 800; margin: 0; }.quote-document__paper h1 { margin: .3rem 0; }
+.quote-document__paper header span { align-self: flex-start; border: 1px solid #64748b; border-radius: 99px; padding: .35rem .7rem; }
+.quote-document__parties { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin: 2rem 0; }.quote-document__parties h2 { font-size: 1rem; color: #475569; }
+.quote-document__paper dl { display: flex; gap: 3rem; }.quote-document__paper dl div { display: grid; }.quote-document__paper dt { color: #64748b; }.quote-document__paper dd { margin: 0; font-weight: 700; }
+.quote-document__paper table { width: 100%; border-collapse: collapse; margin: 2rem 0 1rem; }.quote-document__paper th, .quote-document__paper td { text-align: left; border: 1px solid #cbd5e1; padding: .8rem; }.quote-document__paper th { background: #eff6ff; }
+.quote-document__tax { text-align: right; }.quote-document__paper footer { margin-top: 4rem; }.quote-document__paper footer div { height: 7rem; border: 1px solid #94a3b8; }
+@media (max-width: 650px) { .quote-document__paper { padding: 1.2rem; }.quote-document__parties { grid-template-columns: 1fr; gap: 1rem; }.quote-document__paper { overflow-x: auto; } }
+@media print { body { background: white !important; }.quote-document { padding: 0 !important; }.quote-document__actions { display: none; }.quote-document__paper { box-shadow: none; max-width: none; padding: 0; }.quote-document__paper header span { color: #111; } }

@@ -53,6 +53,7 @@ export default function Contact() {
   const initialFormData = {
     name: '',
     email: '',
+    requestType: 'individual',
     subject: isAiActRegistration ? 'Demande de programme' : 'Demande de devis',
     message: isAiActRegistration
       ? "Je souhaite recevoir les modalités d'inscription à la formation « IA : acculturation et préparation à la conformité AI Act » au tarif promotionnel de 187 €."
@@ -105,9 +106,10 @@ export default function Contact() {
     const request = {
       name: formData.name.trim(),
       email: formData.email.trim(),
+      request_type: formData.requestType,
+      funding_requested: formData.requestType === 'funding',
       subject: formData.subject,
       message: formData.message.trim(),
-      status: 'pending',
     };
 
     try {
@@ -259,6 +261,24 @@ export default function Contact() {
                         {fieldErrors.email}
                       </p>
                     )}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" htmlFor="request-type">
+                      Votre situation
+                    </label>
+                    <select
+                      id="request-type"
+                      name="requestType"
+                      className="form-input"
+                      value={formData.requestType}
+                      onChange={(event) => updateField('requestType', event.target.value)}
+                    >
+                      <option value="individual">Particulier</option>
+                      <option value="professional">Entreprise ou professionnel</option>
+                      <option value="beneficiary">Bénéficiaire d’une formation</option>
+                      <option value="funding">Demande avec financement</option>
+                    </select>
                   </div>
 
                   <div className="form-group">

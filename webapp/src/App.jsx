@@ -46,6 +46,8 @@ const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDo
 const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
 const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const AdminPrivacyRequests = lazy(() => import("./pages/AdminPrivacyRequests"));
+const AdminCommercial = lazy(() => import("./pages/AdminCommercial"));
+const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
 
 function App() {
@@ -102,6 +104,8 @@ function App() {
             <Route path="admin/dossiers" element={<RequireAuth><AdminEnrollments /></RequireAuth>} />
             <Route path="admin/acces-incidents" element={<RequireAuth><AdminAccessIncidents /></RequireAuth>} />
             <Route path="admin/demandes-rgpd" element={<RequireAuth><AdminPrivacyRequests /></RequireAuth>} />
+            <Route path="admin/commercial" element={<RequireAuth><AdminCommercial /></RequireAuth>} />
+            <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
             <Route
               path="parcours/:slug/:lessonId?"

@@ -94,6 +94,40 @@ export function buildWithdrawalReceiptEmail(receipt, fromAddress, contactEmail =
   };
 }
 
+export function buildCommercialEmail({ recipientEmail, subject, body, messageId }, fromAddress) {
+  const to = safeHeaderAddress(recipientEmail);
+  const from = safeHeaderAddress(fromAddress);
+  const normalizedSubject = String(subject || '').trim();
+  const normalizedBody = String(body || '').trim();
+  const normalizedMessageId = String(messageId || '').trim().replace(/[^a-zA-Z0-9._-]/g, '');
+  if (normalizedSubject.length < 2 || normalizedSubject.length > 300 || /[\r\n]/.test(normalizedSubject)) {
+    throw new SmtpReceiptError('smtp_subject_invalid');
+  }
+  if (normalizedBody.length < 2 || normalizedBody.length > 10000) {
+    throw new SmtpReceiptError('smtp_body_invalid');
+  }
+  if (normalizedMessageId.length < 8 || normalizedMessageId.length > 180) {
+    throw new SmtpReceiptError('smtp_message_id_invalid');
+  }
+  const headers = [
+    `From: FormaPrompt <${from}>`,
+    `To: <${to}>`,
+    `Subject: =?UTF-8?B?${base64Utf8(normalizedSubject)}?=`,
+    `Date: ${new Date().toUTCString()}`,
+    `Message-ID: <${normalizedMessageId}@formaprompt.com>`,
+    'MIME-Version: 1.0',
+    'Content-Type: text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+  ];
+  return {
+    from,
+    to,
+    subject: normalizedSubject,
+    body: normalizedBody,
+    data: `${headers.join('\r\n')}\r\n\r\n${wrapBase64(base64Utf8(normalizedBody))}\r\n`,
+  };
+}
+
 async function readReply(connection) {
   const buffer = new Uint8Array(4096);
   let response = '';
@@ -142,6 +176,41 @@ export async function sendWithdrawalReceiptEmail(receipt, options = {}) {
         if (accepted.code !== 250) throw new SmtpReceiptError(`smtp_rejected_${accepted.code || 'unknown'}`);
         await command(connection, 'QUIT', [221]);
         return { status: 'sent' };
+      })(),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new SmtpReceiptError('smtp_timeout')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+    try { connection.close(); } catch { /* connexion déjà fermée */ }
+  }
+}
+
+export async function sendCommercialEmail(message, options = {}) {
+  const config = readSmtpConfig(options.getEnv);
+  const email = buildCommercialEmail(message, config.from);
+  const connectTls = options.connectTls || ((connectionOptions) => globalThis.Deno.connectTls(connectionOptions));
+  const connection = await connectTls({ hostname: config.host, port: config.port });
+  const timeoutMs = options.timeoutMs || 12000;
+  let timeoutId;
+  try {
+    return await Promise.race([
+      (async () => {
+        const greeting = await readReply(connection);
+        if (greeting.code !== 220) throw new SmtpReceiptError('smtp_greeting_rejected');
+        await command(connection, 'EHLO formaprompt.com', [250]);
+        await command(connection, 'AUTH LOGIN', [334]);
+        await command(connection, base64Utf8(config.user), [334]);
+        await command(connection, base64Utf8(config.password), [235]);
+        await command(connection, `MAIL FROM:<${email.from}>`, [250]);
+        await command(connection, `RCPT TO:<${email.to}>`, [250, 251]);
+        await command(connection, 'DATA', [354]);
+        await connection.write(encoder.encode(`${email.data}.\r\n`));
+        const accepted = await readReply(connection);
+        if (accepted.code !== 250) throw new SmtpReceiptError(`smtp_rejected_${accepted.code || 'unknown'}`);
+        await command(connection, 'QUIT', [221]);
+        return { status: 'sent', messageId: message.messageId };
       })(),
       new Promise((_, reject) => {
         timeoutId = setTimeout(() => reject(new SmtpReceiptError('smtp_timeout')), timeoutMs);

@@ -73,9 +73,10 @@ describe('formulaire de contact', () => {
         {
           name: 'Organisme Exemple',
           email: 'contact@example.com',
+          request_type: 'individual',
+          funding_requested: false,
           subject: 'Autre question',
           message: 'Je souhaite obtenir des informations sur une formation.',
-          status: 'pending',
         },
       ]);
     });

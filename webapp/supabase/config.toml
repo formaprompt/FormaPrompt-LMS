@@ -10,6 +10,9 @@ verify_jwt = true
 [functions.admin-manage-enrollment]
 verify_jwt = true
 
+[functions.admin-commercial-cycle]
+verify_jwt = true
+
 [functions.admin-process-privacy-request]
 verify_jwt = true
 
