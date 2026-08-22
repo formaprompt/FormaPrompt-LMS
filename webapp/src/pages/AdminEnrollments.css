@@ -42,11 +42,31 @@
 .admin-enrollments__document button { border: 0; background: transparent; color: #047857; text-decoration: underline; cursor: pointer; }
 .admin-enrollments__edit { margin-bottom: 1rem; }
 .admin-enrollments__complete { margin-top: 1rem; background: #0f172a; color: white; }
+.admin-enrollments__filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: .75rem; margin: 1rem 0 1.5rem; }
+.admin-enrollments__filters label, .admin-enrollments__lifecycle-form label { display: grid; gap: .35rem; font-weight: 700; }
+.admin-enrollments__filters input, .admin-enrollments__filters select, .admin-enrollments__lifecycle-form input, .admin-enrollments__lifecycle-form select, .admin-enrollments__lifecycle-form textarea { width: 100%; padding: .7rem; border: 1px solid #94a3b8; border-radius: 8px; font: inherit; }
+.admin-enrollments__lifecycle { margin-top: 1rem; border: 1px solid #99d5c1; border-radius: 12px; background: #f8fffc; }
+.admin-enrollments__lifecycle > summary { cursor: pointer; padding: 1rem; color: #065f46; font-weight: 800; }
+.admin-enrollments__funding-summary { display: flex; flex-wrap: wrap; gap: .6rem 1rem; padding: 0 1rem 1rem; align-items: center; }
+.admin-enrollments__funding-summary strong { color: #065f46; }
+.admin-enrollments__funding-summary small { flex-basis: 100%; color: #475569; }
+.admin-enrollments__lifecycle-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin: 0 1rem 1rem; padding: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; background: white; }
+.admin-enrollments__lifecycle-form h4 { grid-column: 1 / -1; margin: 0; }
+.admin-enrollments__lifecycle-form button { justify-self: start; }
+.admin-enrollments__warning { grid-column: 1 / -1; margin: 0; padding: .75rem; border-radius: 8px; color: #7c2d12; background: #ffedd5; }
+.admin-enrollments__timeline { margin: 0 1rem 1rem; }
+.admin-enrollments__timeline ol { display: grid; gap: .7rem; padding-left: 1.25rem; }
+.admin-enrollments__timeline li { padding: .7rem; border-left: 3px solid #0f766e; background: white; }
+.admin-enrollments__timeline li span { display: block; color: #64748b; font-size: .85rem; }
+.admin-enrollments__timeline li p { margin: .35rem 0; }
+.admin-enrollments__timeline li em { color: #9a3412; font-weight: 700; }
 @media (max-width: 760px) {
   .admin-enrollments__header { flex-direction: column; }
   .admin-enrollments__form fieldset, .admin-enrollments__optional-grid, .admin-enrollments__file dl { grid-template-columns: 1fr; }
   .admin-enrollments__wide { grid-column: auto; }
   .admin-enrollments__document { align-items: flex-start; flex-wrap: wrap; }
+  .admin-enrollments__filters, .admin-enrollments__lifecycle-form { grid-template-columns: 1fr; }
+  .admin-enrollments__lifecycle-form h4, .admin-enrollments__warning { grid-column: auto; }
 }
 @media print {
   .admin-enrollments__header, .admin-enrollments__panel:first-of-type { display: none; }

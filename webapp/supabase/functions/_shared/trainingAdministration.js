@@ -36,6 +36,9 @@ export const ADMINISTRATIVE_COURSES = {
 export const ENROLLMENT_SOURCES = new Set(['manual', 'company', 'opco', 'free']);
 export const FUNDING_MODES = new Set(['self_funded', 'company', 'opco', 'free', 'other']);
 export const DELIVERY_MODES = new Set(['remote', 'in_person', 'hybrid']);
+export const FUNDING_STATUSES = new Set([
+  'not_requested', 'requested', 'under_review', 'partially_granted', 'granted', 'refused', 'withdrawn',
+]);
 
 const PROVIDER = {
   legalName: 'Thierry FREZARD EI',
@@ -67,6 +70,19 @@ function normalizedDate(value, label) {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) throw new Error(`${label} invalide.`);
   return date.toISOString();
+}
+
+function optionalEmail(value, label) {
+  const email = optionalText(value, 320)?.toLowerCase() ?? null;
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error(`${label} invalide.`);
+  return email;
+}
+
+function cents(value, label, nullable = true) {
+  if ((value === '' || value == null) && nullable) return null;
+  const amount = Number(value);
+  if (!Number.isInteger(amount) || amount < 0) throw new Error(`${label} invalide.`);
+  return amount;
 }
 
 export function accessSourceForEnrollment(source) {
@@ -117,6 +133,10 @@ export function validateAdministrativeEnrollment(input = {}) {
     learnerCity: optionalText(input.learnerCity, 120),
     funderName: optionalText(input.funderName, 200),
     fundingReference: optionalText(input.fundingReference, 120),
+    payerName: optionalText(input.payerName, 200),
+    payerEmail: optionalEmail(input.payerEmail, 'Adresse e-mail du payeur'),
+    clientName: optionalText(input.clientName, 200),
+    clientEmail: optionalEmail(input.clientEmail, 'Adresse e-mail du client'),
     deliveryMode: input.deliveryMode,
     trainingLocation: optionalText(input.trainingLocation, 500),
     remoteAccessDetails: optionalText(input.remoteAccessDetails, 1000),
@@ -125,6 +145,67 @@ export function validateAdministrativeEnrollment(input = {}) {
     durationMinutes,
     priceAmountCents,
     administrativeNotes: optionalText(input.administrativeNotes, 4000),
+  };
+}
+
+export function validateFundingUpdate(input = {}) {
+  if (!FUNDING_STATUSES.has(input.status)) throw new Error('Statut de financement invalide.');
+  const requestedCents = cents(input.requestedCents, 'Montant demandé');
+  const grantedCents = cents(input.grantedCents, 'Montant accordé');
+  if (requestedCents != null && grantedCents != null && grantedCents > requestedCents) {
+    throw new Error('Le montant accordé ne peut pas dépasser le montant demandé.');
+  }
+  if (input.status !== 'not_requested' && requestedCents == null) throw new Error('Montant demandé requis.');
+  return {
+    status: input.status,
+    requestedCents,
+    grantedCents,
+    funderName: optionalText(input.funderName, 200),
+    fundingReference: optionalText(input.fundingReference, 120),
+    reason: requiredText(input.reason, 'Motif', 2000),
+  };
+}
+
+export function validateEnrollmentException(action, input = {}) {
+  const reason = requiredText(input.reason, 'Motif', 2000);
+  if (action === 'cancel_enrollment') {
+    return { reason, actorLabel: requiredText(input.actorLabel, 'Acteur de l’annulation', 120) };
+  }
+  if (action === 'abandon_enrollment') {
+    return { reason, origin: requiredText(input.origin, "Origine de l'abandon", 120) };
+  }
+  if (action === 'postpone_enrollment') {
+    const startsAt = normalizedDate(input.startsAt, 'Nouvelle date de début');
+    const endsAt = normalizedDate(input.endsAt, 'Nouvelle date de fin');
+    if (new Date(endsAt) <= new Date(startsAt)) throw new Error('La date de fin doit suivre la date de début.');
+    return { reason, startsAt, endsAt };
+  }
+  if (action === 'transfer_beneficiary') {
+    return {
+      reason,
+      targetUserId: requiredText(input.targetUserId, 'Nouveau bénéficiaire', 80),
+      learnerFirstName: requiredText(input.learnerFirstName, 'Prénom', 100),
+      learnerLastName: requiredText(input.learnerLastName, 'Nom', 120),
+      learnerEmail: optionalEmail(input.learnerEmail, "Adresse e-mail de l'apprenant"),
+    };
+  }
+  throw new Error('Action administrative invalide.');
+}
+
+export function validateAmendment(input = {}) {
+  const effectiveDate = normalizedDate(input.effectiveDate, "Date d'effet").slice(0, 10);
+  const previousValues = input.previousValues && typeof input.previousValues === 'object' && !Array.isArray(input.previousValues)
+    ? input.previousValues : {};
+  const newValues = input.newValues && typeof input.newValues === 'object' && !Array.isArray(input.newValues)
+    ? input.newValues : {};
+  return {
+    effectiveDate,
+    reason: requiredText(input.reason, 'Motif', 2000),
+    changeSummary: requiredText(input.changeSummary, 'Modification', 4000),
+    previousValues,
+    newValues,
+    sourceDocumentId: optionalText(input.sourceDocumentId, 80),
+    sourceQuoteId: optionalText(input.sourceQuoteId, 80),
   };
 }
 
@@ -147,9 +228,17 @@ function sharedSnapshot(enrollment, learnerEmail, generatedAt) {
     },
     client: {
       organizationName: enrollment.organization_name,
+      clientName: enrollment.client_name,
+      clientEmail: enrollment.client_email,
+      payerName: enrollment.payer_name,
+      payerEmail: enrollment.payer_email,
       funderName: enrollment.funder_name,
       fundingReference: enrollment.funding_reference,
       fundingMode: enrollment.funding_mode,
+      fundingStatus: enrollment.funding_status,
+      fundingRequestedCents: enrollment.funding_requested_cents,
+      fundingGrantedCents: enrollment.funding_granted_cents,
+      fundingBalanceCents: enrollment.funding_balance_cents,
     },
     course: {
       id: enrollment.course_id,

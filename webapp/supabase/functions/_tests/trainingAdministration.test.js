@@ -5,7 +5,10 @@ import {
   buildAdministrativeDocument,
   documentRowsForValidatedEnrollment,
   shouldCreateEnrollmentCourseAccess,
+  validateAmendment,
   validateAdministrativeEnrollment,
+  validateEnrollmentException,
+  validateFundingUpdate,
 } from '../_shared/trainingAdministration.js';
 
 const validInput = {
@@ -118,4 +121,32 @@ test('la fin de formation produit une attestation structurée', () => {
   assert.equal(certificate.documentType, 'completion_certificate');
   assert.match(certificate.completion.statement, /Camille|formation/i);
   assert.equal(certificate.completion.completedAt, '2026-09-01T12:00:00.000Z');
+});
+
+test('un financement partiel calcule des montants cohérents sans attribuer de droit', () => {
+  const funding = validateFundingUpdate({
+    status: 'partially_granted', requestedCents: 49700, grantedCents: 30000,
+    funderName: 'OPCO Exemple', fundingReference: 'OPCO-42', reason: 'Décision reçue du financeur.',
+  });
+  assert.equal(funding.grantedCents, 30000);
+  assert.throws(() => validateFundingUpdate({ ...funding, grantedCents: 60000 }), /dépasser/);
+});
+
+test('les exceptions exigent un motif et conservent une période cohérente', () => {
+  assert.throws(() => validateEnrollmentException('cancel_enrollment', { actorLabel: 'Client' }), /Motif requis/);
+  const postponed = validateEnrollmentException('postpone_enrollment', {
+    reason: 'Indisponibilité confirmée par le bénéficiaire.',
+    startsAt: '2026-10-01T08:00:00Z', endsAt: '2026-10-01T12:00:00Z',
+  });
+  assert.equal(postponed.startsAt, '2026-10-01T08:00:00.000Z');
+});
+
+test('un avenant fige les valeurs avant et après', () => {
+  const amendment = validateAmendment({
+    effectiveDate: '2026-09-10', reason: 'Report accepté par les parties.',
+    changeSummary: 'La session est déplacée au 1er octobre.',
+    previousValues: { startsAt: '2026-09-01' }, newValues: { startsAt: '2026-10-01' },
+  });
+  assert.deepEqual(amendment.previousValues, { startsAt: '2026-09-01' });
+  assert.deepEqual(amendment.newValues, { startsAt: '2026-10-01' });
 });
