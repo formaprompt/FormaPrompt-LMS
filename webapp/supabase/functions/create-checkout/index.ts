@@ -240,6 +240,7 @@ Deno.serve(async (request) => {
             user_id: user.id,
             course_id: purchase.courseId,
             sales_context: commercialRoute.salesContext,
+            access_activation_policy: commercialRoute.accessActivationPolicy,
           },
         },
         success_url: `${siteUrl}/paiement-reussi?course=${encodeURIComponent(purchase.courseId)}&activation=${encodeURIComponent(commercialRoute.accessActivationPolicy)}&session_id={CHECKOUT_SESSION_ID}`,
