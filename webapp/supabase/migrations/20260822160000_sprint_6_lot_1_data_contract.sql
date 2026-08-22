@@ -334,7 +334,7 @@ BEGIN
     v_actor, v_action_type, TG_TABLE_NAME, v_target_id,
     v_previous_state, v_new_state, v_reason,
     CASE WHEN TG_TABLE_NAME = 'quality_complaints'
-      THEN jsonb_build_object('quality_record_id', NEW.quality_record_id)
+      THEN jsonb_build_object('quality_record_id', to_jsonb(NEW) -> 'quality_record_id')
       ELSE jsonb_build_object('source_kind', 'external')
     END
   );

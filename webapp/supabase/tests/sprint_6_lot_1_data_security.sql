@@ -158,7 +158,7 @@ SELECT throws_ok(
     '2026-01-01', '2026-01-01', 'completed', 1, 1, 1, 0,
     'not_invoiced', 'Motif non admin suffisamment long.'
   )$$,
-  '42501', 'Action reservee au role admin.',
+  '42501', 'Action réservée au rôle admin.',
   'Un non-admin ne peut pas creer d activite par RPC'
 );
 
