@@ -282,6 +282,7 @@ AS $$
   END;
 $$;
 REVOKE ALL ON FUNCTION private.stripe_json_uuid(text) FROM PUBLIC, anon, authenticated;
+GRANT USAGE ON SCHEMA private TO service_role;
 GRANT EXECUTE ON FUNCTION private.stripe_json_uuid(text) TO service_role;
 
 CREATE OR REPLACE FUNCTION private.open_stripe_reconciliation_case(
@@ -918,7 +919,7 @@ BEGIN
   END IF;
 
   FOR v_row IN
-    SELECT user_id, course_id, min(id) AS transaction_id, count(*) AS transaction_count
+    SELECT user_id, course_id, min(id::text)::uuid AS transaction_id, count(*) AS transaction_count
     FROM public.stripe_payment_transactions
     WHERE payment_type = 'course'
       AND status IN ('paid', 'partially_refunded', 'refunded', 'disputed', 'dispute_won', 'dispute_lost')

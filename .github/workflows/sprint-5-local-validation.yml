@@ -55,6 +55,9 @@ jobs:
             updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
           );
           ALTER TABLE public.calendar_bookings ENABLE ROW LEVEL SECURITY;
+          INSERT INTO storage.buckets (id, name, public)
+          VALUES ('blog-images', 'blog-images', true)
+          ON CONFLICT (id) DO NOTHING;
           SQL
           rmdir supabase/migrations
           mv /tmp/formaprompt-migrations supabase/migrations
