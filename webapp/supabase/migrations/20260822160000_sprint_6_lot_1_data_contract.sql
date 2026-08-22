@@ -427,10 +427,9 @@ AS $$
 DECLARE
   v_actor uuid := private.require_quality_admin(p_reason);
   v_parent_status text;
-  v_current public.quality_complaints%ROWTYPE;
   v_result public.quality_complaints%ROWTYPE;
 BEGIN
-  SELECT c, r.status INTO v_current, v_parent_status
+  SELECT r.status INTO v_parent_status
   FROM public.quality_complaints c
   JOIN public.quality_records r ON r.id = c.quality_record_id
   WHERE c.quality_record_id = p_quality_record_id
