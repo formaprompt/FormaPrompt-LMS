@@ -869,6 +869,9 @@ GRANT SELECT ON public.admin_cockpit_action_items,
   public.admin_bpf_preparation_rows
 TO authenticated;
 
+GRANT SELECT (acknowledgement_delivery_status)
+ON public.withdrawal_requests TO authenticated;
+
 COMMENT ON VIEW public.admin_cockpit_action_items IS
   'File derivee d elements objectivement actionnables. Aucun libelle ne contient de donnee personnelle.';
 COMMENT ON VIEW public.admin_stripe_financial_summary IS
