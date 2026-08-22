@@ -1885,6 +1885,10 @@ export default function AdminDashboard() {
                   <Link className="btn btn-primary" to="/admin/commercial">
                     Ouvrir le cycle commercial complet
                   </Link>
+                  {' '}
+                  <Link className="btn" to="/admin/stripe-apres-paiement">
+                    Ouvrir Stripe après paiement
+                  </Link>
                 </p>
                 <div style={{ display: 'grid', gap: '1rem' }}>
                   {contacts.length === 0 ? (
