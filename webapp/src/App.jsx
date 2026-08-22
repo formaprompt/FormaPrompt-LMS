@@ -48,6 +48,7 @@ const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const AdminPrivacyRequests = lazy(() => import("./pages/AdminPrivacyRequests"));
 const AdminCommercial = lazy(() => import("./pages/AdminCommercial"));
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
+const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
 
 function App() {
@@ -106,6 +107,7 @@ function App() {
             <Route path="admin/demandes-rgpd" element={<RequireAuth><AdminPrivacyRequests /></RequireAuth>} />
             <Route path="admin/commercial" element={<RequireAuth><AdminCommercial /></RequireAuth>} />
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
+            <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
             <Route
               path="parcours/:slug/:lessonId?"

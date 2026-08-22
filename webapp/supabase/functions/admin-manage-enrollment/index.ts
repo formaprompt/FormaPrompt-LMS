@@ -6,6 +6,9 @@ import {
   documentRowsForValidatedEnrollment,
   shouldCreateEnrollmentCourseAccess,
   validateAdministrativeEnrollment,
+  validateAmendment,
+  validateEnrollmentException,
+  validateFundingUpdate,
 } from '../_shared/trainingAdministration.js';
 
 function requiredEnv(name: string) {
@@ -23,6 +26,22 @@ function relatedProfileEmail(relation: unknown) {
   const value = row && typeof row === 'object' ? (row as { email?: unknown }).email : null;
   if (typeof value !== 'string' || !value) throw new Error('Adresse e-mail du profil introuvable.');
   return value;
+}
+
+function enrollmentState(enrollment: Record<string, unknown>) {
+  return {
+    userId: enrollment.user_id,
+    courseId: enrollment.course_id,
+    status: enrollment.status,
+    startsAt: enrollment.starts_at,
+    endsAt: enrollment.ends_at,
+    fundingStatus: enrollment.funding_status,
+    fundingRequestedCents: enrollment.funding_requested_cents,
+    fundingGrantedCents: enrollment.funding_granted_cents,
+    fundingBalanceCents: enrollment.funding_balance_cents,
+    funderName: enrollment.funder_name,
+    fundingReference: enrollment.funding_reference,
+  };
 }
 
 Deno.serve(async (request) => {
@@ -216,6 +235,10 @@ Deno.serve(async (request) => {
           funding_mode: input.fundingMode,
           funder_name: input.funderName,
           funding_reference: input.fundingReference,
+          payer_name: input.payerName,
+          payer_email: input.payerEmail,
+          client_name: input.clientName,
+          client_email: input.clientEmail,
           delivery_mode: input.deliveryMode,
           training_location: input.trainingLocation,
           remote_access_details: input.remoteAccessDetails,
@@ -240,6 +263,17 @@ Deno.serve(async (request) => {
         .insert(documentRows)
         .select('id, enrollment_id, document_type, status, visible_to_learner, generated_at');
       if (documentsError) throw documentsError;
+
+      const { error: initialEventError } = await supabaseAdmin.from('training_enrollment_events').insert({
+        enrollment_id: enrollment.id,
+        event_type: 'initial_snapshot',
+        reason: 'Création du dossier administratif',
+        previous_state: {},
+        new_state: enrollmentState(enrollment),
+        rights_impact: courseAccess?.id ? 'managed_separately' : 'review_required',
+        actor_user_id: actor.id,
+      });
+      if (initialEventError) throw initialEventError;
 
       if (commercialRequest) {
         const convertedAt = new Date().toISOString();
@@ -273,6 +307,151 @@ Deno.serve(async (request) => {
         source: enrollment.enrollment_source,
       });
       return jsonResponse({ enrollment, documents, courseAccess, invited, commercialConverted: Boolean(commercialRequest) }, 201);
+    }
+
+    if (['update_funding', 'cancel_enrollment', 'postpone_enrollment', 'transfer_beneficiary', 'abandon_enrollment', 'create_amendment'].includes(action)) {
+      const enrollmentId = typeof body.enrollmentId === 'string' ? body.enrollmentId.trim() : '';
+      if (!enrollmentId) return jsonResponse({ error: 'Dossier invalide.' }, 400);
+      const { data: current, error: currentError } = await supabaseAdmin
+        .from('training_enrollments')
+        .select('*, profiles!training_enrollments_user_id_fkey(email), training_documents(id, document_type, status, version, content_snapshot, visible_to_learner, generated_at)')
+        .eq('id', enrollmentId)
+        .single();
+      if (currentError) throw currentError;
+      const before = enrollmentState(current);
+      const now = new Date().toISOString();
+
+      if (action === 'update_funding') {
+        const input = validateFundingUpdate(body.funding);
+        const { data: enrollment, error } = await supabaseAdmin.from('training_enrollments').update({
+          funding_status: input.status,
+          funding_requested_cents: input.requestedCents,
+          funding_granted_cents: input.grantedCents,
+          funding_requested_at: input.status === 'not_requested' ? null : (current.funding_requested_at || now),
+          funding_decided_at: ['partially_granted', 'granted', 'refused', 'withdrawn'].includes(input.status) ? now : null,
+          funder_name: input.funderName,
+          funding_reference: input.fundingReference,
+          updated_at: now,
+        }).eq('id', enrollmentId).select('*').single();
+        if (error) throw error;
+        const { error: eventError } = await supabaseAdmin.from('training_enrollment_events').insert({
+          enrollment_id: enrollmentId, event_type: 'funding_updated', reason: input.reason,
+          previous_state: before, new_state: enrollmentState(enrollment), rights_impact: 'none', actor_user_id: actor.id,
+        });
+        if (eventError) throw eventError;
+        return jsonResponse({ enrollment, rightsChanged: false });
+      }
+
+      if (action === 'create_amendment') {
+        const input = validateAmendment(body.amendment);
+        if (input.sourceDocumentId && !(current.training_documents || []).some((document: { id: string }) => document.id === input.sourceDocumentId)) {
+          return jsonResponse({ error: 'Le document source ne correspond pas au dossier.' }, 400);
+        }
+        if (input.sourceQuoteId && input.sourceQuoteId !== current.commercial_quote_id) {
+          return jsonResponse({ error: 'Le devis source ne correspond pas au dossier.' }, 400);
+        }
+        const { data: previousAmendment, error: previousAmendmentError } = await supabaseAdmin
+          .from('training_amendments').select('version').eq('enrollment_id', enrollmentId)
+          .order('version', { ascending: false }).limit(1).maybeSingle();
+        if (previousAmendmentError) throw previousAmendmentError;
+        const version = (previousAmendment?.version || 0) + 1;
+        const frozenSnapshot = {
+          version, createdAt: now, enrollment: before,
+          learner: { id: current.user_id, email: relatedProfileEmail(current.profiles), firstName: current.learner_first_name, lastName: current.learner_last_name },
+          reason: input.reason, changeSummary: input.changeSummary,
+          previousValues: input.previousValues, newValues: input.newValues,
+        };
+        const { data: amendment, error } = await supabaseAdmin.from('training_amendments').insert({
+          enrollment_id: enrollmentId, source_document_id: input.sourceDocumentId,
+          source_quote_id: input.sourceQuoteId, effective_date: input.effectiveDate,
+          version,
+          reason: input.reason, change_summary: input.changeSummary,
+          previous_values: input.previousValues, new_values: input.newValues,
+          frozen_snapshot: frozenSnapshot, created_by: actor.id,
+        }).select('*').single();
+        if (error) throw error;
+        const { error: eventError } = await supabaseAdmin.from('training_enrollment_events').insert({
+          enrollment_id: enrollmentId, event_type: 'amendment_created', reason: input.reason,
+          previous_state: before, new_state: { ...before, amendmentId: amendment.id, amendmentNumber: amendment.amendment_number },
+          rights_impact: 'none', actor_user_id: actor.id,
+        });
+        if (eventError) throw eventError;
+        return jsonResponse({ amendment, rightsChanged: false }, 201);
+      }
+
+      if (['completed', 'archived', 'cancelled', 'abandoned'].includes(current.status)) {
+        return jsonResponse({ error: 'Le statut actuel du dossier interdit cette action.' }, 409);
+      }
+      const input = validateEnrollmentException(action, body.exception);
+      let changes: Record<string, unknown> = { updated_at: now };
+      let eventType = '';
+      let rightsImpact = 'none';
+
+      if (action === 'cancel_enrollment') {
+        changes = { ...changes, status: 'cancelled', cancelled_at: now, cancelled_by_actor: input.actorLabel, cancellation_reason: input.reason };
+        eventType = 'cancelled'; rightsImpact = 'review_required';
+      } else if (action === 'abandon_enrollment') {
+        changes = { ...changes, status: 'abandoned', abandoned_at: now, abandonment_origin: input.origin, abandonment_reason: input.reason };
+        eventType = 'abandoned'; rightsImpact = 'review_required';
+      } else if (action === 'postpone_enrollment') {
+        changes = { ...changes, starts_at: input.startsAt, ends_at: input.endsAt };
+        eventType = 'postponed'; rightsImpact = 'none';
+      } else {
+        const { data: targetProfile, error: targetError } = await supabaseAdmin.from('profiles')
+          .select('id, email').eq('id', input.targetUserId).maybeSingle();
+        if (targetError) throw targetError;
+        if (!targetProfile || targetProfile.email.toLowerCase() !== input.learnerEmail) {
+          return jsonResponse({ error: 'Le compte cible et son adresse e-mail ne correspondent pas.' }, 400);
+        }
+        const { data: duplicate, error: duplicateError } = await supabaseAdmin.from('training_enrollments')
+          .select('id').eq('user_id', input.targetUserId).eq('course_id', current.course_id)
+          .in('status', ['draft', 'pending', 'validated', 'in_progress', 'completed']).maybeSingle();
+        if (duplicateError) throw duplicateError;
+        if (duplicate) return jsonResponse({ error: 'Le nouveau bénéficiaire possède déjà un dossier ouvert pour cette formation.' }, 409);
+        changes = {
+          ...changes,
+          user_id: input.targetUserId,
+          learner_first_name: input.learnerFirstName,
+          learner_last_name: input.learnerLastName,
+          course_access_id: null,
+        };
+        eventType = 'beneficiary_transferred'; rightsImpact = 'review_required';
+      }
+
+      const { data: enrollment, error } = await supabaseAdmin.from('training_enrollments')
+        .update(changes).eq('id', enrollmentId).select('*').single();
+      if (error) throw error;
+
+      if (['postpone_enrollment', 'transfer_beneficiary'].includes(action)) {
+        const learnerEmail = action === 'transfer_beneficiary'
+          ? input.learnerEmail
+          : relatedProfileEmail(current.profiles);
+        for (const document of current.training_documents || []) {
+          const generatable = ['training_agreement', 'convocation'].includes(document.document_type)
+            && document.status !== 'missing';
+          if (!generatable && action !== 'transfer_beneficiary') continue;
+          const documentChanges: Record<string, unknown> = {
+            version: Number(document.version || 1) + 1,
+            updated_at: now,
+          };
+          if (action === 'transfer_beneficiary') documentChanges.user_id = enrollment.user_id;
+          if (generatable) {
+            documentChanges.content_snapshot = buildAdministrativeDocument(document.document_type, enrollment, learnerEmail, now);
+            documentChanges.generated_by = actor.id;
+            documentChanges.generated_at = now;
+          }
+          const { error: documentError } = await supabaseAdmin.from('training_documents')
+            .update(documentChanges).eq('id', document.id);
+          if (documentError) throw documentError;
+        }
+      }
+      const after = enrollmentState(enrollment);
+      const { error: eventError } = await supabaseAdmin.from('training_enrollment_events').insert({
+        enrollment_id: enrollmentId, event_type: eventType, reason: input.reason,
+        previous_state: before, new_state: after, rights_impact: rightsImpact, actor_user_id: actor.id,
+      });
+      if (eventError) throw eventError;
+      return jsonResponse({ enrollment, rightsChanged: false, rightsReviewRequired: rightsImpact === 'review_required' });
     }
 
     if (action === 'regenerate_document') {
@@ -316,15 +495,19 @@ Deno.serve(async (request) => {
       const enrollmentId = typeof body.enrollmentId === 'string' ? body.enrollmentId : '';
       if (!enrollmentId) return jsonResponse({ error: 'Dossier invalide.' }, 400);
       const input = validateAdministrativeEnrollment(body.enrollment);
+      const updateReason = typeof body.enrollment?.updateReason === 'string' ? body.enrollment.updateReason.trim() : '';
+      if (updateReason.length < 5 || updateReason.length > 2000) {
+        return jsonResponse({ error: 'Un motif de modification de 5 à 2000 caractères est requis.' }, 400);
+      }
 
       const { data: existingEnrollment, error: existingEnrollmentError } = await supabaseAdmin
         .from('training_enrollments')
-        .select('id, user_id, course_id, status, profiles!training_enrollments_user_id_fkey(email)')
+        .select('*, profiles!training_enrollments_user_id_fkey(email)')
         .eq('id', enrollmentId)
         .single();
       if (existingEnrollmentError) throw existingEnrollmentError;
-      if (['archived', 'cancelled'].includes(existingEnrollment.status)) {
-        return jsonResponse({ error: 'Un dossier archivé ou annulé ne peut plus être modifié.' }, 409);
+      if (['archived', 'cancelled', 'abandoned'].includes(existingEnrollment.status)) {
+        return jsonResponse({ error: 'Un dossier archivé, annulé ou abandonné ne peut plus être modifié.' }, 409);
       }
       if (input.targetUserId !== existingEnrollment.user_id || input.courseId !== existingEnrollment.course_id) {
         return jsonResponse({ error: "L'apprenant et la formation d'un dossier existant ne peuvent pas être remplacés." }, 400);
@@ -349,6 +532,10 @@ Deno.serve(async (request) => {
           funding_mode: input.fundingMode,
           funder_name: input.funderName,
           funding_reference: input.fundingReference,
+          payer_name: input.payerName,
+          payer_email: input.payerEmail,
+          client_name: input.clientName,
+          client_email: input.clientEmail,
           delivery_mode: input.deliveryMode,
           training_location: input.trainingLocation,
           remote_access_details: input.remoteAccessDetails,
@@ -383,6 +570,17 @@ Deno.serve(async (request) => {
         .upsert(refreshedDocuments, { onConflict: 'enrollment_id,document_type' });
       if (documentsError) throw documentsError;
 
+      const { error: eventError } = await supabaseAdmin.from('training_enrollment_events').insert({
+        enrollment_id: enrollmentId,
+        event_type: 'dossier_updated',
+        reason: updateReason,
+        previous_state: enrollmentState(existingEnrollment),
+        new_state: enrollmentState(enrollment),
+        rights_impact: 'none',
+        actor_user_id: actor.id,
+      });
+      if (eventError) throw eventError;
+
       return jsonResponse({ enrollment, documentsRegenerated: true });
     }
 
@@ -396,6 +594,9 @@ Deno.serve(async (request) => {
         .eq('id', enrollmentId)
         .single();
       if (dossierError) throw dossierError;
+      if (['archived', 'cancelled', 'abandoned'].includes(dossierToComplete.status)) {
+        return jsonResponse({ error: 'Un dossier archivé, annulé ou abandonné ne peut pas être terminé.' }, 409);
+      }
       if (new Date(dossierToComplete.ends_at) > new Date(completedAt)) {
         return jsonResponse({ error: 'La formation ne peut pas être terminée avant sa date de fin prévue.' }, 409);
       }

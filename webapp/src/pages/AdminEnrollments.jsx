@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
+import EnrollmentLifecyclePanel from '../components/EnrollmentLifecyclePanel';
+import { filterAdministrativeEnrollments } from '../lib/enrollmentLifecycle';
 import './AdminEnrollments.css';
 
 const COURSE_OPTIONS = {
@@ -49,6 +51,10 @@ function createInitialForm() {
     fundingMode: 'opco',
     funderName: '',
     fundingReference: '',
+    payerName: '',
+    payerEmail: '',
+    clientName: '',
+    clientEmail: '',
     deliveryMode: 'remote',
     trainingLocation: '',
     remoteAccessDetails: '',
@@ -57,6 +63,7 @@ function createInitialForm() {
     durationMinutes: 600,
     priceAmountCents: 49700,
     administrativeNotes: '',
+    updateReason: '',
   };
 }
 
@@ -82,6 +89,9 @@ export default function AdminEnrollments() {
   const [actionRunning, setActionRunning] = useState('');
   const [editingEnrollmentId, setEditingEnrollmentId] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [fundingFilter, setFundingFilter] = useState('');
 
   const canCreateLearner = role === 'admin';
 
@@ -94,7 +104,9 @@ export default function AdminEnrollments() {
         .select(`
           *,
           profiles!training_enrollments_user_id_fkey(email),
-          training_documents(id, document_type, status, visible_to_learner, generated_at)
+          training_documents(id, document_type, status, visible_to_learner, generated_at),
+          training_enrollment_events(id, event_type, reason, previous_state, new_state, rights_impact, created_at),
+          training_amendments(id, amendment_number, effective_date, reason, change_summary, frozen_snapshot, created_at)
         `)
         .order('created_at', { ascending: false }),
     ]);
@@ -163,6 +175,10 @@ export default function AdminEnrollments() {
       fundingMode: enrollment.funding_mode,
       funderName: enrollment.funder_name || '',
       fundingReference: enrollment.funding_reference || '',
+      payerName: enrollment.payer_name || '',
+      payerEmail: enrollment.payer_email || '',
+      clientName: enrollment.client_name || '',
+      clientEmail: enrollment.client_email || '',
       deliveryMode: enrollment.delivery_mode,
       trainingLocation: enrollment.training_location || '',
       remoteAccessDetails: enrollment.remote_access_details || '',
@@ -171,6 +187,7 @@ export default function AdminEnrollments() {
       durationMinutes: enrollment.duration_minutes,
       priceAmountCents: enrollment.price_amount_cents ?? 0,
       administrativeNotes: enrollment.administrative_notes || '',
+      updateReason: '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -238,6 +255,33 @@ export default function AdminEnrollments() {
     }
     setActionRunning('');
   }
+
+  async function runLifecycleAction(enrollmentId, action, payload) {
+    const actionKey = `${action}:${enrollmentId}`;
+    setActionRunning(actionKey);
+    setFeedback(null);
+    const { data, error } = await supabase.functions.invoke('admin-manage-enrollment', {
+      body: { action, enrollmentId, ...payload },
+    });
+    if (error || data?.error) {
+      setFeedback({ type: 'error', message: data?.error || "L'action administrative a échoué." });
+    } else {
+      setFeedback({
+        type: 'success',
+        message: data?.rightsReviewRequired
+          ? 'Action enregistrée. Les droits pédagogiques sont inchangés et doivent être examinés séparément.'
+          : 'Action enregistrée dans l’historique du dossier. Les droits pédagogiques sont inchangés.',
+      });
+      await loadData();
+    }
+    setActionRunning('');
+    return !(error || data?.error);
+  }
+
+  const filteredEnrollments = useMemo(
+    () => filterAdministrativeEnrollments(enrollments, { search, status: statusFilter, fundingStatus: fundingFilter }),
+    [enrollments, search, statusFilter, fundingFilter],
+  );
 
   if (!user || !['admin', 'employee'].includes(role)) return null;
 
@@ -334,6 +378,10 @@ export default function AdminEnrollments() {
               Numéro de dossier <span>(facultatif)</span>
               <input maxLength="120" value={form.fundingReference} onChange={(event) => updateField('fundingReference', event.target.value)} />
             </label>
+            <label>Client contractuel <span>(facultatif)</span><input maxLength="200" value={form.clientName} onChange={(event) => updateField('clientName', event.target.value)} /></label>
+            <label>E-mail client <span>(facultatif)</span><input type="email" maxLength="320" value={form.clientEmail} onChange={(event) => updateField('clientEmail', event.target.value)} /></label>
+            <label>Payeur <span>(facultatif)</span><input maxLength="200" value={form.payerName} onChange={(event) => updateField('payerName', event.target.value)} /></label>
+            <label>E-mail payeur <span>(facultatif)</span><input type="email" maxLength="320" value={form.payerEmail} onChange={(event) => updateField('payerEmail', event.target.value)} /></label>
             <label>
               Tarif en euros
               <input type="number" min="0" step="1" value={form.priceAmountCents / 100} onChange={(event) => updateField('priceAmountCents', Math.round(Number(event.target.value) * 100))} />
@@ -379,6 +427,7 @@ export default function AdminEnrollments() {
               <label>Code postal<input maxLength="20" value={form.learnerPostalCode} onChange={(event) => updateField('learnerPostalCode', event.target.value)} /></label>
               <label>Ville<input maxLength="120" value={form.learnerCity} onChange={(event) => updateField('learnerCity', event.target.value)} /></label>
               <label className="admin-enrollments__wide">Notes<textarea rows="3" maxLength="4000" value={form.administrativeNotes} onChange={(event) => updateField('administrativeNotes', event.target.value)} /></label>
+              {editingEnrollmentId && <label className="admin-enrollments__wide">Motif de la modification<input required minLength="5" maxLength="2000" value={form.updateReason} onChange={(event) => updateField('updateReason', event.target.value)} /></label>}
             </div>
           </details>
 
@@ -399,11 +448,16 @@ export default function AdminEnrollments() {
 
       <section className="admin-enrollments__panel" aria-labelledby="files-title">
         <h2 id="files-title">Dossiers de formation</h2>
-        {loading ? <p role="status">Chargement des dossiers…</p> : enrollments.length === 0 ? (
+        <div className="admin-enrollments__filters">
+          <label>Rechercher<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, e-mail, organisme, référence…" /></label>
+          <label>Statut<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">Tous</option><option value="validated">Validé</option><option value="in_progress">En cours</option><option value="completed">Terminé</option><option value="cancelled">Annulé</option><option value="abandoned">Abandonné</option></select></label>
+          <label>Financement<select value={fundingFilter} onChange={(event) => setFundingFilter(event.target.value)}><option value="">Tous</option><option value="not_requested">Non demandé</option><option value="requested">Demandé</option><option value="under_review">En instruction</option><option value="partially_granted">Partiel</option><option value="granted">Accordé</option><option value="refused">Refusé</option></select></label>
+        </div>
+        {loading ? <p role="status">Chargement des dossiers…</p> : filteredEnrollments.length === 0 ? (
           <p>Aucun dossier administratif enregistré.</p>
         ) : (
           <div className="admin-enrollments__files">
-            {enrollments.map((enrollment) => (
+            {filteredEnrollments.map((enrollment) => (
               <article key={enrollment.id} className="admin-enrollments__file">
                 <header>
                   <div>
@@ -418,7 +472,7 @@ export default function AdminEnrollments() {
                   <div><dt>Dates</dt><dd>{formatDate(enrollment.starts_at)} → {formatDate(enrollment.ends_at)}</dd></div>
                   <div><dt>Accès LMS</dt><dd>{enrollment.course_access_id ? 'Attribué' : 'À vérifier'}</dd></div>
                 </dl>
-                {enrollment.status !== 'archived' && enrollment.status !== 'cancelled' && (
+                {!['archived', 'cancelled', 'abandoned'].includes(enrollment.status) && (
                   <button
                     type="button"
                     className="btn admin-enrollments__secondary admin-enrollments__edit"
@@ -457,7 +511,13 @@ export default function AdminEnrollments() {
                     </div>
                   ))}
                 </div>
-                {enrollment.status !== 'completed' && enrollment.status !== 'archived' && (
+                <EnrollmentLifecyclePanel
+                  enrollment={enrollment}
+                  profiles={profiles}
+                  running={actionRunning}
+                  onAction={runLifecycleAction}
+                />
+                {!['completed', 'archived', 'cancelled', 'abandoned'].includes(enrollment.status) && (
                   <button
                     type="button"
                     className="btn admin-enrollments__complete"
