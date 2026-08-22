@@ -397,37 +397,37 @@ SELECT set_config('request.jwt.claim.sub', '86000000-0000-4000-8000-000000000001
 SELECT is(
   (SELECT sum(gross_training_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  47000::bigint,
+  47000::numeric,
   'Les encaissements bruts de formation incluent les paiements arrives a succes'
 );
 SELECT is(
   (SELECT sum(successful_refund_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  18000::bigint,
+  18000::numeric,
   'Les remboursements partiel et total sont distingues'
 );
 SELECT is(
   (SELECT sum(open_dispute_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  1000::bigint,
+  1000::numeric,
   'Le litige ouvert reste un montant a risque'
 );
 SELECT is(
   (SELECT sum(lost_dispute_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  21000::bigint,
+  21000::numeric,
   'Le litige perdu ne recoupe pas les montants deja rembourses'
 );
 SELECT is(
   (SELECT sum(travel_fee_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  3000::bigint,
+  3000::numeric,
   'Les frais de deplacement restent separes du produit de formation'
 );
 SELECT is(
   (SELECT sum(estimated_net_stripe_cents) FROM public.admin_stripe_financial_summary
    WHERE transaction_id::text LIKE '86000000-0000-4000-8000-00000000010%'),
-  11000::bigint,
+  11000::numeric,
   'Le net estime ne soustrait aucun montant deux fois'
 );
 
