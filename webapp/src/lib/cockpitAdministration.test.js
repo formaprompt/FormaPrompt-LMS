@@ -50,6 +50,6 @@ test('le chargement utilise uniquement le RPC de lecture du contrat Lot 1', asyn
 
 test('les destinations sont limitées aux écrans administratifs existants', () => {
   assert.equal(getActionDestination({ destination_path: '/admin/commercial' }), '/admin/commercial');
-  assert.equal(getActionDestination({ destination_path: '/admin/qualite' }), null);
+  assert.equal(getActionDestination({ destination_path: '/admin/qualite' }), '/admin/qualite');
   assert.equal(getActionDestination({ destination_path: 'https://example.invalid' }), null);
 });

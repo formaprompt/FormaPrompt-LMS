@@ -60,6 +60,7 @@ export function getActionDestination(action) {
     '/admin/dossiers': '/admin/dossiers',
     '/admin/demandes-rgpd': '/admin/demandes-rgpd',
     '/admin/acces-incidents': '/admin/acces-incidents',
+    '/admin/qualite': '/admin/qualite',
   };
   return destinations[action?.destination_path] || null;
 }

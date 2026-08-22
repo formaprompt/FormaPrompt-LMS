@@ -5,8 +5,8 @@ const navigation = [
   { label: 'Cockpit', to: '/admin' },
   { label: 'Commercial', to: '/admin/commercial' },
   { label: 'Pédagogique', to: '/admin/pedagogique' },
-  { label: 'Qualité', disabled: true },
-  { label: 'Finance', to: '/admin/stripe-apres-paiement' },
+  { label: 'Qualité', to: '/admin/qualite' },
+  { label: 'Finance', to: '/admin/finance' },
   { label: 'BPF', disabled: true },
 ];
 
