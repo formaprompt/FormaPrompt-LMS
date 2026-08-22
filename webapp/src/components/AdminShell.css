@@ -1,0 +1,50 @@
+.admin-shell {
+  min-height: 80vh;
+  background: #f1f5f9;
+}
+
+.admin-shell__navigation {
+  border-bottom: 1px solid #cbd5e1;
+  background: #0f172a;
+}
+
+.admin-shell__navigation-inner {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding-block: 0.55rem;
+}
+
+.admin-shell__link {
+  min-height: 44px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0.5rem;
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.admin-shell__link:hover,
+.admin-shell__link:focus-visible,
+.admin-shell__link.is-active {
+  background: #065f46;
+  color: #fff;
+}
+
+.admin-shell__link:focus-visible {
+  outline: 3px solid #6ee7b7;
+  outline-offset: 2px;
+}
+
+.admin-shell__link.is-disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .admin-shell__navigation-inner {
+    padding-inline: 1rem;
+  }
+}
