@@ -1,0 +1,6 @@
+interface:
+  display_name: "FormaPrompt LMS"
+  short_description: "Gouvernance et invariants FormaPrompt LMS"
+  default_prompt: "Utilise $formaprompt-lms pour intervenir sur FormaPrompt LMS en respectant ses invariants et ses frontières d'autorisation."
+policy:
+  allow_implicit_invocation: true
