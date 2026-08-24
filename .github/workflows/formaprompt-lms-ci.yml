@@ -1,0 +1,142 @@
+name: FormaPrompt LMS CI
+
+on:
+  pull_request:
+    paths:
+      - "webapp/**"
+      - ".github/workflows/**"
+  push:
+    branches:
+      - main
+      - develop
+      - development
+      - "codex/**"
+      - "feat/**"
+      - "feature/**"
+      - "fix/**"
+    paths:
+      - "webapp/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: formaprompt-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application:
+    name: Node, React and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: webapp
+    env:
+      VITE_SUPABASE_URL: https://crxodkbcukhjdejlcfpg.supabase.co
+      VITE_SUPABASE_ANON_KEY: eyJ0ZXN0.eyJsb2NhbCI6dHJ1ZX0.c2lnbmF0dXJl
+      VITE_SITE_URL: https://formaprompt.com
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Reject committed production secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nE '(sk_live_|rk_live_|whsec_|sb_secret_)[A-Za-z0-9_=-]{16,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' -- .; then
+            echo "A production secret-shaped value is committed."
+            exit 1
+          fi
+
+      - name: Run Node application tests
+        run: npm run test:app
+
+      - name: Run Edge and server tests
+        run: npm run test:stripe
+
+      - name: Run React and Vitest tests deterministically
+        run: npm run test:studio -- --maxWorkers=1 --minWorkers=1
+
+      - name: Check TypeScript
+        run: npm run typecheck
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Build Vite application
+        run: npm run build:app
+
+  database:
+    name: Local migrations and pgTAP
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: webapp
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.115.0
+
+      - name: Start clean local Supabase baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          mv supabase/migrations /tmp/formaprompt-migrations
+          mkdir supabase/migrations
+          supabase start
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 \
+            -f supabase_schema.sql
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 <<'SQL'
+          -- Socle historique antérieur aux migrations suivies dans le dépôt.
+          CREATE TABLE public.calendar_bookings (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            date date NOT NULL,
+            slot text NOT NULL,
+            type text NOT NULL DEFAULT 'option',
+            of_name text NOT NULL,
+            comments text,
+            created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+            updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+          );
+          ALTER TABLE public.calendar_bookings ENABLE ROW LEVEL SECURITY;
+          INSERT INTO storage.buckets (id, name, public)
+          VALUES ('blog-images', 'blog-images', true)
+          ON CONFLICT (id) DO NOTHING;
+          SQL
+          rmdir supabase/migrations
+          mv /tmp/formaprompt-migrations supabase/migrations
+
+      - name: Apply all committed migrations locally
+        run: supabase migration up --local --include-all
+
+      - name: List applied local migrations
+        run: supabase migration list --local
+
+      - name: Run all pgTAP tests dynamically
+        run: supabase test db --local
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup

@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
 import RequireAuth from "./components/RequireAuth";
+import AdminShell from "./components/AdminShell";
 import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
 // Lazy‑loaded pages
 const StudioPage = lazy(() => import("./studio/StudioPage"));
@@ -33,6 +34,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminCockpit = lazy(() => import("./pages/AdminCockpit"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
@@ -48,6 +50,10 @@ const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const AdminPrivacyRequests = lazy(() => import("./pages/AdminPrivacyRequests"));
 const AdminCommercial = lazy(() => import("./pages/AdminCommercial"));
 const AdminStripePostPayment = lazy(() => import("./pages/AdminStripePostPayment"));
+const AdminQuality = lazy(() => import("./pages/AdminQuality"));
+const AdminFinance = lazy(() => import("./pages/AdminFinance"));
+const AdminBpfPreparation = lazy(() => import("./pages/AdminBpfPreparation"));
+const AdminWithdrawalRequests = lazy(() => import("./pages/AdminWithdrawalRequests"));
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
@@ -101,13 +107,18 @@ function App() {
             <Route path="reset-password" element={<ResetPassword />} />
             <Route path="register" element={<Register />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="admin" element={<AdminDashboard />} />
-            <Route path="admin/emargements" element={<AttendanceSheets />} />
-            <Route path="admin/dossiers" element={<RequireAuth><AdminEnrollments /></RequireAuth>} />
-            <Route path="admin/acces-incidents" element={<RequireAuth><AdminAccessIncidents /></RequireAuth>} />
-            <Route path="admin/demandes-rgpd" element={<RequireAuth><AdminPrivacyRequests /></RequireAuth>} />
-            <Route path="admin/commercial" element={<RequireAuth><AdminCommercial /></RequireAuth>} />
-            <Route path="admin/stripe-apres-paiement" element={<RequireAuth><AdminStripePostPayment /></RequireAuth>} />
+            <Route path="admin" element={<RequireAuth><AdminCockpit /></RequireAuth>} />
+            <Route path="admin/pedagogique" element={<AdminShell><AdminDashboard /></AdminShell>} />
+            <Route path="admin/emargements" element={<AdminShell><AttendanceSheets /></AdminShell>} />
+            <Route path="admin/dossiers" element={<RequireAuth><AdminShell><AdminEnrollments /></AdminShell></RequireAuth>} />
+            <Route path="admin/acces-incidents" element={<RequireAuth><AdminShell><AdminAccessIncidents /></AdminShell></RequireAuth>} />
+            <Route path="admin/demandes-rgpd" element={<RequireAuth><AdminShell><AdminPrivacyRequests /></AdminShell></RequireAuth>} />
+            <Route path="admin/commercial" element={<RequireAuth><AdminShell><AdminCommercial /></AdminShell></RequireAuth>} />
+            <Route path="admin/stripe-apres-paiement" element={<RequireAuth><AdminShell><AdminStripePostPayment /></AdminShell></RequireAuth>} />
+            <Route path="admin/qualite" element={<RequireAuth><AdminShell><AdminQuality /></AdminShell></RequireAuth>} />
+            <Route path="admin/finance" element={<RequireAuth><AdminShell><AdminFinance /></AdminShell></RequireAuth>} />
+            <Route path="admin/bpf" element={<RequireAuth><AdminShell><AdminBpfPreparation /></AdminShell></RequireAuth>} />
+            <Route path="admin/retractations" element={<RequireAuth><AdminShell><AdminWithdrawalRequests /></AdminShell></RequireAuth>} />
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
@@ -118,7 +129,7 @@ function App() {
             <Route path="guide-gpt-5-6-codex" element={<GuideGPT56 />} />
             <Route path="paiement-reussi" element={<PaymentSuccess />} />
             <Route path="reservation-formation" element={<CourseBooking />} />
-            <Route path="admin/emargements/:bookingId" element={<AttendanceSheet />} />
+            <Route path="admin/emargements/:bookingId" element={<AdminShell><AttendanceSheet /></AdminShell>} />
             <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
             <Route path="attestations/:issuanceId" element={<IssuedAttestationDocument />} />
             <Route path="dossiers/:enrollmentId/documents/:documentType" element={<RequireAuth><TrainingDocument /></RequireAuth>} />

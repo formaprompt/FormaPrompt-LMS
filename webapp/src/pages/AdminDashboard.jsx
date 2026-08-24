@@ -615,7 +615,9 @@ export default function AdminDashboard() {
   
   const requestedTab = searchParams.get('onglet');
   const [activeTab, setActiveTab] = useState(
-    ['bookings', 'corrections', 'trainer-guides'].includes(requestedTab) ? requestedTab : 'overview',
+    ['overview', 'users', 'contacts', 'blog', 'purchases', 'bookings', 'positioning', 'corrections', 'trainer-guides', 'feedback'].includes(requestedTab)
+      ? requestedTab
+      : 'overview',
   );
   const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState('sessions');
   const [correctionWorkspaceTab, setCorrectionWorkspaceTab] = useState('exercises');
