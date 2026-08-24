@@ -38,9 +38,7 @@ export default function CockpitActionList({ actions }) {
               <strong>{action.neutral_label}</strong>
               <span>{formatDeadline(action)}</span>
             </div>
-            {destination ? <Link className="cockpit-action__link" to={destination}>Traiter</Link> : (
-              <span className="cockpit-action__pending">Écran détaillé à venir</span>
-            )}
+            {destination && <Link className="cockpit-action__link" to={destination}>Traiter</Link>}
           </li>
         );
       })}

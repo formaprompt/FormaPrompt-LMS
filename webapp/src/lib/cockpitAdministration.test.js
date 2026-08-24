@@ -59,5 +59,6 @@ test('les destinations sont limitées aux écrans administratifs existants', () 
   assert.equal(getActionDestination({ destination_path: '/admin/commercial' }), '/admin/commercial');
   assert.equal(getActionDestination({ destination_path: '/admin/qualite' }), '/admin/qualite');
   assert.equal(getActionDestination({ destination_path: '/admin/bpf' }), '/admin/bpf');
+  assert.equal(getActionDestination({ item_type: 'withdrawal_request', destination_path: '/admin' }), '/admin/retractations');
   assert.equal(getActionDestination({ destination_path: 'https://example.invalid' }), null);
 });

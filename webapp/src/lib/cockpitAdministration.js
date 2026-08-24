@@ -56,6 +56,7 @@ export function prioritizeCockpitActions(actions = [], now = new Date()) {
 }
 
 export function getActionDestination(action) {
+  if (action?.item_type === 'withdrawal_request') return '/admin/retractations';
   const destinations = {
     '/admin/stripe-apres-paiement': '/admin/stripe-apres-paiement',
     '/admin/commercial': '/admin/commercial',
@@ -64,6 +65,7 @@ export function getActionDestination(action) {
     '/admin/acces-incidents': '/admin/acces-incidents',
     '/admin/qualite': '/admin/qualite',
     '/admin/bpf': '/admin/bpf',
+    '/admin/retractations': '/admin/retractations',
   };
   return destinations[action?.destination_path] || null;
 }
