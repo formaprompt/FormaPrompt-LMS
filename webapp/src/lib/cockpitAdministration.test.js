@@ -9,11 +9,12 @@ import {
 test('la priorité fonctionnelle place le client avant la qualité et la technique', () => {
   const actions = prioritizeCockpitActions([
     { item_id: 'stripe', domain: 'stripe', item_type: 'orphan_transaction', severity: 'high', age_seconds: 500 },
+    { item_id: 'bpf', domain: 'bpf', item_type: 'bpf_missing_hours', severity: 'high', age_seconds: 600 },
     { item_id: 'quality', domain: 'quality', item_type: 'quality_action', severity: 'high', age_seconds: 500 },
     { item_id: 'client', domain: 'quality', item_type: 'complaint', severity: 'medium', age_seconds: 10 },
   ], new Date('2026-08-22T12:00:00Z'));
 
-  assert.deepEqual(actions.map((action) => action.item_id), ['client', 'quality', 'stripe']);
+  assert.deepEqual(actions.map((action) => action.item_id), ['client', 'quality', 'bpf', 'stripe']);
 });
 
 test('une alerte critique remonte immédiatement et les retards départagent un même groupe', () => {
@@ -26,13 +27,18 @@ test('une alerte critique remonte immédiatement et les retards départagent un 
   assert.deepEqual(actions.map((action) => action.item_id), ['critical', 'overdue', 'future']);
 });
 
-test('le chargement utilise uniquement le RPC de lecture du contrat Lot 1', async () => {
+test('le chargement combine le RPC cockpit et la vue consolidée sans lire course_access directement', async () => {
   const calls = [];
+  const builder = {
+    select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; },
+    then(resolve) { return Promise.resolve({ data: [], error: null }).then(resolve); },
+  };
   const client = {
     rpc: async (name, parameters) => {
       calls.push([name, parameters]);
       return { data: { kpis: {}, priority_actions: [] }, error: null };
     },
+    from: (source) => { calls.push(['from', source]); return builder; },
   };
 
   await fetchCockpitSummary(client, {
@@ -41,15 +47,17 @@ test('le chargement utilise uniquement le RPC de lecture du contrat Lot 1', asyn
     courseId: 'formation-ia',
   });
 
-  assert.deepEqual(calls, [[
+  assert.deepEqual(calls[0], ['from', 'admin_training_activity_all_sources']);
+  assert.deepEqual(calls[1], [
     'admin_get_cockpit_summary',
     { p_date_from: '2026-01-01', p_date_to: '2026-08-22', p_course_id: 'formation-ia' },
-  ]]);
-  assert.equal('from' in client, false, 'aucune mutation ou lecture directe de course_access');
+  ]);
+  assert.ok(!calls.some((call) => call.includes('course_access')), 'aucune lecture directe de course_access');
 });
 
 test('les destinations sont limitées aux écrans administratifs existants', () => {
   assert.equal(getActionDestination({ destination_path: '/admin/commercial' }), '/admin/commercial');
   assert.equal(getActionDestination({ destination_path: '/admin/qualite' }), '/admin/qualite');
+  assert.equal(getActionDestination({ destination_path: '/admin/bpf' }), '/admin/bpf');
   assert.equal(getActionDestination({ destination_path: 'https://example.invalid' }), null);
 });

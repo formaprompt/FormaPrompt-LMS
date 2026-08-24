@@ -19,6 +19,7 @@ const COURSE_OPTIONS = [
 ];
 
 const DOMAIN_LABELS = {
+  bpf: 'BPF',
   commercial: 'Commercial',
   legal: 'Rétractation',
   privacy: 'RGPD',

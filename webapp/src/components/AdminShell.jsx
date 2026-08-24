@@ -7,7 +7,7 @@ const navigation = [
   { label: 'Pédagogique', to: '/admin/pedagogique' },
   { label: 'Qualité', to: '/admin/qualite' },
   { label: 'Finance', to: '/admin/finance' },
-  { label: 'BPF', disabled: true },
+  { label: 'BPF', to: '/admin/bpf' },
 ];
 
 export default function AdminShell({ children }) {

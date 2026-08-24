@@ -4,10 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import AdminCockpit from './AdminCockpit';
 
-const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
+const { rpcMock, fromMock } = vi.hoisted(() => ({ rpcMock: vi.fn(), fromMock: vi.fn() }));
 
 vi.mock('../lib/supabaseClient', () => ({
-  supabase: { rpc: rpcMock },
+  supabase: { rpc: rpcMock, from: fromMock },
 }));
 
 vi.mock('../contexts/useAuth', () => ({
@@ -55,11 +55,19 @@ function renderCockpit(initialEntry = '/admin') {
 describe('AdminCockpit', () => {
   beforeEach(() => {
     rpcMock.mockResolvedValue({ data: summary(), error: null });
+    const builder = {
+      select: vi.fn(), gte: vi.fn(), lte: vi.fn(), eq: vi.fn(),
+      then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
+    };
+    builder.select.mockReturnValue(builder); builder.gte.mockReturnValue(builder);
+    builder.lte.mockReturnValue(builder); builder.eq.mockReturnValue(builder);
+    fromMock.mockReturnValue(builder);
   });
 
   afterEach(() => {
     cleanup();
     rpcMock.mockReset();
+    fromMock.mockReset();
   });
 
   it('charge le résumé Lot 1 et affiche les KPI fiables', async () => {

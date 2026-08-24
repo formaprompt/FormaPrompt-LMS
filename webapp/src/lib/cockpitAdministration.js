@@ -1,3 +1,5 @@
+import { deriveBpfCockpitActions } from './bpfAdministration.js';
+
 const ALLOWED_COURSE_IDS = new Set([
   'formation-ia',
   'formation-prompt-level-1',
@@ -61,6 +63,7 @@ export function getActionDestination(action) {
     '/admin/demandes-rgpd': '/admin/demandes-rgpd',
     '/admin/acces-incidents': '/admin/acces-incidents',
     '/admin/qualite': '/admin/qualite',
+    '/admin/bpf': '/admin/bpf',
   };
   return destinations[action?.destination_path] || null;
 }
@@ -77,15 +80,35 @@ export async function fetchCockpitSummary(client, filters) {
     throw new Error('La formation sélectionnée est invalide.');
   }
 
-  const { data, error } = await client.rpc('admin_get_cockpit_summary', {
-    p_date_from: dateFrom,
-    p_date_to: dateTo,
-    p_course_id: courseId,
-  });
+  let activityQuery = client.from('admin_training_activity_all_sources').select('*')
+    .gte('starts_on', dateFrom).lte('starts_on', dateTo);
+  if (courseId) activityQuery = activityQuery.eq('course_id', courseId);
+  const [{ data, error }, activitiesResult] = await Promise.all([
+    client.rpc('admin_get_cockpit_summary', {
+      p_date_from: dateFrom,
+      p_date_to: dateTo,
+      p_course_id: courseId,
+    }),
+    activityQuery,
+  ]);
 
   if (error) throw new Error(error.message || 'Le cockpit ne peut pas être chargé.');
   if (!data || typeof data !== 'object') throw new Error('Le résumé du cockpit est indisponible.');
-  return data;
+  if (activitiesResult.error) throw new Error(activitiesResult.error.message || 'Le contrôle BPF du cockpit est indisponible.');
+  const bpfActions = deriveBpfCockpitActions(activitiesResult.data || []);
+  const priorityActions = [...(data.priority_actions || []), ...bpfActions];
+  return {
+    ...data,
+    priority_actions: priorityActions,
+    action_counts_by_domain: {
+      ...(data.action_counts_by_domain || {}),
+      ...(bpfActions.length ? { bpf: bpfActions.length } : {}),
+    },
+    kpis: {
+      ...(data.kpis || {}),
+      action_items_total: Number(data.kpis?.action_items_total || 0) + bpfActions.length,
+    },
+  };
 }
 
 export function formatMoney(cents, currency = 'eur') {
