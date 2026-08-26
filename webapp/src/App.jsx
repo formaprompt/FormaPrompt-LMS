@@ -15,6 +15,7 @@ const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
 const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
+const DiagnosticPaymentConfirmation = lazy(() => import("./pages/DiagnosticPaymentConfirmation"));
 const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
@@ -89,6 +90,7 @@ function App() {
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-organismes" element={<FormationOF />} />
             <Route path="diagnostic-ia" element={<DiagnosticIA />} />
+            <Route path="diagnostic-ia/confirmation" element={<DiagnosticPaymentConfirmation />} />
             <Route path="a-propos" element={<About />} />
             <Route path="blog" element={<Blog />} />
             <Route path="blog/:slug" element={<BlogPost />} />

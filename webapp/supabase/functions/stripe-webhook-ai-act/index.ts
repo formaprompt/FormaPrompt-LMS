@@ -13,6 +13,12 @@ import {
   buildStripePostPaymentPayload,
   isStripePostPaymentEvent,
 } from '../_shared/stripePostPayment.js';
+import {
+  DIAGNOSTIC_IA_PAYMENT,
+  isDiagnosticPaymentObject,
+  validateCompletedDiagnosticSession,
+  validateDiagnosticEventIdentity,
+} from '../_shared/diagnosticPayment.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -75,12 +81,19 @@ Deno.serve(async (request) => {
 
   let validationStatus: 'not_required' | 'validated' | 'legacy_review' = 'not_required';
   const object = event.data.object as Stripe.Checkout.Session;
+  let diagnosticEvent = false;
 
   if (
     event.type === 'checkout.session.completed'
     || event.type === 'checkout.session.async_payment_succeeded'
   ) {
-    if (object.metadata?.payment_type === IN_PERSON_TRAVEL_FEE.paymentType) {
+    if (isDiagnosticPaymentObject(object)) {
+      const priceId = requiredEnv(DIAGNOSTIC_IA_PAYMENT.priceEnvName);
+      const validationError = validateCompletedDiagnosticSession(object, priceId);
+      if (validationError) return new Response(validationError, { status: 400 });
+      validationStatus = 'validated';
+      diagnosticEvent = true;
+    } else if (object.metadata?.payment_type === IN_PERSON_TRAVEL_FEE.paymentType) {
       const validationError = validateCompletedTravelFeeSession(object);
       if (validationError) return new Response(validationError, { status: 400 });
       validationStatus = 'validated';
@@ -134,13 +147,31 @@ Deno.serve(async (request) => {
         validationStatus = 'validated';
       }
     }
+  } else if (
+    isDiagnosticPaymentObject(object)
+    && [
+      'payment_intent.payment_failed',
+      'checkout.session.async_payment_failed',
+      'checkout.session.expired',
+    ].includes(event.type)
+  ) {
+    const validationError = validateDiagnosticEventIdentity(
+      object,
+      requiredEnv(DIAGNOSTIC_IA_PAYMENT.priceEnvName),
+    );
+    if (validationError) return new Response(validationError, { status: 400 });
+    validationStatus = 'validated';
+    diagnosticEvent = true;
   }
 
   try {
     const payload = buildStripePostPaymentPayload(event, await sha256(rawBody), {
       validation_status: validationStatus,
     });
-    const { data, error } = await supabaseAdmin.rpc('process_stripe_post_payment_event', {
+    const processor = diagnosticEvent
+      ? 'process_diagnostic_ia_stripe_event'
+      : 'process_stripe_post_payment_event';
+    const { data, error } = await supabaseAdmin.rpc(processor, {
       p_event: payload,
     });
     if (error) throw error;

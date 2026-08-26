@@ -8,11 +8,12 @@ const reconciliation = readFileSync(resolve('supabase/functions/admin-reconcile-
 const checkout = readFileSync(resolve('supabase/functions/create-checkout/index.ts'), 'utf8');
 const config = readFileSync(resolve('supabase/config.toml'), 'utf8');
 const purchaseConfig = readFileSync(resolve('supabase/functions/_shared/purchaseConfig.js'), 'utf8');
+const diagnosticCheckout = readFileSync(resolve('supabase/functions/create-diagnostic-checkout/index.ts'), 'utf8');
 
 test('vérifie la signature sur le corps brut avant tout traitement', () => {
   const rawBody = webhook.indexOf('const rawBody = await request.text()');
   const signature = webhook.indexOf('constructEventAsync');
-  const processing = webhook.indexOf("rpc('process_stripe_post_payment_event'");
+  const processing = webhook.indexOf('supabaseAdmin.rpc(processor');
   assert.ok(rawBody >= 0);
   assert.ok(signature > rawBody);
   assert.ok(processing > signature);
@@ -21,6 +22,7 @@ test('vérifie la signature sur le corps brut avant tout traitement', () => {
 
 test('délègue toutes les mutations post-paiement à la transaction PostgreSQL', () => {
   assert.match(webhook, /process_stripe_post_payment_event/);
+  assert.match(webhook, /process_diagnostic_ia_stripe_event/);
   assert.doesNotMatch(webhook, /from\(['"](?:purchases|course_access|stripe_payment_transactions|stripe_refunds|stripe_disputes)['"]\)\s*\.(?:insert|update|upsert|delete)/s);
   assert.match(webhook, /already_processed|\.\.\.data/);
 });
@@ -42,4 +44,13 @@ test('préserve les trois paiements directs, les frais et automatic_tax false', 
   assert.match(purchaseConfig, /checkoutEnabled: true/);
   assert.match(purchaseConfig, /in_person_travel_fee/);
   assert.match(checkout, /automatic_tax:\s*\{ enabled: false \}/);
+});
+
+test('isole le paiement Diagnostic des achats et droits LMS', () => {
+  assert.match(webhook, /process_diagnostic_ia_stripe_event/);
+  assert.match(diagnosticCheckout, /STRIPE_DIAGNOSTIC_IA_PRICE_ID|priceEnvName/);
+  assert.match(diagnosticCheckout, /automatic_tax:\s*\{ enabled: false \}/);
+  assert.match(diagnosticCheckout, /idempotencyKey/);
+  assert.doesNotMatch(diagnosticCheckout, /\.from\(['"](?:purchases|course_access)['"]\)/);
+  assert.doesNotMatch(diagnosticCheckout, /payment_method_types/);
 });

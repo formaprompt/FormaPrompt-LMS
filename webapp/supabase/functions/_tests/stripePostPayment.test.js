@@ -39,6 +39,22 @@ test('normalise un paiement Checkout sans perdre les identifiants de preuve', ()
   assert.equal(payload.validation_status, 'validated');
 });
 
+test('conserve la référence Diagnostic IA sans donnée sensible', () => {
+  const diagnosticEvent = structuredClone(baseEvent);
+  diagnosticEvent.data.object.customer = 'cus_test_diagnostic';
+  diagnosticEvent.data.object.metadata = {
+    purchase_type: 'diagnostic_ia_express',
+    diagnostic_order_id: '86000000-0000-4000-8000-000000000001',
+    user_id: '86000000-0000-4000-8000-000000000002',
+    price_id: 'price_test_diagnostic',
+  };
+  const payload = buildStripePostPaymentPayload(diagnosticEvent, 'd'.repeat(64));
+  assert.equal(payload.payment_type, 'diagnostic_ia_express');
+  assert.equal(payload.diagnostic_order_id, '86000000-0000-4000-8000-000000000001');
+  assert.equal(payload.stripe_customer_id, 'cus_test_diagnostic');
+  assert.equal('customer_email' in payload, false);
+});
+
 test('normalise remboursement et litige avec leur transaction parente', () => {
   const refund = buildStripePostPaymentPayload({
     ...baseEvent,

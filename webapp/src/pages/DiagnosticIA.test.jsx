@@ -1,10 +1,15 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DiagnosticIA from './DiagnosticIA'
 import { useAuth } from '../contexts/useAuth'
 
+const { createCheckout } = vi.hoisted(() => ({ createCheckout: vi.fn() }))
+
 vi.mock('../contexts/useAuth', () => ({ useAuth: vi.fn() }))
+vi.mock('../lib/supabaseClient', () => ({ supabase: {} }))
+vi.mock('../lib/diagnosticCheckout', () => ({ createDiagnosticCheckout: createCheckout }))
 vi.mock('../components/SEO', () => ({
   default: ({ title, description, url, jsonLd }) => (
     <div
@@ -29,6 +34,7 @@ describe('page commerciale Diagnostic IA Express', () => {
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
+    createCheckout.mockReset()
   })
 
   it('présente l’offre gelée, son résultat et ses limites', () => {
@@ -54,17 +60,66 @@ describe('page commerciale Diagnostic IA Express', () => {
     const cta = within(document.querySelector('.diagnostic-ia-price-card')).getByRole('link', { name: /Réserver mon Diagnostic IA Express - 149 €/i })
     expect(cta).toHaveAttribute('href', '/login?redirect=%2Fdiagnostic-ia%23reserver')
     expect(cta).toHaveAttribute('aria-describedby', 'diagnostic-payment-status')
-    expect(screen.getByText(/aucun paiement n'est déclenché à cette étape/i)).toBeVisible()
+    expect(screen.getByText(/Après connexion et acceptation des CGV applicables/i)).toBeVisible()
     expect(document.querySelector('form')).not.toBeInTheDocument()
   })
 
-  it('n’invente pas de paiement pour une session déjà connectée', () => {
+  it('exige les CGV avant d’ouvrir le checkout pour une session connectée', async () => {
     useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
     renderPage()
 
     const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
-    expect(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i })).toBeDisabled()
+    const button = priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i })
+    expect(button).toBeDisabled()
+    expect(priceCard.getByRole('link', { name: /CGV applicables/i })).toHaveAttribute(
+      'href',
+      '/cgv-particuliers?version=CGV-B2C-2026-08-12',
+    )
+    await userEvent.click(priceCard.getByRole('checkbox'))
+    expect(button).toBeEnabled()
     expect(priceCard.queryByRole('link', { name: /Réserver mon Diagnostic IA Express - 149 €/i })).not.toBeInTheDocument()
+  })
+
+  it('appelle le checkout dédié sans montant ni identité fournis par le frontend', async () => {
+    createCheckout.mockResolvedValue({})
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+
+    const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.click(priceCard.getByRole('radio', { name: /cadre professionnel/i }))
+    expect(priceCard.getByRole('link', { name: /CGV applicables/i })).toHaveAttribute(
+      'href',
+      '/cgv-professionnels?version=CGV-B2B-2026-08-12',
+    )
+    await userEvent.click(priceCard.getByRole('checkbox'))
+    await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i }))
+
+    expect(createCheckout).toHaveBeenCalledWith(expect.anything(), {
+      sales_context: 'professional',
+      cgv_accepted: true,
+      cgv_version: 'CGV-B2B-2026-08-12',
+    })
+    const payload = createCheckout.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('amount')
+    expect(payload).not.toHaveProperty('user_id')
+  })
+
+  it('affiche un chargement puis une erreur contrôlée sans faux paiement', async () => {
+    let rejectCheckout
+    createCheckout.mockImplementation(() => new Promise((resolve, reject) => {
+      rejectCheckout = reject
+    }))
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+
+    const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.click(priceCard.getByRole('checkbox'))
+    await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express/i }))
+    expect(priceCard.getByRole('button', { name: /Ouverture du paiement sécurisé/i })).toBeDisabled()
+
+    rejectCheckout(new Error('Paiement test indisponible.'))
+    expect(await priceCard.findByRole('alert')).toHaveTextContent('Paiement test indisponible.')
+    expect(priceCard.queryByText(/Paiement confirmé/i)).not.toBeInTheDocument()
   })
 
   it('publie des métadonnées dédiées et un schéma Service', () => {

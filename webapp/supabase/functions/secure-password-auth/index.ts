@@ -19,6 +19,11 @@ function validEmail(value: unknown) {
     : null;
 }
 
+function validRedirectPath(value: unknown) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return '/dashboard';
+  return value.length <= 500 ? value : '/dashboard';
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Méthode non autorisée.' }, 405);
@@ -65,13 +70,14 @@ Deno.serve(async (request) => {
     if (action === 'signup') {
       if (!email) return jsonResponse({ error: 'Adresse électronique invalide.' }, 400);
       const siteUrl = requiredEnv('SITE_URL').replace(/\/$/, '');
+      const redirectPath = validRedirectPath(body?.redirect_path);
       const signupClient = createClient(supabaseUrl, supabaseAnonKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
       const { error } = await signupClient.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${siteUrl}/dashboard` },
+        options: { emailRedirectTo: `${siteUrl}${redirectPath}` },
       });
       if (error) return jsonResponse({ error: GENERIC_AUTH_ERROR }, 400);
       return jsonResponse({ success: true, warning });

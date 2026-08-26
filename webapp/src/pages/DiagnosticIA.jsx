@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
@@ -13,6 +14,12 @@ import {
 } from 'lucide-react'
 import SEO from '../components/SEO'
 import { useAuth } from '../contexts/useAuth'
+import {
+  DIAGNOSTIC_SALES_CONTEXTS,
+  getDiagnosticCgv,
+} from '../../supabase/functions/_shared/diagnosticPayment.js'
+import { createDiagnosticCheckout } from '../lib/diagnosticCheckout'
+import { supabase } from '../lib/supabaseClient'
 import { createServiceStructuredData } from '../lib/seoStructuredData'
 import './DiagnosticIA.css'
 
@@ -58,6 +65,36 @@ const serviceStructuredData = createServiceStructuredData({
 
 function ReservationEntry() {
   const { user, loading } = useAuth()
+  const [salesContext, setSalesContext] = useState(DIAGNOSTIC_SALES_CONTEXTS.PERSONAL)
+  const [cgvAccepted, setCgvAccepted] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState('')
+
+  const cgv = getDiagnosticCgv(salesContext)
+
+  async function startCheckout() {
+    if (checkoutLoading || !cgvAccepted) return
+    setCheckoutLoading(true)
+    setCheckoutError('')
+    try {
+      const result = await createDiagnosticCheckout(supabase, {
+        sales_context: salesContext,
+        cgv_accepted: true,
+        cgv_version: cgv.version,
+      })
+      if (result.url) {
+        window.location.assign(result.url)
+        return
+      }
+      if (result.alreadyPaid || result.confirmationPending) {
+        window.location.assign(`/diagnostic-ia/confirmation?order_id=${encodeURIComponent(result.orderId)}`)
+      }
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Le paiement ne peut pas être ouvert pour le moment.')
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -68,18 +105,69 @@ function ReservationEntry() {
   }
 
   if (!user) {
-    return (
-      <Link className="btn diagnostic-ia-cta" to={LOGIN_REDIRECT} aria-describedby="diagnostic-payment-status">
-        Réserver mon Diagnostic IA Express - 149 €
-        <ArrowRight size={20} aria-hidden="true" />
-      </Link>
-    )
+    return <Link className="btn diagnostic-ia-cta" to={LOGIN_REDIRECT} aria-describedby="diagnostic-payment-status">
+      Réserver mon Diagnostic IA Express - 149 €
+      <ArrowRight size={20} aria-hidden="true" />
+    </Link>
   }
 
   return (
-    <button className="btn diagnostic-ia-cta" type="button" disabled aria-describedby="diagnostic-payment-status">
-      Réserver mon Diagnostic IA Express - 149 €
-    </button>
+    <div className="diagnostic-ia-checkout">
+      <fieldset>
+        <legend>Vous achetez ce diagnostic :</legend>
+        <label>
+          <input
+            type="radio"
+            name="diagnostic-sales-context"
+            checked={salesContext === DIAGNOSTIC_SALES_CONTEXTS.PERSONAL}
+            onChange={() => {
+              setSalesContext(DIAGNOSTIC_SALES_CONTEXTS.PERSONAL)
+              setCgvAccepted(false)
+              setCheckoutError('')
+            }}
+          />
+          <span>À titre personnel</span>
+        </label>
+        <label>
+          <input
+            type="radio"
+            name="diagnostic-sales-context"
+            checked={salesContext === DIAGNOSTIC_SALES_CONTEXTS.PROFESSIONAL}
+            onChange={() => {
+              setSalesContext(DIAGNOSTIC_SALES_CONTEXTS.PROFESSIONAL)
+              setCgvAccepted(false)
+              setCheckoutError('')
+            }}
+          />
+          <span>Dans un cadre professionnel</span>
+        </label>
+      </fieldset>
+      <label className="diagnostic-ia-consent">
+        <input
+          type="checkbox"
+          checked={cgvAccepted}
+          onChange={(event) => {
+            setCgvAccepted(event.target.checked)
+            setCheckoutError('')
+          }}
+        />
+        <span>
+          J&apos;ai lu et j&apos;accepte les{' '}
+          <Link to={`${cgv.path}?version=${encodeURIComponent(cgv.version)}`}>CGV applicables à cette commande</Link>.
+        </span>
+      </label>
+      {checkoutError && <p className="diagnostic-ia-checkout-error" role="alert">{checkoutError}</p>}
+      <button
+        className="btn diagnostic-ia-cta"
+        type="button"
+        disabled={checkoutLoading || !cgvAccepted}
+        aria-describedby="diagnostic-payment-status"
+        onClick={startCheckout}
+      >
+        {checkoutLoading ? 'Ouverture du paiement sécurisé…' : 'Réserver mon Diagnostic IA Express - 149 €'}
+        {!checkoutLoading && <ArrowRight size={20} aria-hidden="true" />}
+      </button>
+    </div>
   )
 }
 
@@ -253,7 +341,7 @@ export default function DiagnosticIA() {
               <p className="diagnostic-ia-tax">TVA non applicable - article 293 B du CGI</p>
               <ReservationEntry />
               <p id="diagnostic-payment-status" className="diagnostic-ia-payment-status">
-                Le paiement en ligne n&apos;est pas encore activé sur cette page. La connexion prépare votre accès FormaPrompt ; aucun paiement n&apos;est déclenché à cette étape.
+                Le montant total payé est de 149 €. Après connexion et acceptation des CGV applicables, le paiement sécurisé s&apos;ouvre sur Stripe.
               </p>
             </div>
           </div>

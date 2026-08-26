@@ -397,6 +397,60 @@
   font-weight: 700;
 }
 
+.diagnostic-ia-checkout {
+  display: grid;
+  gap: 1rem;
+}
+
+.diagnostic-ia-checkout fieldset {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #cfe0db;
+  border-radius: 12px;
+}
+
+.diagnostic-ia-checkout legend {
+  padding: 0 0.35rem;
+  color: #123f42;
+  font-weight: 800;
+}
+
+.diagnostic-ia-checkout fieldset label,
+.diagnostic-ia-consent {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  color: #435967;
+  line-height: 1.5;
+}
+
+.diagnostic-ia-checkout input {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.18rem;
+  accent-color: #047857;
+}
+
+.diagnostic-ia-consent a {
+  color: #075f59;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.diagnostic-ia-checkout-error {
+  margin: 0;
+  padding: 0.75rem;
+  color: #8a1c1c !important;
+  background: #fff1f1;
+  border: 1px solid #f3b7b7;
+  border-radius: 10px;
+  line-height: 1.5 !important;
+}
+
 .diagnostic-ia-cta {
   width: 100%;
   min-height: 52px;
