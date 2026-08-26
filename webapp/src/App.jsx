@@ -14,6 +14,7 @@ const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
+const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
 const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
@@ -87,6 +88,7 @@ function App() {
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-organismes" element={<FormationOF />} />
+            <Route path="diagnostic-ia" element={<DiagnosticIA />} />
             <Route path="a-propos" element={<About />} />
             <Route path="blog" element={<Blog />} />
             <Route path="blog/:slug" element={<BlogPost />} />

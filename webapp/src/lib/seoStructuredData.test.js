@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { createAboutStructuredData, createCourseStructuredData } from './seoStructuredData.js'
+import { createAboutStructuredData, createCourseStructuredData, createServiceStructuredData } from './seoStructuredData.js'
 
 test('les pages de formation exposent un Course relié à FormaPrompt et un fil d’Ariane', () => {
   const url = 'https://formaprompt.com/formation-test'
@@ -46,4 +46,25 @@ test('la page à propos identifie Thierry FREZARD et son activité de formation'
   assert.equal(person.name, 'Thierry FREZARD')
   assert.match(person.jobTitle, /Formateur/)
   assert.ok(person.knowsAbout.includes('Prompt Engineering'))
+})
+
+test('le Diagnostic IA expose un Service sans avis ni disponibilité inventés', () => {
+  const url = 'https://formaprompt.com/diagnostic-ia'
+  const data = createServiceStructuredData({
+    name: 'Diagnostic IA Express',
+    description: 'Diagnostic de test',
+    url,
+    serviceType: 'Diagnostic et conseil en usages de l’intelligence artificielle',
+    audience: 'Professionnels et particuliers',
+    price: '149',
+    priceCurrency: 'EUR',
+  })
+  const service = data['@graph'].find((item) => item['@type'] === 'Service')
+
+  assert.equal(service.offers.price, '149')
+  assert.equal(service.offers.priceCurrency, 'EUR')
+  assert.equal(service.provider['@id'], 'https://formaprompt.com/#organization')
+  assert.equal('aggregateRating' in service, false)
+  assert.equal('review' in service, false)
+  assert.equal('availability' in service.offers, false)
 })

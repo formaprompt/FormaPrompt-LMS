@@ -64,6 +64,41 @@ export function createCourseStructuredData({
   }
 }
 
+export function createServiceStructuredData({
+  name,
+  description,
+  url,
+  serviceType,
+  audience,
+  price,
+  priceCurrency,
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      organization,
+      {
+        '@type': 'Service',
+        '@id': `${url}#service`,
+        name,
+        description,
+        url,
+        inLanguage: 'fr-FR',
+        provider: { '@id': organization['@id'] },
+        serviceType,
+        audience: { '@type': 'Audience', audienceType: audience },
+        offers: {
+          '@type': 'Offer',
+          price,
+          priceCurrency,
+          url,
+        },
+      },
+      createBreadcrumb(url, name),
+    ],
+  }
+}
+
 export function createAboutStructuredData() {
   const url = ABOUT_URL
 

@@ -13,6 +13,7 @@ export default function Layout() {
     '/cgv',
     '/informations-precontractuelles',
     '/contact',
+    '/diagnostic-ia',
     '/disponibilites',
     '/faq',
     '/feedback',

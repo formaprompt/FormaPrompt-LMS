@@ -14,9 +14,21 @@ test('le sitemap ne contient que des URL canoniques publiques et uniques', async
   assert.ok(urls.every((url) => !url.includes('www.formaprompt.com')));
   assert.ok(urls.includes('https://formaprompt.com/studio/'));
   assert.ok(urls.includes('https://formaprompt.com/formation-organismes'));
+  assert.ok(urls.includes('https://formaprompt.com/diagnostic-ia'));
   assert.ok(urls.includes('https://formaprompt.com/faq'));
   assert.ok(!urls.includes('https://formaprompt.com/formation-ia-formateur'));
   assert.ok(!urls.includes('https://formaprompt.com/retractation'));
+});
+
+test('la page Diagnostic IA est routée et accessible depuis la navigation principale', async () => {
+  const [app, header] = await Promise.all([
+    readProjectFile('src/App.jsx'),
+    readProjectFile('src/components/Header.jsx'),
+  ]);
+
+  assert.match(app, /path="diagnostic-ia"/);
+  assert.match(header, /to="\/diagnostic-ia"/);
+  assert.match(header, />Diagnostic IA<\/Link>/);
 });
 
 test("chaque URL du sitemap dispose d'une configuration de pré-rendu", async () => {

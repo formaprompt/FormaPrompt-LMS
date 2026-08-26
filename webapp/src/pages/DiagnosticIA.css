@@ -1,0 +1,475 @@
+.diagnostic-ia-page {
+  color: #243746;
+  background: #f8fbfa;
+}
+
+.diagnostic-ia-hero {
+  padding: clamp(3.5rem, 8vw, 6.5rem) 0;
+  color: #eefbf7;
+  background:
+    radial-gradient(circle at 88% 12%, rgba(246, 196, 83, 0.2), transparent 26%),
+    linear-gradient(135deg, #0b3035 0%, #075f59 56%, #0b806b 100%);
+}
+
+.diagnostic-ia-hero-grid,
+.diagnostic-ia-priorities-grid,
+.diagnostic-ia-limits-grid,
+.diagnostic-ia-booking-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
+.diagnostic-ia-kicker {
+  margin: 0 0 0.75rem;
+  color: #087d69;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.diagnostic-ia-hero .diagnostic-ia-kicker,
+.diagnostic-ia-booking-section .diagnostic-ia-kicker {
+  color: #f6c453;
+}
+
+.diagnostic-ia-hero h1 {
+  margin-bottom: 1.2rem;
+  color: #fff;
+  font-size: clamp(2.7rem, 7vw, 5.2rem);
+  line-height: 0.98;
+}
+
+.diagnostic-ia-promise {
+  max-width: 790px;
+  color: #e4f8f3;
+  font-size: clamp(1.15rem, 2.3vw, 1.45rem);
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.diagnostic-ia-hero-note {
+  max-width: 720px;
+  margin-top: 1rem;
+  color: #c9e9e1;
+  line-height: 1.7;
+}
+
+.diagnostic-ia-hero-primary,
+.diagnostic-ia-hero-link,
+.diagnostic-ia-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+.diagnostic-ia-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 1.6rem;
+}
+
+.diagnostic-ia-hero-primary {
+  color: #3f3108;
+  background: #f6c453;
+}
+
+.diagnostic-ia-hero-primary:hover {
+  color: #2f2508;
+  background: #ffda7c;
+}
+
+.diagnostic-ia-hero-link {
+  color: #075f59;
+  background: #fff;
+}
+
+.diagnostic-ia-hero-link:hover {
+  color: #064e49;
+  background: #eef9f6;
+}
+
+.diagnostic-ia-summary {
+  padding: clamp(1.5rem, 4vw, 2.2rem);
+  color: #233946;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  box-shadow: 0 24px 55px rgba(0, 0, 0, 0.22);
+}
+
+.diagnostic-ia-summary-badge {
+  display: inline-flex;
+  padding: 0.35rem 0.7rem;
+  color: #075f59;
+  background: #dff5ef;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.diagnostic-ia-summary dl {
+  margin: 1.4rem 0;
+}
+
+.diagnostic-ia-summary dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #dce9e5;
+}
+
+.diagnostic-ia-summary dt {
+  color: #607184;
+}
+
+.diagnostic-ia-summary dd {
+  margin: 0;
+  color: #123f42;
+  font-weight: 800;
+  text-align: right;
+}
+
+.diagnostic-ia-summary p,
+.diagnostic-ia-section-heading p,
+.diagnostic-ia-introduction p,
+.diagnostic-ia-priorities-grid > div > p,
+.diagnostic-ia-plan-card p,
+.diagnostic-ia-caution-card p,
+.diagnostic-ia-limits-grid p,
+.diagnostic-ia-booking-grid p {
+  color: #526575;
+  line-height: 1.75;
+}
+
+.diagnostic-ia-section {
+  padding-top: clamp(3.8rem, 7vw, 6rem);
+  padding-bottom: clamp(3.8rem, 7vw, 6rem);
+}
+
+.diagnostic-ia-introduction {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.diagnostic-ia-introduction h2,
+.diagnostic-ia-section-heading h2,
+.diagnostic-ia-priorities-grid h2,
+.diagnostic-ia-plan-grid h2,
+.diagnostic-ia-limits-grid h2 {
+  color: #123f42;
+}
+
+.diagnostic-ia-introduction p + p {
+  margin-top: 1rem;
+}
+
+.diagnostic-ia-audience-section,
+.diagnostic-ia-priorities-section {
+  padding: clamp(3.8rem, 7vw, 6rem) 0;
+  background: #eaf6f2;
+}
+
+.diagnostic-ia-section-heading {
+  max-width: 850px;
+  margin-bottom: 2.4rem;
+}
+
+.diagnostic-ia-audience-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  padding: 0;
+  list-style: none;
+}
+
+.diagnostic-ia-audience-list li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 1.1rem 1.2rem;
+  color: #314b57;
+  background: #fff;
+  border: 1px solid #d5e8e2;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+.diagnostic-ia-audience-list svg {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: #07866f;
+}
+
+.diagnostic-ia-timeline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+
+.diagnostic-ia-timeline article {
+  position: relative;
+  padding: 2rem;
+  background: #fff;
+  border: 1px solid #d9e8e4;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(15, 59, 63, 0.06);
+}
+
+.diagnostic-ia-timeline article > svg,
+.diagnostic-ia-priority-cards svg,
+.diagnostic-ia-plan-card > svg,
+.diagnostic-ia-caution-card > svg {
+  color: #07866f;
+}
+
+.diagnostic-ia-timeline h3 {
+  margin-top: 1.1rem;
+  color: #164e63;
+  font-size: 1.3rem;
+}
+
+.diagnostic-ia-timeline p,
+.diagnostic-ia-priority-cards p {
+  color: #526575;
+  line-height: 1.7;
+}
+
+.diagnostic-ia-step {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: #075f59;
+  background: #e2f5f0;
+  border-radius: 50%;
+  font-weight: 900;
+}
+
+.diagnostic-ia-priority-cards {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.diagnostic-ia-priority-cards article {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  padding: 1.2rem;
+  background: #fff;
+  border: 1px solid #d5e8e2;
+  border-radius: 16px;
+}
+
+.diagnostic-ia-priority-cards h3 {
+  margin-bottom: 0.35rem;
+  color: #164e63;
+  font-size: 1.05rem;
+}
+
+.diagnostic-ia-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.3rem;
+}
+
+.diagnostic-ia-plan-card,
+.diagnostic-ia-caution-card {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  padding: clamp(1.6rem, 4vw, 2.2rem);
+  background: #fff;
+  border: 2px solid #b9e0d7;
+  border-radius: 20px;
+}
+
+.diagnostic-ia-caution-card {
+  border-color: #efd39a;
+  background: #fffaf0;
+}
+
+.diagnostic-ia-caution-card > svg {
+  color: #9a6710;
+}
+
+.diagnostic-ia-plan-card > svg,
+.diagnostic-ia-caution-card > svg {
+  flex: 0 0 auto;
+}
+
+.diagnostic-ia-plan-grid h2 {
+  font-size: 1.55rem;
+}
+
+.diagnostic-ia-limits-section {
+  padding: clamp(3.8rem, 7vw, 6rem) 0;
+  background: #fff;
+}
+
+.diagnostic-ia-limits-grid {
+  align-items: start;
+}
+
+.diagnostic-ia-limits-grid ul {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0;
+  list-style: none;
+}
+
+.diagnostic-ia-limits-grid li {
+  position: relative;
+  padding: 0.85rem 1rem 0.85rem 2.4rem;
+  color: #4a5d6c;
+  background: #f8fafc;
+  border: 1px solid #e1e7eb;
+  border-radius: 12px;
+}
+
+.diagnostic-ia-limits-grid li::before {
+  content: '—';
+  position: absolute;
+  left: 1rem;
+  color: #925f11;
+  font-weight: 900;
+}
+
+.diagnostic-ia-booking-section {
+  padding: clamp(4rem, 8vw, 6.5rem) 0;
+  color: #e4f2ef;
+  background: #102f35;
+}
+
+.diagnostic-ia-booking-section h2 {
+  color: #fff;
+}
+
+.diagnostic-ia-booking-grid > div:first-child > p {
+  color: #d1e6e1;
+}
+
+.diagnostic-ia-accessibility a {
+  color: #f6c453;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.diagnostic-ia-booking-note {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  color: #fff !important;
+  border-left: 3px solid #f6c453;
+  font-weight: 800;
+}
+
+.diagnostic-ia-price-card {
+  padding: clamp(1.7rem, 4vw, 2.2rem);
+  color: #24323f;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.22);
+}
+
+.diagnostic-ia-price {
+  margin: 0;
+  color: #087d69 !important;
+  font-size: clamp(3.5rem, 8vw, 4.8rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.diagnostic-ia-tax {
+  margin: 0.7rem 0 1.5rem;
+  color: #5d6c78 !important;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.diagnostic-ia-cta {
+  width: 100%;
+  min-height: 52px;
+  color: #fff;
+  background: #047857;
+}
+
+.diagnostic-ia-cta:hover {
+  color: #fff;
+  background: #065f46;
+}
+
+.diagnostic-ia-cta:disabled {
+  cursor: not-allowed;
+  background: #5c716d;
+  opacity: 1;
+}
+
+.diagnostic-ia-payment-status {
+  margin-top: 1rem;
+  color: #607184 !important;
+  font-size: 0.9rem;
+  line-height: 1.6 !important;
+}
+
+@media (max-width: 960px) {
+  .diagnostic-ia-hero-grid,
+  .diagnostic-ia-introduction,
+  .diagnostic-ia-priorities-grid,
+  .diagnostic-ia-limits-grid,
+  .diagnostic-ia-booking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnostic-ia-audience-list,
+  .diagnostic-ia-timeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .diagnostic-ia-summary {
+    max-width: 620px;
+  }
+}
+
+@media (max-width: 680px) {
+  .diagnostic-ia-hero h1 {
+    font-size: clamp(2.55rem, 15vw, 4rem);
+  }
+
+  .diagnostic-ia-audience-list,
+  .diagnostic-ia-timeline,
+  .diagnostic-ia-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnostic-ia-plan-card,
+  .diagnostic-ia-caution-card {
+    flex-direction: column;
+  }
+
+  .diagnostic-ia-hero-primary,
+  .diagnostic-ia-hero-link,
+  .diagnostic-ia-cta {
+    width: 100%;
+  }
+
+  .diagnostic-ia-summary dl > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .diagnostic-ia-summary dd {
+    text-align: left;
+  }
+}

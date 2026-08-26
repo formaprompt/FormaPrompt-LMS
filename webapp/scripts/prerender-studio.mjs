@@ -14,6 +14,7 @@ const publicPages = [
   { name: 'Formation Prompt Engineering', route: '/formation-prompt-engineering' },
   { name: 'Formation bureautique', route: '/formation-bureautique' },
   { name: 'Formation organismes', route: '/formation-organismes' },
+  { name: 'Diagnostic IA Express', route: '/diagnostic-ia' },
   { name: 'À propos', route: '/a-propos' },
   { name: 'Blog', route: '/blog' },
   { name: 'Article générateurs de prompts 2026', route: '/blog/meilleur-generateur-prompts-comparatif-2026' },
