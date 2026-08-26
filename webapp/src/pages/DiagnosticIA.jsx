@@ -152,8 +152,9 @@ function ReservationEntry() {
           }}
         />
         <span>
-          J&apos;ai lu et j&apos;accepte les{' '}
-          <Link to={`${cgv.path}?version=${encodeURIComponent(cgv.version)}`}>CGV applicables à cette commande</Link>.
+          J&apos;accepte les{' '}
+          <Link to={`${cgv.path}?version=${encodeURIComponent(cgv.version)}`}>Conditions générales de vente applicables au Diagnostic IA Express</Link>{' '}
+          et je reconnais que ma commande m&apos;oblige au paiement de 149 €.
         </span>
       </label>
       {checkoutError && <p className="diagnostic-ia-checkout-error" role="alert">{checkoutError}</p>}

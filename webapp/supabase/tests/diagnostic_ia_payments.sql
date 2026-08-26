@@ -5,6 +5,7 @@ SET LOCAL search_path = public, extensions;
 SELECT no_plan();
 
 SELECT has_table('public', 'diagnostic_ia_orders', 'La table des commandes Diagnostic existe');
+SELECT has_table('public', 'diagnostic_ia_consents', 'La table des preuves de consentement Diagnostic existe');
 SELECT has_column('public', 'stripe_payment_transactions', 'diagnostic_order_id', 'La transaction référence la commande Diagnostic');
 SELECT ok(
   (SELECT relrowsecurity AND relforcerowsecurity FROM pg_class WHERE oid='public.diagnostic_ia_orders'::regclass),
@@ -36,27 +37,81 @@ INSERT INTO public.profiles(id,email,role) VALUES
 ON CONFLICT(id) DO UPDATE SET email=EXCLUDED.email, role=EXCLUDED.role;
 
 INSERT INTO public.diagnostic_ia_orders(
-  id,user_id,customer_email,sales_context,cgv_document_version_id
+  id,user_id,customer_email,sales_context,cgv_document_version_id,cgv_acceptance_statement_version_id
 ) VALUES
   (
     '86000000-0000-4000-8000-000000000010',
     '86000000-0000-4000-8000-000000000002',
     'client-a-diagnostic@example.test','personal',
-    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-26'),
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26')
   ),
   (
     '86000000-0000-4000-8000-000000000011',
     '86000000-0000-4000-8000-000000000003',
     'client-b-diagnostic@example.test','professional',
-    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2B-2026-08-26'),
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26')
   );
+
+INSERT INTO public.diagnostic_ia_consents(
+  order_id,user_id,consent_type,legal_document_version_id,granted,source
+) VALUES (
+  '86000000-0000-4000-8000-000000000010',
+  '86000000-0000-4000-8000-000000000002',
+  'cgv_acceptance',
+  (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26'),
+  true,'web_checkout'
+);
+
+INSERT INTO public.diagnostic_ia_consents(
+  order_id,user_id,consent_type,legal_document_version_id,granted,source,
+  consent_context_id,appointment_starts_at,withdrawal_period_ends_at
+) VALUES
+  (
+    '86000000-0000-4000-8000-000000000010','86000000-0000-4000-8000-000000000002',
+    'early_service_start',
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-EARLY-START-2026-08-26'),
+    true,'web_booking','86000000-0000-4000-8000-000000000020',
+    '2026-09-01T14:00:00Z','2026-09-09T16:00:00Z'
+  ),
+  (
+    '86000000-0000-4000-8000-000000000010','86000000-0000-4000-8000-000000000002',
+    'full_performance_withdrawal_acknowledgement',
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-FULL-PERFORMANCE-ACK-2026-08-26'),
+    true,'web_booking','86000000-0000-4000-8000-000000000020',
+    '2026-09-01T14:00:00Z','2026-09-09T16:00:00Z'
+  );
+
+SELECT is(
+  (SELECT count(*)::integer FROM public.diagnostic_ia_consents
+   WHERE order_id='86000000-0000-4000-8000-000000000010'
+     AND consent_context_id='86000000-0000-4000-8000-000000000020'),
+  2,
+  'Les deux consentements B2C anticipes sont conserves comme deux preuves distinctes'
+);
+
+SELECT throws_ok($$
+  INSERT INTO public.diagnostic_ia_consents(
+    order_id,user_id,consent_type,legal_document_version_id,granted,source,
+    consent_context_id,appointment_starts_at,withdrawal_period_ends_at
+  ) VALUES (
+    '86000000-0000-4000-8000-000000000011','86000000-0000-4000-8000-000000000003',
+    'early_service_start',
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-EARLY-START-2026-08-26'),
+    true,'web_booking','86000000-0000-4000-8000-000000000021',
+    '2026-09-01T14:00:00Z','2026-09-09T16:00:00Z'
+  )
+$$, '23514', 'Le consentement de retractation anticipee est reserve au parcours B2C.',
+  'Le parcours professionnel ne collecte pas un consentement B2C');
 
 SELECT throws_ok($$
   INSERT INTO public.diagnostic_ia_orders(
-    user_id,customer_email,sales_context,cgv_document_version_id
+    user_id,customer_email,sales_context,cgv_document_version_id,cgv_acceptance_statement_version_id
   ) VALUES (
     '86000000-0000-4000-8000-000000000002','client-a-diagnostic@example.test','personal',
-    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-26'),
+    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26')
   )
 $$, '23505', NULL,
   'Une seule commande en attente est permise par client');
@@ -162,6 +217,8 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','86000000-0000-4000-8000-000000000002',true);
 SELECT is((SELECT count(*)::integer FROM public.diagnostic_ia_orders), 1,
   'Le propriétaire lit uniquement sa commande');
+SELECT is((SELECT count(*)::integer FROM public.diagnostic_ia_consents), 3,
+  'Le propriétaire lit uniquement ses preuves de consentement');
 SELECT throws_ok(
   $$UPDATE public.diagnostic_ia_orders SET status='paid' WHERE id='86000000-0000-4000-8000-000000000010'$$,
   '42501', 'permission denied for table diagnostic_ia_orders',

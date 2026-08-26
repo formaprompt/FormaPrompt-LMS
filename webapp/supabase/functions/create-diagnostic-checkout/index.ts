@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
   DIAGNOSTIC_IA_PAYMENT,
+  DIAGNOSTIC_LEGAL_STATEMENTS,
   getDiagnosticCgv,
   validateDiagnosticCheckoutRequest,
   validateDiagnosticStripePrice,
@@ -13,6 +14,7 @@ type DiagnosticOrder = {
   status: string;
   sales_context: string;
   cgv_document_version_id: string;
+  cgv_acceptance_statement_version_id: string;
   stripe_checkout_session_id: string | null;
 };
 
@@ -88,6 +90,17 @@ Deno.serve(async (request) => {
     if (!legalDocument) {
       return jsonResponse({ error: 'La version des CGV applicable est introuvable ou non publiée.' }, 409);
     }
+    const { data: acceptanceStatement, error: acceptanceStatementError } = await supabaseAdmin
+      .from('legal_document_versions')
+      .select('id')
+      .eq('document_type', DIAGNOSTIC_LEGAL_STATEMENTS.cgvAcceptance.documentType)
+      .eq('version', DIAGNOSTIC_LEGAL_STATEMENTS.cgvAcceptance.version)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (acceptanceStatementError) throw acceptanceStatementError;
+    if (!acceptanceStatement) {
+      return jsonResponse({ error: 'La formulation d’acceptation contractuelle est introuvable ou non publiée.' }, 409);
+    }
 
     const { data: paidOrder, error: paidOrderError } = await supabaseAdmin
       .from('diagnostic_ia_orders')
@@ -104,7 +117,7 @@ Deno.serve(async (request) => {
 
     let { data: order, error: pendingOrderError } = await supabaseAdmin
       .from('diagnostic_ia_orders')
-      .select('id, status, sales_context, cgv_document_version_id, stripe_checkout_session_id')
+      .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
       .eq('user_id', user.id)
       .eq('status', 'payment_pending')
       .maybeSingle<DiagnosticOrder>();
@@ -136,18 +149,19 @@ Deno.serve(async (request) => {
         status: 'payment_pending',
         sales_context: body.sales_context,
         cgv_document_version_id: legalDocument.id,
+        cgv_acceptance_statement_version_id: acceptanceStatement.id,
         source: DIAGNOSTIC_IA_PAYMENT.source,
       };
       const created = await supabaseAdmin
         .from('diagnostic_ia_orders')
         .insert(insertPayload)
-        .select('id, status, sales_context, cgv_document_version_id, stripe_checkout_session_id')
+        .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
         .single<DiagnosticOrder>();
 
       if (created.error?.code === '23505') {
         const concurrent = await supabaseAdmin
           .from('diagnostic_ia_orders')
-          .select('id, status, sales_context, cgv_document_version_id, stripe_checkout_session_id')
+          .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
           .eq('user_id', user.id)
           .eq('status', 'payment_pending')
           .single<DiagnosticOrder>();
@@ -161,9 +175,25 @@ Deno.serve(async (request) => {
     }
 
     if (!order) throw new Error('La commande Diagnostic IA n’a pas pu être créée.');
-    if (order.sales_context !== body.sales_context || order.cgv_document_version_id !== legalDocument.id) {
+    if (
+      order.sales_context !== body.sales_context
+      || order.cgv_document_version_id !== legalDocument.id
+      || order.cgv_acceptance_statement_version_id !== acceptanceStatement.id
+    ) {
       return jsonResponse({ error: 'Une commande en attente existe déjà avec un autre contexte contractuel.' }, 409);
     }
+
+    const { error: consentEvidenceError } = await supabaseAdmin
+      .from('diagnostic_ia_consents')
+      .insert({
+        order_id: order.id,
+        user_id: user.id,
+        consent_type: 'cgv_acceptance',
+        legal_document_version_id: acceptanceStatement.id,
+        granted: true,
+        source: 'web_checkout',
+      });
+    if (consentEvidenceError && consentEvidenceError.code !== '23505') throw consentEvidenceError;
 
     const metadata = {
       purchase_type: DIAGNOSTIC_IA_PAYMENT.purchaseType,

@@ -1,5 +1,7 @@
 # Diagnostic IA Express — analyse ciblée des CGV avant mise en production
 
+> **Rapport d'écart initial conservé comme état “avant”.** Les arbitrages commerciaux ont depuis été gelés et le correctif local approuvé est décrit dans `diagnostic-ia-cgv-correctif-2026-08-26.md`. Les CGV de production ne sont pas modifiées tant que la migration correspondante n'est pas déployée séparément.
+
 Date de l'analyse : 26 août 2026
 Documents examinés : `CGV-B2C-2026-08-12` et `CGV-B2B-2026-08-12`, tels que publiés par la migration `20260812132848_publish_commercial_legal_versions.sql`.
 

@@ -15,10 +15,12 @@ import {
 } from '../_shared/stripePostPayment.js';
 import {
   DIAGNOSTIC_IA_PAYMENT,
+  DIAGNOSTIC_LEGAL_STATEMENTS,
   isDiagnosticPaymentObject,
   validateCompletedDiagnosticSession,
   validateDiagnosticEventIdentity,
 } from '../_shared/diagnosticPayment.js';
+import { attemptDiagnosticContractConfirmationDelivery } from '../_shared/diagnosticContractConfirmation.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -175,6 +177,60 @@ Deno.serve(async (request) => {
       p_event: payload,
     });
     if (error) throw error;
+
+    if (
+      diagnosticEvent
+      && ['checkout.session.completed', 'checkout.session.async_payment_succeeded'].includes(event.type)
+    ) {
+      try {
+        const orderId = object.metadata?.diagnostic_order_id;
+        const claimTime = new Date().toISOString();
+        const { data: order, error: orderError } = await supabaseAdmin
+          .from('diagnostic_ia_orders')
+          .update({
+            contract_confirmation_delivery_status: 'sending',
+            contract_confirmation_delivery_attempted_at: claimTime,
+          })
+          .eq('id', orderId)
+          .in('status', ['paid', 'disputed'])
+          .in('contract_confirmation_delivery_status', ['pending', 'failed'])
+          .select('id, customer_email, sales_context, paid_at, cgv_document_version_id, contract_confirmation_delivery_attempts')
+          .maybeSingle();
+        if (orderError) throw orderError;
+
+        if (order) {
+          const { data: cgv, error: cgvError } = await supabaseAdmin
+            .from('legal_document_versions')
+            .select('version, content_text')
+            .eq('id', order.cgv_document_version_id)
+            .single();
+          if (cgvError) throw cgvError;
+
+          let withdrawalForm = null;
+          if (order.sales_context === 'personal') {
+            const { data: form, error: formError } = await supabaseAdmin
+              .from('legal_document_versions')
+              .select('version, content_text')
+              .eq('document_type', DIAGNOSTIC_LEGAL_STATEMENTS.withdrawalForm.documentType)
+              .eq('version', DIAGNOSTIC_LEGAL_STATEMENTS.withdrawalForm.version)
+              .eq('status', 'published')
+              .single();
+            if (formError) throw formError;
+            withdrawalForm = form;
+          }
+
+          const deliveryUpdate = await attemptDiagnosticContractConfirmationDelivery({ order, cgv, withdrawalForm });
+          const { error: deliveryError } = await supabaseAdmin
+            .from('diagnostic_ia_orders')
+            .update(deliveryUpdate)
+            .eq('id', order.id)
+            .eq('contract_confirmation_delivery_status', 'sending');
+          if (deliveryError) throw deliveryError;
+        }
+      } catch {
+        console.warn('diagnostic_contract_confirmation_delivery_failed');
+      }
+    }
     return Response.json({ received: true, ...data });
   } catch (error) {
     console.error(`Traitement Stripe ${event.id} impossible :`, error);

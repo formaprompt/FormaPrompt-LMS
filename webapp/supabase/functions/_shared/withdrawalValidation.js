@@ -1,7 +1,13 @@
 import { isUuid } from './purchaseConfig.js';
 
 export function validateWithdrawalRequestPayload(payload) {
-  if (!isUuid(payload?.purchase_id)) return 'Commande invalide.';
+  const purchaseId = payload?.purchase_id;
+  const diagnosticOrderId = payload?.diagnostic_order_id;
+  if ((Boolean(purchaseId) === Boolean(diagnosticOrderId))
+    || (purchaseId && !isUuid(purchaseId))
+    || (diagnosticOrderId && !isUuid(diagnosticOrderId))) {
+    return 'Commande invalide.';
+  }
   if (!String(payload?.first_name || '').trim() || String(payload.first_name).trim().length > 100 || /[\r\n]/.test(String(payload.first_name))) {
     return 'Prénom invalide.';
   }

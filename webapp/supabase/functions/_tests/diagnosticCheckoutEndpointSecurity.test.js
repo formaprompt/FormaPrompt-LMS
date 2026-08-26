@@ -17,6 +17,17 @@ test('authentifie côté serveur avant toute création de commande', () => {
   assert.doesNotMatch(checkout, /body\.(?:amount|price|user_id|email)/);
 });
 
+test('fige la formulation CGV et enregistre une preuve serveur avant Stripe', () => {
+  const statementLookup = checkout.indexOf('DIAGNOSTIC_LEGAL_STATEMENTS.cgvAcceptance');
+  const evidenceInsert = checkout.indexOf(".from('diagnostic_ia_consents')");
+  const stripeCreation = checkout.indexOf('stripe.checkout.sessions.create');
+  assert.ok(statementLookup >= 0);
+  assert.ok(evidenceInsert > statementLookup);
+  assert.ok(stripeCreation > evidenceInsert);
+  assert.match(checkout, /consent_type: 'cgv_acceptance'/);
+  assert.match(checkout, /source: 'web_checkout'/);
+});
+
 test('impose le Price test et une clé d idempotence serveur', () => {
   assert.match(checkout, /stripeMode !== 'test'/);
   assert.match(checkout, /prices\.retrieve\(priceId\)/);

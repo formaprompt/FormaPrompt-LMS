@@ -68,8 +68,8 @@ export function buildWithdrawalReceiptEmail(receipt, fromAddress, contactEmail =
     `Référence de la demande : ${receipt.id}`,
     `Date et heure de réception : ${receivedLabel}`,
     `Identité déclarée : ${receipt.claimant_first_name} ${receipt.claimant_last_name}`,
-    `Référence de commande ou de contrat : ${receipt.purchase_id}`,
-    `Formation : ${receipt.course_id}`,
+    `Référence de commande ou de contrat : ${receipt.diagnostic_order_id || receipt.purchase_id}`,
+    `Prestation : ${receipt.diagnostic_order_id ? 'Diagnostic IA Express' : receipt.course_id}`,
     `Déclaration : ${receipt.declaration}`,
     '',
     "La réception de votre demande ne constitue pas, à elle seule, une confirmation de remboursement. La demande sera instruite par FormaPrompt.",
@@ -103,7 +103,7 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId 
   if (normalizedSubject.length < 2 || normalizedSubject.length > 300 || /[\r\n]/.test(normalizedSubject)) {
     throw new SmtpReceiptError('smtp_subject_invalid');
   }
-  if (normalizedBody.length < 2 || normalizedBody.length > 10000) {
+  if (normalizedBody.length < 2 || normalizedBody.length > 30000) {
     throw new SmtpReceiptError('smtp_body_invalid');
   }
   if (normalizedMessageId.length < 8 || normalizedMessageId.length > 180) {

@@ -55,7 +55,7 @@ INSERT INTO public.commercial_checkout_intents (
   '61000000-0000-0000-0000-000000000001',
   'formation-ia-act', 'B2C_STANDARD', 'personal', 'immediate',
   'immediate_after_payment', 'stripe_session_created',
-  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
   'cs_test_consent'
 );
 
@@ -67,7 +67,7 @@ INSERT INTO public.commercial_consents (
   '64000000-0000-0000-0000-000000000001',
   '61000000-0000-0000-0000-000000000001',
   'formation-ia-act', 'cgv_acceptance', true,
-  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
   'web_checkout'
 );
 
@@ -86,8 +86,8 @@ INSERT INTO public.withdrawal_requests (
 SET LOCAL ROLE anon;
 SELECT is(
   (SELECT count(*) FROM public.legal_document_versions)::bigint,
-  5::bigint,
-  'le public voit uniquement les cinq versions publiées'
+  9::bigint,
+  'le public voit uniquement les neuf versions publiées'
 );
 
 RESET ROLE;
@@ -106,11 +106,10 @@ SELECT throws_ok(
   'Une version juridique publiée est figée ; créez une nouvelle version.',
   'une version publiée ne peut pas être supprimée'
 );
-SELECT lives_ok(
-  $$UPDATE public.legal_document_versions
-    SET status = 'retired', retired_at = now()
-    WHERE version = 'CGV-B2C-2026-08-12'$$,
-  'une version peut être retirée sans altérer son texte figé'
+SELECT is(
+  (SELECT status FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+  'retired',
+  'l ancienne version demeure figée et retirée'
 );
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '61000000-0000-0000-0000-000000000001', true);
@@ -132,7 +131,7 @@ SELECT throws_ok(
       '64000000-0000-0000-0000-000000000001',
       '61000000-0000-0000-0000-000000000002', 'formation-ia-act',
       'early_service_start', true,
-      (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+      (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
       'web_checkout'
     )$$,
   '42501',

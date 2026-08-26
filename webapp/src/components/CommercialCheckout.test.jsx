@@ -54,7 +54,7 @@ describe('CommercialCheckout', () => {
     expect(screen.getAllByRole('checkbox')).toHaveLength(4)
     expect(screen.getByRole('link', { name: /conditions générales de vente/i })).toHaveAttribute(
       'href',
-      '/cgv-particuliers?version=CGV-B2C-2026-08-12',
+      '/cgv-particuliers?version=CGV-B2C-2026-08-26',
     )
     await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/cgv_acceptance/)
@@ -75,7 +75,7 @@ describe('CommercialCheckout', () => {
           access_start_choice: 'immediate',
         }),
         consents: expect.objectContaining({
-          cgv_version: 'CGV-B2C-2026-08-12',
+          cgv_version: 'CGV-B2C-2026-08-26',
           cgv_acceptance: true,
           early_service_start: true,
           digital_content_start: true,
@@ -91,7 +91,7 @@ describe('CommercialCheckout', () => {
     expect(screen.getAllByRole('checkbox')).toHaveLength(1)
     expect(screen.getByRole('link', { name: /conditions générales de vente/i })).toHaveAttribute(
       'href',
-      '/cgv-professionnels?version=CGV-B2B-2026-08-12',
+      '/cgv-professionnels?version=CGV-B2B-2026-08-26',
     )
     expect(screen.queryByText(/perte du droit de rétractation/i)).not.toBeInTheDocument()
   })

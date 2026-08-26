@@ -9,6 +9,7 @@ import './WithdrawalRequest.css'
 const DECLARATION = 'Je vous informe par la présente de ma décision de me rétracter du contrat identifié ci-dessus.'
 
 function courseLabel(courseId) {
+  if (courseId === 'diagnostic-ia-express') return 'Diagnostic IA Express'
   try {
     return getBookingCourse(courseId).shortTitle
   } catch {
@@ -18,13 +19,13 @@ function courseLabel(courseId) {
 
 export default function WithdrawalRequest() {
   const { user } = useAuth()
-  const [purchases, setPurchases] = useState([])
+  const [contracts, setContracts] = useState([])
   const [loading, setLoading] = useState(Boolean(user))
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [receipt, setReceipt] = useState(null)
   const [form, setForm] = useState({
-    purchase_id: '',
+    contract_reference: '',
     first_name: user?.user_metadata?.first_name || '',
     last_name: user?.user_metadata?.last_name || '',
     acknowledgement_email: user?.email || '',
@@ -34,22 +35,50 @@ export default function WithdrawalRequest() {
     if (!user) return undefined
     let cancelled = false
 
-    async function loadPurchases() {
-      const { data, error: purchaseError } = await supabase
-        .from('purchases')
-        .select('id, course_id, purchased_at')
-        .eq('user_id', user.id)
-        .order('purchased_at', { ascending: false })
+    async function loadContracts() {
+      const [purchaseResult, diagnosticResult] = await Promise.all([
+        supabase
+          .from('purchases')
+          .select('id, course_id, purchased_at')
+          .eq('user_id', user.id)
+          .order('purchased_at', { ascending: false }),
+        supabase
+          .from('diagnostic_ia_orders')
+          .select('id, paid_at, status, sales_context')
+          .eq('user_id', user.id)
+          .eq('sales_context', 'personal')
+          .in('status', ['paid', 'disputed'])
+          .order('paid_at', { ascending: false }),
+      ])
       if (cancelled) return
-      if (purchaseError) setError('Impossible de charger vos commandes pour le moment.')
+      if (purchaseResult.error || diagnosticResult.error) setError('Impossible de charger vos commandes pour le moment.')
       else {
-        setPurchases(data || [])
-        setForm((current) => ({ ...current, purchase_id: current.purchase_id || data?.[0]?.id || '' }))
+        const availableContracts = [
+          ...(purchaseResult.data || []).map((purchase) => ({
+            reference: `purchase:${purchase.id}`,
+            id: purchase.id,
+            type: 'purchase',
+            label: courseLabel(purchase.course_id),
+            date: purchase.purchased_at,
+          })),
+          ...(diagnosticResult.data || []).map((order) => ({
+            reference: `diagnostic:${order.id}`,
+            id: order.id,
+            type: 'diagnostic',
+            label: 'Diagnostic IA Express',
+            date: order.paid_at,
+          })),
+        ].sort((a, b) => new Date(b.date) - new Date(a.date))
+        setContracts(availableContracts)
+        setForm((current) => ({
+          ...current,
+          contract_reference: current.contract_reference || availableContracts[0]?.reference || '',
+        }))
       }
       setLoading(false)
     }
 
-    loadPurchases()
+    loadContracts()
     return () => { cancelled = true }
   }, [user])
 
@@ -59,8 +88,18 @@ export default function WithdrawalRequest() {
     setSubmitting(true)
     setError('')
     try {
+      const [contractType, contractId] = form.contract_reference.split(':')
+      const contractPayload = contractType === 'diagnostic'
+        ? { diagnostic_order_id: contractId }
+        : { purchase_id: contractId }
       const { data, error: requestError } = await supabase.functions.invoke('submit-withdrawal-request', {
-        body: { ...form, declaration: DECLARATION },
+        body: {
+          ...contractPayload,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          acknowledgement_email: form.acknowledgement_email,
+          declaration: DECLARATION,
+        },
       })
       if (requestError || !data?.receipt) throw requestError || new Error('Accusé absent')
       setReceipt(data.receipt)
@@ -79,8 +118,8 @@ export default function WithdrawalRequest() {
       `Référence : ${receipt.id}`,
       `Reçue le : ${new Date(receipt.received_at).toLocaleString('fr-FR')}`,
       `Identité déclarée : ${receipt.claimant_first_name} ${receipt.claimant_last_name}`,
-      `Référence de commande/contrat : ${receipt.purchase_id}`,
-      `Formation : ${courseLabel(receipt.course_id)}`,
+      `Référence de commande/contrat : ${receipt.diagnostic_order_id || receipt.purchase_id}`,
+      `Prestation : ${courseLabel(receipt.course_id)}`,
       `Adresse d’accusé : ${receipt.acknowledgement_email}`,
       `Déclaration : ${receipt.declaration}`,
       `Statut : ${receipt.status}`,
@@ -122,7 +161,7 @@ export default function WithdrawalRequest() {
             <p><strong>Référence :</strong> {receipt.id}</p>
             <p><strong>Date et heure serveur :</strong> {new Date(receipt.received_at).toLocaleString('fr-FR')}</p>
             <p><strong>Identité déclarée :</strong> {receipt.claimant_first_name} {receipt.claimant_last_name}</p>
-            <p><strong>Référence de commande/contrat :</strong> {receipt.purchase_id}</p>
+            <p><strong>Référence de commande/contrat :</strong> {receipt.diagnostic_order_id || receipt.purchase_id}</p>
             <p>La déclaration de rétractation a été reçue. Cette réception ne vaut pas acceptation d’un remboursement.</p>
             {receipt.acknowledgement_delivery_status === 'sent' ? (
               <p>L’accusé électronique a été envoyé à {receipt.acknowledgement_email}.</p>
@@ -137,15 +176,15 @@ export default function WithdrawalRequest() {
             <label htmlFor="withdrawal-purchase">Contrat concerné</label>
             <select
               id="withdrawal-purchase"
-              value={form.purchase_id}
-              onChange={(event) => setForm({ ...form, purchase_id: event.target.value })}
+              value={form.contract_reference}
+              onChange={(event) => setForm({ ...form, contract_reference: event.target.value })}
               required
-              disabled={loading || purchases.length === 0}
+              disabled={loading || contracts.length === 0}
             >
-              {purchases.length === 0 && <option value="">Aucune commande disponible</option>}
-              {purchases.map((purchase) => (
-                <option key={purchase.id} value={purchase.id}>
-                  {courseLabel(purchase.course_id)} — {new Date(purchase.purchased_at).toLocaleDateString('fr-FR')}
+              {contracts.length === 0 && <option value="">Aucune commande disponible</option>}
+              {contracts.map((contract) => (
+                <option key={contract.reference} value={contract.reference}>
+                  {contract.label} — {new Date(contract.date).toLocaleDateString('fr-FR')}
                 </option>
               ))}
             </select>
@@ -162,7 +201,7 @@ export default function WithdrawalRequest() {
 
             <p className="withdrawal-form__declaration">{DECLARATION}</p>
             {error && <p role="alert" className="withdrawal-form__error">{error}</p>}
-            <button type="submit" className="btn btn-primary" disabled={submitting || loading || purchases.length === 0}>
+            <button type="submit" className="btn btn-primary" disabled={submitting || loading || contracts.length === 0}>
               {submitting ? 'Enregistrement…' : 'Confirmer la rétractation'}
             </button>
           </form>

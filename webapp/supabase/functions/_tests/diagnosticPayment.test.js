@@ -2,10 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   DIAGNOSTIC_IA_PAYMENT,
+  DIAGNOSTIC_LEGAL_STATEMENTS,
+  calculateFrenchWithdrawalDeadline,
   getDiagnosticCgv,
   validateCompletedDiagnosticSession,
   validateDiagnosticCheckoutRequest,
   validateDiagnosticEventIdentity,
+  requiresDiagnosticEarlyExecutionConsent,
+  validateDiagnosticEarlyExecutionConsents,
   validateDiagnosticStripePrice,
 } from '../_shared/diagnosticPayment.js';
 
@@ -82,4 +86,38 @@ test('impose le contexte et la version CGV applicables', () => {
     cgv_accepted: false,
     cgv_version: personalCgv.version,
   }), /accepter les CGV/);
+});
+
+test('ne demande les consentements anticipés que pour un rendez-vous dans les quatorze jours', () => {
+  const paidAt = '2026-08-26T10:00:00.000Z';
+  assert.equal(requiresDiagnosticEarlyExecutionConsent({
+    paidAt,
+    appointmentStartsAt: '2026-09-05T10:00:00.000Z',
+  }).required, true);
+  assert.equal(requiresDiagnosticEarlyExecutionConsent({
+    paidAt,
+    appointmentStartsAt: '2026-09-15T10:00:00.000Z',
+  }).required, false);
+});
+
+test('prolonge le délai au premier jour ouvrable lorsque le quatorzième jour tombe un week-end', () => {
+  const deadline = calculateFrenchWithdrawalDeadline('2026-08-15T10:00:00.000Z');
+  assert.equal(deadline, '2026-08-31T21:59:59.999Z');
+  assert.equal(requiresDiagnosticEarlyExecutionConsent({
+    paidAt: '2026-08-15T10:00:00.000Z',
+    appointmentStartsAt: '2026-08-31T14:00:00.000Z',
+  }).required, true);
+});
+
+test('exige deux consentements distincts et versionnés pour une exécution anticipée', () => {
+  assert.match(validateDiagnosticEarlyExecutionConsents({
+    early_service_start_requested: true,
+  }), /reconnaissance/);
+  assert.equal(validateDiagnosticEarlyExecutionConsents({
+    early_service_start_requested: true,
+    full_performance_withdrawal_acknowledged: true,
+    early_service_start_statement_version: DIAGNOSTIC_LEGAL_STATEMENTS.earlyServiceStart.version,
+    full_performance_acknowledgement_version:
+      DIAGNOSTIC_LEGAL_STATEMENTS.fullPerformanceWithdrawalAcknowledgement.version,
+  }), null);
 });

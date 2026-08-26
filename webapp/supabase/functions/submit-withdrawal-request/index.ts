@@ -3,7 +3,7 @@ import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { validateWithdrawalRequestPayload } from '../_shared/withdrawalValidation.js';
 import { attemptWithdrawalReceiptDelivery } from '../_shared/smtpReceipt.js';
 
-const RECEIPT_COLUMNS = 'id, purchase_id, course_id, claimant_first_name, claimant_last_name, declaration, status, received_at, acknowledgement_email, acknowledgement_delivery_status, acknowledgement_delivered_at, acknowledgement_delivery_attempted_at';
+const RECEIPT_COLUMNS = 'id, purchase_id, diagnostic_order_id, course_id, claimant_first_name, claimant_last_name, declaration, status, received_at, acknowledgement_email, acknowledgement_delivery_status, acknowledgement_delivered_at, acknowledgement_delivery_attempted_at';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -34,19 +34,37 @@ Deno.serve(async (request) => {
     const supabaseAdmin = createClient(supabaseUrl, requiredEnv('SUPABASE_SERVICE_ROLE_KEY'), {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: purchase, error: purchaseError } = await supabaseAdmin
-      .from('purchases')
-      .select('id, user_id, course_id, stripe_checkout_session_id')
-      .eq('id', payload.purchase_id)
-      .eq('user_id', authData.user.id)
-      .maybeSingle();
-    if (purchaseError) throw purchaseError;
-    if (!purchase) return jsonResponse({ error: 'La demande ne peut pas être traitée avec les informations fournies.' }, 400);
+    let purchase = null;
+    let diagnosticOrder = null;
+    if (payload.purchase_id) {
+      const result = await supabaseAdmin
+        .from('purchases')
+        .select('id, user_id, course_id, stripe_checkout_session_id')
+        .eq('id', payload.purchase_id)
+        .eq('user_id', authData.user.id)
+        .maybeSingle();
+      if (result.error) throw result.error;
+      purchase = result.data;
+    } else {
+      const result = await supabaseAdmin
+        .from('diagnostic_ia_orders')
+        .select('id, user_id, status, sales_context')
+        .eq('id', payload.diagnostic_order_id)
+        .eq('user_id', authData.user.id)
+        .eq('sales_context', 'personal')
+        .in('status', ['paid', 'disputed'])
+        .maybeSingle();
+      if (result.error) throw result.error;
+      diagnosticOrder = result.data;
+    }
+    if (!purchase && !diagnosticOrder) {
+      return jsonResponse({ error: 'La demande ne peut pas être traitée avec les informations fournies.' }, 400);
+    }
 
     const { data: existingRequest, error: existingError } = await supabaseAdmin
       .from('withdrawal_requests')
       .select(RECEIPT_COLUMNS)
-      .eq('purchase_id', purchase.id)
+      .eq(purchase ? 'purchase_id' : 'diagnostic_order_id', purchase?.id || diagnosticOrder.id)
       .eq('user_id', authData.user.id)
       .in('status', ['received', 'under_review', 'accepted'])
       .order('received_at', { ascending: false })
@@ -67,7 +85,7 @@ Deno.serve(async (request) => {
     }
 
     let checkoutIntentId = null;
-    if (purchase.stripe_checkout_session_id) {
+    if (purchase?.stripe_checkout_session_id) {
       const { data: intent, error: intentError } = await supabaseAdmin
         .from('commercial_checkout_intents')
         .select('id')
@@ -81,9 +99,10 @@ Deno.serve(async (request) => {
       .from('withdrawal_requests')
       .insert({
         user_id: authData.user.id,
-        purchase_id: purchase.id,
+        purchase_id: purchase?.id || null,
+        diagnostic_order_id: diagnosticOrder?.id || null,
         checkout_intent_id: checkoutIntentId,
-        course_id: purchase.course_id,
+        course_id: purchase?.course_id || 'diagnostic-ia-express',
         claimant_first_name: String(payload.first_name).trim(),
         claimant_last_name: String(payload.last_name).trim(),
         acknowledgement_email: String(payload.acknowledgement_email).trim().toLowerCase(),
@@ -95,7 +114,7 @@ Deno.serve(async (request) => {
       const { data: duplicate, error: duplicateError } = await supabaseAdmin
         .from('withdrawal_requests')
         .select(RECEIPT_COLUMNS)
-        .eq('purchase_id', purchase.id)
+        .eq(purchase ? 'purchase_id' : 'diagnostic_order_id', purchase?.id || diagnosticOrder.id)
         .eq('user_id', authData.user.id)
         .in('status', ['received', 'under_review', 'accepted'])
         .maybeSingle();

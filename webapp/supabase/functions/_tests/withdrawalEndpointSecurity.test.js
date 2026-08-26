@@ -29,6 +29,14 @@ test('normalise le refus de commande et limite les appels rapprochés', () => {
   assert.match(endpointSource, /429/);
 });
 
+test('n accepte que la commande B2C Diagnostic payée du propriétaire', () => {
+  assert.match(endpointSource, /\.from\('diagnostic_ia_orders'\)/);
+  assert.match(endpointSource, /\.eq\('user_id', authData\.user\.id\)/);
+  assert.match(endpointSource, /\.eq\('sales_context', 'personal'\)/);
+  assert.match(endpointSource, /\.in\('status', \['paid', 'disputed'\]\)/);
+  assert.doesNotMatch(endpointSource, /\.from\('course_access'\)/);
+});
+
 test('ne journalise ni charge utile ni détail SMTP sensible', () => {
   assert.doesNotMatch(endpointSource, /console\.(?:error|warn)\([^)]*payload/);
   assert.doesNotMatch(endpointSource, /console\.(?:error|warn)\([^)]*deliveryError/);

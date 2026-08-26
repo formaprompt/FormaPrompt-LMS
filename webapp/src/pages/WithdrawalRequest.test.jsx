@@ -3,13 +3,23 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter } from 'react-router-dom'
 import WithdrawalRequest from './WithdrawalRequest'
 
-const { invoke, select, mockState } = vi.hoisted(() => {
-  const state = { purchaseResult: { data: [], error: null }, invokeResult: { data: null, error: null } }
+const { invoke, from, mockState } = vi.hoisted(() => {
+  const state = {
+    purchaseResult: { data: [], error: null },
+    diagnosticResult: { data: [], error: null },
+    invokeResult: { data: null, error: null },
+  }
   const hoistedInvoke = vi.fn(() => Promise.resolve(state.invokeResult))
-  const hoistedOrder = vi.fn(() => Promise.resolve(state.purchaseResult))
-  const hoistedEq = vi.fn(() => ({ order: hoistedOrder }))
-  const hoistedSelect = vi.fn(() => ({ eq: hoistedEq }))
-  return { invoke: hoistedInvoke, select: hoistedSelect, mockState: state }
+  const hoistedFrom = vi.fn((table) => {
+    const builder = {
+      select: () => builder,
+      eq: () => builder,
+      in: () => builder,
+      order: () => Promise.resolve(table === 'purchases' ? state.purchaseResult : state.diagnosticResult),
+    }
+    return builder
+  })
+  return { invoke: hoistedInvoke, from: hoistedFrom, mockState: state }
 })
 
 vi.mock('../components/SEO', () => ({ default: () => null }))
@@ -24,7 +34,7 @@ vi.mock('../contexts/useAuth', () => ({
 }))
 vi.mock('../lib/supabaseClient', () => ({
   supabase: {
-    from: () => ({ select }),
+    from,
     functions: { invoke },
   },
 }))
@@ -44,6 +54,7 @@ describe('rétractation électronique', () => {
       }],
       error: null,
     }
+    mockState.diagnosticResult = { data: [], error: null }
     mockState.invokeResult = {
       data: {
         receipt: {
@@ -84,6 +95,7 @@ describe('rétractation électronique', () => {
       data: [{ id: '63000000-0000-0000-0000-000000000001', course_id: 'formation-ia', purchased_at: '2026-08-12' }],
       error: null,
     }
+    mockState.diagnosticResult = { data: [], error: null }
     mockState.invokeResult = {
       data: {
         receipt: {
@@ -110,10 +122,53 @@ describe('rétractation électronique', () => {
 
   it('ne fabrique pas un succès lorsque la fonction serveur échoue', async () => {
     mockState.purchaseResult = { data: [{ id: 'p1', course_id: 'formation-ia', purchased_at: '2026-08-12' }], error: null }
+    mockState.diagnosticResult = { data: [], error: null }
     mockState.invokeResult = { data: null, error: new Error('indisponible') }
     render(<MemoryRouter><WithdrawalRequest /></MemoryRouter>)
     await waitFor(() => expect(screen.getByRole('button', { name: 'Confirmer la rétractation' })).toBeEnabled())
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer la rétractation' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/n’a pas pu être enregistrée/i)
+  })
+
+  it('permet d’identifier une commande B2C Diagnostic sans la confondre avec un achat LMS', async () => {
+    mockState.purchaseResult = { data: [], error: null }
+    mockState.diagnosticResult = {
+      data: [{
+        id: '86000000-0000-4000-8000-000000000010',
+        paid_at: '2026-08-26T16:00:00.000Z',
+        status: 'paid',
+        sales_context: 'personal',
+      }],
+      error: null,
+    }
+    mockState.invokeResult = {
+      data: {
+        receipt: {
+          id: '66000000-0000-0000-0000-000000000003',
+          purchase_id: null,
+          diagnostic_order_id: '86000000-0000-4000-8000-000000000010',
+          course_id: 'diagnostic-ia-express',
+          claimant_first_name: 'Marie',
+          claimant_last_name: 'Test',
+          acknowledgement_email: 'marie@example.test',
+          declaration: 'Je vous informe par la présente de ma décision de me rétracter.',
+          status: 'received',
+          received_at: '2026-08-26T16:05:00.000Z',
+          acknowledgement_delivery_status: 'sent',
+        },
+      },
+      error: null,
+    }
+
+    render(<MemoryRouter><WithdrawalRequest /></MemoryRouter>)
+    await screen.findByRole('option', { name: /Diagnostic IA Express/i })
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmer la rétractation' }))
+    await screen.findByRole('heading', { name: 'Demande enregistrée' })
+    expect(invoke).toHaveBeenCalledWith('submit-withdrawal-request', expect.objectContaining({
+      body: expect.objectContaining({
+        diagnostic_order_id: '86000000-0000-4000-8000-000000000010',
+      }),
+    }))
+    expect(invoke.mock.calls[0][1].body).not.toHaveProperty('purchase_id')
   })
 })

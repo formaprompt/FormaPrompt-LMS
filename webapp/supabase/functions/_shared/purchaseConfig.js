@@ -33,8 +33,8 @@ export const CONSENT_TYPES = Object.freeze({
 });
 
 const LEGAL_VERSIONS = Object.freeze({
-  cgvB2c: 'CGV-B2C-2026-08-12',
-  cgvB2b: 'CGV-B2B-2026-08-12',
+  cgvB2c: 'CGV-B2C-2026-08-26',
+  cgvB2b: 'CGV-B2B-2026-08-26',
   earlyService: 'EARLY-SERVICE-2026-08-12',
   digitalStart: 'DIGITAL-START-2026-08-12',
   digitalWithdrawalAcknowledgement: 'DIGITAL-ACK-2026-08-12',

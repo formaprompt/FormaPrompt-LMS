@@ -12,10 +12,19 @@ const validPayload = {
 
 test('accepte une demande de rétractation minimale et explicite', () => {
   assert.equal(validateWithdrawalRequestPayload(validPayload), null);
+  assert.equal(validateWithdrawalRequestPayload({
+    ...validPayload,
+    purchase_id: undefined,
+    diagnostic_order_id: '86000000-0000-4000-8000-000000000010',
+  }), null);
 });
 
 test('refuse une commande ou une adresse électronique incohérente', () => {
   assert.match(validateWithdrawalRequestPayload({ ...validPayload, purchase_id: 'x' }), /Commande/);
+  assert.match(validateWithdrawalRequestPayload({
+    ...validPayload,
+    diagnostic_order_id: '86000000-0000-4000-8000-000000000010',
+  }), /Commande/);
   assert.match(validateWithdrawalRequestPayload({ ...validPayload, acknowledgement_email: 'x' }), /électronique/);
 });
 

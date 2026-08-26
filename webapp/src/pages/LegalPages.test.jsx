@@ -34,11 +34,14 @@ describe('documents juridiques publiables', () => {
 
   it('identifie les versions stables sans avertissement préparatoire', () => {
     renderPage(CGVConsumer);
-    expect(screen.getByText('CGV B2C — version 2026-08-12')).toBeVisible();
+    expect(screen.getByText('CGV B2C — version 2026-08-26')).toBeVisible();
+    expect(screen.getByText(/rendez-vous de 90 minutes a été réalisé/i)).toBeVisible();
+    expect(screen.getByText(/simple enregistrement ne déclenche aucune analyse automatisée ou humaine/i)).toBeVisible();
     expect(screen.queryByText(/publication après validation/i)).not.toBeInTheDocument();
     cleanup();
     renderPage(CGVProfessional);
-    expect(screen.getByText('CGV B2B — version 2026-08-12')).toBeVisible();
+    expect(screen.getByText('CGV B2B — version 2026-08-26')).toBeVisible();
+    expect(screen.getByText(/paiement est intégralement exigible lors de la commande en ligne/i)).toBeVisible();
   });
 
   it('affiche la règle LMS de référence sans garantie perpétuelle', () => {
@@ -65,7 +68,7 @@ describe('documents juridiques publiables', () => {
   it('conserve la franchise en base sans inventer de TVA applicable', () => {
     for (const Page of [Legal, CGVConsumer, CGVProfessional, PrecontractualInformation]) {
       const { unmount } = renderPage(Page);
-      expect(screen.getByText(/TVA non applicable - article 293 B du CGI/i)).toBeVisible();
+      expect(screen.getAllByText(/TVA non applicable - article 293 B du CGI/i).length).toBeGreaterThan(0);
       expect(screen.queryByText(/^TVA applicable$/i)).not.toBeInTheDocument();
       unmount();
     }

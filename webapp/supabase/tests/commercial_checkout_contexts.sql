@@ -54,8 +54,8 @@ SELECT ok(
 );
 SELECT is(
   (SELECT count(*) FROM public.legal_document_versions WHERE status = 'published')::bigint,
-  5::bigint,
-  'les deux CGV et les trois formulations sont publiées localement'
+  9::bigint,
+  'les CGV courantes et les formulations juridiques sont publiées localement'
 );
 
 INSERT INTO auth.users (
@@ -77,7 +77,7 @@ SELECT lives_ok($$
   ) VALUES (
     '72000000-0000-0000-0000-000000000001', '71000000-0000-0000-0000-000000000001',
     'formation-ia', 'B2C_STANDARD', 'personal', 'immediate', 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26')
   )$$,
   'contexte B2C immédiat valide'
 );
@@ -89,7 +89,7 @@ SELECT lives_ok($$
   ) VALUES (
     '72000000-0000-0000-0000-000000000002', '71000000-0000-0000-0000-000000000001',
     'formation-prompt-level-1', 'B2C_STANDARD', 'personal', 'deferred', 'deferred_after_withdrawal_period',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26')
   )$$,
   'contexte B2C différé valide'
 );
@@ -101,7 +101,7 @@ SELECT lives_ok($$
   ) VALUES (
     '72000000-0000-0000-0000-000000000003', '71000000-0000-0000-0000-000000000001',
     'formation-ia-act', 'B2B', 'professional_self', NULL, 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   'contexte B2B valide'
 );
@@ -115,7 +115,7 @@ SELECT lives_ok($$
     '72000000-0000-0000-0000-000000000004', '71000000-0000-0000-0000-000000000001',
     'formation-beneficiaire', 'B2B', 'beneficiary', NULL, 'deferred_beneficiary_assignment',
     'beneficiaire@example.test', 'Entreprise Test',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   'achat pour bénéficiaire valide'
 );
@@ -127,7 +127,7 @@ SELECT lives_ok($$
   ) VALUES (
     '72000000-0000-0000-0000-000000000005', '71000000-0000-0000-0000-000000000001',
     'formation-opco', 'OF_OPCO', 'of_opco', NULL, 'of_opco_administrative',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   'contexte OPCO valide'
 );
@@ -139,7 +139,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000001', 'formation-invalid-context',
     'B2C_STANDARD', 'intruder', 'immediate', 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26')
   )$$,
   '23514', NULL, 'un contexte inconnu est refusé'
 );
@@ -151,7 +151,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000001', 'formation-manipulated-type',
     'B2B', 'personal', 'immediate', 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   '23514', NULL, 'un type de parcours manipulé est refusé'
 );
@@ -163,7 +163,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000001', 'formation-manipulated-activation',
     'B2C_STANDARD', 'personal', 'immediate', 'deferred_after_withdrawal_period',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26')
   )$$,
   '23514', NULL, 'une politique d activation manipulée est refusée'
 );
@@ -175,7 +175,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000001', 'formation-beneficiary-incomplete',
     'B2B', 'beneficiary', NULL, 'deferred_beneficiary_assignment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   '23514', NULL, 'un bénéficiaire incomplet est refusé'
 );
@@ -187,7 +187,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000001', 'formation-wrong-cgv',
     'B2C_STANDARD', 'personal', 'immediate', 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   '23514', 'Le parcours B2C doit référencer les CGV B2C publiées.',
   'une mauvaise famille de CGV est refusée'
@@ -218,7 +218,7 @@ INSERT INTO public.commercial_checkout_intents (
 ) VALUES (
   '72000000-0000-0000-0000-000000000006', '71000000-0000-0000-0000-000000000002',
   'formation-ia', 'B2B', 'professional_self', NULL, 'immediate_after_payment',
-  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
 );
 
 SET LOCAL ROLE authenticated;
@@ -240,7 +240,7 @@ SELECT throws_ok($$
   ) VALUES (
     '71000000-0000-0000-0000-000000000002', 'formation-browser-forged',
     'B2B', 'professional_self', NULL, 'immediate_after_payment',
-    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-12')
+    (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2B-2026-08-26')
   )$$,
   '42501', 'permission denied for table commercial_checkout_intents',
   'le navigateur ne peut pas créer une intention'

@@ -15,7 +15,7 @@ test('appelle uniquement le checkout Diagnostic sans montant frontend', async ()
   const body = {
     sales_context: 'personal',
     cgv_accepted: true,
-    cgv_version: 'CGV-B2C-2026-08-12',
+    cgv_version: 'CGV-B2C-2026-08-26',
   }
   const result = await createDiagnosticCheckout(supabase, body)
   assert.equal(result.url, 'https://checkout.stripe.com/c/pay/cs_test_safe')

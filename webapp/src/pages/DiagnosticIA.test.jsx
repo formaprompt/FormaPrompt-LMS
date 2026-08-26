@@ -71,9 +71,9 @@ describe('page commerciale Diagnostic IA Express', () => {
     const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
     const button = priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i })
     expect(button).toBeDisabled()
-    expect(priceCard.getByRole('link', { name: /CGV applicables/i })).toHaveAttribute(
+    expect(priceCard.getByRole('link', { name: /Conditions générales de vente/i })).toHaveAttribute(
       'href',
-      '/cgv-particuliers?version=CGV-B2C-2026-08-12',
+      '/cgv-particuliers?version=CGV-B2C-2026-08-26',
     )
     await userEvent.click(priceCard.getByRole('checkbox'))
     expect(button).toBeEnabled()
@@ -87,9 +87,9 @@ describe('page commerciale Diagnostic IA Express', () => {
 
     const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
     await userEvent.click(priceCard.getByRole('radio', { name: /cadre professionnel/i }))
-    expect(priceCard.getByRole('link', { name: /CGV applicables/i })).toHaveAttribute(
+    expect(priceCard.getByRole('link', { name: /Conditions générales de vente/i })).toHaveAttribute(
       'href',
-      '/cgv-professionnels?version=CGV-B2B-2026-08-12',
+      '/cgv-professionnels?version=CGV-B2B-2026-08-26',
     )
     await userEvent.click(priceCard.getByRole('checkbox'))
     await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i }))
@@ -97,7 +97,7 @@ describe('page commerciale Diagnostic IA Express', () => {
     expect(createCheckout).toHaveBeenCalledWith(expect.anything(), {
       sales_context: 'professional',
       cgv_accepted: true,
-      cgv_version: 'CGV-B2B-2026-08-12',
+      cgv_version: 'CGV-B2B-2026-08-26',
     })
     const payload = createCheckout.mock.calls[0][1]
     expect(payload).not.toHaveProperty('amount')
