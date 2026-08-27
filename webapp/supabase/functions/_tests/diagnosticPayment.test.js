@@ -4,6 +4,7 @@ import {
   DIAGNOSTIC_IA_PAYMENT,
   DIAGNOSTIC_LEGAL_STATEMENTS,
   calculateFrenchWithdrawalDeadline,
+  getDiagnosticStripeMode,
   getDiagnosticCgv,
   validateCompletedDiagnosticSession,
   validateDiagnosticCheckoutRequest,
@@ -50,6 +51,17 @@ test('impose le prix serveur ponctuel de 149 EUR en mode test', () => {
     unit_amount: 1,
     recurring: null,
   }), /149 EUR/);
+});
+
+test('autorise uniquement les couples cohérents clé et Price Stripe TEST ou LIVE', () => {
+  const testPrice = { livemode: false, active: true, currency: 'eur', unit_amount: 14_900, recurring: null };
+  const livePrice = { ...testPrice, livemode: true };
+
+  assert.equal(validateDiagnosticStripePrice(testPrice, getDiagnosticStripeMode('sk_test_example')), null);
+  assert.equal(validateDiagnosticStripePrice(livePrice, getDiagnosticStripeMode('rk_live_example')), null);
+  assert.match(validateDiagnosticStripePrice(livePrice, getDiagnosticStripeMode('sk_test_example')), /149 EUR/);
+  assert.match(validateDiagnosticStripePrice(testPrice, getDiagnosticStripeMode('sk_live_example')), /149 EUR/);
+  assert.throws(() => getDiagnosticStripeMode('invalid_key'), /clé Stripe valide/);
 });
 
 test('refuse un montant ou un Price ID manipulé dans une session', () => {

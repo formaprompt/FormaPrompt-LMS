@@ -15,7 +15,7 @@ export default function DiagnosticPaymentConfirmation() {
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const orderId = searchParams.get('order_id')
-  const validSessionId = sessionId?.startsWith('cs_test_') ? sessionId : null
+  const validSessionId = /^cs_(?:test|live)_[A-Za-z0-9]+$/.test(sessionId || '') ? sessionId : null
   const validOrderId = /^[0-9a-f-]{36}$/i.test(orderId || '') ? orderId : null
   const reference = useMemo(() => ({ orderId: validOrderId, sessionId: validSessionId }), [validOrderId, validSessionId])
   const [serverStatus, setServerStatus] = useState('checking')

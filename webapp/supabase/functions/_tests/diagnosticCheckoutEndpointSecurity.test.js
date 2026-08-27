@@ -6,6 +6,7 @@ import test from 'node:test';
 const checkout = readFileSync(resolve('supabase/functions/create-diagnostic-checkout/index.ts'), 'utf8');
 const webhook = readFileSync(resolve('supabase/functions/stripe-webhook-ai-act/index.ts'), 'utf8');
 const migration = readFileSync(resolve('supabase/migrations/20260826163906_add_diagnostic_ia_payments.sql'), 'utf8');
+const legalMigration = readFileSync(resolve('supabase/migrations/20260826192602_add_diagnostic_ia_legal_consents.sql'), 'utf8');
 
 test('authentifie côté serveur avant toute création de commande', () => {
   const authentication = checkout.indexOf('auth.getUser(accessToken)');
@@ -28,8 +29,9 @@ test('fige la formulation CGV et enregistre une preuve serveur avant Stripe', ()
   assert.match(checkout, /source: 'web_checkout'/);
 });
 
-test('impose le Price test et une clé d idempotence serveur', () => {
-  assert.match(checkout, /stripeMode !== 'test'/);
+test('impose un Price cohérent avec la clé TEST ou LIVE et une clé d idempotence serveur', () => {
+  assert.doesNotMatch(checkout, /stripeMode !== 'test'/);
+  assert.match(checkout, /getDiagnosticStripeMode/);
   assert.match(checkout, /prices\.retrieve\(priceId\)/);
   assert.match(checkout, /validateDiagnosticStripePrice/);
   assert.match(checkout, /idempotencyKey: `diagnostic-ia-checkout-\$\{order\.id\}`/);
@@ -50,4 +52,19 @@ test('le webhook Diagnostic reste signé et isolé du LMS', () => {
   assert.match(webhook, /process_diagnostic_ia_stripe_event/);
   assert.doesNotMatch(migration, /INSERT INTO public\.(?:purchases|course_access)/i);
   assert.doesNotMatch(migration, /UPDATE public\.(?:purchases|course_access)/i);
+});
+
+test('préserve les anciennes CGV et fige la version acceptée par chaque intention', () => {
+  assert.match(legalMigration, /CGV-B2C-2026-08-12/);
+  assert.match(legalMigration, /CGV-B2C-2026-08-26/);
+  assert.doesNotMatch(legalMigration, /DELETE\s+FROM\s+public\.legal_document_versions/i);
+  assert.match(webhook, /cgv_document_version_id/);
+  assert.match(webhook, /legal_document_versions!inner\(id, version\)/);
+});
+
+test('borne et temporise la reprise des confirmations contractuelles', () => {
+  assert.match(webhook, /DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS/);
+  assert.match(webhook, /diagnosticContractDeliveryClaimFilter/);
+  assert.match(webhook, /\.lt\('contract_confirmation_delivery_attempts'/);
+  assert.match(webhook, /DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING/);
 });

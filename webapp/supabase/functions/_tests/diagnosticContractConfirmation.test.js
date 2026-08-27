@@ -3,6 +3,10 @@ import test from 'node:test';
 import {
   attemptDiagnosticContractConfirmationDelivery,
   buildDiagnosticContractConfirmationMessage,
+  diagnosticContractDeliveryClaimFilter,
+  DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS,
+  DIAGNOSTIC_CONTRACT_DELIVERY_STALE_AFTER_MS,
+  isDiagnosticContractDeliveryRetryable,
 } from '../_shared/diagnosticContractConfirmation.js';
 
 function input(salesContext = 'personal') {
@@ -41,4 +45,26 @@ test('un échec SMTP est tracé sans transformer le paiement en échec', async (
   assert.equal(result.contract_confirmation_delivery_status, 'failed');
   assert.equal(result.contract_confirmation_delivery_attempts, 1);
   assert.equal(result.contract_confirmation_delivery_error_code, 'smtp_delivery_failed');
+});
+
+test('un envoi sending ne devient récupérable qu’après quinze minutes et avec un nombre borné de tentatives', () => {
+  const now = new Date('2026-08-27T12:00:00.000Z');
+  const filter = diagnosticContractDeliveryClaimFilter(now);
+  assert.equal(DIAGNOSTIC_CONTRACT_DELIVERY_STALE_AFTER_MS, 15 * 60 * 1000);
+  assert.equal(DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS, 5);
+  assert.match(filter, /status\.eq\.pending/);
+  assert.match(filter, /status\.in\.\(failed,sending\)/);
+  assert.match(filter, /2026-08-27T11:45:00\.000Z/);
+  assert.equal(isDiagnosticContractDeliveryRetryable({
+    contract_confirmation_delivery_status: 'sending',
+    contract_confirmation_delivery_attempts: 1,
+  }), true);
+  assert.equal(isDiagnosticContractDeliveryRetryable({
+    contract_confirmation_delivery_status: 'sent',
+    contract_confirmation_delivery_attempts: 1,
+  }), false);
+  assert.equal(isDiagnosticContractDeliveryRetryable({
+    contract_confirmation_delivery_status: 'failed',
+    contract_confirmation_delivery_attempts: 5,
+  }), false);
 });

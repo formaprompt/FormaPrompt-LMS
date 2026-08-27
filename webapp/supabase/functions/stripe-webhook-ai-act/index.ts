@@ -20,7 +20,13 @@ import {
   validateCompletedDiagnosticSession,
   validateDiagnosticEventIdentity,
 } from '../_shared/diagnosticPayment.js';
-import { attemptDiagnosticContractConfirmationDelivery } from '../_shared/diagnosticContractConfirmation.js';
+import {
+  attemptDiagnosticContractConfirmationDelivery,
+  diagnosticContractDeliveryClaimFilter,
+  DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS,
+  DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING,
+  isDiagnosticContractDeliveryRetryable,
+} from '../_shared/diagnosticContractConfirmation.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -115,7 +121,7 @@ Deno.serve(async (request) => {
         const checkoutIntentId = object.metadata!.checkout_intent_id;
         const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
           .from('commercial_checkout_intents')
-          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id')
+          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id, cgv_document_version_id')
           .eq('id', checkoutIntentId)
           .maybeSingle();
         if (checkoutIntentError) {
@@ -131,7 +137,8 @@ Deno.serve(async (request) => {
             course_id,
             consent_type,
             granted,
-            legal_document_versions!inner(version)
+            legal_document_version_id,
+            legal_document_versions!inner(id, version)
           `)
           .eq('checkout_intent_id', checkoutIntentId);
         if (consentRowsError) {
@@ -184,7 +191,8 @@ Deno.serve(async (request) => {
     ) {
       try {
         const orderId = object.metadata?.diagnostic_order_id;
-        const claimTime = new Date().toISOString();
+        const claimNow = new Date();
+        const claimTime = claimNow.toISOString();
         const { data: order, error: orderError } = await supabaseAdmin
           .from('diagnostic_ia_orders')
           .update({
@@ -193,7 +201,8 @@ Deno.serve(async (request) => {
           })
           .eq('id', orderId)
           .in('status', ['paid', 'disputed'])
-          .in('contract_confirmation_delivery_status', ['pending', 'failed'])
+          .lt('contract_confirmation_delivery_attempts', DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS)
+          .or(diagnosticContractDeliveryClaimFilter(claimNow))
           .select('id, customer_email, sales_context, paid_at, cgv_document_version_id, contract_confirmation_delivery_attempts')
           .maybeSingle();
         if (orderError) throw orderError;
@@ -226,9 +235,26 @@ Deno.serve(async (request) => {
             .eq('id', order.id)
             .eq('contract_confirmation_delivery_status', 'sending');
           if (deliveryError) throw deliveryError;
+          if (deliveryUpdate.contract_confirmation_delivery_status === 'failed'
+            && deliveryUpdate.contract_confirmation_delivery_attempts < DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS) {
+            throw new Error(DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING);
+          }
+        } else {
+          const { data: deliveryState, error: deliveryStateError } = await supabaseAdmin
+            .from('diagnostic_ia_orders')
+            .select('contract_confirmation_delivery_status, contract_confirmation_delivery_attempts')
+            .eq('id', orderId)
+            .maybeSingle();
+          if (deliveryStateError) throw deliveryStateError;
+          if (isDiagnosticContractDeliveryRetryable(deliveryState)) {
+            throw new Error(DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING);
+          }
         }
-      } catch {
+      } catch (error) {
         console.warn('diagnostic_contract_confirmation_delivery_failed');
+        if (error instanceof Error && error.message === DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING) {
+          throw error;
+        }
       }
     }
     return Response.json({ received: true, ...data });

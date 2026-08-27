@@ -132,6 +132,12 @@ export function validateDiagnosticCheckoutRequest(body) {
   return null;
 }
 
+export function getDiagnosticStripeMode(secretKey) {
+  if (secretKey?.startsWith('sk_test_') || secretKey?.startsWith('rk_test_')) return 'test';
+  if (secretKey?.startsWith('sk_live_') || secretKey?.startsWith('rk_live_')) return 'live';
+  throw new Error('STRIPE_SECRET_KEY n’est pas une clé Stripe valide.');
+}
+
 export function requiresDiagnosticEarlyExecutionConsent({ paidAt, appointmentStartsAt }) {
   const appointment = new Date(appointmentStartsAt);
   if (Number.isNaN(appointment.getTime())) {

@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
   DIAGNOSTIC_IA_PAYMENT,
   DIAGNOSTIC_LEGAL_STATEMENTS,
+  getDiagnosticStripeMode,
   getDiagnosticCgv,
   validateDiagnosticCheckoutRequest,
   validateDiagnosticStripePrice,
@@ -24,12 +25,6 @@ function requiredEnv(name: string) {
   return value;
 }
 
-function getStripeMode(secretKey: string) {
-  if (secretKey.startsWith('sk_test_') || secretKey.startsWith('rk_test_')) return 'test';
-  if (secretKey.startsWith('sk_live_') || secretKey.startsWith('rk_live_')) return 'live';
-  throw new Error('STRIPE_SECRET_KEY n’est pas une clé Stripe valide.');
-}
-
 function getSiteUrl() {
   const siteUrl = new URL(requiredEnv('SITE_URL'));
   if (!['http:', 'https:'].includes(siteUrl.protocol)) {
@@ -44,10 +39,7 @@ Deno.serve(async (request) => {
 
   try {
     const stripeSecretKey = requiredEnv('STRIPE_SECRET_KEY');
-    const stripeMode = getStripeMode(stripeSecretKey);
-    if (stripeMode !== 'test') {
-      return jsonResponse({ error: 'Le checkout Diagnostic IA est limité au mode Stripe test avant validation de mise en production.' }, 503);
-    }
+    const stripeMode = getDiagnosticStripeMode(stripeSecretKey);
 
     const authorization = request.headers.get('Authorization');
     const accessToken = authorization?.match(/^Bearer\s+(.+)$/i)?.[1];

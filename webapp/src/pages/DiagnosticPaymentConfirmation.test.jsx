@@ -40,6 +40,20 @@ describe('retour Stripe du Diagnostic IA', () => {
     expect(screen.queryByRole('heading', { name: 'Paiement confirmé' })).not.toBeInTheDocument()
   })
 
+  it('accepte une référence Checkout LIVE sans la transformer en preuve de paiement', () => {
+    fetchOrder.mockImplementation(() => new Promise(() => {}))
+    renderPage('/diagnostic-ia/confirmation?session_id=cs_live_diagnostic')
+    expect(screen.getByRole('heading', { name: /Confirmation du paiement en cours/i })).toBeVisible()
+    expect(fetchOrder).toHaveBeenCalledWith({}, { orderId: null, sessionId: 'cs_live_diagnostic' })
+    expect(screen.queryByRole('heading', { name: 'Paiement confirmé' })).not.toBeInTheDocument()
+  })
+
+  it('refuse une référence Checkout qui n’est ni TEST ni LIVE', () => {
+    renderPage('/diagnostic-ia/confirmation?session_id=cs_fake_diagnostic')
+    expect(screen.getByRole('heading', { name: 'Référence de paiement absente' })).toBeVisible()
+    expect(fetchOrder).not.toHaveBeenCalled()
+  })
+
   it('n’affiche aucun succès pour une commande annulée', async () => {
     fetchOrder.mockResolvedValue({ data: { status: 'cancelled' }, error: null })
     renderPage()

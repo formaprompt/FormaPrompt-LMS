@@ -1,5 +1,26 @@
 import { sendCommercialEmail, smtpFailureCode } from './smtpReceipt.js';
 
+// Une reprise avant 15 minutes risquerait de doubler un envoi SMTP encore en
+// cours. Cinq tentatives automatiques au maximum bornent les rejouages Stripe.
+export const DIAGNOSTIC_CONTRACT_DELIVERY_STALE_AFTER_MS = 15 * 60 * 1000;
+export const DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS = 5;
+export const DIAGNOSTIC_CONTRACT_DELIVERY_RETRY_PENDING = 'diagnostic_contract_confirmation_retry_pending';
+
+export function diagnosticContractDeliveryClaimFilter(now = new Date()) {
+  const current = new Date(now);
+  if (Number.isNaN(current.getTime())) throw new Error('diagnostic_delivery_claim_time_invalid');
+  const staleBefore = new Date(
+    current.getTime() - DIAGNOSTIC_CONTRACT_DELIVERY_STALE_AFTER_MS,
+  ).toISOString();
+  return `contract_confirmation_delivery_status.eq.pending,and(contract_confirmation_delivery_status.in.(failed,sending),contract_confirmation_delivery_attempted_at.lt.${staleBefore})`;
+}
+
+export function isDiagnosticContractDeliveryRetryable(order) {
+  return ['failed', 'sending'].includes(order?.contract_confirmation_delivery_status)
+    && Number.isInteger(order?.contract_confirmation_delivery_attempts)
+    && order.contract_confirmation_delivery_attempts < DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS;
+}
+
 export function buildDiagnosticContractConfirmationMessage({ order, cgv, withdrawalForm }) {
   const paidAt = new Date(order.paid_at);
   if (Number.isNaN(paidAt.getTime())) throw new Error('diagnostic_paid_at_invalid');

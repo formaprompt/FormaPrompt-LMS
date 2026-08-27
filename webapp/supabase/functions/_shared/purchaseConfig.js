@@ -247,14 +247,21 @@ export function validateCommercialConsentEvidence(session, purchase, intent, con
   }
 
   for (const consentType of getRequiredConsentTypes(route)) {
-    const expectedVersion = getConsentDocumentVersion(purchase, route, consentType);
+    const expectedVersion = consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+      ? null
+      : getConsentDocumentVersion(purchase, route, consentType);
     const matchingRows = (consentRows || []).filter((row) => (
       row.checkout_intent_id === intent.id
       && row.user_id === intent.user_id
       && row.course_id === intent.course_id
       && row.consent_type === consentType
       && row.granted === true
-      && row.legal_document_versions?.version === expectedVersion
+      && (
+        consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+          ? row.legal_document_version_id === intent.cgv_document_version_id
+            && row.legal_document_versions?.id === intent.cgv_document_version_id
+          : row.legal_document_versions?.version === expectedVersion
+      )
     ));
     if (matchingRows.length !== 1) {
       return `La preuve du consentement « ${consentType} » est absente ou ambiguë.`;

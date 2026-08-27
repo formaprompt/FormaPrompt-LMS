@@ -25,6 +25,7 @@ import {
 const priceId = 'price_test_ai_act';
 const userId = 'b86f9479-e782-4c03-8fe0-e55f4ab67a56';
 const checkoutIntentId = '1f4789b5-19f2-4ad1-9d84-ef18a5fd94af';
+const currentCgvId = '2f4789b5-19f2-4ad1-9d84-ef18a5fd94af';
 
 function validSession(purchase = AI_ACT_PURCHASE, selectedPriceId = priceId) {
   return {
@@ -170,6 +171,7 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     access_start_choice: context.access_start_choice,
     access_activation_policy: route.accessActivationPolicy,
     stripe_checkout_session_id: session.id,
+    cgv_document_version_id: currentCgvId,
     status: 'stripe_session_created',
   };
   const versions = {
@@ -178,17 +180,75 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     [CONSENT_TYPES.DIGITAL_CONTENT_START]: AI_ACT_PURCHASE.legalVersions.digitalStart,
     [CONSENT_TYPES.DIGITAL_CONTENT_WITHDRAWAL_ACKNOWLEDGEMENT]: AI_ACT_PURCHASE.legalVersions.digitalWithdrawalAcknowledgement,
   };
-  const rows = route.requiredConsentTypes.map((consentType) => ({
+  const rows = route.requiredConsentTypes.map((consentType, index) => ({
     checkout_intent_id: intent.id,
     user_id: userId,
     course_id: AI_ACT_PURCHASE.courseId,
     consent_type: consentType,
     granted: true,
-    legal_document_versions: { version: versions[consentType] },
+    legal_document_version_id: consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+      ? currentCgvId
+      : `3f4789b5-19f2-4ad1-9d84-ef18a5fd94a${index}`,
+    legal_document_versions: {
+      id: consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+        ? currentCgvId
+        : `3f4789b5-19f2-4ad1-9d84-ef18a5fd94a${index}`,
+      version: versions[consentType],
+    },
   }));
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, rows), null);
   assert.equal(shouldActivateCourseAccess(intent), true);
   assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, [...rows, rows[0]]), /ambiguë/);
+});
+
+test('finalise une session formation avec la CGV figée avant la bascule juridique', () => {
+  const context = personalContext();
+  const route = getCommercialRoute(AI_ACT_PURCHASE, context);
+  const session = validSession();
+  session.metadata.sales_context = route.salesContext;
+  session.metadata.access_activation_policy = route.accessActivationPolicy;
+  const legacyCgvId = '4f4789b5-19f2-4ad1-9d84-ef18a5fd94af';
+  const intent = {
+    id: checkoutIntentId,
+    user_id: userId,
+    course_id: AI_ACT_PURCHASE.courseId,
+    offer_classification: route.offerClassification,
+    sales_context: route.salesContext,
+    access_start_choice: context.access_start_choice,
+    access_activation_policy: route.accessActivationPolicy,
+    stripe_checkout_session_id: session.id,
+    cgv_document_version_id: legacyCgvId,
+    status: 'stripe_session_created',
+  };
+  const versions = {
+    [CONSENT_TYPES.CGV_ACCEPTANCE]: 'CGV-B2C-2026-08-12',
+    [CONSENT_TYPES.EARLY_SERVICE_START]: AI_ACT_PURCHASE.legalVersions.earlyService,
+    [CONSENT_TYPES.DIGITAL_CONTENT_START]: AI_ACT_PURCHASE.legalVersions.digitalStart,
+    [CONSENT_TYPES.DIGITAL_CONTENT_WITHDRAWAL_ACKNOWLEDGEMENT]: AI_ACT_PURCHASE.legalVersions.digitalWithdrawalAcknowledgement,
+  };
+  const rows = route.requiredConsentTypes.map((consentType, index) => {
+    const documentId = consentType === CONSENT_TYPES.CGV_ACCEPTANCE
+      ? legacyCgvId
+      : `5f4789b5-19f2-4ad1-9d84-ef18a5fd94a${index}`;
+    return {
+      checkout_intent_id: intent.id,
+      user_id: userId,
+      course_id: AI_ACT_PURCHASE.courseId,
+      consent_type: consentType,
+      granted: true,
+      legal_document_version_id: documentId,
+      legal_document_versions: { id: documentId, version: versions[consentType] },
+    };
+  });
+
+  assert.equal(AI_ACT_PURCHASE.legalVersions.cgvB2c, 'CGV-B2C-2026-08-26');
+  assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, rows), null);
+  assert.equal(shouldActivateCourseAccess(intent), true);
+
+  const retroactivelyReplaced = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE
+    ? { ...row, legal_document_version_id: currentCgvId, legal_document_versions: { id: currentCgvId, version: 'CGV-B2C-2026-08-26' } }
+    : row);
+  assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, retroactivelyReplaced), /absente ou ambiguë/);
 });
 
 test('accepte une session AI Act complète et cohérente', () => {
