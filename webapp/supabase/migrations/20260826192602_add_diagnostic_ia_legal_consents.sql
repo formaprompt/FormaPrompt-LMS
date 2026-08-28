@@ -35,7 +35,8 @@ WITH source AS (
         replace(
           replace(
             replace(
-              replace(content_text,
+              replace(
+                replace(content_text,
                 'CGV B2C — version 2026-08-12',
                 'CGV B2C — version 2026-08-26'),
               'Cette formulation ne constitue pas une garantie absolue ou perpétuelle. Les séances, corrections et accompagnements limités dans le temps conservent la durée indiquée dans l’offre.',
