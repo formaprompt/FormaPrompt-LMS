@@ -52,6 +52,18 @@ function renderCockpit(initialEntry = '/admin') {
   );
 }
 
+function cockpitActions(count) {
+  return Array.from({ length: count }, (_, index) => ({
+    domain: 'quality',
+    severity: 'medium',
+    item_type: 'quality_action',
+    item_id: `action-${index + 1}`,
+    neutral_label: `Action ${index + 1}`,
+    created_at: `2026-08-${String(index + 1).padStart(2, '0')}T10:00:00Z`,
+    destination_path: '/admin/qualite',
+  }));
+}
+
 describe('AdminCockpit', () => {
   beforeEach(() => {
     rpcMock.mockResolvedValue({ data: summary(), error: null });
@@ -131,6 +143,45 @@ describe('AdminCockpit', () => {
 
     await userEvent.click(within(list).getAllByRole('link', { name: 'Traiter' })[0]);
     expect(screen.getByLabelText('route active')).toHaveTextContent('/admin/commercial');
+  });
+
+  it('n’indique aucune action masquée lorsque les huit actions affichées suffisent', async () => {
+    rpcMock.mockResolvedValue({ data: summary({
+      kpis: { ...summary().kpis, action_items_total: 8 },
+      priority_actions: cockpitActions(8),
+    }), error: null });
+    renderCockpit();
+
+    const actionsHeading = await screen.findByRole('heading', { name: 'À traiter maintenant' });
+    const list = actionsHeading.closest('section').querySelector('.cockpit-actions');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.queryByText(/autre.*action.*à consulter/i)).not.toBeInTheDocument();
+  });
+
+  it('signale une action masquée lorsque neuf actions existent', async () => {
+    rpcMock.mockResolvedValue({ data: summary({
+      kpis: { ...summary().kpis, action_items_total: 9 },
+      priority_actions: cockpitActions(9),
+    }), error: null });
+    renderCockpit();
+
+    const actionsHeading = await screen.findByRole('heading', { name: 'À traiter maintenant' });
+    const list = actionsHeading.closest('section').querySelector('.cockpit-actions');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByText('1 autre action à consulter')).toBeVisible();
+  });
+
+  it('calcule les actions masquées au-delà de neuf sans modifier la limite affichée', async () => {
+    rpcMock.mockResolvedValue({ data: summary({
+      kpis: { ...summary().kpis, action_items_total: 11 },
+      priority_actions: cockpitActions(11),
+    }), error: null });
+    renderCockpit();
+
+    const actionsHeading = await screen.findByRole('heading', { name: 'À traiter maintenant' });
+    const list = actionsHeading.closest('section').querySelector('.cockpit-actions');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByText('3 autres actions à consulter')).toBeVisible();
   });
 
   it('conserve la file d’actions avant la colonne secondaire dans l’ordre mobile', async () => {

@@ -89,6 +89,8 @@ export default function AdminCockpit() {
     () => prioritizeCockpitActions(summary?.priority_actions || []),
     [summary],
   );
+  const displayedActions = prioritizedActions.slice(0, 8);
+  const hiddenActionsCount = Math.max(0, prioritizedActions.length - displayedActions.length);
   const deadlines = useMemo(() => prioritizedActions
     .filter((action) => action.due_at)
     .sort((left, right) => Date.parse(left.due_at) - Date.parse(right.due_at))
@@ -181,7 +183,10 @@ export default function AdminCockpit() {
                   </div>
                   <span>{Number(kpis.action_items_total || 0)} action(s)</span>
                 </div>
-                <CockpitActionList actions={prioritizedActions.slice(0, 8)} />
+                <CockpitActionList actions={displayedActions} />
+                {hiddenActionsCount > 0 && (
+                  <p className="cockpit-data-note">{hiddenActionsCount} autre{hiddenActionsCount > 1 ? 's' : ''} action{hiddenActionsCount > 1 ? 's' : ''} à consulter</p>
+                )}
                 {Number(kpis.action_items_total || 0) > prioritizedActions.length && (
                   <p className="cockpit-data-note">Le contrat affiche les 20 actions les plus prioritaires sur {kpis.action_items_total}.</p>
                 )}
