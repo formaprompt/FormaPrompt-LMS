@@ -9,7 +9,11 @@ import {
   filterAdministrativeAccesses,
   isAccessActionTargetConsistent,
 } from '../lib/accessAdministration';
-import { COURSE_ACCESS_STATUS_LABELS } from '../lib/courseAccessLifecycle';
+import {
+  COURSE_ACCESS_STATUS_HELP,
+  COURSE_ACCESS_STATUS_LABELS,
+  isCourseAccessOpen,
+} from '../lib/courseAccessLifecycle';
 import './AdminAccessIncidents.css';
 
 const COURSE_LABELS = {
@@ -426,12 +430,26 @@ export default function AdminAccessIncidents() {
             </label>
           </div>
 
+          <details className="access-status-help">
+            <summary>Signification du statut</summary>
+            <dl>
+              {Object.entries(COURSE_ACCESS_STATUS_LABELS).map(([status, label]) => (
+                <div key={status}>
+                  <dt>{label}</dt>
+                  <dd>{COURSE_ACCESS_STATUS_HELP[status]}</dd>
+                </div>
+              ))}
+            </dl>
+          </details>
+
           <div className="access-card-list">
             {filteredAccesses.map((access) => {
               const learner = identityByUserId.get(access.user_id) || {
                 fullName: 'Nom non renseigné',
                 email: 'Adresse e-mail non renseignée',
               };
+              const accessIsOpen = isCourseAccessOpen(access);
+              const closedByExpiredDeadline = access.status === 'active' && !accessIsOpen;
               const history = auditEntries.filter((entry) => entry.target_type === 'course_access' && entry.target_id === access.id);
               const relatedIncidents = incidents.filter((incident) => incident.learner_user_id === access.user_id && incident.course_id === access.course_id);
               return (
@@ -448,7 +466,20 @@ export default function AdminAccessIncidents() {
                   </header>
                   <dl>
                     <div><dt>Origine</dt><dd>{access.access_source}</dd></div>
+                    <div>
+                      <dt>Accès effectif</dt>
+                      <dd className={`access-effective-status is-${accessIsOpen ? 'open' : 'closed'}`}>
+                        {accessIsOpen ? 'Ouvert' : 'Fermé'}
+                        {closedByExpiredDeadline && ' — échéance dépassée'}
+                      </dd>
+                    </div>
                     <div><dt>Échéance</dt><dd>{access.expires_at ? formatDate(access.expires_at) : 'Aucune échéance prédéfinie'}</dd></div>
+                    {access.suspension_ends_at && (
+                      <div className="access-suspension-end">
+                        <dt>Fin indicative de suspension</dt>
+                        <dd>{formatDate(access.suspension_ends_at)}<small>Ne réactive jamais automatiquement l’accès.</small></dd>
+                      </div>
+                    )}
                     <div><dt>Dernier changement</dt><dd>{formatDate(access.status_changed_at || access.granted_at)}</dd></div>
                     <div><dt>Incidents associés</dt><dd>{relatedIncidents.length}</dd></div>
                   </dl>
@@ -457,6 +488,7 @@ export default function AdminAccessIncidents() {
                     {access.status === 'suspended' && <button type="button" onClick={() => openAccessAction('reactivate', access)}>Réactiver</button>}
                     {access.status === 'revoked' && <button type="button" onClick={() => openAccessAction('restore', access)}>Restaurer l’accès</button>}
                     {['active', 'suspended'].includes(access.status) && <button type="button" className="is-danger" onClick={() => openAccessAction('revoke', access)}>Révoquer</button>}
+                    {['refunded', 'expired'].includes(access.status) && <p className="access-no-action">Aucune action disponible dans ce cockpit.</p>}
                     <button type="button" onClick={() => openIncidentDialog(access)}>Créer un incident</button>
                   </div>
                   <details className="access-history">
@@ -590,7 +622,7 @@ export default function AdminAccessIncidents() {
               )}
               {accessAction.type === 'restore' && (
                 <div className="access-dialog-information">
-                  La révocation restera visible dans l’historique. Cette restauration rendra de nouveau la formation accessible et sera journalisée avec son propre motif.
+                  Décision manuelle exceptionnelle et journalisée. Aucune réactivation automatique. La révocation restera visible dans l’historique.
                 </div>
               )}
               <label>Motif obligatoire
