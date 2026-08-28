@@ -14,21 +14,13 @@ import {
   COURSE_ACCESS_STATUS_LABELS,
   isCourseAccessOpen,
 } from '../lib/courseAccessLifecycle';
+import { DISCIPLINARY_INCIDENT_STATUS_LABELS } from '../lib/disciplinaryIncidentAdministration';
 import './AdminAccessIncidents.css';
 
 const COURSE_LABELS = {
   'formation-ia': 'Formation IA générative',
   'formation-ia-act': 'IA Act – acculturation et conformité',
   'formation-prompt-level-1': 'Prompt Engineering – Niveau 1',
-};
-
-const INCIDENT_STATUS_LABELS = {
-  reported: 'Signalé',
-  under_review: 'En cours d’instruction',
-  conservatory_measure: 'Mesure conservatoire',
-  hearing_pending: 'Entretien à organiser',
-  decision_pending: 'Décision attendue',
-  closed: 'Clôturé',
 };
 
 const OUTCOME_LABELS = {
@@ -540,7 +532,7 @@ export default function AdminAccessIncidents() {
                       <p>{COURSE_LABELS[incident.course_id] || incident.course_id}</p>
                     </div>
                     <div className="incident-badges">
-                      <span>{INCIDENT_STATUS_LABELS[incident.incident_status]}</span>
+                      <span>{DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status]}</span>
                       <span className={`is-${incident.severity}`}>{SEVERITY_LABELS[incident.severity]}</span>
                     </div>
                   </header>
@@ -558,7 +550,7 @@ export default function AdminAccessIncidents() {
                   <div className="incident-workflow-grid">
                     <label>État du dossier
                       <select value={draft.incidentStatus || 'reported'} onChange={(event) => updateIncidentDraft(incident.id, 'incidentStatus', event.target.value)}>
-                        {Object.entries(INCIDENT_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                        {Object.entries(DISCIPLINARY_INCIDENT_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
                       </select>
                     </label>
                     <label>Décision humaine
@@ -636,7 +628,7 @@ export default function AdminAccessIncidents() {
               <label>Incident associé facultatif
                 <select value={linkedIncidentId} onChange={(event) => setLinkedIncidentId(event.target.value)}>
                   <option value="">Aucun incident associé</option>
-                  {matchingIncidents.map((incident) => <option key={incident.id} value={incident.id}>{incident.id.slice(0, 8)} · {INCIDENT_STATUS_LABELS[incident.incident_status]}</option>)}
+                  {matchingIncidents.map((incident) => <option key={incident.id} value={incident.id}>{incident.id.slice(0, 8)} · {DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status]}</option>)}
                 </select>
               </label>
               <div className="access-dialog-actions">
