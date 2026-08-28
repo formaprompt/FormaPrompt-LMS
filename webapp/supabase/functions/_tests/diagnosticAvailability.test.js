@@ -154,6 +154,8 @@ test('protège l endpoint et isole les réservations du LMS', () => {
   assert.match(endpoint, /GOOGLE_DIAGNOSTIC_CALENDAR_ID/)
   assert.match(endpoint, /GOOGLE_BUSY_CALENDAR_IDS/)
   assert.match(endpoint, /queryGoogleCalendarFreeBusy/)
+  assert.match(endpoint, /requiresDiagnosticEarlyExecutionConsent/)
+  assert.match(endpoint, /requires_early_start_consents/)
   assert.doesNotMatch(endpoint, /\.from\(['"](?:purchases|course_access)['"]\)/)
   assert.doesNotMatch(migration, /(?:INSERT INTO|UPDATE|DELETE FROM) public\.(?:purchases|course_access)/i)
   assert.match(migration, /ENABLE ROW LEVEL SECURITY/g)

@@ -19,6 +19,7 @@ export default function DiagnosticPaymentConfirmation() {
   const validOrderId = /^[0-9a-f-]{36}$/i.test(orderId || '') ? orderId : null
   const reference = useMemo(() => ({ orderId: validOrderId, sessionId: validSessionId }), [validOrderId, validSessionId])
   const [serverStatus, setServerStatus] = useState('checking')
+  const [resolvedOrderId, setResolvedOrderId] = useState(validOrderId)
   const status = loading
     ? 'checking'
     : !user
@@ -41,6 +42,7 @@ export default function DiagnosticPaymentConfirmation() {
         return
       }
       if (data && PAID_STATUSES.has(data.status)) {
+        setResolvedOrderId(data.id)
         setServerStatus('paid')
         return
       }
@@ -122,9 +124,15 @@ export default function DiagnosticPaymentConfirmation() {
           ) : (
             <Link className="btn btn-primary" to="/diagnostic-ia">Revenir au Diagnostic IA Express</Link>
           )}
-          <button className="btn diagnostic-confirmation-disabled" type="button" disabled>
-            Choisir mon créneau
-          </button>
+          {status === 'paid' && resolvedOrderId ? (
+            <Link className="btn btn-primary" to={`/diagnostic-ia/reserver?order_id=${encodeURIComponent(resolvedOrderId)}`}>
+              Choisir mon créneau
+            </Link>
+          ) : (
+            <button className="btn diagnostic-confirmation-disabled" type="button" disabled>
+              Choisir mon créneau
+            </button>
+          )}
         </section>
       </div>
     </>

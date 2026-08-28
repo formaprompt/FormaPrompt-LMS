@@ -10,6 +10,7 @@ import {
   queryGoogleCalendarFreeBusy,
   refreshGoogleCalendarAccessToken,
 } from '../_shared/googleCalendar.js';
+import { requiresDiagnosticEarlyExecutionConsent } from '../_shared/diagnosticPayment.js';
 
 const MAX_AVAILABILITY_RANGE_DAYS = 20;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -61,7 +62,7 @@ Deno.serve(async (request) => {
     });
     const { data: order, error: orderError } = await supabaseAdmin
       .from('diagnostic_ia_orders')
-      .select('id, user_id, status, paid_at')
+      .select('id, user_id, status, sales_context, paid_at')
       .eq('id', orderId)
       .eq('user_id', user.id)
       .maybeSingle();
@@ -125,6 +126,18 @@ Deno.serve(async (request) => {
       blockedDiagnosticDays: getBlockedDiagnosticDays(bookingsResult.data || [], range.now),
       formaPromptBlocks: blocksResult.data || [],
       googleBusy,
+    }).map((candidate) => {
+      const earlyExecution = order.sales_context === 'personal'
+        ? requiresDiagnosticEarlyExecutionConsent({
+          paidAt: order.paid_at,
+          appointmentStartsAt: candidate.starts_at,
+        })
+        : { required: false, withdrawalDeadline: null };
+      return {
+        ...candidate,
+        requires_early_start_consents: earlyExecution.required,
+        withdrawal_period_ends_at: earlyExecution.withdrawalDeadline,
+      };
     });
 
     return jsonResponse({ candidates }, 200);

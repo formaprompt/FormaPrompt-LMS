@@ -26,11 +26,14 @@ describe('retour Stripe du Diagnostic IA', () => {
   })
 
   it('affiche le succès uniquement pour une commande payée côté serveur', async () => {
-    fetchOrder.mockResolvedValue({ data: { status: 'paid' }, error: null })
+    fetchOrder.mockResolvedValue({ data: { id: '88000000-0000-4000-8000-000000000001', status: 'paid' }, error: null })
     renderPage()
     expect(await screen.findByRole('heading', { name: 'Paiement confirmé' })).toBeVisible()
     expect(screen.getByText(/La réservation de votre créneau sera disponible à l’étape suivante/i)).toBeVisible()
-    expect(screen.getByRole('button', { name: /Choisir mon créneau/i })).toBeDisabled()
+    expect(screen.getByRole('link', { name: /Choisir mon créneau/i })).toHaveAttribute(
+      'href',
+      '/diagnostic-ia/reserver?order_id=88000000-0000-4000-8000-000000000001',
+    )
   })
 
   it('ne transforme pas le retour navigateur en preuve de paiement', () => {
