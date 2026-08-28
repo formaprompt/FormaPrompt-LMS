@@ -4,6 +4,9 @@ verify_jwt = true
 [functions.create-diagnostic-checkout]
 verify_jwt = true
 
+[functions.get-diagnostic-availability]
+verify_jwt = true
+
 [functions.submit-withdrawal-request]
 verify_jwt = true
 
