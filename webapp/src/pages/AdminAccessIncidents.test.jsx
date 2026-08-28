@@ -214,6 +214,53 @@ describe('administration sécurisée des accès', () => {
     })));
   });
 
+  it('distingue le statut stocké de l’accès effectif et explicite les états sans action', async () => {
+    database.course_access.push(
+      {
+        id: 'access-expired-deadline',
+        user_id: USER_B_ID,
+        course_id: 'formation-ia-act',
+        status: 'active',
+        access_source: 'admin',
+        granted_at: '2025-07-02T10:00:00Z',
+        expires_at: '2025-08-02T10:00:00Z',
+        status_changed_at: '2025-07-02T10:00:00Z',
+        suspension_ends_at: null,
+      },
+      {
+        id: 'access-refunded',
+        user_id: USER_B_ID,
+        course_id: 'formation-prompt-level-1',
+        status: 'refunded',
+        access_source: 'admin',
+        granted_at: '2026-07-02T10:00:00Z',
+        expires_at: null,
+        status_changed_at: '2026-07-02T10:00:00Z',
+        suspension_ends_at: null,
+      },
+      {
+        id: 'access-suspended',
+        user_id: USER_B_ID,
+        course_id: 'formation-ia',
+        status: 'suspended',
+        access_source: 'admin',
+        granted_at: '2026-07-02T10:00:00Z',
+        expires_at: null,
+        status_changed_at: '2026-08-02T10:00:00Z',
+        suspension_ends_at: '2026-09-02T10:00:00Z',
+      },
+    );
+    renderPage();
+    await screen.findByText('Aucune action disponible dans ce cockpit.');
+
+    expect(screen.getAllByText('Actif').length).toBeGreaterThan(0);
+    expect(screen.getByText('Fermé — échéance dépassée')).toBeInTheDocument();
+    expect(screen.getByText('Aucune action disponible dans ce cockpit.')).toBeInTheDocument();
+    expect(screen.getByText('Fin indicative de suspension')).toBeInTheDocument();
+    expect(screen.getByText('Ne réactive jamais automatiquement l’accès.')).toBeInTheDocument();
+    expect(screen.getByText('Signification du statut')).toBeInTheDocument();
+  });
+
   it('conserve les identités et la confirmation utilisables à 390 px', async () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
     window.dispatchEvent(new Event('resize'));

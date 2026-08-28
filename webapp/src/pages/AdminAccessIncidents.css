@@ -46,6 +46,12 @@
 .access-admin-toolbar p { margin: 0; color: #94a3b8; }
 .access-admin-toolbar label { min-width: min(100%, 340px); font-weight: 700; }
 .access-admin-toolbar input { width: 100%; margin-top: 0.4rem; }
+.access-status-help { margin: 0 0 1.25rem; color: #cbd5e1; }
+.access-status-help summary { cursor: pointer; font-weight: 700; }
+.access-status-help dl { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.5rem; margin: 0.75rem 0 0; }
+.access-status-help dl div { padding: 0.65rem; border: 1px solid #475569; border-radius: 8px; background: #172554; }
+.access-status-help dt { color: #fff; font-weight: 800; }
+.access-status-help dd { margin: 0.25rem 0 0; font-size: 0.82rem; }
 
 .access-card-list,
 .incident-card-list { display: grid; gap: 1rem; }
@@ -64,6 +70,10 @@
 .incident-card dt { color: #94a3b8; font-size: 0.8rem; }
 .access-card dd,
 .incident-card dd { margin: 0.2rem 0 0; overflow-wrap: anywhere; }
+.access-effective-status { font-weight: 800; }
+.access-effective-status.is-open { color: #6ee7b7; }
+.access-effective-status.is-closed { color: #fca5a5; }
+.access-suspension-end small { display: block; margin-top: 0.3rem; color: #fbbf24; font-size: 0.78rem; }
 
 .access-status-badge,
 .incident-badges span { display: inline-flex; padding: 0.35rem 0.65rem; border: 1px solid currentColor; border-radius: 999px; font-size: 0.82rem; font-weight: 800; }
@@ -79,6 +89,7 @@
 
 .access-card-actions,
 .incident-actions { justify-content: flex-start; margin: 1rem 0; }
+.access-no-action { margin: 0; color: #cbd5e1; font-size: 0.9rem; font-style: italic; }
 .access-card-actions button,
 .incident-actions button,
 .access-dialog button { padding: 0.7rem 1rem; border: 1px solid #64748b; border-radius: 8px; background: #334155; color: #fff; font-weight: 700; cursor: pointer; }
@@ -140,7 +151,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .access-admin-tabs button { flex: 1 1 0; padding-inline: 0.5rem; white-space: normal; }
   .access-card dl,
   .incident-card dl,
-  .incident-workflow-grid { grid-template-columns: 1fr; }
+  .incident-workflow-grid,
+  .access-status-help dl { grid-template-columns: 1fr; }
   .incident-workflow-grid .is-wide { grid-column: auto; }
   .access-card-actions button,
   .incident-actions button { flex: 1 1 100%; }
