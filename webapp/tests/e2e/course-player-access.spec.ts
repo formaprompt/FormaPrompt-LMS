@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { courseCatalog } from '../../supabase/functions/_shared/paidCourseCatalog.js';
 
 const LEARNER_ID = '61000000-0000-0000-0000-000000000001';
 
@@ -32,22 +33,36 @@ test('CoursePlayer échoue fermé sans fallback purchases puis retrouve un accè
     });
   });
 
+  await page.route('**/functions/v1/paid-course-content', async (route) => {
+    if (accessReadFails) {
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Impossible de vérifier votre accès à la formation.' }),
+      });
+      return;
+    }
+    if (access.status !== 'active') {
+      await route.fulfill({
+        status: 403,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Accès à la formation refusé.' }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ course: courseCatalog['formation-prompt-level-1'] }),
+    });
+  });
+
   await page.route('**/rest/v1/**', async (route) => {
     const url = new URL(route.request().url());
     const resource = url.pathname.split('/').pop();
 
     if (resource === 'profiles') {
       await route.fulfill({ contentType: 'application/json', body: JSON.stringify({ role: 'user' }) });
-      return;
-    }
-    if (resource === 'course_access') {
-      if (accessReadFails) {
-        await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ code: 'PGRST205', message: 'indisponible' }) });
-        return;
-      }
-      const open = access.status === 'active'
-        && (!access.expires_at || new Date(access.expires_at) > new Date());
-      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(open ? [access] : []) });
       return;
     }
     if (resource === 'purchases') {
