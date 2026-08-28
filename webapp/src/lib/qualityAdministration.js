@@ -2,6 +2,12 @@ const CLOSED_ACTION_STATUSES = new Set(['completed', 'cancelled']);
 const CLOSED_RISK_STATUSES = new Set(['accepted', 'closed']);
 const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 
+export function needsQualityRiskReview(item, now = new Date()) {
+  return Boolean(item?.review_due_at
+    && Date.parse(item.review_due_at) < now.getTime()
+    && !CLOSED_RISK_STATUSES.has(item.status));
+}
+
 function unwrap(result, fallback) {
   if (result.error) throw new Error(result.error.message || fallback);
   return result.data || [];
@@ -56,7 +62,7 @@ export function buildQualityOverview(data, now = new Date()) {
   const risks = (data.risks || []).map((item) => ({
     ...item,
     parent: recordsById.get(item.quality_record_id) || {},
-    needsReview: Boolean(item.review_due_at && Date.parse(item.review_due_at) < timestamp && !CLOSED_RISK_STATUSES.has(item.status)),
+    needsReview: needsQualityRiskReview(item, now),
   })).sort((a, b) => Number(b.needsReview) - Number(a.needsReview) || Number(b.risk_score) - Number(a.risk_score));
 
   const closableRecords = (data.records || []).filter((record) => record.status === 'resolved'

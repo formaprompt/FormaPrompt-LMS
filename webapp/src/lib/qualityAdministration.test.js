@@ -2,8 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildQualityOverview, createComplaint, createQualityAction, createQualityRecord, createQualityRisk,
-  updateComplaint, updateQualityAction, updateQualityRecord, updateQualityRisk,
+  needsQualityRiskReview, updateComplaint, updateQualityAction, updateQualityRecord, updateQualityRisk,
 } from './qualityAdministration.js';
+
+test('la revue de risque reprend exactement la logique needsReview du registre qualité', () => {
+  const now = new Date('2026-08-22T12:00:00Z');
+  assert.equal(needsQualityRiskReview({ status: 'assessed', review_due_at: '2026-08-21T12:00:00Z' }, now), true);
+  assert.equal(needsQualityRiskReview({ status: 'accepted', review_due_at: '2026-08-21T12:00:00Z' }, now), false);
+  assert.equal(needsQualityRiskReview({ status: 'assessed', review_due_at: '2026-08-23T12:00:00Z' }, now), false);
+});
 
 test('les réclamations client non accusées et en retard passent avant les actions internes', () => {
   const overview = buildQualityOverview({
