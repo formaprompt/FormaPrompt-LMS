@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  COURSE_ACCESS_STATUS_HELP,
   COURSE_ACCESS_STATUS_LABELS,
   isCourseAccessOpen,
   learnerAccessMessage,
@@ -12,6 +13,11 @@ test('un accès actif sans échéance reste contrôlé et ouvert', () => {
 
 test('un accès suspendu sans échéance reste fermé', () => {
   assert.equal(isCourseAccessOpen({ status: 'suspended', expires_at: null }), false);
+});
+
+test('l’aide administrative décrit les cinq statuts sans modifier leur logique', () => {
+  assert.deepEqual(Object.keys(COURSE_ACCESS_STATUS_HELP), Object.keys(COURSE_ACCESS_STATUS_LABELS));
+  assert.match(COURSE_ACCESS_STATUS_HELP.suspended, /réactivation manuelle/i);
 });
 
 test('completed ne fait pas partie des statuts de droit', () => {
