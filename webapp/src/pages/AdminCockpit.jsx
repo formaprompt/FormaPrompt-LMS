@@ -21,6 +21,7 @@ const COURSE_OPTIONS = [
 const DOMAIN_LABELS = {
   bpf: 'BPF',
   commercial: 'Commercial',
+  incident: 'Incident',
   legal: 'Rétractation',
   privacy: 'RGPD',
   quality: 'Qualité',

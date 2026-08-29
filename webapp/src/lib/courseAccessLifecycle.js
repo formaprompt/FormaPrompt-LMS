@@ -6,6 +6,14 @@ export const COURSE_ACCESS_STATUS_LABELS = {
   expired: 'Expiré',
 };
 
+export const COURSE_ACCESS_STATUS_HELP = {
+  active: 'Droit enregistré comme actif ; l’échéance reste contrôlée.',
+  suspended: 'Accès fermé temporairement, avec réactivation manuelle seulement.',
+  revoked: 'Accès fermé par décision ; une restauration exige une décision manuelle.',
+  refunded: 'Accès fermé après remboursement ou décision administrative.',
+  expired: 'Accès fermé car son échéance est atteinte.',
+};
+
 export function isCourseAccessOpen(access, referenceTime = new Date()) {
   if (access?.status !== 'active') return false;
   return !access.expires_at || new Date(access.expires_at) > referenceTime;
