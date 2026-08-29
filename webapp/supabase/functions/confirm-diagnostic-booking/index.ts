@@ -9,8 +9,10 @@ import {
   buildDiagnosticCalendarEvent,
   createDiagnosticGoogleEvent,
   diagnosticMeetUrl,
+  isDiagnosticGoogleEventMatch,
   parseGoogleCalendarIds,
   queryGoogleCalendarFreeBusy,
+  readDiagnosticGoogleEvent,
   refreshGoogleCalendarAccessToken,
 } from '../_shared/googleCalendar.js'
 import {
@@ -50,6 +52,34 @@ function clientDisplayName(user: { email?: string, user_metadata?: Record<string
 
 function sameSlotSet(left: string[], right: string[]) {
   return left.length === right.length && left.every((id) => right.includes(id))
+}
+
+function safeBookingLogValue(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+
+  return value
+    .replace(/\bBearer\s+\S+/gi, 'Bearer [redacted]')
+    .replace(
+      /\b(access[_-]?token|refresh[_-]?token|authorization|api[_-]?key|secret|password|cookie)\b\s*[:=]\s*\S+/gi,
+      '$1=[redacted]',
+    )
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[redacted-email]')
+    .replace(
+      /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi,
+      '[redacted-id]',
+    )
+    .slice(0, 500)
+}
+
+function safeBookingErrorContext(error: unknown) {
+  const record = error && typeof error === 'object' ? error as Record<string, unknown> : {}
+  const message = error instanceof Error ? error.message : record.message
+
+  return {
+    code: safeBookingLogValue(record.code),
+    message: safeBookingLogValue(message),
+    details: safeBookingLogValue(record.details),
+  }
 }
 
 async function deterministicGoogleEventId(bookingId: string) {
@@ -237,10 +267,29 @@ Deno.serve(async (request) => {
       clientSecret: requiredEnv('GOOGLE_CALENDAR_CLIENT_SECRET'),
       refreshToken: requiredEnv('GOOGLE_CALENDAR_REFRESH_TOKEN'),
     })
-    const recoveringCreatedEvent = existingBooking?.status === 'booking_pending'
-      && Boolean(existingBooking.google_event_id)
+    const samePendingBookingSlots = existingBooking?.status === 'booking_pending'
       && sameSlotSet(existingSlotIds, slotIds)
-    const selected = recoveringCreatedEvent
+    let recoveredGoogleEvent: Record<string, unknown> | null = null
+    if (samePendingBookingSlots && !existingBooking.google_event_id) {
+      const eventId = await deterministicGoogleEventId(existingBooking.id)
+      const existingGoogleEvent = await readDiagnosticGoogleEvent({
+        accessToken: googleAccessToken,
+        calendarId,
+        eventId,
+      })
+      if (isDiagnosticGoogleEventMatch({
+        event: existingGoogleEvent,
+        eventId,
+        startsAt: existingBooking.starts_at,
+        endsAt: existingBooking.ends_at,
+      })) {
+        recoveredGoogleEvent = existingGoogleEvent
+      }
+    }
+    const recoveringCreatedEvent = samePendingBookingSlots
+      && Boolean(existingBooking.google_event_id)
+    const recoveringDeterministicEvent = Boolean(recoveredGoogleEvent)
+    const selected = recoveringCreatedEvent || recoveringDeterministicEvent
       ? { starts_at: existingBooking.starts_at, ends_at: existingBooking.ends_at }
       : await loadSelectedCandidate({
         supabaseAdmin,
@@ -287,7 +336,7 @@ Deno.serve(async (request) => {
       }, 200)
     }
 
-    if (!claim.google_event_id) {
+    if (!claim.google_event_id && !recoveredGoogleEvent) {
       const finalBusy = await queryGoogleCalendarFreeBusy({
         accessToken: googleAccessToken,
         calendarIds,
@@ -304,18 +353,22 @@ Deno.serve(async (request) => {
       }
     }
 
-    const eventId = claim.google_event_id || await deterministicGoogleEventId(bookingId)
-    googleEvent = await createDiagnosticGoogleEvent({
-      accessToken: googleAccessToken,
-      calendarId,
-      event: buildDiagnosticCalendarEvent({
-        eventId,
-        clientName: clientDisplayName(user),
-        clientEmail: user.email,
-        startsAt: claim.starts_at,
-        endsAt: claim.ends_at,
-      }),
-    })
+    if (recoveredGoogleEvent) {
+      googleEvent = recoveredGoogleEvent
+    } else {
+      const eventId = claim.google_event_id || await deterministicGoogleEventId(bookingId)
+      googleEvent = await createDiagnosticGoogleEvent({
+        accessToken: googleAccessToken,
+        calendarId,
+        event: buildDiagnosticCalendarEvent({
+          eventId,
+          clientName: clientDisplayName(user),
+          clientEmail: user.email,
+          startsAt: claim.starts_at,
+          endsAt: claim.ends_at,
+        }),
+      })
+    }
     const meetUrl = diagnosticMeetUrl(googleEvent)
 
     const { data: finalizedRows, error: finalizedError } = await supabaseAdmin.rpc('finalize_diagnostic_ia_booking', {
@@ -340,6 +393,7 @@ Deno.serve(async (request) => {
       },
     }, 201)
   } catch (error) {
+    const errorContext = safeBookingErrorContext(error)
     const code = error instanceof Error ? error.message : 'booking_failed'
     if (supabaseAdmin && bookingId) {
       await markSyncError(supabaseAdmin, bookingId, userId, code, calendarId, googleEvent)
@@ -351,7 +405,7 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Ce créneau vient de devenir indisponible.' }, 409)
     }
     const temporary = code.startsWith('google_') || code.startsWith('missing_env:GOOGLE_')
-    if (!temporary) console.error('confirm-diagnostic-booking:', code)
+    if (!temporary) console.error('confirm-diagnostic-booking:', errorContext)
     return jsonResponse({
       error: temporary
         ? 'La synchronisation du rendez-vous est temporairement indisponible.'

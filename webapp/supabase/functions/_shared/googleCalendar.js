@@ -113,16 +113,44 @@ export function diagnosticMeetUrl(event) {
   return candidates.find((value) => GOOGLE_MEET_URL_PATTERN.test(value || '')) || null
 }
 
-async function readCalendarEvent({ accessToken, calendarId, eventId, fetchImpl }) {
+function sameDateTime(left, right) {
+  const leftTime = new Date(left).getTime()
+  const rightTime = new Date(right).getTime()
+  return Number.isFinite(leftTime) && Number.isFinite(rightTime) && leftTime === rightTime
+}
+
+export function isDiagnosticGoogleEventMatch({ event, eventId, startsAt, endsAt }) {
+  const start = event?.start?.dateTime
+  const end = event?.end?.dateTime
+  return event?.id === eventId
+    && typeof start === 'string'
+    && typeof end === 'string'
+    && sameDateTime(start, startsAt)
+    && sameDateTime(end, endsAt)
+}
+
+export async function readDiagnosticGoogleEvent({
+  accessToken,
+  calendarId,
+  eventId,
+  fetchImpl = fetch,
+}) {
   const response = await fetchImpl(
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
     { headers: { authorization: `Bearer ${accessToken}` } },
   )
   const payload = await response.json().catch(() => ({}))
+  if (response.status === 404) return null
   if (!response.ok || payload.status === 'cancelled' || !payload.id) {
     throw new Error('google_event_lookup_failed')
   }
   return payload
+}
+
+async function readCalendarEvent(options) {
+  const event = await readDiagnosticGoogleEvent(options)
+  if (!event) throw new Error('google_event_lookup_failed')
+  return event
 }
 
 export async function createDiagnosticGoogleEvent({
