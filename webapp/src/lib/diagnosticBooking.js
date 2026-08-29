@@ -1,12 +1,14 @@
 const GENERIC_AVAILABILITY_ERROR = 'Les disponibilités ne peuvent pas être chargées pour le moment.'
+const GENERIC_BOOKING_ERROR = 'La réservation ne peut pas être finalisée pour le moment.'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const MEET_URL_PATTERN = /^https:\/\/meet[.]google[.]com\/[A-Za-z0-9-]+$/
 
-async function functionErrorMessage(error) {
+async function functionErrorMessage(error, fallback = GENERIC_AVAILABILITY_ERROR) {
   if (error?.context && typeof error.context.json === 'function') {
     const payload = await error.context.json().catch(() => null)
-    return payload?.error || GENERIC_AVAILABILITY_ERROR
+    return payload?.error || fallback
   }
-  return GENERIC_AVAILABILITY_ERROR
+  return fallback
 }
 function validCandidate(candidate) {
   const start = new Date(candidate?.starts_at)
@@ -28,6 +30,38 @@ export async function fetchDiagnosticAvailability(supabase, orderId) {
   })
   if (error) throw new Error(await functionErrorMessage(error))
   return Array.isArray(data?.candidates) ? data.candidates.filter(validCandidate) : []
+}
+
+export async function confirmDiagnosticBooking(supabase, orderId, candidate, consents = {}) {
+  if (!UUID_PATTERN.test(orderId || '') || !validCandidate(candidate)) {
+    throw new Error('La sélection de réservation est invalide.')
+  }
+  const { data, error } = await supabase.functions.invoke('confirm-diagnostic-booking', {
+    body: {
+      order_id: orderId,
+      slot_ids: candidate.slot_ids,
+      early_service_start_requested: consents.earlyStartRequested === true,
+      full_performance_withdrawal_acknowledged: consents.fullPerformanceAcknowledged === true,
+      early_service_start_statement_version: 'DIAGNOSTIC-EARLY-START-2026-08-26',
+      full_performance_acknowledgement_version: 'DIAGNOSTIC-FULL-PERFORMANCE-ACK-2026-08-26',
+    },
+  })
+  if (error) throw new Error(await functionErrorMessage(error, GENERIC_BOOKING_ERROR))
+
+  const booking = data?.booking
+  const start = new Date(booking?.starts_at)
+  const end = new Date(booking?.ends_at)
+  const meetUrlIsValid = booking?.google_meet_url == null
+    || MEET_URL_PATTERN.test(booking.google_meet_url)
+  if (!UUID_PATTERN.test(booking?.id || '')
+    || !['booked', 'completed'].includes(booking?.status)
+    || Number.isNaN(start.getTime())
+    || Number.isNaN(end.getTime())
+    || end.getTime() - start.getTime() !== 90 * 60_000
+    || !meetUrlIsValid) {
+    throw new Error(GENERIC_BOOKING_ERROR)
+  }
+  return booking
 }
 
 export function formatDiagnosticCandidate(candidate) {

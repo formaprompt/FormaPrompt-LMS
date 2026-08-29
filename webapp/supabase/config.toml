@@ -7,6 +7,9 @@ verify_jwt = true
 [functions.get-diagnostic-availability]
 verify_jwt = true
 
+[functions.confirm-diagnostic-booking]
+verify_jwt = true
+
 [functions.submit-withdrawal-request]
 verify_jwt = true
 

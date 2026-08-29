@@ -151,6 +151,7 @@ test('protège l endpoint et isole les réservations du LMS', () => {
   assert.ok(orderLookup > auth)
   assert.ok(slotLookup > orderLookup)
   assert.match(endpoint, /order\.status !== 'paid'/)
+  assert.match(endpoint, /cleanup_expired_diagnostic_ia_booking_claims/)
   assert.match(endpoint, /GOOGLE_DIAGNOSTIC_CALENDAR_ID/)
   assert.match(endpoint, /GOOGLE_BUSY_CALENDAR_IDS/)
   assert.match(endpoint, /queryGoogleCalendarFreeBusy/)

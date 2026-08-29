@@ -3,7 +3,11 @@ import { CalendarClock, CheckCircle2, RefreshCw, TriangleAlert } from 'lucide-re
 import { Link, useSearchParams } from 'react-router-dom'
 import SEO from '../components/SEO'
 import { useAuth } from '../contexts/useAuth'
-import { fetchDiagnosticAvailability, formatDiagnosticCandidate } from '../lib/diagnosticBooking'
+import {
+  confirmDiagnosticBooking,
+  fetchDiagnosticAvailability,
+  formatDiagnosticCandidate,
+} from '../lib/diagnosticBooking'
 import { supabase } from '../lib/supabaseClient'
 import './DiagnosticBooking.css'
 
@@ -32,6 +36,7 @@ export default function DiagnosticBooking() {
   const [feedback, setFeedback] = useState(validOrderId ? '' : 'La référence de commande est absente ou invalide.')
   const [earlyStartRequested, setEarlyStartRequested] = useState(false)
   const [fullPerformanceAcknowledged, setFullPerformanceAcknowledged] = useState(false)
+  const [confirmedBooking, setConfirmedBooking] = useState(null)
 
   const loadAvailability = useCallback(async () => {
     if (!user || !validOrderId) return
@@ -59,7 +64,7 @@ export default function DiagnosticBooking() {
   const requiresEarlyConsents = selectedCandidate?.requires_early_start_consents === true
   const canConfirm = Boolean(selectedCandidate)
     && (!requiresEarlyConsents || (earlyStartRequested && fullPerformanceAcknowledged))
-    && status === 'ready'
+    && ['ready', 'booking-error'].includes(status)
 
   const selectCandidate = (candidate) => {
     setSelectedId(candidate.id)
@@ -74,21 +79,24 @@ export default function DiagnosticBooking() {
     setStatus('confirming')
     setFeedback('')
     try {
-      const refreshed = await fetchDiagnosticAvailability(supabase, validOrderId)
-      const stillAvailable = refreshed.find((candidate) => candidate.id === selectedCandidate.id)
-      if (!stillAvailable) {
+      const booking = await confirmDiagnosticBooking(supabase, validOrderId, selectedCandidate, {
+        earlyStartRequested,
+        fullPerformanceAcknowledged,
+      })
+      setConfirmedBooking(booking)
+      setStatus('confirmed')
+      setFeedback('Votre rendez-vous est confirmé et enregistré dans Google Calendar.')
+    } catch (error) {
+      if (/créneau.*indisponible/i.test(error.message)) {
+        const refreshed = await fetchDiagnosticAvailability(supabase, validOrderId).catch(() => [])
         setCandidates(refreshed)
         setSelectedId('')
         setStatus('conflict')
         setFeedback('Ce créneau vient de devenir indisponible. Choisissez une autre proposition.')
-        return
+      } else {
+        setStatus('booking-error')
+        setFeedback(error.message)
       }
-      setCandidates(refreshed)
-      setStatus('verified')
-      setFeedback('Le créneau est toujours disponible. Son enregistrement définitif sera activé avec la réservation sécurisée Google Calendar.')
-    } catch (error) {
-      setStatus('error')
-      setFeedback(error.message)
     }
   }
 
@@ -120,9 +128,20 @@ export default function DiagnosticBooking() {
           ) : (
             <form onSubmit={confirmSelection}>
               {status === 'conflict' && <p className="diagnostic-booking-alert" role="alert">{feedback}</p>}
-              {status === 'verified' && <div className="diagnostic-booking-verified"><CheckCircle2 aria-hidden="true" /><p>{feedback}</p></div>}
+              {status === 'booking-error' && <p className="diagnostic-booking-alert" role="alert">{feedback} Vous pouvez réessayer sans changer de créneau.</p>}
+              {status === 'confirmed' && (
+                <div className="diagnostic-booking-verified" role="status">
+                  <CheckCircle2 aria-hidden="true" />
+                  <div>
+                    <p><strong>Réservation confirmée.</strong> {feedback}</p>
+                    {confirmedBooking?.google_meet_url
+                      ? <p><a href={confirmedBooking.google_meet_url} target="_blank" rel="noreferrer">Ouvrir le lien Google Meet</a></p>
+                      : <p>Le lien de visioconférence vous sera communiqué avec les informations du rendez-vous.</p>}
+                  </div>
+                </div>
+              )}
 
-              <fieldset className="diagnostic-booking-slots" disabled={status === 'confirming' || status === 'verified'}>
+              <fieldset className="diagnostic-booking-slots" disabled={status === 'confirming' || status === 'confirmed'}>
                 <legend>Sélectionnez une date et une heure</legend>
                 {groups.map((group) => (
                   <section key={group.dateKey} className="diagnostic-booking-day">
@@ -157,7 +176,9 @@ export default function DiagnosticBooking() {
 
               <div className="diagnostic-booking-actions">
                 <button className="btn btn-primary" type="submit" disabled={!canConfirm}>
-                  {status === 'confirming' ? 'Nouvelle vérification…' : 'Confirmer ce créneau'}
+                  {status === 'confirming'
+                    ? 'Nouvelle vérification…'
+                    : status === 'booking-error' ? 'Réessayer la confirmation' : 'Confirmer ce créneau'}
                 </button>
                 <button className="btn booking-refresh" type="button" onClick={loadAvailability} disabled={status === 'confirming'}><RefreshCw size={18} aria-hidden="true" /> Actualiser</button>
               </div>

@@ -17,6 +17,13 @@ const CANDIDATE = {
   ends_at: '2026-09-03T09:30:00.000Z',
   requires_early_start_consents: false,
 }
+const BOOKING = {
+  id: '88000000-0000-4000-8000-000000000021',
+  status: 'booked',
+  starts_at: CANDIDATE.starts_at,
+  ends_at: CANDIDATE.ends_at,
+  google_meet_url: 'https://meet.google.com/abc-defg-hij',
+}
 
 vi.mock('../contexts/useAuth', () => ({ useAuth: vi.fn() }))
 vi.mock('../lib/supabaseClient', () => ({ supabase: { functions: { invoke } } }))
@@ -74,9 +81,34 @@ describe('réservation frontend du Diagnostic IA', () => {
     expect(confirm).toBeEnabled()
   })
 
+  it('transmet séparément les deux consentements requis lors de la réservation B2C', async () => {
+    invoke
+      .mockResolvedValueOnce({
+        data: { candidates: [{ ...CANDIDATE, requires_early_start_consents: true }] },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: { booking: BOOKING }, error: null })
+    renderPage()
+    fireEvent.click(await screen.findByRole('radio'))
+    const checkboxes = screen.getAllByRole('checkbox')
+    fireEvent.click(checkboxes[0])
+    fireEvent.click(checkboxes[1])
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmer ce créneau' }))
+    await screen.findByText(/Réservation confirmée/i)
+    expect(invoke).toHaveBeenLastCalledWith('confirm-diagnostic-booking', {
+      body: expect.objectContaining({
+        early_service_start_requested: true,
+        full_performance_withdrawal_acknowledged: true,
+        early_service_start_statement_version: 'DIAGNOSTIC-EARLY-START-2026-08-26',
+        full_performance_acknowledgement_version: 'DIAGNOSTIC-FULL-PERFORMANCE-ACK-2026-08-26',
+      }),
+    })
+  })
+
   it('signale un conflit si le créneau disparaît lors de la nouvelle vérification', async () => {
     invoke
       .mockResolvedValueOnce({ data: { candidates: [CANDIDATE] }, error: null })
+      .mockResolvedValueOnce({ data: null, error: { context: { json: async () => ({ error: 'Ce créneau vient de devenir indisponible.' }) } } })
       .mockResolvedValueOnce({ data: { candidates: [] }, error: null })
     renderPage()
     fireEvent.click(await screen.findByRole('radio'))
@@ -84,13 +116,35 @@ describe('réservation frontend du Diagnostic IA', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/vient de devenir indisponible/i)
   })
 
-  it('ne simule aucune réservation avant l’intégration Google sécurisée', async () => {
-    invoke.mockResolvedValue({ data: { candidates: [CANDIDATE] }, error: null })
+  it('confirme réellement la réservation et affiche le lien Google Meet', async () => {
+    invoke
+      .mockResolvedValueOnce({ data: { candidates: [CANDIDATE] }, error: null })
+      .mockResolvedValueOnce({ data: { booking: BOOKING }, error: null })
     renderPage()
     fireEvent.click(await screen.findByRole('radio'))
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer ce créneau' }))
-    expect(await screen.findByText(/enregistrement définitif sera activé/i)).toBeVisible()
-    expect(screen.queryByText(/réservation confirmée/i)).not.toBeInTheDocument()
-    expect(invoke.mock.calls.every(([name]) => name === 'get-diagnostic-availability')).toBe(true)
+    expect(await screen.findByText(/Réservation confirmée/i)).toBeVisible()
+    expect(screen.getByRole('link', { name: /Ouvrir le lien Google Meet/i })).toHaveAttribute('href', BOOKING.google_meet_url)
+    expect(invoke.mock.calls.map(([name]) => name)).toEqual([
+      'get-diagnostic-availability',
+      'confirm-diagnostic-booking',
+    ])
+  })
+
+  it('permet de reprendre une synchronisation Google interrompue sans perdre le créneau', async () => {
+    invoke
+      .mockResolvedValueOnce({ data: { candidates: [CANDIDATE] }, error: null })
+      .mockResolvedValueOnce({
+        data: null,
+        error: { context: { json: async () => ({ error: 'La synchronisation du rendez-vous est temporairement indisponible.' }) } },
+      })
+      .mockResolvedValueOnce({ data: { booking: BOOKING }, error: null })
+    renderPage()
+    fireEvent.click(await screen.findByRole('radio'))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmer ce créneau' }))
+    const retry = await screen.findByRole('button', { name: 'Réessayer la confirmation' })
+    expect(screen.getByRole('alert')).toHaveTextContent(/sans changer de créneau/i)
+    fireEvent.click(retry)
+    expect(await screen.findByText(/Réservation confirmée/i)).toBeVisible()
   })
 })

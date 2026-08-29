@@ -1,5 +1,7 @@
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 const FREE_BUSY_ENDPOINT = 'https://www.googleapis.com/calendar/v3/freeBusy'
+const CALENDAR_API_ENDPOINT = 'https://www.googleapis.com/calendar/v3'
+const GOOGLE_MEET_URL_PATTERN = /^https:\/\/meet[.]google[.]com\/[A-Za-z0-9-]+$/
 
 export function parseGoogleCalendarIds(diagnosticCalendarId, additionalCalendarIds = '') {
   return [...new Set([
@@ -65,3 +67,94 @@ export async function queryGoogleCalendarFreeBusy({
   return busy
 }
 
+export function buildDiagnosticCalendarEvent({
+  eventId,
+  clientName,
+  clientEmail,
+  startsAt,
+  endsAt,
+}) {
+  const safeName = String(clientName || 'Client FormaPrompt')
+    .replace(/[\r\n\t]+/g, ' ')
+    .trim()
+    .slice(0, 120) || 'Client FormaPrompt'
+  const safeEmail = String(clientEmail || '').trim().toLowerCase()
+  if (!eventId || !safeEmail || !startsAt || !endsAt) throw new Error('google_event_input_invalid')
+
+  return {
+    id: eventId,
+    summary: `Diagnostic IA Express — ${safeName}`,
+    description: [
+      'Diagnostic IA Express FormaPrompt',
+      `Client : ${safeName}`,
+      `Contact : ${safeEmail}`,
+      'Durée : 90 minutes',
+      'Format : visioconférence',
+    ].join('\n'),
+    start: { dateTime: startsAt, timeZone: 'Europe/Paris' },
+    end: { dateTime: endsAt, timeZone: 'Europe/Paris' },
+    attendees: [{ email: safeEmail }],
+    conferenceData: {
+      createRequest: {
+        requestId: `meet-${eventId}`,
+        conferenceSolutionKey: { type: 'hangoutsMeet' },
+      },
+    },
+  }
+}
+
+export function diagnosticMeetUrl(event) {
+  const candidates = [
+    event?.hangoutLink,
+    ...(event?.conferenceData?.entryPoints || [])
+      .filter((entry) => entry?.entryPointType === 'video')
+      .map((entry) => entry.uri),
+  ]
+  return candidates.find((value) => GOOGLE_MEET_URL_PATTERN.test(value || '')) || null
+}
+
+async function readCalendarEvent({ accessToken, calendarId, eventId, fetchImpl }) {
+  const response = await fetchImpl(
+    `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
+    { headers: { authorization: `Bearer ${accessToken}` } },
+  )
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || payload.status === 'cancelled' || !payload.id) {
+    throw new Error('google_event_lookup_failed')
+  }
+  return payload
+}
+
+export async function createDiagnosticGoogleEvent({
+  accessToken,
+  calendarId,
+  event,
+  fetchImpl = fetch,
+}) {
+  const response = await fetchImpl(
+    `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
+    {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(event),
+    },
+  )
+
+  if (response.status === 409) {
+    return readCalendarEvent({
+      accessToken,
+      calendarId,
+      eventId: event.id,
+      fetchImpl,
+    })
+  }
+
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload.id || payload.status === 'cancelled') {
+    throw new Error('google_event_create_failed')
+  }
+  return payload
+}

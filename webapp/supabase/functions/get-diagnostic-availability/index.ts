@@ -72,6 +72,10 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Paiement confirmé requis.' }, 403);
     }
 
+    const { error: cleanupError } = await supabaseAdmin
+      .rpc('cleanup_expired_diagnostic_ia_booking_claims');
+    if (cleanupError) throw cleanupError;
+
     const fromIso = range.from.toISOString();
     const toIso = range.to.toISOString();
     const firstDate = parisDateKey(range.from);
