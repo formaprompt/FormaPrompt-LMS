@@ -1,5 +1,6 @@
 const GENERIC_AVAILABILITY_ERROR = 'Les disponibilités ne peuvent pas être chargées pour le moment.'
 const GENERIC_BOOKING_ERROR = 'La réservation ne peut pas être finalisée pour le moment.'
+const GENERIC_RESCHEDULE_ERROR = 'Le rendez-vous ne peut pas être déplacé pour le moment.'
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const MEET_URL_PATTERN = /^https:\/\/meet[.]google[.]com\/[A-Za-z0-9-]+$/
 
@@ -30,6 +31,37 @@ export async function fetchDiagnosticAvailability(supabase, orderId) {
   })
   if (error) throw new Error(await functionErrorMessage(error))
   return Array.isArray(data?.candidates) ? data.candidates.filter(validCandidate) : []
+}
+
+export async function fetchDiagnosticRescheduleAvailability(supabase, bookingId, range = {}) {
+  if (!UUID_PATTERN.test(bookingId || '')) throw new Error('La référence du rendez-vous est invalide.')
+  const body = { booking_id: bookingId }
+  if (range.from) body.from = range.from
+  if (range.to) body.to = range.to
+  const { data, error } = await supabase.functions.invoke('get-diagnostic-availability', { body })
+  if (error) throw new Error(await functionErrorMessage(error))
+  return Array.isArray(data?.candidates) ? data.candidates.filter(validCandidate) : []
+}
+
+export async function rescheduleDiagnosticBooking(supabase, bookingId, candidate) {
+  if (!UUID_PATTERN.test(bookingId || '') || !validCandidate(candidate)) {
+    throw new Error('La sélection de déplacement est invalide.')
+  }
+  const { data, error } = await supabase.functions.invoke('admin-reschedule-diagnostic-booking', {
+    body: { booking_id: bookingId, slot_ids: candidate.slot_ids },
+  })
+  if (error) throw new Error(await functionErrorMessage(error, GENERIC_RESCHEDULE_ERROR))
+  const booking = data?.booking
+  const start = new Date(booking?.starts_at)
+  const end = new Date(booking?.ends_at)
+  if (booking?.id !== bookingId
+    || booking?.status !== 'booked'
+    || Number.isNaN(start.getTime())
+    || Number.isNaN(end.getTime())
+    || end.getTime() - start.getTime() !== 90 * 60_000) {
+    throw new Error(GENERIC_RESCHEDULE_ERROR)
+  }
+  return booking
 }
 
 export async function confirmDiagnosticBooking(supabase, orderId, candidate, consents = {}) {

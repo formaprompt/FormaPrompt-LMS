@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import {
+  fetchDiagnosticRescheduleAvailability,
+  formatDiagnosticCandidate,
+  rescheduleDiagnosticBooking,
+} from '../lib/diagnosticBooking';
+import {
   completeDiagnosticBooking,
   correctDiagnosticRestitution,
   createEmptyRestitutionContent,
@@ -214,7 +219,7 @@ function RestitutionPreview({ content, onClose }) {
   return (
     <section className="diagnostic-admin-preview" aria-labelledby="diagnostic-preview-title">
       <header><div><p>Aperçu non publié</p><h2 id="diagnostic-preview-title">Restitution Diagnostic IA Express</h2></div><button type="button" className="button-secondary" onClick={onClose}>Fermer l’aperçu</button></header>
-      <div className="diagnostic-admin-preview__intro"><span>Niveau de maturité</span><strong>{maturity ? `${maturity.value}. ${maturity.label}` : 'À renseigner'}</strong><p>{content.overall_summary || 'La synthèse générale apparaîtra ici.'}</p></div>
+      <div className="diagnostic-admin-preview__intro"><span>Niveau d’avancement dans l’usage de l’IA</span><strong>{maturity ? `${maturity.value}. ${maturity.label}` : 'À renseigner'}</strong>{maturity && <p>{maturity.description}</p>}<p>{content.overall_summary || 'La synthèse générale apparaîtra ici.'}</p></div>
       {sections.map(([title, value]) => value && <section key={title}><h3>{title}</h3><p>{value}</p></section>)}
       <PreviewList title="Points forts" values={content.strengths} />
       <PreviewList title="Points de vigilance" values={content.watch_points} />
@@ -231,6 +236,88 @@ function PreviewList({ title, values }) {
   return <section><h3>{title}</h3><ul>{values.map((value, index) => <li key={`${title}-${index}`}>{value}</li>)}</ul></section>;
 }
 
+function ReschedulePanel({ diagnostic, onCancel, onSuccess }) {
+  const [status, setStatus] = useState('loading');
+  const [candidates, setCandidates] = useState([]);
+  const [selectedId, setSelectedId] = useState('');
+  const [confirming, setConfirming] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const loadCandidates = useCallback(async () => {
+    setStatus('loading');
+    setMessage('');
+    try {
+      const result = await fetchDiagnosticRescheduleAvailability(supabase, diagnostic.id);
+      const available = result.filter((candidate) => candidate.starts_at !== diagnostic.starts_at
+        || candidate.ends_at !== diagnostic.ends_at);
+      setCandidates(available);
+      setSelectedId('');
+      setStatus(available.length ? 'ready' : 'empty');
+    } catch (error) {
+      setCandidates([]);
+      setStatus('error');
+      setMessage(error.message || 'Les disponibilités ne peuvent pas être chargées.');
+    }
+  }, [diagnostic.ends_at, diagnostic.id, diagnostic.starts_at]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(loadCandidates, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadCandidates]);
+
+  const selectedCandidate = candidates.find((candidate) => candidate.id === selectedId) || null;
+  const grouped = candidates.reduce((groups, candidate) => {
+    const formatted = formatDiagnosticCandidate(candidate);
+    const existing = groups.find((group) => group.dateKey === formatted.dateKey);
+    const item = { ...candidate, ...formatted };
+    if (existing) existing.candidates.push(item);
+    else groups.push({ dateKey: formatted.dateKey, dateLabel: formatted.dateLabel, candidates: [item] });
+    return groups;
+  }, []);
+
+  async function confirmReschedule() {
+    if (!selectedCandidate) return;
+    setStatus('saving');
+    setMessage('');
+    try {
+      const booking = await rescheduleDiagnosticBooking(supabase, diagnostic.id, selectedCandidate);
+      onSuccess(booking);
+    } catch (error) {
+      setConfirming(false);
+      setStatus('error');
+      setMessage(error.message || 'Le rendez-vous ne peut pas être déplacé.');
+    }
+  }
+
+  return (
+    <section className="diagnostic-admin-reschedule" aria-labelledby="diagnostic-reschedule-title">
+      <header className="diagnostic-admin-section-heading">
+        <div><p>Calendar et Meet existants</p><h3 id="diagnostic-reschedule-title">Choisir un nouveau créneau</h3></div>
+        <button type="button" className="button-tertiary" onClick={onCancel} disabled={status === 'saving'}>Fermer</button>
+      </header>
+      <p>Les horaires sont affichés en heure de Paris. Seuls les créneaux de 90 minutes encore disponibles sont proposés.</p>
+      {status === 'loading' && <p role="status">Chargement des disponibilités…</p>}
+      {status === 'empty' && <p role="status">Aucun autre créneau n’est disponible actuellement.</p>}
+      {message && <div className="diagnostic-admin-message is-error" role="alert"><span>{message}</span><button type="button" onClick={loadCandidates}>Réessayer</button></div>}
+      {grouped.map((group) => (
+        <fieldset key={group.dateKey} disabled={status === 'saving'}>
+          <legend>{group.dateLabel}</legend>
+          <div className="diagnostic-admin-reschedule__times">
+            {group.candidates.map((candidate) => (
+              <label key={candidate.id} className={candidate.id === selectedId ? 'is-selected' : ''}>
+                <input type="radio" name="admin-diagnostic-reschedule" value={candidate.id} checked={candidate.id === selectedId} onChange={() => setSelectedId(candidate.id)} />
+                <span>{candidate.timeLabel}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+      {status === 'ready' && <div className="diagnostic-admin-form-actions"><button type="button" className="button-primary" disabled={!selectedCandidate} onClick={() => setConfirming(true)}>Choisir ce nouveau créneau</button><button type="button" className="button-secondary" onClick={loadCandidates}>Actualiser</button></div>}
+      {confirming && selectedCandidate && <div className="diagnostic-admin-dialog-backdrop" role="presentation"><section className="diagnostic-admin-dialog" role="dialog" aria-modal="true" aria-labelledby="diagnostic-reschedule-confirm-title"><h2 id="diagnostic-reschedule-confirm-title">Déplacer ce rendez-vous ?</h2><p><strong>Ancien rendez-vous :</strong> {formatDateTime(diagnostic.starts_at)} – {new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(diagnostic.ends_at))}</p><p><strong>Nouveau rendez-vous :</strong> {formatDiagnosticCandidate(selectedCandidate).dateLabel}, {formatDiagnosticCandidate(selectedCandidate).timeLabel}</p><p>Le client recevra automatiquement une mise à jour de son invitation.</p><div className="diagnostic-admin-dialog__actions"><button type="button" className="button-secondary" onClick={() => setConfirming(false)} disabled={status === 'saving'}>Annuler</button><button type="button" className="button-primary" onClick={confirmReschedule} disabled={status === 'saving'}>{status === 'saving' ? 'Déplacement…' : 'Confirmer le nouveau rendez-vous'}</button></div></section></div>}
+    </section>
+  );
+}
+
 function RestitutionForm({ diagnostic, content, setContent, working, correctionMode, setCorrectionMode, correctionReason, setCorrectionReason, onCancelCorrection, onSave, onPreview, onPublish, onCorrect }) {
   const restitution = diagnostic.restitution;
   const published = restitution?.status === 'published';
@@ -238,6 +325,7 @@ function RestitutionForm({ diagnostic, content, setContent, working, correctionM
   const publicationValidation = validateRestitutionContent(content, { forPublication: true });
   const setField = (field) => (value) => setContent((current) => ({ ...current, [field]: value }));
   const canPublish = restitution?.status === 'draft' && diagnostic.status === 'completed' && publicationValidation.valid;
+  const selectedMaturity = MATURITY_LEVELS.find((level) => level.value === Number(content.observed_maturity_level));
   return (
     <section className="diagnostic-admin-restitution" aria-labelledby="restitution-form-title">
       <header className="diagnostic-admin-section-heading">
@@ -254,10 +342,12 @@ function RestitutionForm({ diagnostic, content, setContent, working, correctionM
         <fieldset disabled={disabled}>
           <legend>Synthèse</legend>
           <CharacterField label="Synthèse générale" value={content.overall_summary} onChange={setField('overall_summary')} maximum={RESTITUTION_LIMITS.overall_summary} disabled={disabled} rows={6} hint="50 caractères minimum pour publier." />
-          <label className="diagnostic-admin-field">Niveau de maturité
+          <label className="diagnostic-admin-field">Niveau d’avancement dans l’usage de l’IA
+            <small>Évalue où en est actuellement le client dans l’utilisation concrète et organisée de l’IA dans son activité.</small>
             <select value={content.observed_maturity_level ?? ''} onChange={(event) => setField('observed_maturity_level')(event.target.value ? Number(event.target.value) : null)} disabled={disabled}>
               <option value="">À évaluer</option>{MATURITY_LEVELS.map((level) => <option key={level.value} value={level.value}>{level.value}. {level.label}</option>)}
             </select>
+            {selectedMaturity && <span className="diagnostic-admin-maturity-help"><strong>{selectedMaturity.value} - {selectedMaturity.label}</strong>{selectedMaturity.description}</span>}
           </label>
           <CharacterField label="Analyse de maturité" value={content.maturity_assessment} onChange={setField('maturity_assessment')} maximum={RESTITUTION_LIMITS.maturity_assessment} disabled={disabled} />
           <CharacterField label="Usages actuels" value={content.current_uses} onChange={setField('current_uses')} maximum={RESTITUTION_LIMITS.current_uses} disabled={disabled} />
@@ -305,6 +395,7 @@ export default function AdminDiagnosticRestitutions() {
   const [correctionMode, setCorrectionMode] = useState(false);
   const [correctionReason, setCorrectionReason] = useState('');
   const [revisionConflict, setRevisionConflict] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
 
   const loadData = useCallback(async ({ quiet = false } = {}) => {
     if (role !== 'admin') return;
@@ -354,6 +445,7 @@ export default function AdminDiagnosticRestitutions() {
     setCorrectionMode(false);
     setCorrectionReason('');
     setPreviewOpen(false);
+    setRescheduleOpen(false);
     setRevisionConflict(false);
   }
 
@@ -383,6 +475,18 @@ export default function AdminDiagnosticRestitutions() {
     } finally {
       setWorking(false);
     }
+  }
+
+  function handleRescheduledBooking(booking) {
+    replaceSelected({
+      ...booking,
+      order: selected.order,
+      questionnaire: selected.questionnaire,
+      restitution: selected.restitution,
+      clientName: selected.clientName,
+    });
+    setRescheduleOpen(false);
+    setFeedback({ type: 'success', message: 'Le rendez-vous a été déplacé. Calendar a envoyé la mise à jour au client et le lien Meet est conservé.' });
   }
 
   async function saveDraft() {
@@ -471,8 +575,10 @@ export default function AdminDiagnosticRestitutions() {
             <header className="diagnostic-admin-detail__header"><div><p>Fiche Diagnostic</p><h2>{selected.clientName}</h2><span>{selected.order?.customer_email}</span></div><button type="button" className="button-tertiary" onClick={() => setSelectedId(null)}>Fermer la fiche</button></header>
             <div className="diagnostic-admin-summary-grid">
               <section><h3>Commande</h3><dl><div><dt>Référence</dt><dd className="diagnostic-admin-reference">{reference(selected.order_id)}</dd></div><div><dt>Client</dt><dd>{selected.order?.customer_email || selected.clientName}</dd></div><div><dt>Statut</dt><dd>{ORDER_LABELS[selected.order?.status] || selected.order?.status || 'Inconnu'}</dd></div></dl></section>
-              <section><h3>Rendez-vous</h3><dl><div><dt>Date et horaires</dt><dd>{formatDateTime(selected.starts_at)} – {new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(selected.ends_at))}</dd></div><div><dt>Booking</dt><dd>{BOOKING_LABELS[selected.status] || selected.status}</dd></div><div><dt>Calendar</dt><dd>{selected.google_sync_status}</dd></div><div><dt>Meet</dt><dd>{selected.google_meet_status}</dd></div></dl>{selected.status === 'booked' && <button type="button" className="button-primary" onClick={() => setConfirmation('complete')} disabled={working}>Marquer le diagnostic comme réalisé</button>}</section>
+              <section><h3>Rendez-vous</h3><dl><div><dt>Date et horaires</dt><dd>{formatDateTime(selected.starts_at)} – {new Intl.DateTimeFormat('fr-FR', { timeStyle: 'short' }).format(new Date(selected.ends_at))}</dd></div><div><dt>Booking</dt><dd>{BOOKING_LABELS[selected.status] || selected.status}</dd></div><div><dt>Calendar</dt><dd>{selected.google_sync_status}</dd></div><div><dt>Meet</dt><dd>{selected.google_meet_status}</dd></div></dl>{selected.status === 'booked' && <div className="diagnostic-admin-booking-actions"><button type="button" className="button-secondary" onClick={() => setRescheduleOpen((value) => !value)} disabled={working}>Modifier le rendez-vous</button><button type="button" className="button-primary" onClick={() => setConfirmation('complete')} disabled={working}>Marquer le diagnostic comme réalisé</button></div>}</section>
             </div>
+
+            {rescheduleOpen && selected.status === 'booked' && <ReschedulePanel diagnostic={selected} onCancel={() => setRescheduleOpen(false)} onSuccess={handleRescheduledBooking} />}
 
             <section className="diagnostic-admin-questionnaire" aria-labelledby="questionnaire-title"><header className="diagnostic-admin-section-heading"><div><p>Lecture seule</p><h2 id="questionnaire-title">Questionnaire préalable</h2></div><span className={statusClass(selected.questionnaire ? 'received' : 'missing')}>{selected.questionnaire ? 'Transmis' : 'Absent'}</span></header>{selected.questionnaire ? <><p className="diagnostic-admin-questionnaire__identity"><strong>{selected.questionnaire.first_name} {selected.questionnaire.last_name}</strong> · version {selected.questionnaire.questionnaire_version} · transmis le {formatDateTime(selected.questionnaire.submitted_at)}</p><dl>{QUESTIONNAIRE_FIELDS.map(([label, field]) => <div key={field}><dt>{label}</dt><dd>{QUESTIONNAIRE_VALUE_LABELS[selected.questionnaire[field]] || selected.questionnaire[field]}</dd></div>)}</dl></> : <p className="diagnostic-admin-muted">Aucun questionnaire n’a été transmis pour ce booking.</p>}</section>
 

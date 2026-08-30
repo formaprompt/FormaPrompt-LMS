@@ -10,6 +10,9 @@ verify_jwt = true
 [functions.confirm-diagnostic-booking]
 verify_jwt = true
 
+[functions.admin-reschedule-diagnostic-booking]
+verify_jwt = true
+
 [functions.submit-diagnostic-questionnaire]
 verify_jwt = true
 

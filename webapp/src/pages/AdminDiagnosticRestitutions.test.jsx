@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   save: vi.fn(),
   publish: vi.fn(),
   correct: vi.fn(),
+  availability: vi.fn(),
+  reschedule: vi.fn(),
 }));
 
 vi.mock('../contexts/useAuth', () => ({ useAuth: () => ({ role: mocks.auth.role, user: { id: 'admin-1' } }) }));
@@ -24,6 +26,22 @@ vi.mock('../lib/diagnosticRestitution', async (importOriginal) => ({
   publishDiagnosticRestitution: mocks.publish,
   correctDiagnosticRestitution: mocks.correct,
 }));
+vi.mock('../lib/diagnosticBooking', async (importOriginal) => ({
+  ...(await importOriginal()),
+  fetchDiagnosticRescheduleAvailability: mocks.availability,
+  rescheduleDiagnosticBooking: mocks.reschedule,
+}));
+
+const RESCHEDULE_CANDIDATE = {
+  id: 'candidate-reschedule',
+  slot_ids: [
+    '99000000-0000-4000-8000-000000000011',
+    '99000000-0000-4000-8000-000000000012',
+    '99000000-0000-4000-8000-000000000013',
+  ],
+  starts_at: '2026-09-12T14:00:00Z',
+  ends_at: '2026-09-12T15:30:00Z',
+};
 
 function validContent(suffix = '') {
   return {
@@ -115,12 +133,20 @@ describe('administration des Diagnostics IA et restitutions', () => {
     mocks.save.mockReset();
     mocks.publish.mockReset();
     mocks.correct.mockReset();
+    mocks.availability.mockReset();
+    mocks.reschedule.mockReset();
     mocks.fetch.mockImplementation(async () => structuredClone(mocks.database));
     mocks.complete.mockImplementation(async (_client, bookingId) => {
       const item = findDiagnostic(bookingId);
       Object.assign(item, { status: 'completed', completed_at: '2026-09-10T09:30:00Z' });
       return structuredClone(item);
     });
+    mocks.availability.mockResolvedValue([RESCHEDULE_CANDIDATE]);
+    mocks.reschedule.mockImplementation(async (_client, bookingId, candidate) => ({
+      ...findDiagnostic(bookingId),
+      starts_at: candidate.starts_at,
+      ends_at: candidate.ends_at,
+    }));
     mocks.save.mockImplementation(async (_client, bookingId, expectedRevision, content) => {
       const item = findDiagnostic(bookingId);
       const next = { ...(item.restitution || {}), id: item.restitution?.id || `restitution-${bookingId}`, booking_id: bookingId, status: 'draft', revision: expectedRevision + 1, content_sha256: 'b'.repeat(64), ...structuredClone(content) };
@@ -172,6 +198,67 @@ describe('administration des Diagnostics IA et restitutions', () => {
     expect(questionnaire).toHaveTextContent('Organisation TEST');
     expect(questionnaire).toHaveTextContent('Objectif TEST');
     expect(within(questionnaire).queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('propose le déplacement uniquement pour un booking réservé', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await openDiagnostic(user, 'booked');
+    expect(screen.getByRole('button', { name: 'Modifier le rendez-vous' })).toBeVisible();
+    await openDiagnostic(user, 'to-write');
+    expect(screen.queryByRole('button', { name: 'Modifier le rendez-vous' })).not.toBeInTheDocument();
+  });
+
+  it('charge les disponibilités et exige la confirmation ancien/nouveau avant déplacement', async () => {
+    const user = userEvent.setup();
+    mocks.availability.mockResolvedValueOnce([{
+      ...RESCHEDULE_CANDIDATE,
+      id: 'candidate-current',
+      starts_at: '2026-09-10T08:00:00Z',
+      ends_at: '2026-09-10T09:30:00Z',
+    }, RESCHEDULE_CANDIDATE]);
+    renderPage();
+    await openDiagnostic(user, 'booked');
+    await user.click(screen.getByRole('button', { name: 'Modifier le rendez-vous' }));
+    await waitFor(() => expect(mocks.availability).toHaveBeenCalledWith(expect.anything(), 'booked'));
+    expect(await screen.findAllByRole('radio')).toHaveLength(1);
+    await user.click(screen.getByRole('radio'));
+    expect(mocks.reschedule).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Choisir ce nouveau créneau' }));
+    const dialog = screen.getByRole('dialog', { name: 'Déplacer ce rendez-vous ?' });
+    expect(dialog).toHaveTextContent('Ancien rendez-vous');
+    expect(dialog).toHaveTextContent('Nouveau rendez-vous');
+    expect(dialog).toHaveTextContent('mise à jour de son invitation');
+    expect(mocks.reschedule).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole('button', { name: 'Confirmer le nouveau rendez-vous' }));
+    await waitFor(() => expect(mocks.reschedule).toHaveBeenCalledWith(expect.anything(), 'booked', expect.objectContaining({ id: 'candidate-reschedule' })));
+    expect(await screen.findByRole('status')).toHaveTextContent('rendez-vous a été déplacé');
+  });
+
+  it('signale un créneau devenu indisponible sans modifier la fiche', async () => {
+    const user = userEvent.setup();
+    mocks.reschedule.mockRejectedValueOnce(new Error('Ce créneau vient de devenir indisponible.'));
+    renderPage();
+    await openDiagnostic(user, 'booked');
+    await user.click(screen.getByRole('button', { name: 'Modifier le rendez-vous' }));
+    await user.click(await screen.findByRole('radio'));
+    await user.click(screen.getByRole('button', { name: 'Choisir ce nouveau créneau' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Confirmer le nouveau rendez-vous' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('vient de devenir indisponible');
+    expect(screen.getAllByText(/10 sept. 2026/).length).toBeGreaterThan(0);
+  });
+
+  it('affiche le vocabulaire métier et la définition dynamique du niveau IA', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await openDiagnostic(user, 'to-write');
+    const select = screen.getByLabelText(/Niveau d’avancement dans l’usage de l’IA/);
+    expect(within(select).getByRole('option', { name: '2. Premiers essais' })).toBeInTheDocument();
+    expect(within(select).getByRole('option', { name: '3. Usages structurés' })).toBeInTheDocument();
+    expect(within(select).getByRole('option', { name: '4. Intégration métier' })).toBeInTheDocument();
+    await user.selectOptions(select, '3');
+    expect(screen.getByText('3 - Usages structurés')).toBeVisible();
+    expect(screen.getByText(/commencent à être organisés avec des méthodes et des règles communes/)).toBeVisible();
   });
 
   it('marque un booking booked comme completed après confirmation sans appel Calendar ou Meet', async () => {

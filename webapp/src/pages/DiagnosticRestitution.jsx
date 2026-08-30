@@ -54,8 +54,9 @@ function RestitutionDocument({ restitution }) {
 
       <TextSection title="Synthèse générale">{restitution.overall_summary}</TextSection>
       <section className="diagnostic-restitution-section diagnostic-restitution-maturity">
-        <h2>Niveau de maturité IA</h2>
-        <strong>{maturity ? `${maturity.value}. ${maturity.label}` : 'Non renseigné'}</strong>
+        <h2>Votre niveau d’avancement dans l’usage de l’IA</h2>
+        <strong>{maturity ? `${maturity.value} - ${maturity.label}` : 'Non renseigné'}</strong>
+        {maturity && <p>{maturity.description}</p>}
       </section>
       <TextSection title="Analyse de maturité">{restitution.maturity_assessment}</TextSection>
       <TextSection title="Usages actuels">{restitution.current_uses}</TextSection>

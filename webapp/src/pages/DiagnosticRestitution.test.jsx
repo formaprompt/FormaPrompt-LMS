@@ -84,7 +84,9 @@ describe('consultation client de la restitution Diagnostic IA', () => {
   it('restitue fidèlement le document publié, ses opportunités et ses actions groupées', async () => {
     renderPage();
     expect(await screen.findByText('Synthèse métier publiée fidèlement.')).toBeVisible();
-    expect(screen.getByText('3. Structuration')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Votre niveau d’avancement dans l’usage de l’IA' })).toBeVisible();
+    expect(screen.getByText('3 - Usages structurés')).toBeVisible();
+    expect(screen.getByText(/commencent à être organisés avec des méthodes et des règles communes/)).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Comptes rendus' })).toBeVisible();
     expect(screen.getByText('Tester sur un cas fictif')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Immédiat' })).toBeVisible();

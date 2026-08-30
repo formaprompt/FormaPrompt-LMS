@@ -7,11 +7,31 @@ export const DIAGNOSTIC_FILTERS = [
 ];
 
 export const MATURITY_LEVELS = [
-  { value: 1, label: 'Découverte' },
-  { value: 2, label: 'Expérimentation' },
-  { value: 3, label: 'Structuration' },
-  { value: 4, label: 'Intégration' },
-  { value: 5, label: 'Optimisation' },
+  {
+    value: 1,
+    label: 'Découverte',
+    description: 'L’IA est encore peu connue ou très peu utilisée dans l’activité.',
+  },
+  {
+    value: 2,
+    label: 'Premiers essais',
+    description: 'Quelques outils d’IA sont testés ponctuellement, sans méthode réellement structurée.',
+  },
+  {
+    value: 3,
+    label: 'Usages structurés',
+    description: 'Plusieurs usages sont identifiés et commencent à être organisés avec des méthodes et des règles communes.',
+  },
+  {
+    value: 4,
+    label: 'Intégration métier',
+    description: 'L’IA est utilisée régulièrement dans plusieurs activités ou processus de travail.',
+  },
+  {
+    value: 5,
+    label: 'Optimisation',
+    description: 'Les usages de l’IA sont organisés, mesurés, sécurisés et améliorés dans le temps.',
+  },
 ];
 
 export const RESTITUTION_LIMITS = Object.freeze({

@@ -10,10 +10,23 @@ import {
   filterDiagnostics,
   getClientDiagnosticState,
   isRevisionConflict,
+  MATURITY_LEVELS,
   publishDiagnosticRestitution,
   saveDiagnosticRestitution,
   validateRestitutionContent,
 } from './diagnosticRestitution.js';
+
+test('centralise les cinq niveaux d’avancement IA avec leurs descriptions métier', () => {
+  assert.deepEqual(MATURITY_LEVELS.map(({ value, label }) => [value, label]), [
+    [1, 'Découverte'],
+    [2, 'Premiers essais'],
+    [3, 'Usages structurés'],
+    [4, 'Intégration métier'],
+    [5, 'Optimisation'],
+  ]);
+  assert.equal(MATURITY_LEVELS.every((level) => level.description.length > 40), true);
+  assert.equal(new Set(MATURITY_LEVELS.map((level) => level.description)).size, 5);
+});
 
 function query(data, error = null) {
   const chain = {

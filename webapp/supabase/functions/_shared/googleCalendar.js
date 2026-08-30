@@ -61,7 +61,11 @@ export async function queryGoogleCalendarFreeBusy({
     const calendar = payload.calendars[calendarId]
     if (!calendar || calendar.errors?.length) throw new Error('google_calendar_unavailable')
     for (const period of calendar.busy || []) {
-      if (period?.start && period?.end) busy.push({ start: period.start, end: period.end })
+      if (period?.start && period?.end) busy.push({
+        calendarId,
+        start: period.start,
+        end: period.end,
+      })
     }
   }
   return busy
@@ -185,4 +189,66 @@ export async function createDiagnosticGoogleEvent({
     throw new Error('google_event_create_failed')
   }
   return payload
+}
+
+export async function updateDiagnosticGoogleEvent({
+  accessToken,
+  calendarId,
+  eventId,
+  startsAt,
+  endsAt,
+  etag = null,
+  fetchImpl = fetch,
+}) {
+  if (!eventId || !startsAt || !endsAt) throw new Error('google_event_input_invalid')
+  const response = await fetchImpl(
+    `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?conferenceDataVersion=1&sendUpdates=all`,
+    {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': 'application/json',
+        ...(etag ? { 'if-match': etag } : {}),
+      },
+      body: JSON.stringify({
+        start: { dateTime: startsAt, timeZone: 'Europe/Paris' },
+        end: { dateTime: endsAt, timeZone: 'Europe/Paris' },
+      }),
+    },
+  )
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload.id || payload.status === 'cancelled') {
+    throw new Error('google_event_update_failed')
+  }
+  return payload
+}
+
+export function excludeDiagnosticCalendarEventBusy({
+  busyPeriods,
+  calendarId,
+  startsAt,
+  endsAt,
+}) {
+  const excludedStart = new Date(startsAt).getTime()
+  const excludedEnd = new Date(endsAt).getTime()
+  if (!Number.isFinite(excludedStart) || !Number.isFinite(excludedEnd) || excludedEnd <= excludedStart) {
+    return busyPeriods
+  }
+
+  return busyPeriods.flatMap((period) => {
+    if (period.calendarId !== calendarId) return [period]
+    const periodStart = new Date(period.start).getTime()
+    const periodEnd = new Date(period.end).getTime()
+    if (!Number.isFinite(periodStart) || !Number.isFinite(periodEnd)
+      || periodStart >= excludedEnd || periodEnd <= excludedStart) return [period]
+
+    const remaining = []
+    if (periodStart < excludedStart) {
+      remaining.push({ ...period, end: new Date(excludedStart).toISOString() })
+    }
+    if (periodEnd > excludedEnd) {
+      remaining.push({ ...period, start: new Date(excludedEnd).toISOString() })
+    }
+    return remaining
+  })
 }
