@@ -18,6 +18,7 @@ const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
 const DiagnosticPaymentConfirmation = lazy(() => import("./pages/DiagnosticPaymentConfirmation"));
 const DiagnosticBooking = lazy(() => import("./pages/DiagnosticBooking"));
 const DiagnosticQuestionnaire = lazy(() => import("./pages/DiagnosticQuestionnaire"));
+const DiagnosticRestitution = lazy(() => import("./pages/DiagnosticRestitution"));
 const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
@@ -58,6 +59,7 @@ const AdminQuality = lazy(() => import("./pages/AdminQuality"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminBpfPreparation = lazy(() => import("./pages/AdminBpfPreparation"));
 const AdminWithdrawalRequests = lazy(() => import("./pages/AdminWithdrawalRequests"));
+const AdminDiagnosticRestitutions = lazy(() => import("./pages/AdminDiagnosticRestitutions"));
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
@@ -95,6 +97,7 @@ function App() {
             <Route path="diagnostic-ia/confirmation" element={<DiagnosticPaymentConfirmation />} />
             <Route path="diagnostic-ia/reserver" element={<RequireAuth><DiagnosticBooking /></RequireAuth>} />
             <Route path="diagnostic-ia/questionnaire" element={<RequireAuth><DiagnosticQuestionnaire /></RequireAuth>} />
+            <Route path="diagnostic-ia/restitution" element={<RequireAuth><DiagnosticRestitution /></RequireAuth>} />
             <Route path="a-propos" element={<About />} />
             <Route path="blog" element={<Blog />} />
             <Route path="blog/:slug" element={<BlogPost />} />
@@ -128,6 +131,7 @@ function App() {
             <Route path="admin/finance" element={<RequireAuth><AdminShell><AdminFinance /></AdminShell></RequireAuth>} />
             <Route path="admin/bpf" element={<RequireAuth><AdminShell><AdminBpfPreparation /></AdminShell></RequireAuth>} />
             <Route path="admin/retractations" element={<RequireAuth><AdminShell><AdminWithdrawalRequests /></AdminShell></RequireAuth>} />
+            <Route path="admin/diagnostics" element={<RequireAuth><AdminShell><AdminDiagnosticRestitutions /></AdminShell></RequireAuth>} />
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />

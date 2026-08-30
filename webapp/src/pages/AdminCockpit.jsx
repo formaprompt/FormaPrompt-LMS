@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import AdminShell from '../components/AdminShell';
 import CockpitActionList from '../components/CockpitActionList';
 import { useAuth } from '../contexts/useAuth';
@@ -160,6 +160,15 @@ export default function AdminCockpit() {
             <button type="submit">Appliquer</button>
           </form>
         </header>
+
+        <section className="cockpit-diagnostic-entry" aria-labelledby="cockpit-diagnostic-title">
+          <div>
+            <p className="cockpit-eyebrow">Diagnostic IA Express</p>
+            <h2 id="cockpit-diagnostic-title">Restitutions client</h2>
+            <p>Consulter les rendez-vous, lire les questionnaires et préparer les restitutions.</p>
+          </div>
+          <Link to="/admin/diagnostics">Gérer les Diagnostics IA</Link>
+        </section>
 
         {loading && <div className="cockpit-status" role="status">Chargement du cockpit…</div>}
         {!loading && error && (

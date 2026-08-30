@@ -30,7 +30,7 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  RewriteRule ^diagnostic-ia/(?:confirmation|reserver|questionnaire)/?$ app-shell.html [END]
+  RewriteRule ^diagnostic-ia/(?:confirmation|reserver|questionnaire|restitution)/?$ app-shell.html [END]
 
   # Pages publiques pré-rendues générées sous la forme route.html.
   RewriteCond %{REQUEST_FILENAME}.html -f

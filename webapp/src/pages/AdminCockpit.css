@@ -280,3 +280,47 @@
   .cockpit-action__link { width: 100%; }
   .cockpit-action__pending { max-width: none; text-align: left; }
 }
+.cockpit-diagnostic-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #a7f3d0;
+  border-radius: 0.75rem;
+  background: #ecfdf5;
+}
+
+.cockpit-diagnostic-entry h2,
+.cockpit-diagnostic-entry p {
+  margin: 0;
+}
+
+.cockpit-diagnostic-entry > div > p:last-child {
+  margin-top: 0.25rem;
+  color: #475569;
+}
+
+.cockpit-diagnostic-entry a {
+  display: inline-flex;
+  min-height: 44px;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.5rem;
+  background: #047857;
+  color: #fff;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .cockpit-diagnostic-entry {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cockpit-diagnostic-entry a {
+    justify-content: center;
+  }
+}

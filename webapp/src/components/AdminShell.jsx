@@ -4,6 +4,7 @@ import './AdminShell.css';
 const navigation = [
   { label: 'Cockpit', to: '/admin' },
   { label: 'Commercial', to: '/admin/commercial' },
+  { label: 'Diagnostics IA', to: '/admin/diagnostics' },
   { label: 'Pédagogique', to: '/admin/pedagogique' },
   { label: 'Qualité', to: '/admin/qualite' },
   { label: 'Finance', to: '/admin/finance' },

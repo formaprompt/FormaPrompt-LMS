@@ -1,0 +1,640 @@
+.diagnostic-admin {
+  padding-block: 2rem 4rem;
+  color: #0f172a;
+}
+
+.diagnostic-admin button,
+.diagnostic-admin input,
+.diagnostic-admin select,
+.diagnostic-admin textarea {
+  font: inherit;
+}
+
+.diagnostic-admin button {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.diagnostic-admin button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.diagnostic-admin-header,
+.diagnostic-admin-section-heading,
+.diagnostic-admin-detail__header,
+.diagnostic-admin-list__heading,
+.diagnostic-admin-list-editor__heading,
+.diagnostic-admin-opportunity header,
+.diagnostic-admin-preview > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.diagnostic-admin-header h1,
+.diagnostic-admin-header p,
+.diagnostic-admin-section-heading h2,
+.diagnostic-admin-section-heading p,
+.diagnostic-admin-detail__header h2,
+.diagnostic-admin-detail__header p,
+.diagnostic-admin-preview h2,
+.diagnostic-admin-preview header p {
+  margin: 0;
+}
+
+.diagnostic-admin-eyebrow,
+.diagnostic-admin-section-heading p,
+.diagnostic-admin-detail__header p,
+.diagnostic-admin-preview header p {
+  color: #047857;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.diagnostic-admin-header > div > p:last-child {
+  max-width: 66ch;
+  margin-top: 0.45rem;
+  color: #475569;
+}
+
+.button-primary,
+.button-secondary,
+.button-publish,
+.button-tertiary,
+.diagnostic-admin-message button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-weight: 800;
+}
+
+.button-primary {
+  background: #047857;
+  color: #fff;
+}
+
+.button-secondary {
+  border-color: #64748b;
+  background: #fff;
+  color: #0f172a;
+}
+
+.button-publish {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.button-tertiary {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.diagnostic-admin-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-block: 1.25rem;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.diagnostic-admin-message.is-error {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.diagnostic-admin-message.is-success {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.diagnostic-admin-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.38fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+  align-items: start;
+}
+
+.diagnostic-admin-list,
+.diagnostic-admin-detail,
+.diagnostic-admin-questionnaire,
+.diagnostic-admin-restitution,
+.diagnostic-admin-preview {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 5%);
+}
+
+.diagnostic-admin-list {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem;
+}
+
+.diagnostic-admin-list__heading h2 {
+  margin: 0;
+}
+
+.diagnostic-admin-list__heading > span {
+  display: grid;
+  min-width: 2rem;
+  min-height: 2rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 900;
+}
+
+.diagnostic-admin-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block: 1rem;
+}
+
+.diagnostic-admin-filters button {
+  min-height: 38px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.diagnostic-admin-filters button[aria-pressed='true'] {
+  border-color: #047857;
+  background: #047857;
+  color: #fff;
+}
+
+.diagnostic-admin-cards {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.diagnostic-admin-cards article {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border: 1px solid #dbe3eb;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.diagnostic-admin-cards article.is-selected {
+  border-color: #047857;
+  box-shadow: inset 4px 0 #047857;
+}
+
+.diagnostic-admin-cards article > div:first-child {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.diagnostic-admin-cards article > div:first-child span {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.diagnostic-admin-cards article > button {
+  border: 0;
+  border-radius: 0.45rem;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.diagnostic-admin-card-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.diagnostic-admin-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.diagnostic-admin-status.is-completed,
+.diagnostic-admin-status.is-published,
+.diagnostic-admin-status.is-received {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.diagnostic-admin-status.is-booked,
+.diagnostic-admin-status.is-draft {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.diagnostic-admin-status.is-cancelled,
+.diagnostic-admin-status.is-missing {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.diagnostic-admin-detail {
+  min-width: 0;
+  padding: 1.25rem;
+}
+
+.diagnostic-admin-empty-detail {
+  padding: 4rem 1rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.diagnostic-admin-detail__header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.diagnostic-admin-detail__header span {
+  color: #64748b;
+}
+
+.diagnostic-admin-summary-grid,
+.diagnostic-admin-two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.diagnostic-admin-summary-grid {
+  margin-block: 1.25rem;
+}
+
+.diagnostic-admin-summary-grid > section {
+  padding: 1rem;
+  border: 1px solid #dbe3eb;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.diagnostic-admin-summary-grid h3 {
+  margin-top: 0;
+}
+
+.diagnostic-admin-summary-grid dl,
+.diagnostic-admin-preview dl {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.diagnostic-admin-summary-grid dl div,
+.diagnostic-admin-preview dl div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.4fr) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.diagnostic-admin-summary-grid dt,
+.diagnostic-admin-preview dt {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.diagnostic-admin-summary-grid dd,
+.diagnostic-admin-preview dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.diagnostic-admin-reference {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.82rem;
+}
+
+.diagnostic-admin-questionnaire,
+.diagnostic-admin-restitution,
+.diagnostic-admin-preview {
+  margin-top: 1.25rem;
+  padding: 1.15rem;
+}
+
+.diagnostic-admin-questionnaire__identity {
+  color: #475569;
+}
+
+.diagnostic-admin-questionnaire dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.diagnostic-admin-questionnaire dl div {
+  padding: 0.75rem;
+  border-radius: 0.55rem;
+  background: #f8fafc;
+}
+
+.diagnostic-admin-questionnaire dt {
+  margin-bottom: 0.25rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.diagnostic-admin-questionnaire dd {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.diagnostic-admin-restitution__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  color: #475569;
+  font-size: 0.78rem;
+}
+
+.diagnostic-admin-publication-note {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 1rem;
+  padding: 0.8rem;
+  border-left: 4px solid #047857;
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.diagnostic-admin-restitution fieldset {
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+  padding: 1rem;
+  border: 1px solid #dbe3eb;
+  border-radius: 0.75rem;
+}
+
+.diagnostic-admin-restitution legend {
+  padding-inline: 0.5rem;
+  color: #065f46;
+  font-weight: 900;
+}
+
+.diagnostic-admin-field,
+.diagnostic-admin-opportunity label,
+.diagnostic-admin-action-row label,
+.diagnostic-admin-list-row label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 800;
+}
+
+.diagnostic-admin-field small,
+.diagnostic-admin-opportunity label small,
+.diagnostic-admin-list-row small {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+.diagnostic-admin input,
+.diagnostic-admin select,
+.diagnostic-admin textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.45rem;
+  background: #fff;
+  color: #0f172a;
+}
+
+.diagnostic-admin textarea {
+  resize: vertical;
+}
+
+.diagnostic-admin input:focus-visible,
+.diagnostic-admin select:focus-visible,
+.diagnostic-admin textarea:focus-visible,
+.diagnostic-admin button:focus-visible {
+  outline: 3px solid #6ee7b7;
+  outline-offset: 2px;
+}
+
+.diagnostic-admin fieldset:disabled textarea,
+.diagnostic-admin fieldset:disabled select {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.diagnostic-admin-counter {
+  text-align: right;
+}
+
+.diagnostic-admin-list-editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.diagnostic-admin-list-editor h3,
+.diagnostic-admin-opportunity h4 {
+  margin: 0;
+}
+
+.diagnostic-admin-list-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.diagnostic-admin-opportunity {
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+}
+
+.diagnostic-admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.diagnostic-admin-form-grid .is-wide {
+  grid-column: 1 / -1;
+}
+
+.diagnostic-admin-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.25fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.diagnostic-admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.diagnostic-admin-help,
+.diagnostic-admin-muted,
+.diagnostic-admin-empty {
+  color: #64748b;
+}
+
+.diagnostic-admin-correction-reason {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.65rem;
+  background: #eff6ff;
+}
+
+.diagnostic-admin-preview {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+.diagnostic-admin-preview__intro {
+  margin-block: 1rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  background: #0f172a;
+  color: #fff;
+}
+
+.diagnostic-admin-preview__intro span,
+.diagnostic-admin-preview__intro strong {
+  display: block;
+}
+
+.diagnostic-admin-preview__intro strong {
+  margin-block: 0.25rem 0.75rem;
+  color: #6ee7b7;
+  font-size: 1.25rem;
+}
+
+.diagnostic-admin-preview > section {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid #dbe3eb;
+}
+
+.diagnostic-admin-preview p {
+  white-space: pre-wrap;
+}
+
+.diagnostic-admin-preview__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.diagnostic-admin-preview__cards article {
+  padding: 0.85rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.6rem;
+  background: #fff;
+}
+
+.diagnostic-admin-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 68%);
+}
+
+.diagnostic-admin-dialog {
+  width: min(34rem, 100%);
+  padding: 1.25rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 35%);
+}
+
+.diagnostic-admin-dialog h2 {
+  margin-top: 0;
+}
+
+.diagnostic-admin-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 980px) {
+  .diagnostic-admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnostic-admin-list {
+    position: static;
+    max-height: none;
+  }
+
+  .diagnostic-admin-preview__cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .diagnostic-admin-header,
+  .diagnostic-admin-detail__header,
+  .diagnostic-admin-section-heading,
+  .diagnostic-admin-preview > header,
+  .diagnostic-admin-dialog__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .diagnostic-admin-summary-grid,
+  .diagnostic-admin-two-columns,
+  .diagnostic-admin-questionnaire dl,
+  .diagnostic-admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnostic-admin-form-grid .is-wide {
+    grid-column: auto;
+  }
+
+  .diagnostic-admin-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .diagnostic-admin-restitution__meta {
+    justify-content: flex-start;
+  }
+}

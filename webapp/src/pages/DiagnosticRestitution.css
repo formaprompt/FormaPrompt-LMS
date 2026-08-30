@@ -1,0 +1,294 @@
+.diagnostic-restitution-page {
+  max-width: 980px;
+}
+
+.diagnostic-restitution-page__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.diagnostic-restitution-page__heading > div {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.diagnostic-restitution-page__heading > div > svg {
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0.6rem;
+  color: #fff;
+  background: #0f766e;
+  border-radius: 50%;
+}
+
+.diagnostic-restitution-page__heading p,
+.diagnostic-restitution-page__heading h1 {
+  margin: 0;
+}
+
+.diagnostic-restitution-page__heading p {
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.diagnostic-restitution-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 0 auto;
+  color: #fff;
+  background: #0f766e;
+  border: 2px solid #0f766e;
+}
+
+.diagnostic-restitution-state {
+  display: grid;
+  max-width: 660px;
+  min-height: 250px;
+  margin: 2rem auto;
+  padding: 2rem;
+  place-items: center;
+  align-content: center;
+  gap: 0.75rem;
+  color: #334155;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+
+.diagnostic-restitution-state h2,
+.diagnostic-restitution-state p {
+  margin: 0;
+}
+
+.diagnostic-restitution-state > svg {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #0f766e;
+}
+
+.diagnostic-restitution-state.is-error {
+  color: #7f1d1d;
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.diagnostic-restitution-spin {
+  animation: diagnostic-restitution-spin 1s linear infinite;
+}
+
+@keyframes diagnostic-restitution-spin {
+  to { transform: rotate(360deg); }
+}
+
+.diagnostic-restitution-document {
+  padding: clamp(1.25rem, 4vw, 3rem);
+  color: #1e293b;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}
+
+.diagnostic-restitution-document__header {
+  padding-bottom: 1.5rem;
+  border-bottom: 3px solid #0f766e;
+}
+
+.diagnostic-restitution-document__header > p:first-child {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.diagnostic-restitution-document__header h1 {
+  margin: 0.25rem 0 1rem;
+  color: #134e4a;
+}
+
+.diagnostic-restitution-document__header dl,
+.diagnostic-restitution-opportunities dl {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+}
+
+.diagnostic-restitution-document__header dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.diagnostic-restitution-document__header dl > div,
+.diagnostic-restitution-opportunities dl > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.diagnostic-restitution-document dt {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.diagnostic-restitution-document dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.diagnostic-restitution-correction {
+  margin: 1rem 0 0;
+  color: #475569;
+  font-size: 0.88rem;
+  font-style: italic;
+}
+
+.diagnostic-restitution-section {
+  padding: 1.5rem 0 0;
+  break-inside: avoid;
+}
+
+.diagnostic-restitution-section h2 {
+  margin: 0 0 0.75rem;
+  color: #115e59;
+  font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+}
+
+.diagnostic-restitution-section h3 {
+  color: #134e4a;
+}
+
+.diagnostic-restitution-section p,
+.diagnostic-restitution-section li {
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.diagnostic-restitution-section ul {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.diagnostic-restitution-maturity strong {
+  display: inline-flex;
+  padding: 0.65rem 0.9rem;
+  color: #134e4a;
+  background: #ccfbf1;
+  border-radius: 8px;
+  font-size: 1.08rem;
+}
+
+.diagnostic-restitution-opportunities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 1rem;
+}
+
+.diagnostic-restitution-opportunities > article {
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  break-inside: avoid;
+}
+
+.diagnostic-restitution-opportunities h3,
+.diagnostic-restitution-opportunities p {
+  margin-top: 0;
+}
+
+.diagnostic-restitution-opportunities dl > div {
+  padding-top: 0.45rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.diagnostic-restitution-action-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 1rem;
+}
+
+.diagnostic-restitution-action-groups > section {
+  padding: 1rem;
+  background: #f0fdfa;
+  border-left: 4px solid #14b8a6;
+  break-inside: avoid;
+}
+
+.diagnostic-restitution-action-groups h3 {
+  margin-top: 0;
+}
+
+@media (max-width: 680px) {
+  .diagnostic-restitution-page__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .diagnostic-restitution-print {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .diagnostic-restitution-document__header dl {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  @page { size: A4; margin: 14mm; }
+
+  .header,
+  .footer,
+  .skip-link,
+  .diagnostic-print-hidden {
+    display: none !important;
+  }
+
+  body,
+  #root,
+  #main-content,
+  .diagnostic-restitution-page {
+    min-height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #111827 !important;
+    background: #fff !important;
+  }
+
+  .diagnostic-restitution-document {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .diagnostic-restitution-document__header,
+  .diagnostic-restitution-section,
+  .diagnostic-restitution-opportunities > article,
+  .diagnostic-restitution-action-groups > section {
+    break-inside: avoid-page;
+  }
+
+  .diagnostic-restitution-maturity strong,
+  .diagnostic-restitution-opportunities > article,
+  .diagnostic-restitution-action-groups > section {
+    color: #111827;
+    background: #fff;
+  }
+
+  .diagnostic-restitution-section p,
+  .diagnostic-restitution-section li {
+    line-height: 1.45;
+  }
+}

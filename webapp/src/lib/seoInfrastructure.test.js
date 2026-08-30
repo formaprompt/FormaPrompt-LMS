@@ -31,6 +31,26 @@ test('la page Diagnostic IA est routée et accessible depuis la navigation princ
   assert.match(header, />Diagnostic IA<\/Link>/);
 });
 
+test('la restitution Diagnostic reste privée, protégée et absente du pré-rendu public', async () => {
+  const [app, dashboard, sitemap, prerenderScript, page, printStyles] = await Promise.all([
+    readProjectFile('src/App.jsx'),
+    readProjectFile('src/pages/Dashboard.jsx'),
+    readProjectFile('public/sitemap.xml'),
+    readProjectFile('scripts/prerender-studio.mjs'),
+    readProjectFile('src/pages/DiagnosticRestitution.jsx'),
+    readProjectFile('src/pages/DiagnosticRestitution.css'),
+  ]);
+
+  assert.match(app, /path="diagnostic-ia\/restitution" element={<RequireAuth><DiagnosticRestitution \/><\/RequireAuth>}/);
+  assert.match(dashboard, /<DiagnosticDashboardSection/);
+  assert.match(dashboard, /fetchClientDiagnostics\(supabase, user\.id\)/);
+  assert.match(page, /robots="noindex, nofollow"/);
+  assert.doesNotMatch(sitemap, /diagnostic-ia\/restitution/);
+  assert.doesNotMatch(prerenderScript, /route: '\/diagnostic-ia\/restitution'/);
+  assert.match(printStyles, /@media print/);
+  assert.match(printStyles, /@page \{ size: A4;/);
+});
+
 test("chaque URL du sitemap dispose d'une configuration de pré-rendu", async () => {
   const [sitemap, prerenderScript] = await Promise.all([
     readProjectFile('public/sitemap.xml'),
@@ -51,8 +71,24 @@ test('Apache consolide le domaine, conserve les routes privées et renvoie de vr
   assert.match(htaccess, /https:\/\/formaprompt\.com%\{REQUEST_URI\}/);
   assert.match(htaccess, /formation-ia-formateur.*formation-organismes/);
   assert.match(htaccess, /app-shell\.html/);
+  assert.match(htaccess, /diagnostic-ia\/\(\?:confirmation\|reserver\|questionnaire\|restitution\).*app-shell\.html \[END\]/);
   assert.match(htaccess, /ErrorDocument 404 \/404\.html/);
   assert.match(htaccess, /\[R=404,L\]/);
+});
+
+test('la règle Apache Diagnostic couvre les quatre routes profondes sans élargir le fallback', async () => {
+  const htaccess = await readProjectFile('public/.htaccess');
+  const routeRule = htaccess.match(/RewriteRule \^(diagnostic-ia\/\(\?:([^)]+)\)\/\?\$) app-shell\.html \[END\]/);
+  assert.ok(routeRule, 'Règle Diagnostic privée absente');
+  const matcher = new RegExp(`^${routeRule[1]}$`);
+
+  for (const route of ['confirmation', 'reserver', 'questionnaire', 'restitution']) {
+    assert.equal(matcher.test(`diagnostic-ia/${route}`), true, `${route} doit servir app-shell.html`);
+  }
+  assert.equal(matcher.test('diagnostic-ia'), false);
+  assert.equal(matcher.test('diagnostic-ia/inconnue'), false);
+  assert.match(htaccess, /RewriteRule \^\(\?:admin\|course\|parcours\|attestations\|dossiers\)\(\?:\/\.\*\)\?\$ \/app-shell\.html \[L\]/);
+  assert.match(htaccess, /RewriteRule \^ - \[R=404,L\]/);
 });
 
 test('robots.txt publie le sitemap sans masquer les directives noindex', async () => {

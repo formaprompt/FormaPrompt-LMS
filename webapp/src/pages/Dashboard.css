@@ -2,6 +2,172 @@
   overflow-wrap: anywhere;
 }
 
+.diagnostic-dashboard {
+  margin-bottom: 2rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  color: #172033;
+  background: #f8fafc;
+  border: 2px solid #0f766e;
+  border-radius: 14px;
+}
+
+.diagnostic-dashboard__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.diagnostic-dashboard__heading > svg {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.6rem;
+  color: #fff;
+  background: #0f766e;
+  border-radius: 50%;
+}
+
+.diagnostic-dashboard__heading p,
+.diagnostic-dashboard__heading h2 {
+  margin: 0;
+}
+
+.diagnostic-dashboard__heading p {
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.diagnostic-dashboard__heading h2 {
+  color: #134e4a;
+  font-size: clamp(1.4rem, 3vw, 1.8rem);
+}
+
+.diagnostic-dashboard__state {
+  margin: 0;
+  padding: 1rem;
+  color: #475569;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.diagnostic-dashboard__state.is-error {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.diagnostic-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr));
+  gap: 1rem;
+}
+
+.diagnostic-dashboard-card {
+  display: flex;
+  min-width: 0;
+  padding: 1.15rem;
+  flex-direction: column;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+}
+
+.diagnostic-dashboard-card__status span {
+  display: inline-flex;
+  padding: 0.35rem 0.65rem;
+  color: #115e59;
+  background: #ccfbf1;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.diagnostic-dashboard-card.is-published {
+  border-color: #22c55e;
+  box-shadow: 0 8px 24px rgba(21, 128, 61, 0.08);
+}
+
+.diagnostic-dashboard-card.is-published .diagnostic-dashboard-card__status span {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.diagnostic-dashboard-card__appointment {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.diagnostic-dashboard-card__appointment svg {
+  flex: 0 0 auto;
+  color: #0f766e;
+}
+
+.diagnostic-dashboard-card__appointment strong,
+.diagnostic-dashboard-card__appointment span {
+  display: block;
+}
+
+.diagnostic-dashboard-card__appointment span {
+  margin-top: 0.2rem;
+  color: #64748b;
+}
+
+.diagnostic-dashboard-card dl {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.diagnostic-dashboard-card dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.diagnostic-dashboard-card dt {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #475569;
+}
+
+.diagnostic-dashboard-card dt svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.diagnostic-dashboard-card dd {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 800;
+  text-align: right;
+}
+
+.diagnostic-dashboard-card__action {
+  width: 100%;
+  margin-top: auto;
+  color: #fff;
+  text-align: center;
+  background: #0f766e;
+  border: 2px solid #0f766e;
+}
+
+.diagnostic-dashboard-card__action:hover,
+.diagnostic-dashboard-card__action:focus-visible {
+  color: #fff;
+  background: #115e59;
+  border-color: #115e59;
+}
+
 .booking-next-step {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
