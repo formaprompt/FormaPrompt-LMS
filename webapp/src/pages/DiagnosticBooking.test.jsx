@@ -125,6 +125,7 @@ describe('réservation frontend du Diagnostic IA', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer ce créneau' }))
     expect(await screen.findByText(/Réservation confirmée/i)).toBeVisible()
     expect(screen.getByRole('link', { name: /Ouvrir le lien Google Meet/i })).toHaveAttribute('href', BOOKING.google_meet_url)
+    expect(screen.getByRole('link', { name: /Préparer mon diagnostic/i })).toHaveAttribute('href', `/diagnostic-ia/questionnaire?booking_id=${BOOKING.id}`)
     expect(invoke.mock.calls.map(([name]) => name)).toEqual([
       'get-diagnostic-availability',
       'confirm-diagnostic-booking',

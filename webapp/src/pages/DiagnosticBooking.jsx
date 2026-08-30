@@ -137,6 +137,7 @@ export default function DiagnosticBooking() {
                     {confirmedBooking?.google_meet_url
                       ? <p><a href={confirmedBooking.google_meet_url} target="_blank" rel="noreferrer">Ouvrir le lien Google Meet</a></p>
                       : <p>Le lien de visioconférence vous sera communiqué avec les informations du rendez-vous.</p>}
+                    {confirmedBooking?.id && <p><Link to={`/diagnostic-ia/questionnaire?booking_id=${encodeURIComponent(confirmedBooking.id)}`}>Préparer mon diagnostic</Link></p>}
                   </div>
                 </div>
               )}
