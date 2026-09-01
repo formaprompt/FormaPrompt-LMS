@@ -79,6 +79,7 @@ describe('AdminCockpit', () => {
     expect(screen.getByText('Source : course_access')).toBeVisible();
     expect(screen.getAllByText('150,00 €')[0]).toBeVisible();
     expect(screen.getByRole('link', { name: 'Gérer les Diagnostics IA' })).toHaveAttribute('href', '/admin/diagnostics');
+    expect(screen.getByRole('link', { name: 'Gérer les promotions' })).toHaveAttribute('href', '/admin/promotions');
     expect(rpcMock).toHaveBeenCalledWith('admin_get_cockpit_summary', expect.any(Object));
   });
 

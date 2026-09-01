@@ -230,6 +230,13 @@ export function validateCommercialConsentEvidence(session, purchase, intent, con
     sales_context: intent?.sales_context,
     access_start_choice: intent?.access_start_choice,
   });
+  const sessionBindingIsValid = (
+    intent?.stripe_checkout_session_id === session?.id
+    && ['stripe_session_created', 'paid'].includes(intent?.status)
+  ) || (
+    intent?.stripe_checkout_session_id == null
+    && intent?.status === 'created'
+  );
   if (
     !route
     || !intent
@@ -240,8 +247,7 @@ export function validateCommercialConsentEvidence(session, purchase, intent, con
     || intent.access_activation_policy !== route.accessActivationPolicy
     || session.metadata?.sales_context !== intent.sales_context
     || session.metadata?.access_activation_policy !== intent.access_activation_policy
-    || intent.stripe_checkout_session_id !== session.id
-    || !['stripe_session_created', 'paid'].includes(intent.status)
+    || !sessionBindingIsValid
   ) {
     return 'L’intention commerciale ne correspond pas à la session Stripe.';
   }

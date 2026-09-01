@@ -170,6 +170,15 @@ export default function AdminCockpit() {
           <Link to="/admin/diagnostics">Gérer les Diagnostics IA</Link>
         </section>
 
+        <section className="cockpit-diagnostic-entry" aria-labelledby="cockpit-promotions-title">
+          <div>
+            <p className="cockpit-eyebrow">Moteur transversal</p>
+            <h2 id="cockpit-promotions-title">Promotions</h2>
+            <p>Créer, cibler et désactiver les promotions FormaPrompt sans modifier les prix catalogue.</p>
+          </div>
+          <Link to="/admin/promotions">Gérer les promotions</Link>
+        </section>
+
         {loading && <div className="cockpit-status" role="status">Chargement du cockpit…</div>}
         {!loading && error && (
           <div className="cockpit-error" role="alert">

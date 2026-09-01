@@ -72,6 +72,30 @@ test('refuse un montant ou un Price ID manipulé dans une session', () => {
   const wrongPrice = validSession();
   wrongPrice.metadata.price_id = 'price_falsified';
   assert.match(validateCompletedDiagnosticSession(wrongPrice, priceId), /tarif Diagnostic/);
+
+  const wrongCurrency = validSession();
+  wrongCurrency.currency = 'usd';
+  assert.match(validateCompletedDiagnosticSession(wrongCurrency, priceId), /montant ou la devise/);
+
+  const unpaid = validSession();
+  unpaid.payment_status = 'unpaid';
+  assert.match(validateCompletedDiagnosticSession(unpaid, priceId), /n’est pas confirmé/);
+});
+
+test('valide le montant final serveur réservé et jamais une valeur frontend', () => {
+  const discounted = validSession();
+  discounted.amount_total = 13_410;
+  assert.equal(validateCompletedDiagnosticSession(discounted, priceId, 13_410), null);
+  assert.match(validateCompletedDiagnosticSession(discounted, priceId, 1), /montant ou la devise/);
+});
+
+test('accepte une remise totale uniquement comme checkout sans paiement requis', () => {
+  const free = validSession();
+  free.amount_total = 0;
+  free.payment_status = 'no_payment_required';
+  assert.equal(validateCompletedDiagnosticSession(free, priceId, 0), null);
+  free.payment_status = 'paid';
+  assert.match(validateCompletedDiagnosticSession(free, priceId, 0), /n’est pas confirmé/);
 });
 
 test('valide une session payée sans créer de notion de formation', () => {

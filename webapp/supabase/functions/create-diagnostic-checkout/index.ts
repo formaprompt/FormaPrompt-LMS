@@ -9,6 +9,14 @@ import {
   validateDiagnosticCheckoutRequest,
   validateDiagnosticStripePrice,
 } from '../_shared/diagnosticPayment.js';
+import {
+  DIAGNOSTIC_PROMOTION,
+  buildDiagnosticStripeLineItem,
+  diagnosticPromotionCheckoutExpiresAt,
+  hasDiagnosticPromotionInput,
+  isAmbiguousStripeCreationError,
+  normalizeDiagnosticPromotionCode,
+} from '../_shared/diagnosticPromotion.js';
 
 type DiagnosticOrder = {
   id: string;
@@ -17,7 +25,13 @@ type DiagnosticOrder = {
   cgv_document_version_id: string;
   cgv_acceptance_statement_version_id: string;
   stripe_checkout_session_id: string | null;
+  promo_redemption_id: string | null;
+  original_amount_cents: number;
+  discount_amount_cents: number;
+  final_amount_cents: number;
 };
+
+const ORDER_SELECT = 'id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id, promo_redemption_id, original_amount_cents, discount_amount_cents, final_amount_cents';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -37,6 +51,14 @@ Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Méthode non autorisée.' }, 405);
 
+  let promotionCleanup: {
+    admin: ReturnType<typeof createClient>;
+    orderId: string;
+    userId: string;
+    redemptionId: string | null;
+  } | null = null;
+  let stripeSessionCreated = false;
+
   try {
     const stripeSecretKey = requiredEnv('STRIPE_SECRET_KEY');
     const stripeMode = getDiagnosticStripeMode(stripeSecretKey);
@@ -48,6 +70,11 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const checkoutValidationError = validateDiagnosticCheckoutRequest(body);
     if (checkoutValidationError) return jsonResponse({ error: checkoutValidationError }, 400);
+    const hasPromotionCode = hasDiagnosticPromotionInput(body?.promo_code);
+    const requestedPromotionCode = normalizeDiagnosticPromotionCode(body?.promo_code);
+    if (hasPromotionCode && !requestedPromotionCode) {
+      return jsonResponse({ error: DIAGNOSTIC_PROMOTION.genericInvalidMessage }, 400);
+    }
 
     const supabaseUrl = requiredEnv('SUPABASE_URL');
     const supabaseAnonKey = requiredEnv('SUPABASE_ANON_KEY');
@@ -66,6 +93,7 @@ Deno.serve(async (request) => {
     const price = await stripe.prices.retrieve(priceId);
     const priceValidationError = validateDiagnosticStripePrice(price, stripeMode);
     if (priceValidationError) throw new Error(priceValidationError);
+    const catalogProductId = typeof price.product === 'string' ? price.product : price.product?.id;
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
@@ -109,7 +137,7 @@ Deno.serve(async (request) => {
 
     let { data: order, error: pendingOrderError } = await supabaseAdmin
       .from('diagnostic_ia_orders')
-      .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
+      .select(ORDER_SELECT)
       .eq('user_id', user.id)
       .eq('status', 'payment_pending')
       .maybeSingle<DiagnosticOrder>();
@@ -118,10 +146,25 @@ Deno.serve(async (request) => {
     if (order?.stripe_checkout_session_id) {
       const existingSession = await stripe.checkout.sessions.retrieve(order.stripe_checkout_session_id);
       if (existingSession.status === 'open' && existingSession.url) {
-        return jsonResponse({ url: existingSession.url, orderId: order.id, reused: true });
+        return jsonResponse({
+          url: existingSession.url,
+          orderId: order.id,
+          reused: true,
+          catalog_amount_cents: order.original_amount_cents,
+          discount_amount_cents: order.discount_amount_cents,
+          final_amount_cents: order.final_amount_cents,
+        });
       }
       if (existingSession.status === 'complete') {
         return jsonResponse({ confirmationPending: true, orderId: order.id });
+      }
+      if (order.promo_redemption_id) {
+        const { error: releaseError } = await supabaseAdmin.rpc('release_promo_redemption_for_checkout', {
+          p_redemption_id: order.promo_redemption_id,
+          p_order_context_type: DIAGNOSTIC_PROMOTION.orderContextType,
+          p_order_context_id: order.id,
+        });
+        if (releaseError) throw releaseError;
       }
       const { error: cancelError } = await supabaseAdmin
         .from('diagnostic_ia_orders')
@@ -147,13 +190,13 @@ Deno.serve(async (request) => {
       const created = await supabaseAdmin
         .from('diagnostic_ia_orders')
         .insert(insertPayload)
-        .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
+        .select(ORDER_SELECT)
         .single<DiagnosticOrder>();
 
       if (created.error?.code === '23505') {
         const concurrent = await supabaseAdmin
           .from('diagnostic_ia_orders')
-          .select('id, status, sales_context, cgv_document_version_id, cgv_acceptance_statement_version_id, stripe_checkout_session_id')
+          .select(ORDER_SELECT)
           .eq('user_id', user.id)
           .eq('status', 'payment_pending')
           .single<DiagnosticOrder>();
@@ -193,10 +236,55 @@ Deno.serve(async (request) => {
       user_id: user.id,
       price_id: priceId,
     };
+    const { data: checkoutConfiguration, error: configurationError } = await supabaseAdmin
+      .rpc('prepare_diagnostic_promotion_checkout', {
+        p_order_id: order.id,
+        p_user_id: user.id,
+        p_email: user.email,
+        p_promo_code: requestedPromotionCode,
+      })
+      .single();
+    if (configurationError?.code === 'P0001') {
+      await supabaseAdmin.rpc('reset_diagnostic_promotion_checkout', {
+        p_order_id: order.id,
+        p_user_id: user.id,
+      });
+      return jsonResponse({ error: DIAGNOSTIC_PROMOTION.genericInvalidMessage }, 400);
+    }
+    if (configurationError) throw configurationError;
+    if (!checkoutConfiguration) throw new Error('Configuration du checkout Diagnostic IA absente.');
+
+    const configuredPromotionCode = checkoutConfiguration.normalized_code || null;
+    if (configuredPromotionCode !== requestedPromotionCode) {
+      return jsonResponse({
+        error: 'Une tentative de paiement existe déjà avec une autre configuration tarifaire.',
+      }, 409);
+    }
+
+    promotionCleanup = {
+      admin: supabaseAdmin,
+      orderId: order.id,
+      userId: user.id,
+      redemptionId: checkoutConfiguration.promo_redemption_id || null,
+    };
+    if (checkoutConfiguration.promo_redemption_id) {
+      Object.assign(metadata, { promo_redemption_id: checkoutConfiguration.promo_redemption_id });
+    }
+
+    const lineItem = buildDiagnosticStripeLineItem({
+      catalogPriceId: priceId,
+      catalogProductId,
+      finalAmountCents: checkoutConfiguration.final_amount_cents,
+      promotionApplied: Boolean(checkoutConfiguration.promo_redemption_id),
+    });
+    const stripeExpiresAt = diagnosticPromotionCheckoutExpiresAt({
+      promotionApplied: Boolean(checkoutConfiguration.promo_redemption_id),
+      reservationExpiresAt: checkoutConfiguration.reservation_expires_at,
+    });
     const siteUrl = getSiteUrl();
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [lineItem],
       client_reference_id: user.id,
       customer_email: user.email,
       customer_creation: 'always',
@@ -205,28 +293,56 @@ Deno.serve(async (request) => {
       invoice_creation: { enabled: true },
       locale: 'fr',
       metadata,
-      payment_intent_data: { metadata },
+      ...(checkoutConfiguration.final_amount_cents > 0 ? { payment_intent_data: { metadata } } : {}),
       success_url: `${siteUrl}/diagnostic-ia/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/diagnostic-ia#reserver`,
+      ...(stripeExpiresAt ? { expires_at: stripeExpiresAt } : {}),
     }, {
       idempotencyKey: `diagnostic-ia-checkout-${order.id}`,
     });
+    stripeSessionCreated = true;
 
     if (!session.url) throw new Error('Stripe n’a pas retourné d’URL de paiement.');
 
-    const { error: orderUpdateError } = await supabaseAdmin
+    const { data: updatedOrder, error: orderUpdateError } = await supabaseAdmin
       .from('diagnostic_ia_orders')
       .update({
         stripe_checkout_session_id: session.id,
         stripe_customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id || null,
       })
       .eq('id', order.id)
-      .eq('status', 'payment_pending');
+      .eq('status', 'payment_pending')
+      .select('id')
+      .maybeSingle();
     if (orderUpdateError) throw orderUpdateError;
+    if (!updatedOrder) throw new Error('La commande Diagnostic IA n’est plus disponible.');
 
-    return jsonResponse({ url: session.url, orderId: order.id });
+    return jsonResponse({
+      url: session.url,
+      orderId: order.id,
+      catalog_amount_cents: checkoutConfiguration.original_amount_cents,
+      discount_amount_cents: checkoutConfiguration.discount_amount_cents,
+      final_amount_cents: checkoutConfiguration.final_amount_cents,
+    });
   } catch (error) {
-    console.error('Création du Checkout Diagnostic IA impossible :', error instanceof Error ? error.name : 'Erreur inconnue');
+    if (promotionCleanup && !stripeSessionCreated && !isAmbiguousStripeCreationError(error)) {
+      const { error: cleanupError } = await promotionCleanup.admin.rpc('reset_diagnostic_promotion_checkout', {
+        p_order_id: promotionCleanup.orderId,
+        p_user_id: promotionCleanup.userId,
+      });
+      if (cleanupError) {
+        console.warn('diagnostic_promotion_cleanup_failed', {
+          order_id: promotionCleanup.orderId,
+          redemption_id: promotionCleanup.redemptionId,
+          error_code: cleanupError.code || null,
+        });
+      }
+    }
+    console.error('Création du Checkout Diagnostic IA impossible :', {
+      order_id: promotionCleanup?.orderId || null,
+      redemption_id: promotionCleanup?.redemptionId || null,
+      error_type: error instanceof Error ? error.name : 'Erreur inconnue',
+    });
     return jsonResponse({ error: 'Le paiement est temporairement indisponible. Aucun débit n’a été effectué par cette tentative.' }, 500);
   }
 });

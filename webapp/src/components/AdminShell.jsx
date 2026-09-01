@@ -5,6 +5,7 @@ const navigation = [
   { label: 'Cockpit', to: '/admin' },
   { label: 'Commercial', to: '/admin/commercial' },
   { label: 'Diagnostics IA', to: '/admin/diagnostics' },
+  { label: 'Promotions', to: '/admin/promotions' },
   { label: 'Pédagogique', to: '/admin/pedagogique' },
   { label: 'Qualité', to: '/admin/qualite' },
   { label: 'Finance', to: '/admin/finance' },

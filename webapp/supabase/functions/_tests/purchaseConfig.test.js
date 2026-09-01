@@ -243,6 +243,11 @@ test('finalise une session formation avec la CGV figée avant la bascule juridiq
 
   assert.equal(AI_ACT_PURCHASE.legalVersions.cgvB2c, 'CGV-B2C-2026-08-26');
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, rows), null);
+  assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, {
+    ...intent,
+    status: 'created',
+    stripe_checkout_session_id: null,
+  }, rows), null);
   assert.equal(shouldActivateCourseAccess(intent), true);
 
   const retroactivelyReplaced = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE

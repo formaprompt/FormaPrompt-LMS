@@ -89,6 +89,76 @@
   font-size: 0.95rem;
 }
 
+.commercial-checkout__promotion {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid #d9e0ea;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.commercial-checkout__promotion > label {
+  font-weight: 700;
+}
+
+.commercial-checkout__promotion-row {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.commercial-checkout__promotion-row input {
+  min-width: 0;
+  flex: 1;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #aeb8c8;
+  border-radius: 0.5rem;
+  text-transform: uppercase;
+}
+
+.commercial-checkout__promotion-button {
+  flex: 0 0 auto;
+}
+
+.commercial-checkout__promotion-message,
+.commercial-checkout__promotion-success {
+  margin: 0;
+}
+
+.commercial-checkout__promotion-message {
+  color: #9b1c1c;
+}
+
+.commercial-checkout__promotion-success {
+  color: #17633a;
+  font-weight: 600;
+}
+
+.commercial-checkout__amounts {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.commercial-checkout__amounts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.commercial-checkout__amounts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+@media (max-width: 520px) {
+  .commercial-checkout__promotion-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
 @media (max-width: 390px) {
   .commercial-checkout-review,
   .commercial-checkout {

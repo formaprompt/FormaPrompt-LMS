@@ -196,14 +196,26 @@ export function validateDiagnosticEventIdentity(object, expectedPriceId) {
   return null;
 }
 
-export function validateCompletedDiagnosticSession(session, expectedPriceId) {
+export function validateCompletedDiagnosticSession(
+  session,
+  expectedPriceId,
+  expectedAmountCents = DIAGNOSTIC_IA_PAYMENT.amountTotal,
+) {
   const identityError = validateDiagnosticEventIdentity(session, expectedPriceId);
   if (identityError) return identityError;
-  if (session.mode !== 'payment' || session.status !== 'complete' || session.payment_status !== 'paid') {
+  const expectedPaymentStatus = expectedAmountCents === 0 ? 'no_payment_required' : 'paid';
+  if (
+    !Number.isInteger(expectedAmountCents)
+    || expectedAmountCents < 0
+    || expectedAmountCents > DIAGNOSTIC_IA_PAYMENT.amountTotal
+    || session.mode !== 'payment'
+    || session.status !== 'complete'
+    || session.payment_status !== expectedPaymentStatus
+  ) {
     return 'Le paiement du Diagnostic IA n’est pas confirmé.';
   }
   if (
-    session.amount_total !== DIAGNOSTIC_IA_PAYMENT.amountTotal
+    session.amount_total !== expectedAmountCents
     || session.currency !== DIAGNOSTIC_IA_PAYMENT.currency
   ) {
     return 'Le montant ou la devise du Diagnostic IA est invalide.';

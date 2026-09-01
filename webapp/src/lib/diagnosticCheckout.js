@@ -23,6 +23,25 @@ export async function createDiagnosticCheckout(supabase, body) {
   throw new Error(GENERIC_CHECKOUT_ERROR)
 }
 
+export async function validateDiagnosticPromotion(supabase, promoCode) {
+  const { data, error } = await supabase.functions.invoke('validate-diagnostic-promotion', {
+    body: { promo_code: promoCode },
+  })
+  if (error) throw new Error(await functionErrorMessage(error))
+  if (
+    typeof data?.valid !== 'boolean'
+    || data.catalog_amount_cents !== 14_900
+    || !Number.isInteger(data.discount_amount_cents)
+    || !Number.isInteger(data.final_amount_cents)
+    || data.discount_amount_cents < 0
+    || data.final_amount_cents < 0
+    || data.discount_amount_cents + data.final_amount_cents !== 14_900
+  ) {
+    throw new Error('La réponse de vérification du code est invalide.')
+  }
+  return data
+}
+
 export async function fetchDiagnosticOrder(supabase, { orderId, sessionId }) {
   let query = supabase
     .from('diagnostic_ia_orders')

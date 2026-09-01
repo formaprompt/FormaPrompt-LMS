@@ -60,6 +60,7 @@ const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminBpfPreparation = lazy(() => import("./pages/AdminBpfPreparation"));
 const AdminWithdrawalRequests = lazy(() => import("./pages/AdminWithdrawalRequests"));
 const AdminDiagnosticRestitutions = lazy(() => import("./pages/AdminDiagnosticRestitutions"));
+const AdminPromotions = lazy(() => import("./pages/AdminPromotions"));
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
@@ -132,6 +133,7 @@ function App() {
             <Route path="admin/bpf" element={<RequireAuth><AdminShell><AdminBpfPreparation /></AdminShell></RequireAuth>} />
             <Route path="admin/retractations" element={<RequireAuth><AdminShell><AdminWithdrawalRequests /></AdminShell></RequireAuth>} />
             <Route path="admin/diagnostics" element={<RequireAuth><AdminShell><AdminDiagnosticRestitutions /></AdminShell></RequireAuth>} />
+            <Route path="admin/promotions" element={<RequireAuth><AdminShell><AdminPromotions /></AdminShell></RequireAuth>} />
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />

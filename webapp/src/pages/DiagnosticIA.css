@@ -441,6 +441,93 @@
   text-underline-offset: 0.15em;
 }
 
+.diagnostic-ia-promotion {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem;
+  background: #f5faf8;
+  border: 1px solid #cfe0db;
+  border-radius: 12px;
+}
+
+.diagnostic-ia-promotion > label {
+  color: #123f42;
+  font-weight: 800;
+}
+
+.diagnostic-ia-promotion > label span {
+  color: #607184;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.diagnostic-ia-promotion-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.diagnostic-ia-checkout .diagnostic-ia-promotion-entry input {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0 0.8rem;
+  color: #24323f;
+  background: #fff;
+  border: 1px solid #91aaa3;
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.diagnostic-ia-promotion-entry button {
+  min-height: 44px;
+  padding: 0 1rem;
+  color: #075f59;
+  background: #fff;
+  border: 1px solid #087d69;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.diagnostic-ia-promotion-entry button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.diagnostic-ia-promotion-message {
+  margin: 0;
+  color: #526575 !important;
+  font-size: 0.92rem;
+}
+
+.diagnostic-ia-promotion-message.is-valid {
+  color: #08704f !important;
+  font-weight: 750;
+}
+
+.diagnostic-ia-promotion-message.is-invalid,
+.diagnostic-ia-promotion-message.is-error {
+  color: #8a1c1c !important;
+}
+
+.diagnostic-ia-promotion-summary {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.diagnostic-ia-promotion-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.diagnostic-ia-promotion-summary dd {
+  margin: 0;
+  color: #123f42;
+  font-weight: 850;
+}
+
 .diagnostic-ia-checkout-error {
   margin: 0;
   padding: 0.75rem;
@@ -525,5 +612,9 @@
 
   .diagnostic-ia-summary dd {
     text-align: left;
+  }
+
+  .diagnostic-ia-promotion-entry {
+    grid-template-columns: 1fr;
   }
 }
