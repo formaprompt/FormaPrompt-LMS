@@ -1,0 +1,167 @@
+name: LOT 1G PostgreSQL validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lot-1g-postgres-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  promotion-postgres:
+    name: Local runner migrations, pgTAP and concurrency
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: webapp
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: "54322"
+      PGDATABASE: postgres
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGSSLMODE: disable
+      PGCONNECT_TIMEOUT: "5"
+      VALIDATION_REPORT_DIR: ${{ runner.temp }}/lot-1g-postgres-validation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Enforce ephemeral local-only configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$PGHOST" == "127.0.0.1" ]]
+          [[ "$PGPORT" == "54322" ]]
+          [[ "$PGDATABASE" == "postgres" ]]
+          [[ "$PGUSER" == "postgres" ]]
+          for forbidden in \
+            SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID \
+            SUPABASE_PROJECT_REF PROJECT_ID PROJECT_REF DATABASE_URL SUPABASE_DB_URL; do
+            if [[ -n "${!forbidden:-}" ]]; then
+              echo "Remote Supabase configuration is forbidden: $forbidden is set."
+              exit 1
+            fi
+          done
+          mkdir -p "$VALIDATION_REPORT_DIR"
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.116.0
+
+      - name: Record Supabase CLI version
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase --version | tee "$VALIDATION_REPORT_DIR/supabase-cli-version.txt"
+
+      - name: Start clean local Supabase baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          saved_migrations="$RUNNER_TEMP/formaprompt-migrations"
+          mv supabase/migrations "$saved_migrations"
+          mkdir supabase/migrations
+          restore_migrations() {
+            rm -rf supabase/migrations
+            mv "$saved_migrations" supabase/migrations
+          }
+          trap restore_migrations EXIT
+
+          supabase start >/dev/null
+          psql -X -v ON_ERROR_STOP=1 -f supabase_schema.sql
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          -- Socle historique antérieur aux migrations suivies dans le dépôt.
+          CREATE TABLE public.calendar_bookings (
+            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+            date date NOT NULL,
+            slot text NOT NULL,
+            type text NOT NULL DEFAULT 'option',
+            of_name text NOT NULL,
+            comments text,
+            created_at timestamptz NOT NULL DEFAULT timezone('utc', now()),
+            updated_at timestamptz NOT NULL DEFAULT timezone('utc', now())
+          );
+          ALTER TABLE public.calendar_bookings ENABLE ROW LEVEL SECURITY;
+          INSERT INTO storage.buckets (id, name, public)
+          VALUES ('blog-images', 'blog-images', true)
+          ON CONFLICT (id) DO NOTHING;
+          SQL
+
+          restore_migrations
+          trap - EXIT
+
+      - name: Apply all committed migrations locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration up --local --include-all 2>&1 \
+            | tee "$VALIDATION_REPORT_DIR/migrations.txt"
+
+      - name: List applied local migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase migration list --local 2>&1 \
+            | tee "$VALIDATION_REPORT_DIR/migration-list.txt"
+
+      - name: Verify LOT 1G pgTAP inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash supabase/tests/validation/verify_promotion_pgtap_counts.sh \
+            | tee "$VALIDATION_REPORT_DIR/pgtap-inventory.txt"
+
+      - name: Run all pgTAP tests against local PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase test db --local 2>&1 \
+            | tee "$VALIDATION_REPORT_DIR/pgtap.txt"
+
+      - name: Validate promotion RLS, ACL and SECURITY DEFINER runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 \
+            -f supabase/tests/validation/promotion_runtime_security.sql 2>&1 \
+            | tee "$VALIDATION_REPORT_DIR/security.txt"
+
+      - name: Run real two-connection promotion concurrency tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=10s 5m \
+            bash supabase/tests/concurrency/promotion_engine_concurrency.sh 2>&1 \
+            | tee "$VALIDATION_REPORT_DIR/concurrency.txt"
+
+      - name: Publish validation summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## LOT 1G PostgreSQL validation"
+            echo
+            echo "Environment: ephemeral Supabase stack on the GitHub-hosted runner."
+            echo "Expected LOT 1G pgTAP inventory: 78 + 43 + 53 + 56 = 230."
+            echo "The job status above remains authoritative; no PASS is inferred from inventory counts."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload non-sensitive validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lot-1g-postgres-validation-${{ github.run_id }}
+          path: ${{ runner.temp }}/lot-1g-postgres-validation
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
