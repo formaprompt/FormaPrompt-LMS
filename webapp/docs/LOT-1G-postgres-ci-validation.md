@@ -33,7 +33,7 @@ Le job reprend le bootstrap local existant du dépôt :
 5. restauration des migrations suivies ;
 6. application de toutes les migrations avec `supabase migration up --local --include-all` ;
 7. affichage de la liste locale des migrations appliquées ;
-8. inventaire statique des assertions, puis exécution pgTAP réelle.
+8. inventaire statique des assertions, puis exécution réelle des quatre suites pgTAP LOT 1G.
 
 `supabase db reset --local` n'est pas utilisé ici : l'historique Git commence après un schéma FormaPrompt déjà existant (`supabase_schema.sql`, `calendar_bookings` et bucket local). Un reset Supabase standard supprimerait ce socle avant de rejouer les migrations et ne reproduirait donc pas l'ordre historique réel du dépôt. Le runner étant neuf, la séquence ci-dessus construit déjà une base vide, charge explicitement ce socle antérieur puis applique chaque migration suivie dans l'ordre. Aucune migration cassée n'est ignorée.
 
@@ -41,17 +41,19 @@ Une migration historique en erreur fait échouer le job. Le workflow ne masque n
 
 ## pgTAP
 
-`supabase test db --local` exécute toutes les suites SQL de `supabase/tests` contre le PostgreSQL réel du runner, chaque fichier pgTAP dans sa propre transaction. Les quatre suites LOT 1G attendues contiennent statiquement :
+Le workflow fournit explicitement à `supabase test db ... --local` les quatre fichiers promotionnels. Chaque fichier pgTAP s'exécute dans sa propre transaction contre le PostgreSQL réel du runner. Les suites attendues contiennent statiquement :
 
 | Sous-lot | Fichier | Assertions présentes |
 |---|---|---:|
-| 1G-A | `promotion_engine.sql` | 78 |
+| 1G-A | `promotion_engine.sql` | 79 |
 | 1G-B | `diagnostic_promotion_integration.sql` | 43 |
 | 1G-C | `course_promotion_integration.sql` | 53 |
 | 1G-D | `promotion_administration.sql` | 56 |
-| **Total** | | **230** |
+| **Total** | | **231** |
 
-Le script `verify_promotion_pgtap_counts.sh` protège uniquement cet inventaire. Il ne transforme jamais la présence des assertions en résultat PASS. À ce stade, **0 assertion a été exécutée sur PostgreSQL réel**.
+Le script `verify_promotion_pgtap_counts.sh` protège uniquement cet inventaire. Il ne transforme jamais la présence des assertions en résultat PASS. Les suites historiques hors LOT 1G ne sont plus incluses dans cette étape spécifique ; toutes les migrations du dépôt restent néanmoins appliquées avant les tests.
+
+Le premier run réel (`33525511132`) a validé le runner, Supabase CLI 2.116.0, le bootstrap historique et l'application complète des migrations, puis a échoué pendant pgTAP sur l'erreur PostgreSQL `42702` dans `private.reserve_promo_code`. Il n'a donc produit aucun résultat global `231/231`. Les étapes de sécurité runtime et de concurrence, placées après pgTAP, n'ont pas été exécutées lors de ce run.
 
 ## Validations runtime complémentaires
 
@@ -85,16 +87,16 @@ Le workflow réussit uniquement si :
 
 - Supabase local démarre sur le runner ;
 - toutes les migrations suivies s'appliquent réellement ;
-- toutes les suites pgTAP du dépôt réussissent, dont les 230 assertions LOT 1G ;
+- les quatre suites pgTAP LOT 1G réussissent, soit 231 assertions ;
 - les contrôles RLS/ACL/propriétaires/`SECURITY DEFINER` réussissent ;
 - tous les scénarios concurrents convergent vers l'état attendu.
 
 Les sorties texte non sensibles sont conservées sept jours comme artefact GitHub Actions. Une erreur de migration, une assertion en échec, un privilège inattendu ou une race non sérialisée fait échouer le job.
 
-Le premier run doit être lancé explicitement depuis l'onglet Actions après un futur push autorisé. Il peut légitimement échouer sur une migration historique : ce résultat devra être traité comme un blocage réel, sans correction artificielle ni contournement. Vérifier également avant ce futur push qu'aucune règle de protection de branche ne dépend encore du nom de l'ancien job automatique `Local migrations and pgTAP`.
+Chaque run doit être lancé explicitement depuis l'onglet Actions après un push autorisé. Un échec de migration historique reste un blocage réel, sans correction artificielle ni contournement. Les suites pgTAP historiques ne font pas partie du verdict spécifique LOT 1G. Vérifier également avant un futur push qu'aucune règle de protection de branche ne dépend encore du nom de l'ancien job automatique `Local migrations and pgTAP`.
 
-## Dette restante avant exécution
+## Dette restante avant validation complète
 
-Cette préparation locale n'est pas une exécution PostgreSQL. Avant tout déploiement du moteur promotionnel, une exécution manuelle réussie du workflow reste obligatoire afin de valider réellement migrations, PL/pgSQL, transactions, verrous, concurrence, RLS, ACL, propriétaires et privilèges.
+Le premier run a validé l'application réelle des migrations mais pas le moteur promotionnel jusqu'au bout. Avant tout déploiement, un nouveau run manuel réussi reste obligatoire afin de valider les 231 assertions pgTAP, la sécurité runtime, les transactions, les verrous, la concurrence, RLS, les ACL, les propriétaires et les privilèges.
 
 Aucun déploiement, aucun accès Supabase distant, aucune ressource Stripe LIVE et aucun paiement réel ne sont réalisés par cette infrastructure.

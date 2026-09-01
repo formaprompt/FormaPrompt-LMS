@@ -346,9 +346,11 @@ BEGIN
     RETURN;
   END IF;
 
-  UPDATE public.promo_redemptions
+  UPDATE public.promo_redemptions AS redemption
   SET status = 'released', released_at = now(), reservation_expires_at = NULL
-  WHERE promo_code_id = v_promo.id AND status = 'reserved' AND reservation_expires_at <= now();
+  WHERE redemption.promo_code_id = v_promo.id
+    AND redemption.status = 'reserved'
+    AND redemption.reservation_expires_at <= now();
 
   SELECT * INTO v_quote FROM private.validate_promo_code(
     p_code, p_user_id, p_email, p_target_type, p_target_key, p_original_amount_cents

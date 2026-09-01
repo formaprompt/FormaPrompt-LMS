@@ -271,6 +271,24 @@ WHERE order_context_id='97000000-0000-4000-8000-000000000203';
 SELECT is(public.release_expired_promo_reservations(),1,'Le nettoyage libere les reservations expirees');
 SELECT is((SELECT status FROM public.promo_redemptions WHERE order_context_id='97000000-0000-4000-8000-000000000203'),'released',
   'Une reservation expiree ne bloque plus un quota');
+
+UPDATE public.promo_redemptions
+SET reserved_at=now()-interval '1 hour', reservation_expires_at=now()-interval '1 minute'
+WHERE order_context_id='97000000-0000-4000-8000-000000000201';
+SELECT is((
+  WITH new_reservation AS MATERIALIZED (
+    SELECT status FROM public.reserve_promo_code_for_checkout(
+      'ONEUSE','97000000-0000-4000-8000-000000000003','promo-b@example.test',
+      'diagnostic','diagnostic-ia-express',14900,'diagnostic_order','97000000-0000-4000-8000-000000000208'
+    )
+  )
+  SELECT concat(
+    (SELECT status FROM public.promo_redemptions WHERE order_context_id='97000000-0000-4000-8000-000000000201'),
+    ':', new_reservation.status
+  )
+  FROM new_reservation
+),'released:reserved',
+  'Une nouvelle reservation libere l usage expire avant de recalculer le quota');
 RESET ROLE;
 
 SET LOCAL ROLE authenticated;
