@@ -26,7 +26,6 @@ jobs:
       PGPASSWORD: postgres
       PGSSLMODE: disable
       PGCONNECT_TIMEOUT: "5"
-      VALIDATION_REPORT_DIR: ${{ runner.temp }}/lot-1g-postgres-validation
 
     steps:
       - name: Checkout repository
@@ -48,7 +47,9 @@ jobs:
               exit 1
             fi
           done
-          mkdir -p "$VALIDATION_REPORT_DIR"
+          report_dir="$RUNNER_TEMP/lot-1g-postgres-validation"
+          mkdir -p "$report_dir"
+          echo "VALIDATION_REPORT_DIR=$report_dir" >> "$GITHUB_ENV"
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v3
