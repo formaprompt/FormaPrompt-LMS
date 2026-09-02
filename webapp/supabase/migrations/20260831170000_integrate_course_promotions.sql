@@ -218,6 +218,7 @@ DECLARE
   v_reservation record;
   v_normalized_code text := nullif(upper(btrim(coalesce(p_promo_code, ''))), '');
   v_redemption_status text;
+  v_configuration_was_locked boolean;
 BEGIN
   IF p_checkout_intent_id IS NULL OR p_user_id IS NULL OR p_email IS NULL
     OR p_course_id NOT IN ('formation-ia', 'formation-ia-act', 'formation-prompt-level-1')
@@ -237,6 +238,8 @@ BEGIN
   THEN
     PERFORM private.promo_invalid();
   END IF;
+
+  v_configuration_was_locked := v_intent.checkout_configuration_locked_at IS NOT NULL;
 
   IF v_intent.checkout_configuration_locked_at IS NULL THEN
     IF v_normalized_code IS NOT NULL THEN
@@ -272,8 +275,10 @@ BEGIN
       WHERE intents.id = p_checkout_intent_id
       RETURNING * INTO v_intent;
     END IF;
-  ELSIF v_intent.original_amount_cents IS DISTINCT FROM p_original_amount_cents THEN
-    PERFORM private.promo_invalid();
+  ELSE
+    IF v_intent.original_amount_cents IS DISTINCT FROM p_original_amount_cents THEN
+      PERFORM private.promo_invalid();
+    END IF;
   END IF;
 
   IF v_intent.promo_redemption_id IS NOT NULL THEN
@@ -288,6 +293,12 @@ BEGIN
   ELSE
     reservation_expires_at := NULL;
     normalized_code := NULL;
+  END IF;
+
+  IF v_configuration_was_locked
+    AND v_normalized_code IS DISTINCT FROM normalized_code
+  THEN
+    PERFORM private.promo_invalid();
   END IF;
 
   checkout_intent_id := v_intent.id;

@@ -5,9 +5,9 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 tests_dir="$(cd -- "$script_dir/.." && pwd)"
 
 declare -A expected=(
-  [promotion_engine.sql]=79
+  [promotion_engine.sql]=82
   [diagnostic_promotion_integration.sql]=43
-  [course_promotion_integration.sql]=53
+  [course_promotion_integration.sql]=56
   [promotion_administration.sql]=56
 )
 
@@ -47,8 +47,8 @@ for filename in "${ordered_files[@]}"; do
   total=$((total + actual))
 done
 
-if [[ "$total" -ne 231 ]]; then
-  echo "Unexpected LOT 1G pgTAP total: expected 231, found $total." >&2
+if [[ "$total" -ne 237 ]]; then
+  echo "Unexpected LOT 1G pgTAP total: expected 237, found $total." >&2
   exit 1
 fi
 

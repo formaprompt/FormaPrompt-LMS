@@ -103,6 +103,7 @@ CREATE TEMP TABLE course_promotion_baseline(purchases integer,accesses integer) 
 INSERT INTO course_promotion_baseline SELECT
   (SELECT count(*)::integer FROM public.purchases),
   (SELECT count(*)::integer FROM public.course_access);
+GRANT SELECT ON TABLE course_promotion_baseline TO service_role;
 
 SET LOCAL ROLE service_role;
 SELECT is((SELECT final_amount_cents FROM public.prepare_course_promotion_checkout(
@@ -122,6 +123,18 @@ SELECT ok((SELECT reservation_expires_at >= now()+interval '34 minutes' FROM pub
 SELECT throws_ok(
   $$SELECT * FROM public.prepare_course_promotion_checkout('97000000-0000-4000-8000-000000000201','97000000-0000-4000-8000-000000000001','course-a@example.test','formation-ia',49700,'GLOBAL5')$$,
   'P0001','Ce code n''est pas valide ou n''est plus disponible.','Le code devient immuable apres verrouillage'
+);
+SELECT throws_ok(
+  $$SELECT * FROM public.prepare_course_promotion_checkout('97000000-0000-4000-8000-000000000201','97000000-0000-4000-8000-000000000001','course-a@example.test','formation-ia',49700,NULL)$$,
+  'P0001','Ce code n''est pas valide ou n''est plus disponible.','Une promotion verrouillee ne peut pas etre retiree'
+);
+SELECT throws_ok(
+  $$SELECT * FROM public.prepare_course_promotion_checkout('97000000-0000-4000-8000-000000000203','97000000-0000-4000-8000-000000000003','course-c@example.test','formation-prompt-level-1',34300,'COURSE10')$$,
+  'P0001','Ce code n''est pas valide ou n''est plus disponible.','Une intention verrouillee sans promotion ne peut pas recevoir un code'
+);
+SELECT throws_ok(
+  $$SELECT * FROM public.prepare_course_promotion_checkout('97000000-0000-4000-8000-000000000201','97000000-0000-4000-8000-000000000001','course-a@example.test','formation-ia',49701,'COURSE10')$$,
+  'P0001','Ce code n''est pas valide ou n''est plus disponible.','Le montant original devient immuable apres verrouillage'
 );
 SELECT throws_ok(
   $$SELECT * FROM public.prepare_course_promotion_checkout('97000000-0000-4000-8000-000000000202','97000000-0000-4000-8000-000000000002','course-b@example.test','formation-ia-act',18700,'OTHERCOURSE')$$,

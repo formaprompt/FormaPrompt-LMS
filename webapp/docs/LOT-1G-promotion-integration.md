@@ -275,18 +275,21 @@ Aucun déploiement n'a été effectué.
 
 Les validations PostgreSQL réelles restent obligatoires avant tout déploiement :
 
-- LOT 1G-A : 79 assertions pgTAP présentes ;
+- LOT 1G-A : 82 assertions pgTAP présentes ;
 - LOT 1G-B : 43 assertions pgTAP présentes ;
 - LOT 1G-D : 56 assertions pgTAP présentes après la revue statique finale
   (refus des mutations non-admin, auxiliaires privés, réservation expirée,
   absence de code orphelin et réduction de quota sous historique ajoutés).
-- LOT 1G-C : 53 assertions pgTAP présentes (contexte idempotent, montants
+- LOT 1G-C : 56 assertions pgTAP présentes (contexte idempotent, montants
   figés, ciblage course, réservation, erreurs Stripe, consommation atomique,
   double webhook et garde des droits LMS).
 
-Total promotionnel : 231 assertions pgTAP présentes. Le premier run PostgreSQL
-réel a commencé leur exécution, puis a échoué sur l'ambiguïté SQL 42702 corrigée
-localement ; aucun résultat global 231/231 PASS n'est donc acquis.
+Total promotionnel : 237 assertions pgTAP présentes. Le premier run PostgreSQL
+réel a révélé l'ambiguïté SQL 42702 ; le deuxième a confirmé sa correction, ainsi
+que les suites 1G-B et 1G-D, puis a révélé un test 1G-A non déterministe, un
+défaut d'immutabilité 1G-C et une permission manquante sur une fixture temporaire.
+Ces points sont corrigés localement ; aucun résultat global 237/237 PASS n'est
+donc acquis, et la sécurité runtime comme la concurrence restent à exécuter.
 
 La migration et les tests peuvent être parsés statiquement, mais cette analyse
 ne remplace ni leur exécution réelle ni la validation des transactions, verrous

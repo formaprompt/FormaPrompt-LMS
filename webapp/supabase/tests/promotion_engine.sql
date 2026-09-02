@@ -275,20 +275,20 @@ SELECT is((SELECT status FROM public.promo_redemptions WHERE order_context_id='9
 UPDATE public.promo_redemptions
 SET reserved_at=now()-interval '1 hour', reservation_expires_at=now()-interval '1 minute'
 WHERE order_context_id='97000000-0000-4000-8000-000000000201';
-SELECT is((
-  WITH new_reservation AS MATERIALIZED (
-    SELECT status FROM public.reserve_promo_code_for_checkout(
-      'ONEUSE','97000000-0000-4000-8000-000000000003','promo-b@example.test',
-      'diagnostic','diagnostic-ia-express',14900,'diagnostic_order','97000000-0000-4000-8000-000000000208'
-    )
-  )
-  SELECT concat(
-    (SELECT status FROM public.promo_redemptions WHERE order_context_id='97000000-0000-4000-8000-000000000201'),
-    ':', new_reservation.status
-  )
-  FROM new_reservation
-),'released:reserved',
-  'Une nouvelle reservation libere l usage expire avant de recalculer le quota');
+SELECT is((SELECT status FROM public.reserve_promo_code_for_checkout(
+  'ONEUSE','97000000-0000-4000-8000-000000000003','promo-b@example.test',
+  'diagnostic','diagnostic-ia-express',14900,'diagnostic_order','97000000-0000-4000-8000-000000000208'
+)),'reserved','Une nouvelle reservation devient possible apres expiration du dernier quota');
+SELECT is((SELECT status FROM public.promo_redemptions
+  WHERE order_context_id='97000000-0000-4000-8000-000000000201'),'released',
+  'La nouvelle reservation libere automatiquement l usage expire');
+SELECT is((SELECT status FROM public.promo_redemptions
+  WHERE order_context_id='97000000-0000-4000-8000-000000000208'),'reserved',
+  'La nouvelle redemption reste reservee apres le recalcul du quota');
+SELECT is((SELECT count(*)::integer FROM public.promo_redemptions
+  WHERE promo_code_id='97000000-0000-4000-8000-000000000108'
+    AND (status='consumed' OR (status='reserved' AND reservation_expires_at > now()))),1,
+  'Le quota ONEUSE compte exactement une utilisation active apres remplacement');
 RESET ROLE;
 
 SET LOCAL ROLE authenticated;

@@ -155,7 +155,7 @@ jobs:
             echo "## LOT 1G PostgreSQL validation"
             echo
             echo "Environment: ephemeral Supabase stack on the GitHub-hosted runner."
-            echo "Expected LOT 1G pgTAP inventory: 79 + 43 + 53 + 56 = 231."
+            echo "Expected LOT 1G pgTAP inventory: 82 + 43 + 56 + 56 = 237."
             echo "The job status above remains authoritative; no PASS is inferred from inventory counts."
           } >> "$GITHUB_STEP_SUMMARY"
 

@@ -45,15 +45,17 @@ Le workflow fournit explicitement à `supabase test db ... --local` les quatre f
 
 | Sous-lot | Fichier | Assertions présentes |
 |---|---|---:|
-| 1G-A | `promotion_engine.sql` | 79 |
+| 1G-A | `promotion_engine.sql` | 82 |
 | 1G-B | `diagnostic_promotion_integration.sql` | 43 |
-| 1G-C | `course_promotion_integration.sql` | 53 |
+| 1G-C | `course_promotion_integration.sql` | 56 |
 | 1G-D | `promotion_administration.sql` | 56 |
-| **Total** | | **231** |
+| **Total** | | **237** |
 
 Le script `verify_promotion_pgtap_counts.sh` protège uniquement cet inventaire. Il ne transforme jamais la présence des assertions en résultat PASS. Les suites historiques hors LOT 1G ne sont plus incluses dans cette étape spécifique ; toutes les migrations du dépôt restent néanmoins appliquées avant les tests.
 
-Le premier run réel (`33525511132`) a validé le runner, Supabase CLI 2.116.0, le bootstrap historique et l'application complète des migrations, puis a échoué pendant pgTAP sur l'erreur PostgreSQL `42702` dans `private.reserve_promo_code`. Il n'a donc produit aucun résultat global `231/231`. Les étapes de sécurité runtime et de concurrence, placées après pgTAP, n'ont pas été exécutées lors de ce run.
+Le premier run réel (`33525511132`) a validé le runner, Supabase CLI 2.116.0, le bootstrap historique et l'application complète des migrations, puis a échoué pendant pgTAP sur l'erreur PostgreSQL `42702` dans `private.reserve_promo_code`.
+
+Le deuxième run réel (`33542552570`) a confirmé la correction de cette ambiguïté, ainsi que les suites 1G-B (`43/43`) et 1G-D (`56/56`). Il a ensuite révélé un test 1G-A non déterministe fondé sur la visibilité d'un même snapshot SQL, un défaut réel d'immutabilité du code promotionnel après verrouillage 1G-C et un défaut de permission limité à la table temporaire de fixture `course_promotion_baseline`. Ces trois points sont corrigés localement. La suite 1G-C s'est interrompue après 33 assertions sur 53 ; les étapes de sécurité runtime et de concurrence n'ont donc toujours pas été exécutées. Aucun résultat global `237/237` n'est acquis.
 
 ## Validations runtime complémentaires
 
@@ -87,7 +89,7 @@ Le workflow réussit uniquement si :
 
 - Supabase local démarre sur le runner ;
 - toutes les migrations suivies s'appliquent réellement ;
-- les quatre suites pgTAP LOT 1G réussissent, soit 231 assertions ;
+- les quatre suites pgTAP LOT 1G réussissent, soit 237 assertions ;
 - les contrôles RLS/ACL/propriétaires/`SECURITY DEFINER` réussissent ;
 - tous les scénarios concurrents convergent vers l'état attendu.
 
@@ -97,6 +99,6 @@ Chaque run doit être lancé explicitement depuis l'onglet Actions après un pus
 
 ## Dette restante avant validation complète
 
-Le premier run a validé l'application réelle des migrations mais pas le moteur promotionnel jusqu'au bout. Avant tout déploiement, un nouveau run manuel réussi reste obligatoire afin de valider les 231 assertions pgTAP, la sécurité runtime, les transactions, les verrous, la concurrence, RLS, les ACL, les propriétaires et les privilèges.
+Les deux premiers runs ont validé l'application réelle des migrations, et le deuxième a confirmé 1G-B et 1G-D, mais aucun n'a validé le moteur promotionnel jusqu'au bout. Avant tout déploiement, un nouveau run manuel réussi reste obligatoire afin de valider les 237 assertions pgTAP, la sécurité runtime, les transactions, les verrous, la concurrence, RLS, les ACL, les propriétaires et les privilèges.
 
 Aucun déploiement, aucun accès Supabase distant, aucune ressource Stripe LIVE et aucun paiement réel ne sont réalisés par cette infrastructure.
