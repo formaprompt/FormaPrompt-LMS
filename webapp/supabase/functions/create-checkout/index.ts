@@ -9,13 +9,21 @@ import {
   getRequiredConsentTypes,
   validateCommercialCheckoutRequest,
 } from '../_shared/purchaseConfig.js';
+import {
+  COURSE_PROMOTION,
+  buildCourseStripeLineItem,
+  coursePromotionCheckoutExpiresAt,
+  hasCoursePromotionInput,
+  isAmbiguousCourseStripeCreationError,
+  normalizeCheckoutRequestId,
+  normalizeCoursePromotionCode,
+} from '../_shared/coursePromotion.js';
 
 const CONSENT_DOCUMENT_TYPES = Object.freeze({
   [CONSENT_TYPES.EARLY_SERVICE_START]: 'early_service_start_statement',
   [CONSENT_TYPES.DIGITAL_CONTENT_START]: 'digital_content_start_statement',
   [CONSENT_TYPES.DIGITAL_CONTENT_WITHDRAWAL_ACKNOWLEDGEMENT]: 'digital_content_withdrawal_acknowledgement',
 });
-
 type ConsentType =
   | 'cgv_acceptance'
   | 'early_service_start'
@@ -68,6 +76,14 @@ Deno.serve(async (request) => {
     return jsonResponse({ error: 'Méthode non autorisée.' }, 405);
   }
 
+  let promotionCleanup: {
+    admin: ReturnType<typeof createClient>;
+    checkoutIntentId: string;
+    userId: string;
+    redemptionId: string | null;
+  } | null = null;
+  let stripeSessionCreated = false;
+
   try {
     const stripeSecretKey = requiredEnv('STRIPE_SECRET_KEY');
     const stripeMode = getStripeMode(stripeSecretKey);
@@ -82,6 +98,15 @@ Deno.serve(async (request) => {
     const purchase = getPurchaseConfig(body.course_id);
     if (!purchase) {
       return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
+    }
+    const checkoutRequestId = normalizeCheckoutRequestId(body.checkout_request_id);
+    if (!checkoutRequestId) {
+      return jsonResponse({ error: 'Référence de tentative de paiement invalide.' }, 400);
+    }
+    const hasPromotionCode = hasCoursePromotionInput(body.promo_code);
+    const requestedPromotionCode = normalizeCoursePromotionCode(body.promo_code);
+    if (hasPromotionCode && !requestedPromotionCode) {
+      return jsonResponse({ error: COURSE_PROMOTION.genericInvalidMessage }, 400);
     }
 
     const supabaseUrl = requiredEnv('SUPABASE_URL');
@@ -139,6 +164,23 @@ Deno.serve(async (request) => {
     if (purchaseError) throw purchaseError;
     if (existingPurchase) return jsonResponse({ alreadyPurchased: true });
 
+    const priceId = requiredEnv(purchase.priceEnvName);
+    const stripe = new Stripe(stripeSecretKey);
+    const price = await stripe.prices.retrieve(priceId);
+    if (
+      price.livemode !== (stripeMode === 'live')
+      || !price.active
+      || price.currency !== purchase.currency
+      || price.unit_amount !== purchase.amountTotal
+      || price.recurring !== null
+    ) {
+      throw new Error(`Le tarif Stripe doit être un prix ${stripeMode}, ponctuel, actif et égal à ${purchase.amountTotal / 100} EUR.`);
+    }
+    const catalogProductId = typeof price.product === 'string' ? price.product : price.product?.id;
+    if (typeof catalogProductId !== 'string' || !catalogProductId.startsWith('prod_')) {
+      throw new Error('Le produit Stripe de la formation est invalide.');
+    }
+
     const requiredConsentTypes = getRequiredConsentTypes(commercialRoute) as ConsentType[];
     const requiredDocumentPairs: RequiredDocumentPair[] = requiredConsentTypes.map((consentType: ConsentType) => ({
       consentType,
@@ -168,56 +210,131 @@ Deno.serve(async (request) => {
       consentType === CONSENT_TYPES.CGV_ACCEPTANCE
     ))!.document!;
     const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
-      .from('commercial_checkout_intents')
-      .insert({
-        user_id: user.id,
-        course_id: purchase.courseId,
-        offer_classification: commercialRoute.offerClassification,
-        sales_context: commercialRoute.salesContext,
-        access_start_choice: checkoutContext.access_start_choice,
-        access_activation_policy: commercialRoute.accessActivationPolicy,
-        beneficiary_email: checkoutContext.beneficiary_email,
-        buyer_organization_name: checkoutContext.buyer_organization_name,
-        cgv_document_version_id: cgvDocument.id,
+      .rpc('prepare_course_checkout_intent', {
+        p_checkout_request_id: checkoutRequestId,
+        p_user_id: user.id,
+        p_course_id: purchase.courseId,
+        p_offer_classification: commercialRoute.offerClassification,
+        p_sales_context: commercialRoute.salesContext,
+        p_access_start_choice: checkoutContext.access_start_choice,
+        p_access_activation_policy: commercialRoute.accessActivationPolicy,
+        p_beneficiary_email: checkoutContext.beneficiary_email,
+        p_buyer_organization_name: checkoutContext.buyer_organization_name,
+        p_cgv_document_version_id: cgvDocument.id,
+        p_consent_documents: consentDocuments.map(({ consentType, document }) => ({
+          consent_type: consentType,
+          legal_document_version_id: document!.id,
+        })),
+        p_catalog_price_id: priceId,
+        p_stripe_product_id: catalogProductId,
       })
-      .select('id')
       .single();
     if (checkoutIntentError) throw checkoutIntentError;
 
-    const { error: consentInsertError } = await supabaseAdmin
-      .from('commercial_consents')
-      .insert(consentDocuments.map(({ consentType, document }) => ({
-        checkout_intent_id: checkoutIntent.id,
-        user_id: user.id,
-        course_id: purchase.courseId,
-        consent_type: consentType,
-        granted: true,
-        legal_document_version_id: document!.id,
-        source: 'web_checkout',
-      })));
-    if (consentInsertError) throw consentInsertError;
-
-    const priceId = requiredEnv(purchase.priceEnvName);
-    const stripe = new Stripe(stripeSecretKey);
-    const price = await stripe.prices.retrieve(priceId);
-
-    if (
-      price.livemode !== (stripeMode === 'live')
-      || !price.active
-      || price.currency !== purchase.currency
-      || price.unit_amount !== purchase.amountTotal
-      || price.recurring !== null
-    ) {
-      throw new Error(`Le tarif Stripe doit être un prix ${stripeMode}, ponctuel, actif et égal à ${purchase.amountTotal / 100} EUR.`);
+    if (checkoutIntent.stripe_checkout_session_id) {
+      if ((checkoutIntent.normalized_code || null) !== requestedPromotionCode) {
+        return jsonResponse({
+          error: 'Une tentative de paiement existe déjà avec une autre configuration tarifaire.',
+        }, 409);
+      }
+      const existingSession = await stripe.checkout.sessions.retrieve(checkoutIntent.stripe_checkout_session_id);
+      if (existingSession.status === 'open' && existingSession.url) {
+        return jsonResponse({
+          url: existingSession.url,
+          reused: true,
+          catalog_amount_cents: checkoutIntent.original_amount_cents,
+          discount_amount_cents: checkoutIntent.discount_amount_cents,
+          final_amount_cents: checkoutIntent.final_amount_cents,
+        });
+      }
+      if (existingSession.status === 'complete') {
+        return jsonResponse({ confirmationPending: true, checkoutIntentId: checkoutIntent.id });
+      }
+      if (checkoutIntent.promo_redemption_id) {
+        const { error: releaseError } = await supabaseAdmin.rpc('release_promo_redemption_for_checkout', {
+          p_redemption_id: checkoutIntent.promo_redemption_id,
+          p_order_context_type: COURSE_PROMOTION.orderContextType,
+          p_order_context_id: checkoutIntent.id,
+        });
+        if (releaseError) throw releaseError;
+      }
+      const { error: expireError } = await supabaseAdmin
+        .from('commercial_checkout_intents')
+        .update({ status: 'expired', failure_code: 'stripe_checkout_expired', updated_at: new Date().toISOString() })
+        .eq('id', checkoutIntent.id)
+        .eq('status', 'stripe_session_created');
+      if (expireError) throw expireError;
+      return jsonResponse({
+        error: 'Cette tentative de paiement a expiré. Vous pouvez en démarrer une nouvelle.',
+        checkout_context_reset: true,
+      }, 409);
     }
 
+    const { data: checkoutConfiguration, error: configurationError } = await supabaseAdmin
+      .rpc('prepare_course_promotion_checkout', {
+        p_checkout_intent_id: checkoutIntent.id,
+        p_user_id: user.id,
+        p_email: user.email,
+        p_course_id: purchase.courseId,
+        p_original_amount_cents: purchase.amountTotal,
+        p_promo_code: requestedPromotionCode,
+      })
+      .single();
+    if (configurationError?.code === 'P0001') {
+      await supabaseAdmin.rpc('reset_course_promotion_checkout', {
+        p_checkout_intent_id: checkoutIntent.id,
+        p_user_id: user.id,
+      });
+      return jsonResponse({
+        promotion_invalid: true,
+        message: COURSE_PROMOTION.genericInvalidMessage,
+      });
+    }
+    if (configurationError) throw configurationError;
+    if (!checkoutConfiguration) throw new Error('Configuration du checkout formation absente.');
+    if ((checkoutConfiguration.normalized_code || null) !== requestedPromotionCode) {
+      return jsonResponse({
+        error: 'Une tentative de paiement existe déjà avec une autre configuration tarifaire.',
+      }, 409);
+    }
+
+    promotionCleanup = {
+      admin: supabaseAdmin,
+      checkoutIntentId: checkoutIntent.id,
+      userId: user.id,
+      redemptionId: checkoutConfiguration.promo_redemption_id || null,
+    };
+
     const siteUrl = getSiteUrl();
-    let session;
-    try {
-      session = await stripe.checkout.sessions.create({
+    const metadata = {
+      checkout_intent_id: checkoutIntent.id,
+      user_id: user.id,
+      course_id: purchase.courseId,
+      price_id: priceId,
+      stripe_product_id: catalogProductId,
+      expected_amount_cents: String(checkoutConfiguration.final_amount_cents),
+      sales_context: commercialRoute.salesContext,
+      access_activation_policy: commercialRoute.accessActivationPolicy,
+      payment_type: 'course',
+      ...(checkoutConfiguration.promo_redemption_id
+        ? { promo_redemption_id: checkoutConfiguration.promo_redemption_id }
+        : {}),
+    };
+    const lineItem = buildCourseStripeLineItem({
+      purchase,
+      catalogPriceId: priceId,
+      catalogProductId,
+      finalAmountCents: checkoutConfiguration.final_amount_cents,
+      promotionApplied: Boolean(checkoutConfiguration.promo_redemption_id),
+    });
+    const stripeExpiresAt = coursePromotionCheckoutExpiresAt({
+      promotionApplied: Boolean(checkoutConfiguration.promo_redemption_id),
+      reservationExpiresAt: checkoutConfiguration.reservation_expires_at,
+    });
+    const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
+        line_items: [lineItem],
         client_reference_id: user.id,
         customer_email: user.email,
         customer_creation: 'always',
@@ -226,34 +343,15 @@ Deno.serve(async (request) => {
         automatic_tax: { enabled: false },
         invoice_creation: { enabled: true },
         locale: 'fr',
-        metadata: {
-          checkout_intent_id: checkoutIntent.id,
-          user_id: user.id,
-          course_id: purchase.courseId,
-          price_id: priceId,
-          sales_context: commercialRoute.salesContext,
-          access_activation_policy: commercialRoute.accessActivationPolicy,
-        },
-        payment_intent_data: {
-          metadata: {
-            checkout_intent_id: checkoutIntent.id,
-            user_id: user.id,
-            course_id: purchase.courseId,
-            sales_context: commercialRoute.salesContext,
-            access_activation_policy: commercialRoute.accessActivationPolicy,
-          },
-        },
+        metadata,
+        payment_intent_data: { metadata },
         success_url: `${siteUrl}/paiement-reussi?course=${encodeURIComponent(purchase.courseId)}&activation=${encodeURIComponent(commercialRoute.accessActivationPolicy)}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}${purchase.landingPath}`,
+        ...(stripeExpiresAt ? { expires_at: stripeExpiresAt } : {}),
+      }, {
+        idempotencyKey: `course-checkout-${checkoutIntent.id}`,
       });
-    } catch (stripeError) {
-      await supabaseAdmin
-        .from('commercial_checkout_intents')
-        .update({ status: 'failed', failure_code: 'stripe_session_creation_failed', updated_at: new Date().toISOString() })
-        .eq('id', checkoutIntent.id)
-        .eq('status', 'created');
-      throw stripeError;
-    }
+    stripeSessionCreated = true;
 
     if (!session.url) throw new Error('Stripe n’a pas retourné d’URL Checkout.');
     const { error: intentUpdateError } = await supabaseAdmin
@@ -267,9 +365,36 @@ Deno.serve(async (request) => {
       .eq('status', 'created');
     if (intentUpdateError) throw intentUpdateError;
 
-    return jsonResponse({ url: session.url });
+    return jsonResponse({
+      url: session.url,
+      catalog_amount_cents: checkoutConfiguration.original_amount_cents,
+      discount_amount_cents: checkoutConfiguration.discount_amount_cents,
+      final_amount_cents: checkoutConfiguration.final_amount_cents,
+    });
   } catch (error) {
-    console.error('create-checkout:', error);
-    return jsonResponse({ error: 'Impossible de préparer le paiement pour le moment.' }, 500);
+    const ambiguous = isAmbiguousCourseStripeCreationError(error);
+    if (promotionCleanup && !stripeSessionCreated && !ambiguous) {
+      const { error: cleanupError } = await promotionCleanup.admin.rpc('reset_course_promotion_checkout', {
+        p_checkout_intent_id: promotionCleanup.checkoutIntentId,
+        p_user_id: promotionCleanup.userId,
+      });
+      if (cleanupError) {
+        console.warn('course_promotion_cleanup_failed', {
+          checkout_intent_id: promotionCleanup.checkoutIntentId,
+          redemption_id: promotionCleanup.redemptionId,
+          error_code: cleanupError.code || null,
+        });
+      }
+    }
+    console.error('create-checkout:', {
+      checkout_intent_id: promotionCleanup?.checkoutIntentId || null,
+      redemption_id: promotionCleanup?.redemptionId || null,
+      error_type: error instanceof Error ? error.name : 'Erreur inconnue',
+    });
+    return jsonResponse({
+      error: 'Impossible de préparer le paiement pour le moment.',
+      retry_same_context: ambiguous,
+      checkout_context_reset: Boolean(promotionCleanup && !stripeSessionCreated && !ambiguous),
+    }, 500);
   }
 });

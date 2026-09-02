@@ -12,7 +12,7 @@ const purchaseConfig = readFileSync(resolve('supabase/functions/_shared/purchase
 test('vérifie la signature sur le corps brut avant tout traitement', () => {
   const rawBody = webhook.indexOf('const rawBody = await request.text()');
   const signature = webhook.indexOf('constructEventAsync');
-  const processing = webhook.indexOf("rpc('process_stripe_post_payment_event'");
+  const processing = webhook.indexOf('.rpc(processor');
   assert.ok(rawBody >= 0);
   assert.ok(signature > rawBody);
   assert.ok(processing > signature);
@@ -21,6 +21,7 @@ test('vérifie la signature sur le corps brut avant tout traitement', () => {
 
 test('délègue toutes les mutations post-paiement à la transaction PostgreSQL', () => {
   assert.match(webhook, /process_stripe_post_payment_event/);
+  assert.match(webhook, /process_course_stripe_event/);
   assert.doesNotMatch(webhook, /from\(['"](?:purchases|course_access|stripe_payment_transactions|stripe_refunds|stripe_disputes)['"]\)\s*\.(?:insert|update|upsert|delete)/s);
   assert.match(webhook, /already_processed|\.\.\.data/);
 });

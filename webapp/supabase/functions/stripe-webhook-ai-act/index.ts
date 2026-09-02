@@ -10,6 +10,10 @@ import {
   validateCompletedTravelFeeSession,
 } from '../_shared/purchaseConfig.js';
 import {
+  validateCompletedCoursePromotionSession,
+  validateCoursePromotionEventIdentity,
+} from '../_shared/coursePromotion.js';
+import {
   buildStripePostPaymentPayload,
   isStripePostPaymentEvent,
 } from '../_shared/stripePostPayment.js';
@@ -75,6 +79,7 @@ Deno.serve(async (request) => {
 
   let validationStatus: 'not_required' | 'validated' | 'legacy_review' = 'not_required';
   const object = event.data.object as Stripe.Checkout.Session;
+  let courseEvent = false;
 
   if (
     event.type === 'checkout.session.completed'
@@ -94,19 +99,22 @@ Deno.serve(async (request) => {
         if (legacyValidationError) return new Response(legacyValidationError, { status: 400 });
         validationStatus = 'legacy_review';
       } else {
-        const validationError = validateCompletedCourseSession(object, purchase, priceId);
-        if (validationError) return new Response(validationError, { status: 400 });
-
         const checkoutIntentId = object.metadata!.checkout_intent_id;
         const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
           .from('commercial_checkout_intents')
-          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id')
+          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id')
           .eq('id', checkoutIntentId)
           .maybeSingle();
-        if (checkoutIntentError) {
+        if (checkoutIntentError || !checkoutIntent) {
           console.error(`Intention commerciale ${event.id} inaccessible :`, checkoutIntentError);
           return new Response('Vérification commerciale impossible.', { status: 500 });
         }
+
+        const currentPromotionCheckout = checkoutIntent.original_amount_cents !== null;
+        const validationError = currentPromotionCheckout
+          ? validateCompletedCoursePromotionSession(object, purchase, priceId, checkoutIntent)
+          : validateCompletedCourseSession(object, purchase, priceId);
+        if (validationError) return new Response(validationError, { status: 400 });
 
         const { data: consentRows, error: consentRowsError } = await supabaseAdmin
           .from('commercial_consents')
@@ -132,15 +140,45 @@ Deno.serve(async (request) => {
         );
         if (consentValidationError) return new Response(consentValidationError, { status: 400 });
         validationStatus = 'validated';
+        courseEvent = currentPromotionCheckout;
       }
     }
+  } else if (
+    ['payment_intent.payment_failed', 'checkout.session.async_payment_failed', 'checkout.session.expired']
+      .includes(event.type)
+    && object.metadata?.payment_type === 'course'
+  ) {
+    const purchase = getPurchaseConfig(object.metadata?.course_id);
+    if (!purchase) return new Response('Formation Stripe inconnue.', { status: 400 });
+    const checkoutIntentId = object.metadata?.checkout_intent_id;
+    const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
+      .from('commercial_checkout_intents')
+      .select('id, user_id, course_id, status, stripe_checkout_session_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id')
+      .eq('id', checkoutIntentId)
+      .maybeSingle();
+    if (checkoutIntentError || !checkoutIntent) {
+      console.error(`Intention commerciale terminale ${event.id} inaccessible.`);
+      return new Response('Vérification commerciale impossible.', { status: 500 });
+    }
+    const validationError = validateCoursePromotionEventIdentity(
+      object,
+      purchase,
+      requiredEnv(purchase.priceEnvName),
+      checkoutIntent,
+    );
+    if (validationError) return new Response(validationError, { status: 400 });
+    validationStatus = 'validated';
+    courseEvent = true;
   }
 
   try {
     const payload = buildStripePostPaymentPayload(event, await sha256(rawBody), {
       validation_status: validationStatus,
     });
-    const { data, error } = await supabaseAdmin.rpc('process_stripe_post_payment_event', {
+    const processor = courseEvent
+      ? 'process_course_stripe_event'
+      : 'process_stripe_post_payment_event';
+    const { data, error } = await supabaseAdmin.rpc(processor, {
       p_event: payload,
     });
     if (error) throw error;

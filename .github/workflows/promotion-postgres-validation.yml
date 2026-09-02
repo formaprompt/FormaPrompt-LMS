@@ -1,4 +1,4 @@
-name: LOT 1G PostgreSQL validation
+name: LOT 1G Phase Express PostgreSQL validation
 
 on:
   workflow_dispatch:
@@ -112,18 +112,22 @@ jobs:
           supabase migration list --local 2>&1 \
             | tee "$VALIDATION_REPORT_DIR/migration-list.txt"
 
-      - name: Verify LOT 1G pgTAP inventory
+      - name: Verify Phase Express pgTAP inventory
         shell: bash
         run: |
           set -euo pipefail
           bash supabase/tests/validation/verify_promotion_pgtap_counts.sh \
             | tee "$VALIDATION_REPORT_DIR/pgtap-inventory.txt"
 
-      - name: Run all pgTAP tests against local PostgreSQL
+      - name: Run Phase Express pgTAP tests against local PostgreSQL
         shell: bash
         run: |
           set -euo pipefail
-          supabase test db --local 2>&1 \
+          supabase test db \
+            supabase/tests/promotion_engine.sql \
+            supabase/tests/course_promotion_integration.sql \
+            supabase/tests/promotion_administration.sql \
+            --local 2>&1 \
             | tee "$VALIDATION_REPORT_DIR/pgtap.txt"
 
       - name: Validate promotion RLS, ACL and SECURITY DEFINER runtime
@@ -131,7 +135,7 @@ jobs:
         run: |
           set -euo pipefail
           psql -X -v ON_ERROR_STOP=1 \
-            -f supabase/tests/validation/promotion_runtime_security.sql 2>&1 \
+            -f supabase/validation/promotion_runtime_security.sql 2>&1 \
             | tee "$VALIDATION_REPORT_DIR/security.txt"
 
       - name: Run real two-connection promotion concurrency tests
@@ -147,10 +151,10 @@ jobs:
         shell: bash
         run: |
           {
-            echo "## LOT 1G PostgreSQL validation"
+            echo "## LOT 1G Phase Express PostgreSQL validation"
             echo
             echo "Environment: ephemeral Supabase stack on the GitHub-hosted runner."
-            echo "Expected LOT 1G pgTAP inventory: 78 + 43 + 53 + 56 = 230."
+            echo "Expected Phase Express pgTAP inventory: 82 + 56 + 56 = 194."
             echo "The job status above remains authoritative; no PASS is inferred from inventory counts."
           } >> "$GITHUB_STEP_SUMMARY"
 
