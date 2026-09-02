@@ -174,8 +174,8 @@ INSERT INTO public.diagnostic_ia_orders(
    'ci-race-c@example.test','personal',
    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-26'),
    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26')),
-  ('a1000000-0000-4000-8000-000000000302','a1000000-0000-4000-8000-000000000003',
-   'ci-race-c@example.test','personal',
+  ('a1000000-0000-4000-8000-000000000302','a1000000-0000-4000-8000-000000000002',
+   'ci-race-b@example.test','personal',
    (SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-26'),
    (SELECT id FROM public.legal_document_versions WHERE version='DIAGNOSTIC-CGV-ACCEPTANCE-2026-08-26'));
 
@@ -312,7 +312,7 @@ diag_redemption="$(query_scalar "SELECT promo_redemption_id FROM public.diagnost
 [[ "$(query_scalar "SET ROLE service_role; SELECT status FROM public.consume_promo_redemption_for_checkout('$diag_redemption','diagnostic_ia_order','a1000000-0000-4000-8000-000000000301')")" == "consumed" ]]
 [[ "$(query_scalar "SET ROLE service_role; SELECT status FROM public.release_promo_redemption_for_checkout('$diag_redemption','diagnostic_ia_order','a1000000-0000-4000-8000-000000000301')")" == "consumed" ]]
 
-query_scalar "SET ROLE service_role; SELECT promo_redemption_id FROM public.prepare_diagnostic_promotion_checkout('a1000000-0000-4000-8000-000000000302','a1000000-0000-4000-8000-000000000003','ci-race-c@example.test','CI_DIAG10')" >"$tmp_dir/diagnostic-release-id"
+query_scalar "SET ROLE service_role; SELECT promo_redemption_id FROM public.prepare_diagnostic_promotion_checkout('a1000000-0000-4000-8000-000000000302','a1000000-0000-4000-8000-000000000002','ci-race-b@example.test','CI_DIAG10')" >"$tmp_dir/diagnostic-release-id"
 IFS= read -r diag_release_redemption < "$tmp_dir/diagnostic-release-id"
 [[ -n "$diag_release_redemption" ]]
 [[ "$(query_scalar "SET ROLE service_role; SELECT status FROM public.release_promo_redemption_for_checkout('$diag_release_redemption','diagnostic_ia_order','a1000000-0000-4000-8000-000000000302')")" == "released" ]]
