@@ -70,6 +70,8 @@ describe('CommercialCheckout', () => {
     expect(invoke).toHaveBeenCalledWith('create-checkout', {
       body: expect.objectContaining({
         course_id: AI_ACT_PURCHASE.courseId,
+        checkout_request_id: expect.any(String),
+        promo_code: null,
         checkout_context: expect.objectContaining({
           sales_context: SALES_CONTEXTS.PERSONAL,
           access_start_choice: 'immediate',
@@ -83,6 +85,130 @@ describe('CommercialCheckout', () => {
         }),
       }),
     })
+  })
+
+  it('valide un code côté serveur sans réserver puis affiche les montants retournés', async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        valid: true,
+        code: 'COURSE20',
+        catalog_amount_cents: 18_700,
+        discount_amount_cents: 3_740,
+        final_amount_cents: 14_960,
+        message: 'Code promotionnel appliqué.',
+      },
+      error: null,
+    })
+    renderCheckout()
+    await userEvent.type(screen.getByRole('textbox', { name: /code promotionnel/i }), ' course20 ')
+    await userEvent.click(screen.getByRole('button', { name: /vérifier/i }))
+    expect(invoke).toHaveBeenCalledWith('validate-course-promotion', {
+      body: { course_id: AI_ACT_PURCHASE.courseId, promo_code: ' course20 ' },
+    })
+    expect(await screen.findByText('Code promotionnel appliqué.')).toBeVisible()
+    expect(screen.getByText('149,60 €')).toBeVisible()
+    expect(screen.getByText('− 37,40 €')).toBeVisible()
+  })
+
+  it('ne transmet au checkout que le code validé et verrouille la configuration après la tentative', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          valid: true,
+          code: 'COURSE20',
+          catalog_amount_cents: 18_700,
+          discount_amount_cents: 3_740,
+          final_amount_cents: 14_960,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({ data: { url: 'invalid-for-test' }, error: null })
+    renderCheckout()
+    const promoInput = screen.getByRole('textbox', { name: /code promotionnel/i })
+    await userEvent.type(promoInput, 'course20')
+    await userEvent.click(screen.getByRole('button', { name: /vérifier/i }))
+    await acceptAllVisibleConsents()
+    await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
+    expect(invoke).toHaveBeenLastCalledWith('create-checkout', {
+      body: expect.objectContaining({
+        checkout_request_id: expect.any(String),
+        promo_code: 'COURSE20',
+      }),
+    })
+    expect(promoInput).toBeDisabled()
+  })
+
+  it('revient à un état modifiable si le code devient indisponible au moment du checkout', async () => {
+    invoke
+      .mockResolvedValueOnce({
+        data: {
+          valid: true,
+          code: 'LASTONE',
+          catalog_amount_cents: 18_700,
+          discount_amount_cents: 1_870,
+          final_amount_cents: 16_830,
+        },
+        error: null,
+      })
+      .mockResolvedValueOnce({
+        data: {
+          promotion_invalid: true,
+          message: "Ce code n'est pas valide ou n'est plus disponible.",
+        },
+        error: null,
+      })
+    renderCheckout()
+    const input = screen.getByRole('textbox', { name: /code promotionnel/i })
+    await userEvent.type(input, 'LASTONE')
+    await userEvent.click(screen.getByRole('button', { name: /vérifier/i }))
+    await acceptAllVisibleConsents()
+    await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
+    expect(await screen.findByText("Ce code n'est pas valide ou n'est plus disponible.")).toBeVisible()
+    expect(input).not.toBeDisabled()
+  })
+
+  it('déverrouille une nouvelle intention après un échec Stripe terminal contrôlé', async () => {
+    const response = new Response(JSON.stringify({
+      error: 'Cette tentative de paiement a échoué. Vous pouvez en démarrer une nouvelle.',
+      checkout_context_reset: true,
+    }), { status: 500, headers: { 'Content-Type': 'application/json' } })
+    invoke.mockResolvedValueOnce({ data: null, error: { context: response } })
+    renderCheckout()
+    await acceptAllVisibleConsents()
+    await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/démarrer une nouvelle/i)
+    expect(screen.getByRole('textbox', { name: /code promotionnel/i })).not.toBeDisabled()
+  })
+
+  it('refuse de traiter un code saisi mais non validé', async () => {
+    renderCheckout()
+    await userEvent.type(screen.getByRole('textbox', { name: /code promotionnel/i }), 'COURSE20')
+    await acceptAllVisibleConsents()
+    await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/vérifiez le code promotionnel/i)
+    expect(invoke).not.toHaveBeenCalled()
+  })
+
+  it('retourne au prix catalogue et invalide la validation quand le code change avant checkout', async () => {
+    invoke.mockResolvedValueOnce({
+      data: {
+        valid: true,
+        code: 'COURSE20',
+        catalog_amount_cents: 18_700,
+        discount_amount_cents: 3_740,
+        final_amount_cents: 14_960,
+      },
+      error: null,
+    })
+    renderCheckout()
+    const input = screen.getByRole('textbox', { name: /code promotionnel/i })
+    await userEvent.type(input, 'COURSE20')
+    await userEvent.click(screen.getByRole('button', { name: /vérifier/i }))
+    expect(await screen.findByText('149,60 €')).toBeVisible()
+    await userEvent.type(input, 'B')
+    expect(screen.queryByText('149,60 €')).not.toBeInTheDocument()
+    expect(screen.getAllByText('187,00 €').length).toBeGreaterThan(0)
   })
 
   it('utilise les CGV B2B sans consentement B2C inutile pour le professionnel', async () => {

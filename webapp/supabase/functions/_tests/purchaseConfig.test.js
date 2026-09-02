@@ -187,6 +187,11 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     legal_document_versions: { version: versions[consentType] },
   }));
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, rows), null);
+  assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, {
+    ...intent,
+    status: 'created',
+    stripe_checkout_session_id: null,
+  }, rows), null);
   assert.equal(shouldActivateCourseAccess(intent), true);
   assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, [...rows, rows[0]]), /ambiguë/);
 });

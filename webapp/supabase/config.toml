@@ -1,6 +1,9 @@
 [functions.create-checkout]
 verify_jwt = true
 
+[functions.validate-course-promotion]
+verify_jwt = true
+
 [functions.submit-withdrawal-request]
 verify_jwt = true
 
