@@ -170,6 +170,7 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     access_start_choice: context.access_start_choice,
     access_activation_policy: route.accessActivationPolicy,
     stripe_checkout_session_id: session.id,
+    cgv_document_version_id: '1f4789b5-19f2-4ad1-9d84-ef18a5fd94b0',
     status: 'stripe_session_created',
   };
   const versions = {
@@ -184,14 +185,29 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     course_id: AI_ACT_PURCHASE.courseId,
     consent_type: consentType,
     granted: true,
-    legal_document_versions: { version: versions[consentType] },
+    legal_document_version_id: intent.cgv_document_version_id,
+    legal_document_versions: { id: intent.cgv_document_version_id, version: versions[consentType] },
   }));
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, rows), null);
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, {
     ...intent,
+    original_amount_cents: AI_ACT_PURCHASE.amountTotal,
     status: 'created',
     stripe_checkout_session_id: null,
   }, rows), null);
+  assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, {
+    ...intent,
+    status: 'created',
+    stripe_checkout_session_id: null,
+  }, rows), /intention commerciale/);
+  const archivedCgvRows = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE
+    ? { ...row, legal_document_versions: { ...row.legal_document_versions, version: 'CGV-B2C-2026-08-26' } }
+    : row);
+  assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, archivedCgvRows), null);
+  const unrelatedCgvRows = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE
+    ? { ...row, legal_document_version_id: 'other-document' }
+    : row);
+  assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, unrelatedCgvRows), /cgv_acceptance/);
   assert.equal(shouldActivateCourseAccess(intent), true);
   assert.match(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, [...rows, rows[0]]), /ambiguë/);
 });
