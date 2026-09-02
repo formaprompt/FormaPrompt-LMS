@@ -103,7 +103,7 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId 
   if (normalizedSubject.length < 2 || normalizedSubject.length > 300 || /[\r\n]/.test(normalizedSubject)) {
     throw new SmtpReceiptError('smtp_subject_invalid');
   }
-  if (normalizedBody.length < 2 || normalizedBody.length > 10000) {
+  if (normalizedBody.length < 2 || normalizedBody.length > 30000) {
     throw new SmtpReceiptError('smtp_body_invalid');
   }
   if (normalizedMessageId.length < 8 || normalizedMessageId.length > 180) {
