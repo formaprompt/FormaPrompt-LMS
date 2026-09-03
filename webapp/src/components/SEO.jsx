@@ -1,6 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 
-export default function SEO({ title, description, url, image, type = 'website', jsonLd }) {
+export default function SEO({ title, description, url, image, type = 'website', jsonLd, robots = '' }) {
   const structuredData = jsonLd || {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -13,6 +13,7 @@ export default function SEO({ title, description, url, image, type = 'website', 
     <Helmet>
       <title data-formaprompt-seo="true">{title}</title>
       <meta data-formaprompt-seo="true" name="description" content={description} />
+      {robots && <meta data-formaprompt-seo="true" name="robots" content={robots} />}
       {url && <link data-formaprompt-seo="true" rel="canonical" href={url} />}
       {/* Open Graph */}
       <meta data-formaprompt-seo="true" property="og:title" content={title} />

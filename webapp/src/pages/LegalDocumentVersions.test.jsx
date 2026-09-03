@@ -9,12 +9,12 @@ vi.mock('../components/SEO', () => ({ default: () => null }));
 
 const EXPECTED_VERSIONS = Object.freeze({
   b2c: Object.freeze({
-    id: 'CGV-B2C-2026-08-12',
-    hash: '2638f1ae962efb81a8f8b7f1ed96a4ba673fd3300b6dd507ba39e53979a7d459',
+    id: 'CGV-B2C-2026-08-26',
+    hash: '888f14bd7f8b99d8731b1520652463a63bf3629ab94b1dd602c8a3e4ebda0476',
   }),
   b2b: Object.freeze({
-    id: 'CGV-B2B-2026-08-12',
-    hash: '5ef0c09d8c454ad72f089aad6fc332c007011830aeb972e791eff9c0e80d3702',
+    id: 'CGV-B2B-2026-08-26',
+    hash: '85bd6b41a4ce2a7f22ca465e232b45de2f75ce947c7059392eba96175659f76e',
   }),
 });
 

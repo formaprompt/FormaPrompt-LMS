@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
+import DiagnosticDashboardSection from '../components/DiagnosticDashboardSection';
 import LearningPathAccessCard from '../components/LearningPathAccessCard';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
@@ -14,6 +15,7 @@ import { fetchCourseAccessEntitlement, fetchCourseAccesses } from '../lib/course
 import { isCourseAccessOpen, learnerAccessMessage } from '../lib/courseAccessLifecycle';
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import { keepOwnVisibleAdministrativeDocuments } from '../lib/administrativeDocuments';
+import { fetchClientDiagnostics } from '../lib/diagnosticRestitution';
 import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
@@ -56,6 +58,8 @@ export default function Dashboard() {
   const [attestationsAvailable, setAttestationsAvailable] = useState(true);
   const [administrativeDocuments, setAdministrativeDocuments] = useState([]);
   const [administrativeDocumentsAvailable, setAdministrativeDocumentsAvailable] = useState(true);
+  const [diagnostics, setDiagnostics] = useState([]);
+  const [diagnosticsLoadError, setDiagnosticsLoadError] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -70,6 +74,7 @@ export default function Dashboard() {
       setProgressAvailable(true);
       setAttestationsAvailable(true);
       setAdministrativeDocumentsAvailable(true);
+      setDiagnosticsLoadError(false);
 
       const [
         accessesResult,
@@ -80,6 +85,7 @@ export default function Dashboard() {
         exerciseReviewsResult,
         attestationsResult,
         administrativeDocumentsResult,
+        diagnosticsResult,
       ] = await Promise.all([
         fetchCourseAccesses({ userId: user.id }),
         fetchCourseAccessEntitlement({
@@ -122,6 +128,9 @@ export default function Dashboard() {
           .neq('status', 'missing')
           .in('document_type', ['training_agreement', 'convocation', 'completion_certificate'])
           .order('generated_at', { ascending: false }),
+        fetchClientDiagnostics(supabase, user.id)
+          .then((data) => ({ data, error: null }))
+          .catch((error) => ({ data: [], error })),
       ]);
 
       if (accessesResult.error) {
@@ -182,6 +191,13 @@ export default function Dashboard() {
           keepOwnVisibleAdministrativeDocuments(administrativeDocumentsResult.data, user.id),
         );
       }
+
+      if (diagnosticsResult.error) {
+        setDiagnostics([]);
+        setDiagnosticsLoadError(true);
+      } else {
+        setDiagnostics(diagnosticsResult.data);
+      }
       setLoading(false);
     }
 
@@ -202,7 +218,13 @@ export default function Dashboard() {
   return (
     <div className="container learner-dashboard" style={{ padding: '4rem 1rem', minHeight: '60vh' }}>
       <h1 style={{ marginBottom: '2rem' }}>Mon espace apprenant</h1>
-      
+
+      <DiagnosticDashboardSection
+        diagnostics={diagnostics}
+        loading={loading}
+        error={diagnosticsLoadError}
+      />
+
       <div style={{ background: '#1e1e1e', color: '#fff', padding: '2rem', borderRadius: '12px', border: '1px solid #333' }}>
         <h2 style={{ color: '#fff' }}>Bienvenue, {user.email} !</h2>
         <p style={{ color: '#aaa', marginTop: '1rem', marginBottom: '2rem' }}>

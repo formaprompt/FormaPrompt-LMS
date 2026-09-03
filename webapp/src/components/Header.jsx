@@ -69,6 +69,7 @@ export default function Header() {
         <nav id="primary-navigation" className={`nav ${isMenuOpen ? 'nav-open' : ''}`}>
           <Link to="/" onClick={() => setIsMenuOpen(false)}>Accueil</Link>
           <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio</Link>
+          <Link to="/diagnostic-ia" onClick={() => setIsMenuOpen(false)}>Diagnostic IA</Link>
           
           <div className="dropdown">
             <span className="dropdown-title">Formations</span>

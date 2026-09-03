@@ -1,11 +1,21 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { secureSignup } from '../lib/passwordSecurity';
+import { useAuth } from '../contexts/useAuth';
 import './Auth.css';
 
 export default function Register() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const requestedRedirect = searchParams.get('redirect');
+  const redirectTo = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/dashboard';
+  const loginPath = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? `/login?redirect=${encodeURIComponent(requestedRedirect)}`
+    : '/login';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,7 +37,7 @@ export default function Register() {
     }
 
     try {
-      const result = await secureSignup(supabase, email, password);
+      const result = await secureSignup(supabase, email, password, redirectTo);
       setPassword('');
       setConfirmPassword('');
       setMessage([
@@ -39,6 +49,8 @@ export default function Register() {
     }
     setLoading(false);
   };
+
+  if (user) return <Navigate to={redirectTo} replace />;
 
   return (
     <div className="auth-container">
@@ -115,7 +127,7 @@ export default function Register() {
         </p>
 
         <div className="auth-links">
-          <p>Déjà un compte ? <Link to="/login">Se connecter</Link></p>
+          <p>Déjà un compte ? <Link to={loginPath}>Se connecter</Link></p>
         </div>
       </div>
     </div>
