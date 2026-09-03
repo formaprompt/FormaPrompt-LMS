@@ -6,12 +6,14 @@ tests_dir="$(cd -- "$script_dir/.." && pwd)"
 
 declare -A expected=(
   [promotion_engine.sql]=82
+  [diagnostic_promotion_integration.sql]=55
   [course_promotion_integration.sql]=56
   [promotion_administration.sql]=56
 )
 
 ordered_files=(
   promotion_engine.sql
+  diagnostic_promotion_integration.sql
   course_promotion_integration.sql
   promotion_administration.sql
 )
@@ -45,8 +47,8 @@ for filename in "${ordered_files[@]}"; do
   total=$((total + actual))
 done
 
-if [[ "$total" -ne 194 ]]; then
-  echo "Unexpected Phase Express pgTAP total: expected 194, found $total." >&2
+if [[ "$total" -ne 249 ]]; then
+  echo "Unexpected promotions pgTAP total: expected 249, found $total." >&2
   exit 1
 fi
 

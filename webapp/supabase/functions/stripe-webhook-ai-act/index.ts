@@ -102,7 +102,18 @@ Deno.serve(async (request) => {
   ) {
     if (isDiagnosticPaymentObject(object)) {
       const priceId = requiredEnv(DIAGNOSTIC_IA_PAYMENT.priceEnvName);
-      const validationError = validateCompletedDiagnosticSession(object, priceId);
+      const identityError = validateDiagnosticEventIdentity(object, priceId);
+      if (identityError) return new Response(identityError, { status: 400 });
+      const { data: diagnosticOrder, error: diagnosticOrderError } = await supabaseAdmin
+        .from('diagnostic_ia_orders')
+        .select('id, user_id, final_amount_cents, promo_redemption_id')
+        .eq('id', object.metadata!.diagnostic_order_id)
+        .maybeSingle();
+      if (diagnosticOrderError) return new Response('Vérification commerciale impossible.', { status: 500 });
+      if (!diagnosticOrder || diagnosticOrder.user_id !== object.metadata!.user_id
+        || (diagnosticOrder.promo_redemption_id ?? null) !== (object.metadata!.promo_redemption_id ?? null)
+      ) return new Response('Configuration du paiement Diagnostic invalide.', { status: 400 });
+      const validationError = validateCompletedDiagnosticSession(object, priceId, diagnosticOrder.final_amount_cents);
       if (validationError) return new Response(validationError, { status: 400 });
       validationStatus = 'validated';
       diagnosticEvent = true;
@@ -248,7 +259,7 @@ Deno.serve(async (request) => {
           .in('status', ['paid', 'disputed'])
           .lt('contract_confirmation_delivery_attempts', DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS)
           .or(diagnosticContractDeliveryClaimFilter(claimNow))
-          .select('id, customer_email, sales_context, paid_at, cgv_document_version_id, contract_confirmation_delivery_attempts')
+          .select('id, customer_email, sales_context, paid_at, amount_total, currency, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, cgv_acceptance_statement_version_id, cgv_document_version_id, contract_confirmation_delivery_attempts')
           .maybeSingle();
         if (orderError) throw orderError;
 
@@ -273,7 +284,18 @@ Deno.serve(async (request) => {
             withdrawalForm = form;
           }
 
-          const deliveryUpdate = await attemptDiagnosticContractConfirmationDelivery({ order, cgv, withdrawalForm });
+          let acceptance = null;
+          if (order.promo_redemption_id) {
+            const { data: proof, error: proofError } = await supabaseAdmin
+              .from('diagnostic_ia_consents')
+              .select('legal_document_version_id, acceptance_text, legal_document_versions!inner(version)')
+              .eq('order_id', order.id)
+              .eq('consent_type', 'cgv_acceptance')
+              .single();
+            if (proofError) throw proofError;
+            acceptance = proof;
+          }
+          const deliveryUpdate = await attemptDiagnosticContractConfirmationDelivery({ order, cgv, withdrawalForm, acceptance });
           const { error: deliveryError } = await supabaseAdmin
             .from('diagnostic_ia_orders')
             .update(deliveryUpdate)

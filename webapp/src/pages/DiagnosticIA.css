@@ -426,7 +426,8 @@
   line-height: 1.5;
 }
 
-.diagnostic-ia-checkout input {
+.diagnostic-ia-checkout input[type="radio"],
+.diagnostic-ia-checkout input[type="checkbox"] {
   flex: 0 0 auto;
   width: 1.1rem;
   height: 1.1rem;

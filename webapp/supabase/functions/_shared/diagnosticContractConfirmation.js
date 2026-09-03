@@ -1,4 +1,5 @@
 import { sendCommercialEmail, smtpFailureCode } from './smtpReceipt.js';
+import { buildDiagnosticPromoEvidence, diagnosticEvidenceEuros } from './diagnosticContractEvidence.js';
 
 // Une reprise avant 15 minutes risquerait de doubler un envoi SMTP encore en
 // cours. Cinq tentatives automatiques au maximum bornent les rejouages Stripe.
@@ -21,7 +22,30 @@ export function isDiagnosticContractDeliveryRetryable(order) {
     && order.contract_confirmation_delivery_attempts < DIAGNOSTIC_CONTRACT_DELIVERY_MAX_ATTEMPTS;
 }
 
-export function buildDiagnosticContractConfirmationMessage({ order, cgv, withdrawalForm }) {
+export function buildDiagnosticContractConfirmationMessage({ order, cgv, withdrawalForm, acceptance }) {
+  if (!Number.isInteger(order.amount_total) || order.amount_total <= 0 || order.amount_total > 14_900) {
+    throw new Error('diagnostic_paid_amount_invalid');
+  }
+  const paidAmount = order.amount_total === 14_900 ? '149 €'
+    : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(order.amount_total / 100);
+  let promoLines = [];
+  if (order.promo_redemption_id) {
+    const expected = buildDiagnosticPromoEvidence(order);
+    if (order.amount_total !== order.final_amount_cents
+      || acceptance?.legal_document_version_id !== order.cgv_acceptance_statement_version_id
+      || acceptance?.legal_document_versions?.version !== expected.version
+      || acceptance?.acceptance_text !== expected.text) {
+      throw new Error('diagnostic_contract_evidence_invalid');
+    }
+    promoLines = [
+      `Prix catalogue : ${diagnosticEvidenceEuros(order.original_amount_cents)}`,
+      `Remise promotionnelle : ${diagnosticEvidenceEuros(order.discount_amount_cents)}`,
+      `Modèle de preuve transactionnelle : ${expected.version}`,
+      acceptance.acceptance_text,
+    ];
+  } else if (order.amount_total !== 14900) {
+    throw new Error('diagnostic_paid_amount_invalid');
+  }
   const paidAt = new Date(order.paid_at);
   if (Number.isNaN(paidAt.getTime())) throw new Error('diagnostic_paid_at_invalid');
   const paidLabel = new Intl.DateTimeFormat('fr-FR', {
@@ -36,7 +60,8 @@ export function buildDiagnosticContractConfirmationMessage({ order, cgv, withdra
     `Référence de commande : ${order.id}`,
     `Date de conclusion du contrat : ${paidLabel}`,
     'Prestation : Diagnostic IA Express — rendez-vous de 90 minutes en visioconférence et remise d’un Plan d’action IA FormaPrompt personnalisé.',
-    'Prix total payé : 149 €',
+    `Prix total payé : ${paidAmount}`,
+    ...promoLines,
     'TVA non applicable - article 293 B du CGI',
     'Prochaine étape : choisissez votre créneau parmi les disponibilités proposées par FormaPrompt.',
     '',

@@ -102,6 +102,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Socle Diagnostic deja deploye, absent de l historique Express.
+          # Copies de test uniquement : jamais de redeploiement production.
+          for fixture in supabase/tests/fixtures/diagnostic-history/*.sql; do
+            destination="supabase/migrations/$(basename "$fixture")"
+            test ! -e "$destination"
+            cp "$fixture" "$destination"
+          done
           supabase migration up --local --include-all 2>&1 \
             | tee "$VALIDATION_REPORT_DIR/migrations.txt"
 
@@ -125,6 +132,7 @@ jobs:
           set -euo pipefail
           supabase test db \
             supabase/tests/promotion_engine.sql \
+            supabase/tests/diagnostic_promotion_integration.sql \
             supabase/tests/course_promotion_integration.sql \
             supabase/tests/promotion_administration.sql \
             --local 2>&1 \
@@ -154,7 +162,7 @@ jobs:
             echo "## LOT 1G Phase Express PostgreSQL validation"
             echo
             echo "Environment: ephemeral Supabase stack on the GitHub-hosted runner."
-            echo "Expected Phase Express pgTAP inventory: 82 + 56 + 56 = 194."
+            echo "Expected promotions pgTAP inventory: 82 + 55 + 56 + 56 = 249."
             echo "The job status above remains authoritative; no PASS is inferred from inventory counts."
           } >> "$GITHUB_STEP_SUMMARY"
 

@@ -155,7 +155,7 @@ function PromotionForm({ promotion, onCancel, onSaved }) {
       {!promotion && <label className="promotion-form__active"><input type="checkbox" name="active" checked={draft.active} onChange={updateField} /> Activer dès que les dates le permettent</label>}
       <fieldset className="promotion-targets">
         <legend>Cibles</legend>
-        <p>Choisissez des identifiants métier stables. Les formations sont raccordées ; la cible Diagnostic reste indisponible dans cette release.</p>
+        <p>Choisissez des identifiants métier stables : formations ou Diagnostic IA Express.</p>
         <div className="promotion-targets__options">
           {PROMOTION_TARGET_OPTIONS.map((target) => (
             <label key={targetFingerprint(target)}>
