@@ -129,7 +129,17 @@ jobs:
           mv /tmp/formaprompt-migrations supabase/migrations
 
       - name: Apply all committed migrations locally
-        run: supabase migration up --local --include-all
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Socle Diagnostic historique : meme preparation que le workflow dedie.
+          # Copies sur le runner uniquement, appliquees dans l'ordre des migrations.
+          for fixture in supabase/tests/fixtures/diagnostic-history/*.sql; do
+            destination="supabase/migrations/$(basename "$fixture")"
+            test ! -e "$destination"
+            cp "$fixture" "$destination"
+          done
+          supabase migration up --local --include-all
 
       - name: List applied local migrations
         run: supabase migration list --local
