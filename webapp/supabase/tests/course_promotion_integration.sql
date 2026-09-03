@@ -96,7 +96,7 @@ FROM (VALUES
   ('97000000-0000-4000-8000-000000000205'::uuid,'97000000-0000-4000-8000-000000000003'::uuid,'formation-ia','97000000-0000-4000-8000-000000000305'::uuid,'price_ia','prod_ia')
 ) AS fixtures(id,user_id,course_id,request_id,price_id,product_id)
 CROSS JOIN LATERAL (
-  SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-12' LIMIT 1
+  SELECT id FROM public.legal_document_versions WHERE version='CGV-B2C-2026-08-26' LIMIT 1
 ) AS documents;
 
 CREATE TEMP TABLE course_promotion_baseline(purchases integer,accesses integer) ON COMMIT DROP;

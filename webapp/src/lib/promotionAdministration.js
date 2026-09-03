@@ -1,4 +1,5 @@
 export const PROMOTION_TARGET_OPTIONS = [
+  { target_type: 'diagnostic', target_key: 'diagnostic-ia-express', label: 'Diagnostic IA Express' },
   { target_type: 'all', target_key: 'all', label: 'Toutes les offres FormaPrompt' },
   { target_type: 'course', target_key: 'formation-ia', label: 'Formation IA générative' },
   { target_type: 'course', target_key: 'formation-ia-act', label: 'Formation IA Act' },

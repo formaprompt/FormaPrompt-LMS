@@ -4,12 +4,19 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DiagnosticIA from './DiagnosticIA'
 import { useAuth } from '../contexts/useAuth'
+import { buildDiagnosticPromoEvidence } from '../../supabase/functions/_shared/diagnosticContractEvidence.js'
 
-const { createCheckout } = vi.hoisted(() => ({ createCheckout: vi.fn() }))
+const { createCheckout, validatePromotion } = vi.hoisted(() => ({
+  createCheckout: vi.fn(),
+  validatePromotion: vi.fn(),
+}))
 
 vi.mock('../contexts/useAuth', () => ({ useAuth: vi.fn() }))
 vi.mock('../lib/supabaseClient', () => ({ supabase: {} }))
-vi.mock('../lib/diagnosticCheckout', () => ({ createDiagnosticCheckout: createCheckout }))
+vi.mock('../lib/diagnosticCheckout', () => ({
+  createDiagnosticCheckout: createCheckout,
+  validateDiagnosticPromotion: validatePromotion,
+}))
 vi.mock('../components/SEO', () => ({
   default: ({ title, description, url, jsonLd }) => (
     <div
@@ -35,6 +42,7 @@ describe('page commerciale Diagnostic IA Express', () => {
     cleanup()
     vi.clearAllMocks()
     createCheckout.mockReset()
+    validatePromotion.mockReset()
   })
 
   it('présente l’offre gelée, son résultat et ses limites', () => {
@@ -60,7 +68,7 @@ describe('page commerciale Diagnostic IA Express', () => {
     const cta = within(document.querySelector('.diagnostic-ia-price-card')).getByRole('link', { name: /Réserver mon Diagnostic IA Express - 149 €/i })
     expect(cta).toHaveAttribute('href', '/login?redirect=%2Fdiagnostic-ia%23reserver')
     expect(cta).toHaveAttribute('aria-describedby', 'diagnostic-payment-status')
-    expect(screen.getByText(/Après connexion et acceptation des CGV applicables/i)).toBeVisible()
+    expect(screen.getByText(/Après connexion, une éventuelle remise validée/i)).toBeVisible()
     expect(document.querySelector('form')).not.toBeInTheDocument()
   })
 
@@ -69,7 +77,7 @@ describe('page commerciale Diagnostic IA Express', () => {
     renderPage()
 
     const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
-    const button = priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i })
+    const button = priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149(?:,00)?\s€?/i })
     expect(button).toBeDisabled()
     expect(priceCard.getByRole('link', { name: /Conditions générales de vente/i })).toHaveAttribute(
       'href',
@@ -92,7 +100,7 @@ describe('page commerciale Diagnostic IA Express', () => {
       '/cgv-professionnels?version=CGV-B2B-2026-08-26',
     )
     await userEvent.click(priceCard.getByRole('checkbox'))
-    await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149 €/i }))
+    await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express - 149(?:,00)?\s€?/i }))
 
     expect(createCheckout).toHaveBeenCalledWith(expect.anything(), {
       sales_context: 'professional',
@@ -102,10 +110,83 @@ describe('page commerciale Diagnostic IA Express', () => {
     const payload = createCheckout.mock.calls[0][1]
     expect(payload).not.toHaveProperty('amount')
     expect(payload).not.toHaveProperty('user_id')
-    expect(payload).not.toHaveProperty('promo_code')
-    expect(payload).not.toHaveProperty('promo_redemption_id')
-    expect(payload).not.toHaveProperty('discount_amount_cents')
-    expect(priceCard.queryByRole('textbox', { name: /code|promo|réduction/i })).not.toBeInTheDocument()
+  })
+
+  it('valide un code côté serveur puis affiche le détail monétaire', async () => {
+    validatePromotion.mockResolvedValue({
+      valid: true,
+      code: 'DIAG10',
+      catalog_amount_cents: 14_900,
+      discount_amount_cents: 1_490,
+      final_amount_cents: 13_410,
+      acceptance_statement: buildDiagnosticPromoEvidence({ original_amount_cents: 14900,
+        discount_amount_cents: 1490, final_amount_cents: 13410 }),
+      message: 'Code promotionnel appliqué.',
+    })
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+
+    const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.type(priceCard.getByLabelText(/Code promotionnel/i), ' diag10 ')
+    await userEvent.click(priceCard.getByRole('button', { name: 'Vérifier' }))
+
+    expect(validatePromotion).toHaveBeenCalledWith(expect.anything(), ' diag10 ')
+    expect(await priceCard.findByText('Code promotionnel appliqué.')).toBeVisible()
+    expect(priceCard.getAllByText(/134,10/).length).toBeGreaterThan(0)
+    expect(priceCard.getAllByText(/14,90/).length).toBeGreaterThan(0)
+  })
+
+  it('n envoie que le code validé et invalide l estimation lorsqu il change', async () => {
+    validatePromotion.mockResolvedValue({
+      valid: true,
+      code: 'DIAG10',
+      catalog_amount_cents: 14_900,
+      discount_amount_cents: 1_490,
+      final_amount_cents: 13_410,
+      acceptance_statement: buildDiagnosticPromoEvidence({ original_amount_cents: 14900,
+        discount_amount_cents: 1490, final_amount_cents: 13410 }),
+      message: 'Code promotionnel appliqué.',
+    })
+    createCheckout.mockResolvedValue({})
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+
+    const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
+    const input = priceCard.getByLabelText(/Code promotionnel/i)
+    await userEvent.type(input, 'DIAG10')
+    await userEvent.click(priceCard.getByRole('button', { name: 'Vérifier' }))
+    await userEvent.click(priceCard.getByRole('checkbox'))
+    await userEvent.click(priceCard.getByRole('button', { name: /Réserver mon Diagnostic IA Express/i }))
+
+    expect(createCheckout).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ promo_code: 'DIAG10' }))
+    const payload = createCheckout.mock.calls[0][1]
+    expect(payload).not.toHaveProperty('amount')
+    expect(payload).not.toHaveProperty('user_id')
+    expect(payload).not.toHaveProperty('email')
+    expect(payload.promo_acceptance_version).toBe('DIAGNOSTIC-CGV-ACCEPTANCE-PROMO-2026-09-03')
+    expect(payload.promo_acceptance_text).toContain("m'oblige au paiement de 134,10 €")
+
+    await userEvent.type(input, 'B')
+    expect(priceCard.queryByText('Code promotionnel appliqué.')).not.toBeInTheDocument()
+    expect(priceCard.getAllByText(/149,00/).length).toBeGreaterThan(0)
+  })
+
+  it('affiche le même refus générique pour un code indisponible', async () => {
+    validatePromotion.mockResolvedValue({
+      valid: false,
+      code: null,
+      catalog_amount_cents: 14_900,
+      discount_amount_cents: 0,
+      final_amount_cents: 14_900,
+      message: "Ce code n'est pas valide ou n'est plus disponible.",
+    })
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+
+    const priceCard = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.type(priceCard.getByLabelText(/Code promotionnel/i), 'INCONNU')
+    await userEvent.click(priceCard.getByRole('button', { name: 'Vérifier' }))
+    expect(await priceCard.findByRole('alert')).toHaveTextContent("Ce code n'est pas valide ou n'est plus disponible.")
   })
 
   it('affiche un chargement puis une erreur contrôlée sans faux paiement', async () => {
@@ -134,5 +215,61 @@ describe('page commerciale Diagnostic IA Express', () => {
     expect(seo).toHaveAttribute('data-title', expect.stringContaining('Diagnostic IA Express'))
     expect(seo).toHaveAttribute('data-description', expect.stringContaining('90 minutes'))
     expect(seo).toHaveAttribute('data-schema', 'Service')
+  })
+
+  it('affiche 7,45 euros dans le total, le bouton et le texte pour une remise serveur de 95 pour cent', async () => {
+    validatePromotion.mockResolvedValue({ valid: true, code: 'LOCAL95', catalog_amount_cents: 14900,
+      discount_amount_cents: 14155, final_amount_cents: 745, message: 'Code promotionnel appliqué.',
+      acceptance_statement: buildDiagnosticPromoEvidence({ original_amount_cents: 14900,
+        discount_amount_cents: 14155, final_amount_cents: 745 }) })
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+    const card = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.type(card.getByLabelText(/Code promotionnel/), 'LOCAL95')
+    await userEvent.click(card.getByRole('button', { name: 'Vérifier' }))
+    expect(card.getByRole('button', { name: /Réserver.*7,45/ })).toBeVisible()
+    expect(card.getByText(/Montant à payer : 7,45/)).toBeVisible()
+    expect(card.getAllByText(/141,55/).length).toBeGreaterThan(0)
+    expect(card.getByRole('checkbox')).toHaveAccessibleName(expect.stringContaining("m'oblige au paiement de 7,45 €"))
+    expect(createCheckout).not.toHaveBeenCalled()
+  })
+
+  it('bloque le paiement et la saisie pendant la vérification sans accepter une estimation périmée', async () => {
+    let resolveQuote
+    validatePromotion.mockImplementation(() => new Promise((resolve) => { resolveQuote = resolve }))
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+    const card = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.click(card.getByRole('checkbox'))
+    const input = card.getByLabelText(/Code promotionnel/)
+    await userEvent.type(input, 'LOCAL95')
+    expect(card.getByRole('button', { name: /Réserver mon Diagnostic/ })).toBeDisabled()
+    await userEvent.click(card.getByRole('button', { name: 'Vérifier' }))
+    expect(input).toBeDisabled()
+    resolveQuote({ valid: false, message: "Ce code n'est pas valide ou n'est plus disponible." })
+    await card.findByRole('alert')
+    expect(card.getByRole('button', { name: /Réserver mon Diagnostic/ })).toBeDisabled()
+    await userEvent.clear(input)
+    expect(card.getByRole('checkbox')).not.toBeChecked()
+    await userEvent.click(card.getByRole('checkbox'))
+    expect(card.getByRole('button', { name: /Réserver mon Diagnostic/ })).toBeEnabled()
+    expect(createCheckout).not.toHaveBeenCalled()
+  })
+
+  it('exige une nouvelle acceptation lors de la reverification du meme code', async () => {
+    validatePromotion.mockResolvedValue({ valid: true, code: 'LOCAL95', catalog_amount_cents: 14900,
+      discount_amount_cents: 14155, final_amount_cents: 745, message: 'Code promotionnel appliqué.',
+      acceptance_statement: buildDiagnosticPromoEvidence({ original_amount_cents: 14900,
+        discount_amount_cents: 14155, final_amount_cents: 745 }) })
+    useAuth.mockReturnValue({ user: { id: 'client-test' }, loading: false })
+    renderPage()
+    const card = within(document.querySelector('.diagnostic-ia-price-card'))
+    await userEvent.type(card.getByLabelText(/Code promotionnel/), 'LOCAL95')
+    await userEvent.click(card.getByRole('button', { name: 'Vérifier' }))
+    await userEvent.click(card.getByRole('checkbox'))
+    expect(card.getByRole('button', { name: /Réserver mon Diagnostic/ })).toBeEnabled()
+    await userEvent.click(card.getByRole('button', { name: 'Vérifier' }))
+    expect(card.getByRole('checkbox')).not.toBeChecked()
+    expect(card.getByRole('button', { name: /Réserver mon Diagnostic/ })).toBeDisabled()
   })
 })

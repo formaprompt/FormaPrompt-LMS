@@ -18,14 +18,19 @@ import {
   DIAGNOSTIC_SALES_CONTEXTS,
   getDiagnosticCgv,
 } from '../../supabase/functions/_shared/diagnosticPayment.js'
-import { createDiagnosticCheckout } from '../lib/diagnosticCheckout'
+import { createDiagnosticCheckout, validateDiagnosticPromotion } from '../lib/diagnosticCheckout'
 import { supabase } from '../lib/supabaseClient'
 import { createServiceStructuredData } from '../lib/seoStructuredData'
 import './DiagnosticIA.css'
+import '../components/CommercialCheckout.css'
 
 const PAGE_URL = 'https://formaprompt.com/diagnostic-ia'
 const PAGE_DESCRIPTION = "Diagnostic IA Express de 90 minutes : analysez vos tâches, choisissez trois opportunités IA prioritaires et repartez avec un plan d'action adapté."
 const LOGIN_REDIRECT = `/login?redirect=${encodeURIComponent('/diagnostic-ia#reserver')}`
+
+function formatEuros(amountCents) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amountCents / 100)
+}
 
 const audiences = [
   'Indépendants',
@@ -69,19 +74,54 @@ function ReservationEntry() {
   const [cgvAccepted, setCgvAccepted] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState('')
+  const [promoCode, setPromoCode] = useState('')
+  const [promotion, setPromotion] = useState({ status: 'idle', quote: null, message: '' })
 
   const cgv = getDiagnosticCgv(salesContext)
+  const displayedFinalAmount = promotion.status === 'valid'
+    ? promotion.quote.final_amount_cents
+    : 14_900
+  const checkoutLabel = `Réserver mon Diagnostic IA Express - ${formatEuros(displayedFinalAmount)}`
+  const promotionPending = Boolean(promoCode.trim()) && promotion.status !== 'valid'
+
+  async function checkPromotion() {
+    if (!promoCode.trim() || promotion.status === 'checking') return
+    setCgvAccepted(false)
+    setPromotion({ status: 'checking', quote: null, message: 'Vérification du code…' })
+    setCheckoutError('')
+    try {
+      const quote = await validateDiagnosticPromotion(supabase, promoCode)
+      if (quote.valid) {
+        setPromoCode(quote.code)
+        setPromotion({ status: 'valid', quote, message: quote.message })
+      } else {
+        setPromotion({ status: 'invalid', quote: null, message: quote.message })
+      }
+    } catch (error) {
+      setPromotion({
+        status: 'error',
+        quote: null,
+        message: error instanceof Error ? error.message : 'La vérification du code est temporairement indisponible.',
+      })
+    }
+  }
 
   async function startCheckout() {
-    if (checkoutLoading || !cgvAccepted) return
+    if (checkoutLoading || !cgvAccepted || promotionPending) return
     setCheckoutLoading(true)
     setCheckoutError('')
     try {
-      const result = await createDiagnosticCheckout(supabase, {
+      const payload = {
         sales_context: salesContext,
         cgv_accepted: true,
         cgv_version: cgv.version,
-      })
+      }
+      if (promotion.status === 'valid') {
+        payload.promo_code = promotion.quote.code
+        payload.promo_acceptance_version = promotion.quote.acceptance_statement.version
+        payload.promo_acceptance_text = promotion.quote.acceptance_statement.text
+      }
+      const result = await createDiagnosticCheckout(supabase, payload)
       if (result.url) {
         window.location.assign(result.url)
         return
@@ -90,7 +130,11 @@ function ReservationEntry() {
         window.location.assign(`/diagnostic-ia/confirmation?order_id=${encodeURIComponent(result.orderId)}`)
       }
     } catch (error) {
-      setCheckoutError(error instanceof Error ? error.message : 'Le paiement ne peut pas être ouvert pour le moment.')
+      const message = error instanceof Error ? error.message : 'Le paiement ne peut pas être ouvert pour le moment.'
+      setCheckoutError(message)
+      if (message === "Ce code n'est pas valide ou n'est plus disponible.") {
+        setPromotion({ status: 'invalid', quote: null, message })
+      }
     } finally {
       setCheckoutLoading(false)
     }
@@ -142,6 +186,51 @@ function ReservationEntry() {
           <span>Dans un cadre professionnel</span>
         </label>
       </fieldset>
+      <div className="commercial-checkout">
+      <div className="commercial-checkout__promotion">
+        <label htmlFor="diagnostic-promo-code">Code promotionnel <span>(facultatif)</span></label>
+        <div className="commercial-checkout__promotion-row">
+          <input
+            id="diagnostic-promo-code"
+            type="text"
+            value={promoCode}
+            maxLength={64}
+            autoComplete="off"
+            spellCheck="false"
+            disabled={promotion.status === 'checking' || checkoutLoading}
+            onChange={(event) => {
+              setPromoCode(event.target.value)
+              setCgvAccepted(false)
+              setPromotion({ status: 'idle', quote: null, message: '' })
+              setCheckoutError('')
+            }}
+          />
+          <button
+            type="button"
+            className="btn btn-outline commercial-checkout__promotion-button"
+            onClick={checkPromotion}
+            disabled={!promoCode.trim() || promotion.status === 'checking' || checkoutLoading}
+          >
+            {promotion.status === 'checking' ? 'Vérification…' : 'Vérifier'}
+          </button>
+        </div>
+        {promotion.message && (
+          <p
+            className={promotion.status === 'valid' ? 'commercial-checkout__promotion-success' : 'commercial-checkout__promotion-message'}
+            role={promotion.status === 'invalid' || promotion.status === 'error' ? 'alert' : 'status'}
+          >
+            {promotion.message}
+          </p>
+        )}
+        <dl className="commercial-checkout__amounts" aria-label="Récapitulatif du prix">
+          <div><dt>Prix</dt><dd>{formatEuros(14_900)}</dd></div>
+          {promotion.status === 'valid' && (
+            <div><dt>Remise</dt><dd>- {formatEuros(promotion.quote.discount_amount_cents)}</dd></div>
+          )}
+          <div><dt>Total</dt><dd>{formatEuros(displayedFinalAmount)}</dd></div>
+        </dl>
+      </div>
+      </div>
       <label className="diagnostic-ia-consent">
         <input
           type="checkbox"
@@ -151,23 +240,29 @@ function ReservationEntry() {
             setCheckoutError('')
           }}
         />
-        <span>
+        {promotion.status === 'valid' ? <span>
+          {promotion.quote.acceptance_statement.text}{' '}
+          <Link to={`${cgv.path}?version=${encodeURIComponent(cgv.version)}`}>Consulter les CGV applicables</Link>
+        </span> : <span>
           J&apos;accepte les{' '}
           <Link to={`${cgv.path}?version=${encodeURIComponent(cgv.version)}`}>Conditions générales de vente applicables au Diagnostic IA Express</Link>{' '}
           et je reconnais que ma commande m&apos;oblige au paiement de 149 €.
-        </span>
+        </span>}
       </label>
       {checkoutError && <p className="diagnostic-ia-checkout-error" role="alert">{checkoutError}</p>}
       <button
         className="btn diagnostic-ia-cta"
         type="button"
-        disabled={checkoutLoading || !cgvAccepted}
+        disabled={checkoutLoading || !cgvAccepted || promotionPending}
         aria-describedby="diagnostic-payment-status"
         onClick={startCheckout}
       >
-        {checkoutLoading ? 'Ouverture du paiement sécurisé…' : 'Réserver mon Diagnostic IA Express - 149 €'}
+        {checkoutLoading ? 'Ouverture du paiement sécurisé…' : checkoutLabel}
         {!checkoutLoading && <ArrowRight size={20} aria-hidden="true" />}
       </button>
+      <p className="diagnostic-ia-payment-status" role="status">
+        Montant à payer : {formatEuros(displayedFinalAmount)}. Le paiement sécurisé sera confirmé sur Stripe.
+      </p>
     </div>
   )
 }
@@ -210,7 +305,7 @@ export default function DiagnosticIA() {
               <span className="diagnostic-ia-summary-badge">En visioconférence</span>
               <dl>
                 <div><dt>Durée</dt><dd>90 minutes</dd></div>
-                <div><dt>Tarif payé</dt><dd>149 €</dd></div>
+                <div><dt>Tarif catalogue</dt><dd>149 €</dd></div>
                 <div><dt>Restitution</dt><dd>Plan d&apos;action personnalisé</dd></div>
               </dl>
               <p>Un seul diagnostic est proposé par jour afin de préserver le temps d&apos;analyse et de restitution.</p>
@@ -342,7 +437,7 @@ export default function DiagnosticIA() {
               <p className="diagnostic-ia-tax">TVA non applicable - article 293 B du CGI</p>
               <ReservationEntry />
               <p id="diagnostic-payment-status" className="diagnostic-ia-payment-status">
-                Le montant total payé est de 149 €. Après connexion et acceptation des CGV applicables, le paiement sécurisé s&apos;ouvre sur Stripe.
+                Le prix catalogue est de 149 €. Après connexion, une éventuelle remise validée et l&apos;acceptation des CGV applicables, le montant final est confirmé sur Stripe.
               </p>
             </div>
           </div>

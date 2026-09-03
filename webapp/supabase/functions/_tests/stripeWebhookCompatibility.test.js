@@ -10,6 +10,7 @@ import * as coursePromotion from '../_shared/coursePromotion.js';
 import * as postPayment from '../_shared/stripePostPayment.js';
 import * as diagnosticPayment from '../_shared/diagnosticPayment.js';
 import * as diagnosticContract from '../_shared/diagnosticContractConfirmation.js';
+import { buildDiagnosticPromoEvidence } from '../_shared/diagnosticContractEvidence.js';
 import { buildCommercialEmail } from '../_shared/smtpReceipt.js';
 
 const source = readFileSync(resolve('supabase/functions/stripe-webhook-ai-act/index.ts'), 'utf8');
@@ -87,7 +88,7 @@ function harness(options = {}) {
     !columns || columns.includes(key)));
   function from(table) {
     assert.ok(['commercial_checkout_intents', 'commercial_consents', 'diagnostic_ia_orders',
-      'legal_document_versions'].includes(table), `Accès table inattendu : ${table}`);
+      'legal_document_versions', 'diagnostic_ia_consents'].includes(table), `Accès table inattendu : ${table}`);
     const query = { table, filters: [] };
     queries.push(query);
     const result = () => {
@@ -95,6 +96,11 @@ function harness(options = {}) {
       let data;
       if (table === 'commercial_checkout_intents') data = options.intent ?? null;
       if (table === 'commercial_consents') data = options.consents ?? [];
+      if (table === 'diagnostic_ia_consents') data = {
+        legal_document_version_id: 'promo-acceptance',
+        acceptance_text: buildDiagnosticPromoEvidence(options.diagnosticOrder).text,
+        legal_document_versions: { version: buildDiagnosticPromoEvidence(options.diagnosticOrder).version },
+      };
       if (table === 'legal_document_versions') data = {
         version: 'CGV-B2C-2026-08-26', content_text: 'Texte contractuel local de test.',
       };
@@ -103,8 +109,13 @@ function harness(options = {}) {
           data = options.claimUnavailable ? null : {
             id: orderId, customer_email: 'diagnostic@example.test', sales_context: 'personal',
             paid_at: '2026-08-29T12:00:00Z', cgv_document_version_id: cgvId,
+            amount_total: options.diagnosticOrder?.final_amount_cents ?? 14900,
+            ...options.diagnosticOrder,
+            cgv_acceptance_statement_version_id: 'promo-acceptance',
             contract_confirmation_delivery_attempts: options.deliveryAttempts ?? 0,
           };
+        } else if (query.select?.includes('final_amount_cents')) {
+          data = options.diagnosticOrder ?? { id: orderId, user_id: userId, final_amount_cents: 14900, promo_redemption_id: null };
         } else data = options.deliveryState ?? null;
       }
       return { data: Array.isArray(data) ? data.map((row) => project(row, query.select))
@@ -155,7 +166,10 @@ function harness(options = {}) {
         }),
     },
   };
-  runInNewContext(compiled.outputText, {
+  const executable = options.mutate ? ts.transpileModule(options.mutate(source), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText : compiled.outputText;
+  runInNewContext(executable, {
     exports: {}, require(name) { assert.ok(dependencies[name], `Import inattendu : ${name}`); return dependencies[name]; },
     Deno: { env: { get: (name) => env[name] }, serve: (callback) => { handler = callback; } },
     Response, TextEncoder, crypto: webcrypto, Error,
@@ -324,12 +338,13 @@ test('Diagnostic : une erreur RPC empêche la confirmation contractuelle', async
   const h = harness({ rpcError: true });
   assert.equal((await h.dispatch(event('checkout.session.completed', diagnosticObject()))).status, 500);
   assert.equal(h.deliveries.length, 0);
-  assert.equal(h.queries.length, 0);
+  assert.equal(h.queries.length, 1);
+  assert.equal(h.queries[0].update, undefined);
 });
 
 test('la limite SMTP v42 accepte une confirmation longue sans changer les accusés existants', () => {
   const message = diagnosticContract.buildDiagnosticContractConfirmationMessage({
-    order: { id: orderId, customer_email: 'diagnostic@example.test', paid_at: '2026-08-29T12:00:00Z', sales_context: 'personal' },
+    order: { id: orderId, customer_email: 'diagnostic@example.test', paid_at: '2026-08-29T12:00:00Z', sales_context: 'personal', amount_total: 14900 },
     cgv: { version: 'CGV-B2C-2026-08-26', content_text: 'x'.repeat(11000) },
     withdrawalForm: { content_text: 'Formulaire de test' },
   });
@@ -378,9 +393,87 @@ test('signature, mode et méthode sont contrôlés avant tout accès Supabase', 
   assert.equal(h.clientCount, 0);
 });
 
-test('aucune promotion Diagnostic ni mutation directe LMS dans le webhook et ses helpers restaurés', () => {
+test('aucune reservation dans le webhook ni mutation directe LMS dans ses helpers', () => {
   const restored = ['diagnosticPayment.js', 'diagnosticContractConfirmation.js'].map((name) =>
     readFileSync(resolve('supabase/functions/_shared', name), 'utf8')).join('\n');
-  assert.doesNotMatch(source + restored, /diagnosticPromotion|validate-diagnostic-promotion|process_diagnostic_stripe_event|reserve_diagnostic_promotion/);
+  assert.doesNotMatch(source + restored, /validate-diagnostic-promotion|process_diagnostic_stripe_event|reserve_diagnostic_promotion/);
   assert.doesNotMatch(source + restored, /from\(['"](?:promo_redemptions|purchases|course_access)['"]\)\s*\.(?:insert|update|upsert|delete)/s);
+});
+function promotedDiagnostic() {
+  const object = diagnosticObject();
+  object.amount_total = 745;
+  object.metadata.promo_redemption_id = redemptionId;
+  return { object, diagnosticOrder: { id: orderId, user_id: userId,
+    original_amount_cents: 14900, discount_amount_cents: 14155, currency: 'eur',
+    final_amount_cents: 745, promo_redemption_id: redemptionId } };
+}
+
+for (const type of ['checkout.session.completed', 'checkout.session.async_payment_succeeded']) {
+  test(`Diagnostic remisé ${type} : RPC et confirmation du montant réellement payé`, async () => {
+    const fixture = promotedDiagnostic();
+    const h = harness(fixture);
+    assert.equal((await h.dispatch(event(type, fixture.object))).status, 200);
+    assert.equal(h.calls[0].name, 'process_diagnostic_ia_stripe_event');
+    assert.equal(h.calls[0].payload.amount_total, 745);
+    assert.equal(h.deliveries.length, 1);
+    assert.match(h.deliveries[0].body, /Prix total payé : 7,45\s€/);
+    assert.doesNotMatch(h.deliveries[0].body, /Prix total payé : 149/);
+  });
+}
+for (const type of ['payment_intent.payment_failed', 'checkout.session.expired', 'checkout.session.async_payment_failed']) {
+  test(`Diagnostic remisé ${type} : délégation transactionnelle sans libération Edge`, async () => {
+    const fixture = promotedDiagnostic();
+    const h = harness(fixture);
+    assert.equal((await h.dispatch(event(type, fixture.object))).status, 200);
+    assert.equal(h.calls[0].name, 'process_diagnostic_ia_stripe_event');
+    assert.equal(h.calls[0].payload.event_type, type);
+    assert.equal(h.deliveries.length, 0);
+    assert.equal(h.queries.length, 0);
+  });
+}
+for (const alter of [
+  (f) => { f.object.amount_total = 14900; },
+  (f) => { f.object.metadata.promo_redemption_id = orderId; },
+  (f) => { f.diagnosticOrder.user_id = orderId; },
+  (f) => { f.object.amount_total = f.diagnosticOrder.final_amount_cents = 0; },
+]) {
+  test(`Diagnostic remisé : montant ou liaison falsifiée refusés ${alter}`, async () => {
+    const fixture = promotedDiagnostic(); alter(fixture);
+    const h = harness(fixture);
+    assert.equal((await h.dispatch(event('checkout.session.completed', fixture.object))).status, 400);
+    assert.equal(h.calls.length, 0);
+    assert.equal(h.deliveries.length, 0);
+  });
+}
+test('Diagnostic remisé : panne SMTP puis retry du même événement déjà traité', async () => {
+  const fixture = promotedDiagnostic();
+  const payload = event('checkout.session.completed', fixture.object);
+  const failed = harness({ ...fixture, smtpFails: true });
+  assert.equal((await failed.dispatch(payload)).status, 500);
+  const retry = harness({ ...fixture, alreadyProcessed: true, deliveryAttempts: 1 });
+  const response = await retry.dispatch(payload);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).already_processed, true);
+  assert.equal(retry.deliveries.length, 1);
+  assert.match(retry.deliveries[0].body, /7,45\s€/);
+  assert.equal(retry.deliveries[0].body, failed.deliveries[0].body);
+});
+
+// Contre-tests : les mêmes assertions comportementales doivent tuer les mutants.
+async function requireHistoricalDiagnostic(h) {
+  assert.equal((await h.dispatch(event('checkout.session.completed', diagnosticObject()))).status, 200);
+  assert.equal(h.calls[0].name, 'process_diagnostic_ia_stripe_event');
+  assert.equal(h.deliveries.length, 1);
+  assert.match(h.deliveries[0].body, /Prix total payé : 149 €/);
+}
+test('contre-test : supprimer le routage Diagnostic fait réellement échouer le contrat', async () => {
+  await requireHistoricalDiagnostic(harness());
+  await assert.rejects(requireHistoricalDiagnostic(harness({
+    mutate: (code) => code.replace("? 'process_diagnostic_ia_stripe_event'", "? 'process_stripe_post_payment_event'"),
+  })), { name: 'AssertionError' });
+});
+test('contre-test : supprimer la confirmation Diagnostic fait réellement échouer le contrat', async () => {
+  await assert.rejects(requireHistoricalDiagnostic(harness({
+    mutate: (code) => code.replace("diagnosticEvent\n      && ['checkout.session.completed'", "false\n      && ['checkout.session.completed'"),
+  })), { name: 'AssertionError' });
 });

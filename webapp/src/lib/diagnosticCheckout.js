@@ -1,3 +1,5 @@
+import { buildDiagnosticPromoEvidence } from '../../supabase/functions/_shared/diagnosticContractEvidence.js'
+
 const GENERIC_CHECKOUT_ERROR = 'Le paiement ne peut pas être ouvert pour le moment.'
 
 async function functionErrorMessage(error) {
@@ -21,6 +23,36 @@ export async function createDiagnosticCheckout(supabase, body) {
   }
   if (data?.alreadyPaid || data?.confirmationPending) return data
   throw new Error(GENERIC_CHECKOUT_ERROR)
+}
+
+export async function validateDiagnosticPromotion(supabase, promoCode) {
+  const { data, error } = await supabase.functions.invoke('validate-diagnostic-promotion', {
+    body: { promo_code: promoCode },
+  })
+  if (error) throw new Error('La vérification du code est temporairement indisponible.')
+  if (
+    typeof data?.valid !== 'boolean'
+    || data.catalog_amount_cents !== 14_900
+    || !Number.isInteger(data.discount_amount_cents)
+    || !Number.isInteger(data.final_amount_cents)
+    || data.discount_amount_cents < 0
+    || data.final_amount_cents <= 0
+    || (data.valid && (typeof data.code !== 'string' || !/^[A-Z0-9][A-Z0-9_-]{0,63}$/.test(data.code)))
+    || (!data.valid && (data.discount_amount_cents !== 0 || data.final_amount_cents !== 14_900))
+    || data.discount_amount_cents + data.final_amount_cents !== 14_900
+  ) {
+    throw new Error('La réponse de vérification du code est invalide.')
+  }
+  if (data.valid) {
+    const expected = buildDiagnosticPromoEvidence({ ...data, original_amount_cents: data.catalog_amount_cents })
+    if (data.acceptance_statement?.version !== expected.version || data.acceptance_statement?.text !== expected.text) {
+      throw new Error('La preuve de vérification du code est invalide.')
+    }
+  }
+  return {
+    ...data,
+    message: data.valid ? 'Code promotionnel appliqué.' : "Ce code n'est pas valide ou n'est plus disponible.",
+  }
 }
 
 export async function fetchDiagnosticOrder(supabase, { orderId, sessionId }) {
