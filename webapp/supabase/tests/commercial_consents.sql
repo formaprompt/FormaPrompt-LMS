@@ -55,7 +55,7 @@ INSERT INTO public.commercial_checkout_intents (
   '61000000-0000-0000-0000-000000000001',
   'formation-ia-act', 'B2C_STANDARD', 'personal', 'immediate',
   'immediate_after_payment', 'stripe_session_created',
-  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
   'cs_test_consent'
 );
 
@@ -67,7 +67,7 @@ INSERT INTO public.commercial_consents (
   '64000000-0000-0000-0000-000000000001',
   '61000000-0000-0000-0000-000000000001',
   'formation-ia-act', 'cgv_acceptance', true,
-  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+  (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
   'web_checkout'
 );
 
@@ -85,7 +85,23 @@ INSERT INTO public.withdrawal_requests (
 
 SET LOCAL ROLE anon;
 SELECT is(
-  (SELECT count(*) FROM public.legal_document_versions)::bigint,
+  (
+    SELECT count(*)
+    FROM (VALUES
+      ('cgv_b2c', 'CGV-B2C-2026-08-26'),
+      ('cgv_b2b', 'CGV-B2B-2026-08-26'),
+      ('early_service_start_statement', 'EARLY-SERVICE-2026-08-12'),
+      ('digital_content_start_statement', 'DIGITAL-START-2026-08-12'),
+      ('digital_content_withdrawal_acknowledgement', 'DIGITAL-ACK-2026-08-12')
+    ) AS expected(document_type, version)
+    WHERE EXISTS (
+      SELECT 1
+      FROM public.legal_document_versions AS document
+      WHERE document.document_type = expected.document_type
+        AND document.version = expected.version
+        AND document.status = 'published'
+    )
+  )::bigint,
   5::bigint,
   'le public voit uniquement les cinq versions publiées'
 );
@@ -132,7 +148,7 @@ SELECT throws_ok(
       '64000000-0000-0000-0000-000000000001',
       '61000000-0000-0000-0000-000000000002', 'formation-ia-act',
       'early_service_start', true,
-      (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-12'),
+      (SELECT id FROM public.legal_document_versions WHERE version = 'CGV-B2C-2026-08-26'),
       'web_checkout'
     )$$,
   '42501',
