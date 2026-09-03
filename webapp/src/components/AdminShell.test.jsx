@@ -11,5 +11,13 @@ describe('AdminShell', () => {
     const link = screen.getByRole('link', { name: 'Promotions' });
     expect(link).toHaveAttribute('href', '/admin/promotions');
     expect(link).toHaveClass('is-active');
+    expect(screen.getByRole('link', { name: 'Diagnostics IA' })).toHaveAttribute('href', '/admin/diagnostics');
+  });
+
+  it('conserve Diagnostics IA et Promotions ensemble sur la page Diagnostic', () => {
+    render(<MemoryRouter initialEntries={['/admin/diagnostics']}><AdminShell><main>Diagnostics</main></AdminShell></MemoryRouter>);
+    expect(screen.getByRole('link', { name: 'Diagnostics IA' })).toHaveClass('is-active');
+    expect(screen.getByRole('link', { name: 'Promotions' })).toHaveAttribute('href', '/admin/promotions');
+    expect(screen.getByRole('link', { name: 'Promotions' })).not.toHaveClass('is-active');
   });
 });

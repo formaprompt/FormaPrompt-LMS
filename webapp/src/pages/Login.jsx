@@ -34,6 +34,9 @@ export default function Login() {
     : role === 'admin' || role === 'employee'
       ? '/admin'
       : '/dashboard';
+  const registerPath = requestedRedirect?.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? `/register?redirect=${encodeURIComponent(requestedRedirect)}`
+    : '/register';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -126,7 +129,7 @@ export default function Login() {
         </form>
 
         <div className="auth-links">
-          <p>Pas encore de compte ? <Link to="/register">S'inscrire</Link></p>
+          <p>Pas encore de compte ? <Link to={registerPath}>S'inscrire</Link></p>
         </div>
       </div>
     </div>

@@ -14,6 +14,11 @@ const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
+const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
+const DiagnosticPaymentConfirmation = lazy(() => import("./pages/DiagnosticPaymentConfirmation"));
+const DiagnosticBooking = lazy(() => import("./pages/DiagnosticBooking"));
+const DiagnosticQuestionnaire = lazy(() => import("./pages/DiagnosticQuestionnaire"));
+const DiagnosticRestitution = lazy(() => import("./pages/DiagnosticRestitution"));
 const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
@@ -55,6 +60,7 @@ const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminBpfPreparation = lazy(() => import("./pages/AdminBpfPreparation"));
 const AdminWithdrawalRequests = lazy(() => import("./pages/AdminWithdrawalRequests"));
 const AdminPromotions = lazy(() => import("./pages/AdminPromotions"));
+const AdminDiagnosticRestitutions = lazy(() => import("./pages/AdminDiagnosticRestitutions"));
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
@@ -87,6 +93,11 @@ function App() {
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-organismes" element={<FormationOF />} />
+            <Route path="diagnostic-ia" element={<DiagnosticIA />} />
+            <Route path="diagnostic-ia/confirmation" element={<DiagnosticPaymentConfirmation />} />
+            <Route path="diagnostic-ia/reserver" element={<RequireAuth><DiagnosticBooking /></RequireAuth>} />
+            <Route path="diagnostic-ia/questionnaire" element={<RequireAuth><DiagnosticQuestionnaire /></RequireAuth>} />
+            <Route path="diagnostic-ia/restitution" element={<RequireAuth><DiagnosticRestitution /></RequireAuth>} />
             <Route path="a-propos" element={<About />} />
             <Route path="blog" element={<Blog />} />
             <Route path="blog/:slug" element={<BlogPost />} />
@@ -121,6 +132,7 @@ function App() {
             <Route path="admin/bpf" element={<RequireAuth><AdminShell><AdminBpfPreparation /></AdminShell></RequireAuth>} />
             <Route path="admin/retractations" element={<RequireAuth><AdminShell><AdminWithdrawalRequests /></AdminShell></RequireAuth>} />
             <Route path="admin/promotions" element={<RequireAuth><AdminShell><AdminPromotions /></AdminShell></RequireAuth>} />
+            <Route path="admin/diagnostics" element={<RequireAuth><AdminShell><AdminDiagnosticRestitutions /></AdminShell></RequireAuth>} />
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />

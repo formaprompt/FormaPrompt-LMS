@@ -12,8 +12,13 @@ async function invokePasswordSecurity(supabase, body) {
   throw new Error(message || GENERIC_PASSWORD_SECURITY_ERROR);
 }
 
-export function secureSignup(supabase, email, password) {
-  return invokePasswordSecurity(supabase, { action: 'signup', email, password });
+export function secureSignup(supabase, email, password, redirectPath) {
+  return invokePasswordSecurity(supabase, {
+    action: 'signup',
+    email,
+    password,
+    ...(redirectPath ? { redirect_path: redirectPath } : {}),
+  });
 }
 
 export function securePasswordUpdate(supabase, password) {

@@ -1,0 +1,51 @@
+.diagnostic-confirmation-page {
+  display: grid;
+  min-height: 65vh;
+  padding: clamp(3rem, 8vw, 6rem) 1rem;
+  place-items: center;
+  color: #243746;
+  background: #f0f8f5;
+}
+
+.diagnostic-confirmation-card {
+  width: min(100%, 680px);
+  padding: clamp(1.7rem, 5vw, 2.8rem);
+  text-align: center;
+  background: #fff;
+  border: 1px solid #d5e8e2;
+  border-radius: 22px;
+  box-shadow: 0 18px 42px rgba(15, 59, 63, 0.1);
+}
+
+.diagnostic-confirmation-card > svg {
+  color: #087d69;
+}
+
+.diagnostic-confirmation-card h1 {
+  margin: 1rem 0;
+  color: #123f42;
+}
+
+.diagnostic-confirmation-card p {
+  margin: 0 auto 1.6rem;
+  color: #526575;
+  line-height: 1.7;
+}
+
+.diagnostic-confirmation-card .btn {
+  margin: 0.35rem;
+}
+
+.diagnostic-confirmation-disabled:disabled {
+  color: #fff;
+  cursor: not-allowed;
+  background: #70817f;
+  opacity: 1;
+}
+
+@media (max-width: 560px) {
+  .diagnostic-confirmation-card .btn {
+    width: 100%;
+    margin: 0.35rem 0;
+  }
+}
