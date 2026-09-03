@@ -65,12 +65,13 @@ describe('AdminPromotions', () => {
     renderPage();
     await screen.findByText('Aucune promotion enregistrée.');
     await userEvent.click(screen.getByRole('button', { name: 'Créer une promotion' }));
-    expect(screen.queryByLabelText(/Diagnostic IA Express/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Diagnostic IA Express/)).not.toBeChecked();
     await userEvent.type(screen.getByLabelText('Code'), ' fixe20 ');
     await userEvent.selectOptions(screen.getByLabelText('Type de remise'), 'fixed_amount');
     await userEvent.type(screen.getByLabelText('Montant fixe (€)'), '20,00');
     await userEvent.click(screen.getByLabelText(/Formation IA générative/));
     await userEvent.click(screen.getByLabelText(/Formation IA Act/));
+    await userEvent.click(screen.getByLabelText(/Diagnostic IA Express/));
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer la promotion' }));
 
     await waitFor(() => expect(rpcMock).toHaveBeenCalledWith('admin_create_promotion', expect.objectContaining({
@@ -78,6 +79,7 @@ describe('AdminPromotions', () => {
       p_targets: [
         { target_type: 'course', target_key: 'formation-ia' },
         { target_type: 'course', target_key: 'formation-ia-act' },
+        { target_type: 'diagnostic', target_key: 'diagnostic-ia-express' },
       ],
     })));
   });

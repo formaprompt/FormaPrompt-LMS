@@ -46,13 +46,22 @@ INSERT INTO public.profiles (id, email, role) VALUES
   ('87000000-0000-4000-8000-000000000002','learner-withdrawal@example.test','user')
 ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, role = EXCLUDED.role;
 
+INSERT INTO public.purchases (
+  id, user_id, course_id, amount_total, currency, payment_status, purchased_at
+) VALUES (
+  '87000000-0000-4000-8000-000000000020',
+  '87000000-0000-4000-8000-000000000002',
+  'formation-ia', 49700, 'eur', 'paid', now()
+);
+
 INSERT INTO public.withdrawal_requests (
-  id, user_id, course_id, claimant_first_name, claimant_last_name,
+  id, user_id, purchase_id, course_id, claimant_first_name, claimant_last_name,
   acknowledgement_email, declaration, acknowledgement_delivery_status,
   acknowledgement_delivered_at
 ) VALUES (
   '87000000-0000-4000-8000-000000000010',
   '87000000-0000-4000-8000-000000000002',
+  '87000000-0000-4000-8000-000000000020',
   'formation-ia', 'Camille', 'Test', 'learner-withdrawal@example.test',
   'Je confirme la demande de retractation utilisee pour le test dynamique.',
   'sent', now()

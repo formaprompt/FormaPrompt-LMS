@@ -76,6 +76,7 @@ test('un particulier choisit un accès immédiat avec consentements séparés', 
   const route = getCommercialRoute(AI_ACT_PURCHASE, context);
   assert.equal(route.offerClassification, OFFER_CLASSIFICATIONS.B2C_STANDARD);
   assert.equal(route.cgvDocumentType, 'cgv_b2c');
+  assert.equal(route.cgvVersion, 'CGV-B2C-2026-08-26');
   assert.equal(route.accessActivationPolicy, ACCESS_ACTIVATION_POLICIES.IMMEDIATE_AFTER_PAYMENT);
   assert.deepEqual(route.requiredConsentTypes, [
     CONSENT_TYPES.CGV_ACCEPTANCE,
@@ -110,6 +111,7 @@ test('un professionnel utilise les CGV B2B sans consentements consommateurs inut
   const route = getCommercialRoute(AI_ACT_PURCHASE, context);
   assert.equal(route.offerClassification, OFFER_CLASSIFICATIONS.B2B);
   assert.equal(route.cgvDocumentType, 'cgv_b2b');
+  assert.equal(route.cgvVersion, 'CGV-B2B-2026-08-26');
   assert.deepEqual(route.requiredConsentTypes, [CONSENT_TYPES.CGV_ACCEPTANCE]);
   assert.equal(validateCommercialCheckoutRequest(
     AI_ACT_PURCHASE,
@@ -121,6 +123,8 @@ test('un professionnel utilise les CGV B2B sans consentements consommateurs inut
 test('un achat bénéficiaire reste payable mais exige organisation et bénéficiaire', () => {
   const incomplete = { sales_context: SALES_CONTEXTS.BENEFICIARY };
   const route = getCommercialRoute(AI_ACT_PURCHASE, incomplete);
+  assert.equal(route.cgvDocumentType, 'cgv_b2b');
+  assert.equal(route.cgvVersion, 'CGV-B2B-2026-08-26');
   const consents = validConsentPayload(AI_ACT_PURCHASE, route);
   assert.match(validateCommercialCheckoutRequest(AI_ACT_PURCHASE, incomplete, consents), /bénéficiaire/);
 
@@ -138,6 +142,7 @@ test('le parcours OPCO reste distinct du paiement Stripe direct', () => {
   const route = getCommercialRoute(AI_ACT_PURCHASE, context);
   assert.equal(route.offerClassification, OFFER_CLASSIFICATIONS.OF_OPCO);
   assert.equal(route.directCheckoutEnabled, false);
+  assert.equal(route.cgvVersion, null);
   assert.match(validateCommercialCheckoutRequest(AI_ACT_PURCHASE, context, {}), /financement ou un devis/);
 });
 
@@ -146,7 +151,7 @@ test('le serveur refuse contexte manipulé, ancienne version et consentement inu
   const context = { sales_context: SALES_CONTEXTS.PROFESSIONAL_SELF };
   const route = getCommercialRoute(AI_ACT_PURCHASE, context);
   assert.match(validateCommercialCheckoutRequest(AI_ACT_PURCHASE, context, {
-    cgv_version: 'CGV-B2B-ANCIENNE',
+    cgv_version: 'CGV-B2B-2026-08-12',
     cgv_acceptance: true,
   }), /version des CGV/);
   assert.match(validateCommercialCheckoutRequest(AI_ACT_PURCHASE, context, {
@@ -201,8 +206,9 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
     stripe_checkout_session_id: null,
   }, rows), /intention commerciale/);
   const archivedCgvRows = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE
-    ? { ...row, legal_document_versions: { ...row.legal_document_versions, version: 'CGV-B2C-2026-08-26' } }
+    ? { ...row, legal_document_versions: { ...row.legal_document_versions, version: 'CGV-B2C-2026-08-12' } }
     : row);
+  assert.notEqual(archivedCgvRows[0].legal_document_versions.version, route.cgvVersion);
   assert.equal(validateCommercialConsentEvidence(session, AI_ACT_PURCHASE, intent, archivedCgvRows), null);
   const unrelatedCgvRows = rows.map((row) => row.consent_type === CONSENT_TYPES.CGV_ACCEPTANCE
     ? { ...row, legal_document_version_id: 'other-document' }
@@ -214,6 +220,18 @@ test('le webhook relie Stripe à une intention et aux preuves versionnées uniqu
 
 test('accepte une session AI Act complète et cohérente', () => {
   assert.equal(validateCompletedAiActSession(validSession(), priceId), null);
+});
+
+test('les CGV du 26/08 conservent les trois consentements non-CGV du 12/08 pour chaque formation', () => {
+  for (const purchase of Object.values(COURSE_PURCHASES)) {
+    assert.deepEqual(purchase.legalVersions, {
+      cgvB2c: 'CGV-B2C-2026-08-26',
+      cgvB2b: 'CGV-B2B-2026-08-26',
+      earlyService: 'EARLY-SERVICE-2026-08-12',
+      digitalStart: 'DIGITAL-START-2026-08-12',
+      digitalWithdrawalAcknowledgement: 'DIGITAL-ACK-2026-08-12',
+    });
+  }
 });
 
 test('refuse un paiement non confirmé ou au mauvais montant', () => {

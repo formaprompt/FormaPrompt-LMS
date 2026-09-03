@@ -103,20 +103,27 @@
 
 .commercial-checkout__promotion-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 0.65rem;
 }
 
 .commercial-checkout__promotion-row input {
-  min-width: 0;
-  flex: 1;
+  width: 100%;
+  min-width: min(100%, 24ch);
+  flex: 1 1 24ch;
+  min-height: 2.75rem;
   padding: 0.7rem 0.8rem;
+  font-size: 1rem;
   border: 1px solid #aeb8c8;
   border-radius: 0.5rem;
   text-transform: uppercase;
 }
 
-.commercial-checkout__promotion-button {
+.commercial-checkout .commercial-checkout__promotion-row .commercial-checkout__promotion-button {
+  width: auto;
   flex: 0 0 auto;
+  min-height: 2.75rem;
 }
 
 .commercial-checkout__promotion-message,
@@ -156,9 +163,26 @@
     align-items: stretch;
     flex-direction: column;
   }
+
+  .commercial-checkout__promotion-row input {
+    flex-basis: auto;
+  }
+
+  .commercial-checkout .commercial-checkout__promotion-row .commercial-checkout__promotion-button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 390px) {
+  .commercial-checkout__promotion {
+    margin-inline: -1.25rem;
+    padding: 0.5rem;
+  }
+
+  .commercial-checkout__promotion-row input {
+    padding-inline: 0.5rem;
+  }
+
   .commercial-checkout-review,
   .commercial-checkout {
     min-width: 0;
