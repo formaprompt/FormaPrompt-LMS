@@ -64,6 +64,7 @@ const AdminDiagnosticRestitutions = lazy(() => import("./pages/AdminDiagnosticRe
 const AdminCommercialQuoteDocument = lazy(() => import("./pages/AdminCommercialQuoteDocument"));
 const AdminAmendmentDocument = lazy(() => import("./pages/AdminAmendmentDocument"));
 const TrainingDocument = lazy(() => import("./pages/TrainingDocument"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   return (
@@ -147,6 +148,7 @@ function App() {
             <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
             <Route path="attestations/:issuanceId" element={<IssuedAttestationDocument />} />
             <Route path="dossiers/:enrollmentId/documents/:documentType" element={<RequireAuth><TrainingDocument /></RequireAuth>} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </Suspense>
