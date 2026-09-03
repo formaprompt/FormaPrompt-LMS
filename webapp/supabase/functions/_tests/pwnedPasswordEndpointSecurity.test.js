@@ -41,7 +41,7 @@ test('n envoie à HIBP que le préfixe et active le padding', () => {
 });
 
 test('les pages ne calculent aucun hash et passent par le serveur', () => {
-  assert.match(registerPage, /secureSignup\(supabase, email, password\)/);
+  assert.match(registerPage, /secureSignup\(supabase, email, password, redirectTo\)/);
   assert.match(resetPage, /securePasswordUpdate\(supabase, password\)/);
   assert.doesNotMatch(registerPage, /auth\.signUp|SHA-?1|pwnedpasswords/i);
   assert.doesNotMatch(resetPage, /auth\.updateUser|SHA-?1|pwnedpasswords/i);
