@@ -125,7 +125,7 @@ SELECT throws_ok(
 SELECT lives_ok(
   $$UPDATE public.legal_document_versions
     SET status = 'retired', retired_at = now()
-    WHERE version = 'CGV-B2C-2026-08-12'$$,
+    WHERE version = 'CGV-B2C-2026-08-26'$$,
   'une version peut être retirée sans altérer son texte figé'
 );
 SET LOCAL ROLE authenticated;
