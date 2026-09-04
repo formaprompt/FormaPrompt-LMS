@@ -1,12 +1,37 @@
 import { Link } from 'react-router-dom';
 // import removed: logo will be referenced via public path
 import { Menu, ShieldCheck, X, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/useAuth';
 import './Header.css';
 
+function NavigationGroup({ id, label, children }) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef(null);
+  return (
+    <div className="dropdown" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }} onKeyDown={(event) => {
+      if (event.key === 'Escape' && open) {
+        event.stopPropagation();
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    }}>
+      <button ref={trigger} type="button" className="dropdown-title" aria-expanded={open}
+        aria-controls={id} onClick={() => setOpen(!open)}>
+        {label} <span aria-hidden="true">{open ? '−' : '+'}</span>
+      </button>
+      <div id={id} className="dropdown-content" hidden={!open} onClick={(event) => {
+        if (event.target.closest('a')) setOpen(false);
+      }}>{children}</div>
+    </div>
+  );
+}
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuButton = useRef(null);
   const { user, role } = useAuth();
 
   useEffect(() => {
@@ -14,15 +39,22 @@ export default function Header() {
 
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event) => {
-      if (event.key === 'Escape') setIsMenuOpen(false);
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+        menuButton.current?.focus();
+      }
     };
+    const desktop = window.matchMedia('(min-width: 1201px)');
+    const closeOnDesktop = () => { if (desktop.matches) setIsMenuOpen(false); };
 
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', closeOnEscape);
+    desktop.addEventListener('change', closeOnDesktop);
 
     return () => {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', closeOnEscape);
+      desktop.removeEventListener('change', closeOnDesktop);
     };
   }, [isMenuOpen]);
 
@@ -54,6 +86,7 @@ export default function Header() {
             </Link>
           )}
           <button
+            ref={menuButton}
             type="button"
             className="mobile-menu-btn"
             aria-label={isMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
@@ -66,31 +99,30 @@ export default function Header() {
         </div>
 
         {/* Navigation */}
-        <nav id="primary-navigation" className={`nav ${isMenuOpen ? 'nav-open' : ''}`}>
+        <nav aria-label="Navigation principale" id="primary-navigation" className={`nav ${isMenuOpen ? 'nav-open' : ''}`} onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget) && event.relatedTarget !== menuButton.current) setIsMenuOpen(false);
+        }}>
           <Link to="/" onClick={() => setIsMenuOpen(false)}>Accueil</Link>
-          <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio</Link>
           <Link to="/diagnostic-ia" onClick={() => setIsMenuOpen(false)}>Diagnostic IA</Link>
           
-          <div className="dropdown">
-            <span className="dropdown-title">Formations</span>
-            <div className="dropdown-content">
+          <NavigationGroup id="navigation-formations" label="Formations">
               <Link to="/formation-ia-generative" onClick={() => setIsMenuOpen(false)}>IA Générative</Link>
               <Link to="/formation-ia-act-conformite" onClick={() => setIsMenuOpen(false)}>IA &amp; AI Act</Link>
               <Link to="/formation-prompt-engineering" onClick={() => setIsMenuOpen(false)}>Prompt Engineering</Link>
               <Link to="/formation-bureautique" onClick={() => setIsMenuOpen(false)}>Bureautique</Link>
               <Link to="/formation-organismes" onClick={() => setIsMenuOpen(false)}>Pour les OF</Link>
-            </div>
-          </div>
+          </NavigationGroup>
           
-          <Link to="/disponibilites" onClick={() => setIsMenuOpen(false)}>Disponibilités</Link>
-          <Link to="/a-propos" onClick={() => setIsMenuOpen(false)}>À propos</Link>
-          <div className="dropdown">
-            <span className="dropdown-title">Ressources</span>
-            <div className="dropdown-content">
+          <NavigationGroup id="navigation-ressources" label="Outils et ressources">
+              <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio — outil gratuit</Link>
               <Link to="/blog" onClick={() => setIsMenuOpen(false)}>Blog</Link>
               <Link to="/guide-gpt-5-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑5.6</Link>
-            </div>
-          </div>
+          </NavigationGroup>
+          <NavigationGroup id="navigation-informations" label="Informations">
+            <Link to="/disponibilites" onClick={() => setIsMenuOpen(false)}>Disponibilités</Link>
+            <Link to="/a-propos" onClick={() => setIsMenuOpen(false)}>À propos</Link>
+          </NavigationGroup>
+          <Link to="/contact" onClick={() => setIsMenuOpen(false)}>Contact</Link>
           
           {user ? (
             <div className="nav-account-actions">
