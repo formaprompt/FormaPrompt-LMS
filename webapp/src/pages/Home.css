@@ -23,9 +23,14 @@
 
 .hero-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   justify-content: center;
 }
+
+.home #formations, .home #training-lab { scroll-margin-top: 7rem; }
+.home-orientation h2 { margin-bottom: 1.5rem; }
+.home-orientation .card p { margin-bottom: 1rem; }
 
 .link-arrow {
   color: var(--color-primary);
@@ -168,9 +173,12 @@
 }
 
 @media (max-width: 768px) {
+  .home .hero { padding: 2rem 0; }
+  .home .hero-subtitle { font-size: 1.125rem; margin-bottom: 1.5rem; }
   .hero h1 {
     font-size: 2.25rem;
   }
+  .home .hero h1 { font-size: 1.875rem; }
   
   .hero-actions {
     flex-direction: column;
@@ -194,4 +202,12 @@
     width: 100%;
     text-align: center;
   }
+}
+
+@media (max-width: 480px) {
+  .home .container { padding-left: 1rem; padding-right: 1rem; }
+  .home .grid-cols-2, .home .grid-cols-3 { grid-template-columns: minmax(0, 1fr); }
+  .home .grid > *, .home-studio-card > * { min-width: 0; }
+  .home .hero-image-container { margin-right: 1rem; }
+  .home .card { overflow-wrap: anywhere; }
 }

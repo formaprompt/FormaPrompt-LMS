@@ -36,7 +36,7 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .nav > a, .dropdown-title {
@@ -72,8 +72,21 @@
   padding: 0.5rem 0;
 }
 
-.dropdown:hover .dropdown-content {
+.dropdown-content:not([hidden]) {
   display: block;
+}
+
+.dropdown-content[hidden] { display: none; }
+
+.dropdown-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0.5rem 0;
+  text-align: left;
 }
 
 .dropdown-content a {
@@ -111,7 +124,7 @@ a:focus, button:focus {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
-@media (max-width: 960px) {
+@media (max-width: 1200px) {
   .header-container {
     gap: 0.75rem;
     padding-top: 0.5rem;
@@ -172,7 +185,7 @@ a:focus, button:focus {
     gap: 0.35rem;
     height: calc(100dvh - 72px);
     max-height: calc(100dvh - 72px);
-    padding: 0.75rem 1.5rem max(5rem, calc(1.5rem + env(safe-area-inset-bottom)));
+    padding: 0.75rem 1.5rem max(14rem, calc(1.5rem + env(safe-area-inset-bottom)));
     overflow-y: auto;
     overscroll-behavior: contain;
     scroll-padding-bottom: max(5rem, calc(1.5rem + env(safe-area-inset-bottom)));
@@ -186,12 +199,14 @@ a:focus, button:focus {
   }
 
   .dropdown-content {
-    display: block;
     position: static;
     box-shadow: none;
     padding-left: 1rem;
     background: transparent;
   }
+
+  .dropdown { border-top: 1px solid var(--color-border); }
+  .dropdown-title { justify-content: space-between; font-weight: 700; }
 
   .dropdown,
   .nav > a,

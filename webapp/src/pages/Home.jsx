@@ -119,7 +119,7 @@ export default function Home() {
     <>
       <SEO
         title="FormaPrompt | Formations IA, prompts et bureautique"
-        description="Formations professionnelles en IA générative, prompt engineering et bureautique. Testez gratuitement FormaPrompt Studio pour structurer vos prompts."
+        description="Formations en IA générative, prompt engineering et bureautique. Découvrez les parcours FormaPrompt et le Diagnostic IA Express pour préciser vos besoins."
         url={SITE_CONFIG.urls.home}
         image={SITE_CONFIG.assets.logo}
         jsonLd={homeStructuredData}
@@ -135,8 +135,8 @@ export default function Home() {
                   FormaPrompt forme les professionnels, étudiants et personnes en reconversion aux usages concrets de l'IA générative, du prompt engineering et des outils bureautiques.
                 </p>
                 <div className="hero-actions" style={{justifyContent: 'flex-start'}}>
-                  <Link to="/contact" className="btn btn-primary">Demander un programme</Link>
-                  <Link to="/a-propos" className="btn btn-outline">Découvrir FormaPrompt</Link>
+                  <a href="#formations" className="btn btn-primary">Voir les formations</a>
+                  <Link to="/diagnostic-ia" className="btn btn-outline">Découvrir le Diagnostic IA</Link>
                 </div>
               </div>
               <div className="hero-image-container" style={{position: 'relative'}}>
@@ -167,6 +167,45 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {/* Services Section */}
+        <section id="formations" className="section section-light" aria-labelledby="home-formations-title">
+          <div className="container">
+            <div className="text-center mb-8">
+              <h2 id="home-formations-title">Choisissez votre formation</h2>
+              <p style={{color: 'var(--color-text-light)'}}>Consultez le programme, les modalités et le tarif de chaque parcours. Selon la formation, inscrivez-vous en ligne ou demandez un devis adapté à votre besoin.</p>
+            </div>
+            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+              {/* Offer 1 */}
+              <div className="card">
+                <Bot size={40} color="var(--color-primary)" className="mb-2" />
+                <h3 className="card-title">IA générative</h3>
+                <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
+                <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
+              </div>
+              {/* Offer 2 */}
+              <div className="card">
+                <BookOpen size={40} color="var(--color-primary)" className="mb-2" />
+                <h3 className="card-title">Prompt Engineering</h3>
+                <p className="mb-3">Apprendre à construire de bons prompts, créer des workflows et produire des livrables fiables avec ChatGPT, Copilot ou Claude.</p>
+                <Link to="/formation-prompt-engineering" className="link-arrow">Voir le programme Prompt Engineering &rarr;</Link>
+              </div>
+              {/* Offer 3 */}
+              <div className="card">
+                <Monitor size={40} color="var(--color-primary)" className="mb-2" />
+                <h3 className="card-title">Bureautique Pro</h3>
+                <p className="mb-3">Maîtriser Word, Excel, PowerPoint, Outlook et Teams pour gagner en efficacité et en productivité.</p>
+                <Link to="/formation-bureautique" className="link-arrow">Voir les formations bureautiques &rarr;</Link>
+              </div>
+              {/* Offer 4 */}
+              <div className="card">
+                <ShieldCheck size={40} color="var(--color-primary)" className="mb-2" />
+                <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
+                <p className="mb-3">Comprendre les enjeux de l'AI Act et préparer un premier plan d'action pour des usages professionnels responsables.</p>
+                <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>
+              </div>
+            </div>
+          </div>
+        </section>
         {/* FormaPrompt Studio Section */}
         <section className="section home-studio" aria-labelledby="home-studio-title">
           <div className="container">
@@ -174,7 +213,7 @@ export default function Home() {
               <div className="home-studio-content">
                 <p className="home-studio-eyebrow">
                   <Sparkles size={20} aria-hidden="true" />
-                  Nouvel outil public
+                  Outil gratuit, accessible à tous
                 </p>
                 <h2 id="home-studio-title">Structurez vos prompts avec FormaPrompt Studio</h2>
                 <p>
@@ -182,7 +221,7 @@ export default function Home() {
                 </p>
                 <ul className="home-studio-benefits">
                   <li><CheckCircle size={20} aria-hidden="true" /> Seize cas d’usage pour écrire, transmettre, analyser, créer et construire.</li>
-                  <li><CheckCircle size={20} aria-hidden="true" /> Un diagnostic déterministe, sans appel à un fournisseur externe.</li>
+                  <li><CheckCircle size={20} aria-hidden="true" /> Une analyse de votre prompt, sans appel à un fournisseur externe.</li>
                   <li><CheckCircle size={20} aria-hidden="true" /> {STUDIO_PRIVACY_COPY.home}</li>
                 </ul>
                 <div className="home-studio-actions">
@@ -203,46 +242,25 @@ export default function Home() {
             </div>
           </div>
         </section>
-        {/* Services Section */}
-        <section className="section section-light">
+        {/* Pourquoi choisir FormaPrompt Section */}
+        <section className="section home-orientation" aria-labelledby="home-orientation-title">
           <div className="container">
-            <div className="text-center mb-8">
-              <h2>Nos Domaines de Formation</h2>
-              <p style={{color: 'var(--color-text-light)'}}>Des parcours adaptés pour développer vos compétences numériques</p>
-            </div>
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-              {/* Offer 1 */}
-              <div className="card">
-                <Bot size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">IA générative</h3>
-                <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
-                <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
-              </div>
-              {/* Offer 2 */}
-              <div className="card">
-                <BookOpen size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">Prompt Engineering</h3>
-                <p className="mb-3">Apprendre à construire de bons prompts, créer des workflows et produire des livrables fiables avec ChatGPT, Copilot ou Claude.</p>
-                <Link to="/formation-prompt-engineering" className="link-arrow">En savoir plus &rarr;</Link>
-              </div>
-              {/* Offer 3 */}
-              <div className="card">
-                <Monitor size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">Bureautique Pro</h3>
-                <p className="mb-3">Maîtriser Word, Excel, PowerPoint, Outlook et Teams pour gagner en efficacité et en productivité.</p>
-                <Link to="/formation-bureautique" className="link-arrow">En savoir plus &rarr;</Link>
-              </div>
-              {/* Offer 4 */}
-              <div className="card">
-                <ShieldCheck size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
-                <p className="mb-3">Comprendre les obligations essentielles et préparer un premier plan d'action avant l'échéance-clé du 2 août 2026.</p>
-                <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>
-              </div>
+            <h2 id="home-orientation-title">Un accompagnement selon votre besoin</h2>
+            <div className="grid grid-cols-2">
+              <article className="card">
+                <h3>Diagnostic IA Express : préciser vos priorités</h3>
+                <p>Un accompagnement individuel à distance de 90 minutes pour analyser vos tâches, identifier trois opportunités IA prioritaires et construire un plan d'action. Ce service est distinct d'une formation et de l'analyse de prompts proposée par le Studio.</p>
+                <Link to="/diagnostic-ia" className="link-arrow">Voir le déroulement et le tarif du Diagnostic IA &rarr;</Link>
+              </article>
+              <article id="training-lab" className="card">
+                <h3>Training Lab : pratiquer en formation</h3>
+                <p>Le Training Lab est un espace de pratique réservé aux apprenants. Il ne s'agit pas d'un outil public comme le Studio : ses modalités d'accès sont communiquées dans le cadre de la formation concernée.</p>
+                <p>Déjà inscrit ? Retrouvez vos formations et vos ressources dans votre espace apprenant.</p>
+                <Link to="/dashboard" className="link-arrow">Retrouver mon espace apprenant &rarr;</Link>
+              </article>
             </div>
           </div>
         </section>
-        {/* Pourquoi choisir FormaPrompt Section */}
         <section className="section section-light">
           <div className="container">
             <div className="text-center mb-8">
