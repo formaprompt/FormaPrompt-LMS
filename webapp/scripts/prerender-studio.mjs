@@ -33,6 +33,39 @@ const pages = [
     ],
   },
   {
+    name: 'Formation IA générative',
+    url: `http://${host}:${port}/formation-ia-generative`,
+    outputPath: path.resolve('dist', 'formation-ia-generative', 'index.html'),
+    heading: /ia générative : comprendre, pratiquer et sécuriser ses usages/i,
+    markers: [
+      'formation ia générative de 10 heures',
+      '10 heures accompagnées',
+      'https://formaprompt.com/formation-ia-generative',
+    ],
+  },
+  {
+    name: 'Formation Prompt Engineering',
+    url: `http://${host}:${port}/formation-prompt-engineering`,
+    outputPath: path.resolve('dist', 'formation-prompt-engineering', 'index.html'),
+    heading: /formation prompt engineering.*niveau 1/i,
+    markers: [
+      'formation prompt engineering',
+      '7 heures accompagnées',
+      'https://formaprompt.com/formation-prompt-engineering',
+    ],
+  },
+  {
+    name: 'Formation AI Act',
+    url: `http://${host}:${port}/formation-ia-act-conformite`,
+    outputPath: path.resolve('dist', 'formation-ia-act-conformite', 'index.html'),
+    heading: /ia : acculturation et préparation à la conformité ai act/i,
+    markers: [
+      'formation ai act',
+      '4 h 45 estimées',
+      'https://formaprompt.com/formation-ia-act-conformite',
+    ],
+  },
+  {
     name: 'Accueil',
     url: `http://${host}:${port}/`,
     outputPath: path.resolve('dist', 'index.html'),

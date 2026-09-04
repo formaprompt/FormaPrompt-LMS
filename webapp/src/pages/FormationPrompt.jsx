@@ -4,18 +4,18 @@ import {
   Accessibility,
   BookOpenCheck,
   CheckCircle2,
-  Clock3,
   FileText,
   Library,
-  MonitorPlay,
   Sparkles,
   Users,
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import CourseSummary from '../components/CourseSummary'
 import CommercialCheckout from '../components/CommercialCheckout'
 import { useAuth } from '../contexts/useAuth'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import { getBookingUrl } from '../data/bookingCatalog'
+import { SITE_CONFIG } from '../config/site'
 import './FormationPrompt.css'
 
 const COURSE_ID = 'formation-prompt-level-1'
@@ -69,7 +69,7 @@ export default function FormationPrompt() {
       <SEO
         title="Formation Prompt Engineering – Niveau 1 | FormaPrompt"
         description="Formation de 7 heures pour apprendre à concevoir, tester et améliorer des prompts professionnels. Présentiel ou classe virtuelle."
-        url="https://www.formaprompt.com/formation-prompt-engineering"
+        url={`${SITE_CONFIG.baseUrl}/formation-prompt-engineering`}
         image="https://www.formaprompt.com/assets/Formation%20prompt%20engineering.png"
       />
 
@@ -83,11 +83,17 @@ export default function FormationPrompt() {
                 Apprenez une méthode claire pour concevoir, tester et améliorer des prompts adaptés à vos usages
                 professionnels, sans dépendre de formules toutes faites.
               </p>
-              <div className="prompt-facts" aria-label="Informations principales">
-                <span><Clock3 size={19} aria-hidden="true" /> 7 heures accompagnées</span>
-                <span><MonitorPlay size={19} aria-hidden="true" /> Présentiel ou classe virtuelle</span>
-                <span><Users size={19} aria-hidden="true" /> Tarif individuel</span>
-              </div>
+              <CourseSummary
+                id="formation-prompt-summary"
+                items={[
+                  { label: 'Durée', value: '7 heures accompagnées' },
+                  { label: 'Public', value: 'Professionnels, formateurs et fonctions support' },
+                  { label: 'Modalités', value: 'Présentiel ou classe virtuelle' },
+                  { label: 'Objectif', value: 'Concevoir, tester et améliorer des prompts professionnels' },
+                  { label: 'Tarif individuel', value: '343 € par apprenant' },
+                  { label: 'Groupe ou entreprise', value: 'Programme et tarif adaptés sur devis' },
+                ]}
+              />
               <div className="prompt-actions">
                 <a href="#inscription" className="btn btn-primary">Voir le tarif et s’inscrire</a>
                 <a href="#programme" className="btn prompt-secondary-btn">Consulter le programme</a>

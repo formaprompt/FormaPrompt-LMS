@@ -13,6 +13,7 @@ import {
   Users,
 } from 'lucide-react'
 import SEO from '../components/SEO'
+import CourseSummary from '../components/CourseSummary'
 import CommercialCheckout from '../components/CommercialCheckout'
 import { SITE_CONFIG } from '../config/site'
 import { useAuth } from '../contexts/useAuth'
@@ -149,11 +150,17 @@ export default function FormationIA() {
                 Une formation accompagnée pour intégrer l&apos;IA dans son activité avec méthode, recul critique et
                 validation humaine, à partir de situations professionnelles concrètes.
               </p>
-              <div className="generative-ai-facts" aria-label="Informations principales">
-                <span><Clock3 size={19} aria-hidden="true" /> 10 heures accompagnées</span>
-                <span><MonitorPlay size={19} aria-hidden="true" /> Présentiel ou classe virtuelle</span>
-                <span><Users size={19} aria-hidden="true" /> Tarif individuel : 497 €</span>
-              </div>
+              <CourseSummary
+                id="formation-ia-summary"
+                items={[
+                  { label: 'Durée', value: '10 heures accompagnées' },
+                  { label: 'Public', value: 'Professionnels, formateurs et personnes en reconversion' },
+                  { label: 'Modalités', value: 'Présentiel ou classe virtuelle' },
+                  { label: 'Objectif', value: 'Intégrer l’IA dans son activité avec méthode et validation humaine' },
+                  { label: 'Tarif individuel', value: '497 € par apprenant' },
+                  { label: 'Groupe ou entreprise', value: 'Programme et tarif adaptés sur devis' },
+                ]}
+              />
               <div className="generative-ai-actions">
                 <a href="#inscription" className="btn btn-primary">Voir le tarif et s&apos;inscrire</a>
                 <a href="#programme" className="btn generative-ai-secondary-btn">Consulter le programme</a>
