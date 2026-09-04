@@ -3,6 +3,10 @@
   background: #fbfdfc;
 }
 
+.ai-act-page :is(h1, h2, h3) {
+  overflow-wrap: anywhere;
+}
+
 .ai-act-hero {
   padding: clamp(3.5rem, 7vw, 6.5rem) 0;
   color: #f8fafc;
@@ -434,7 +438,7 @@
   .ai-act-pricing-grid,
   .ai-act-two-columns,
   .ai-act-objectives-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ai-act-method-grid {

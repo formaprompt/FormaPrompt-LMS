@@ -3,6 +3,10 @@
   background: #f8fbfa;
 }
 
+.generative-ai-page :is(h1, h2, h3) {
+  overflow-wrap: anywhere;
+}
+
 .generative-ai-hero {
   padding: clamp(3.5rem, 7vw, 6rem) 0;
   color: #f8fafc;
@@ -359,7 +363,7 @@
   .generative-ai-pricing-grid,
   .generative-ai-introduction,
   .generative-ai-two-columns {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .generative-ai-objectives {

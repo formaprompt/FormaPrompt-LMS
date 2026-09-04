@@ -4,17 +4,17 @@ import {
   Accessibility,
   AlertTriangle,
   BookOpenCheck,
-  CalendarClock,
   CheckCircle,
-  Clock,
-  MonitorPlay,
   ShieldCheck,
   Users,
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import CourseSummary from '../components/CourseSummary';
 import CommercialCheckout from '../components/CommercialCheckout';
 import { useAuth } from '../contexts/useAuth';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
+import { getBookingUrl } from '../data/bookingCatalog';
+import { SITE_CONFIG } from '../config/site';
 import './FormationAIAct.css';
 
 const officialSources = [
@@ -101,7 +101,7 @@ export default function FormationAIAct() {
       <SEO
         title="Formation AI Act : acculturation et préparation à la conformité – FormaPrompt"
         description="Formation estimée à 4 h 45 pour comprendre l'AI Act, acculturer les équipes et préparer un premier plan d'action avant l'application générale du 2 août 2026."
-        url="https://formaprompt.com/formation-ia-act-conformite"
+        url={`${SITE_CONFIG.baseUrl}/formation-ia-act-conformite`}
         image="https://formaprompt.com/assets/IA%20ACT%20Blog.png"
       />
 
@@ -116,11 +116,16 @@ export default function FormationAIAct() {
                 d'action adapté à votre organisation.
               </p>
 
-              <div className="ai-act-key-facts" aria-label="Informations principales">
-                <span><Clock size={19} aria-hidden="true" /> 4 h 45 estimées</span>
-                <span><MonitorPlay size={19} aria-hidden="true" /> Classe virtuelle ou présentiel</span>
-                <span><CalendarClock size={19} aria-hidden="true" /> Repère : 2 août 2026</span>
-              </div>
+              <CourseSummary
+                id="formation-ai-act-summary"
+                items={[
+                  { label: 'Durée', value: '4 h 45 estimées, dont 4 heures guidées' },
+                  { label: 'Public', value: 'Dirigeants, équipes support, référents IA et formateurs' },
+                  { label: 'Modalités', value: 'Classe virtuelle ou présentiel' },
+                  { label: 'Objectif', value: 'Préparer un premier plan d’action adapté à l’organisation' },
+                  { label: 'Tarif individuel', value: '187 € par apprenant, tarif promotionnel' },
+                ]}
+              />
 
               <div className="ai-act-hero-actions">
                 <a href="#inscription" className="btn btn-primary">Voir le tarif et s'inscrire</a>
@@ -204,7 +209,7 @@ export default function FormationAIAct() {
 
         <section id="programme" className="container ai-act-section">
           <div className="ai-act-section-heading">
-            <p className="ai-act-kicker">Programme – 4 h guidées + 45 min d’e-learning</p>
+            <p className="ai-act-kicker">Programme – 4 h guidées, pour une durée totale estimée à 4 h 45</p>
             <h2>Quatre étapes pour structurer votre préparation</h2>
           </div>
           <div className="ai-act-modules">
@@ -232,7 +237,7 @@ export default function FormationAIAct() {
               <h2>Un parcours court, guidé et applicable</h2>
             </div>
             <div className="ai-act-method-grid">
-              <article><strong>Durée</strong><span>4 h 45 estimées : 45 min d’e-learning et 4 h avec le formateur</span></article>
+              <article><strong>Durée</strong><span>4 h 45 estimées, dont 4 h avec le formateur</span></article>
               <article><strong>Modalités</strong><span>Classe virtuelle en 1 × 4 h, 2 × 2 h ou 4 × 1 h ; présentiel en 1 × 4 h ou 2 × 2 h</span></article>
               <article><strong>Méthodes</strong><span>Vidéos sous-titrées, échanges guidés, exemples et exercices pratiques</span></article>
               <article><strong>Évaluation</strong><span>Quiz préalable, activités d'application et plan d'action</span></article>
@@ -261,8 +266,8 @@ export default function FormationAIAct() {
               <p className="ai-act-kicker">Tarif promotionnel</p>
               <h2>Accéder au parcours complet</h2>
               <p>
-                La formation comprend le quiz préalable, environ 45 minutes d’e-learning et 4 heures guidées avec
-                le formateur, en classe virtuelle ou en présentiel dans les conditions précisées ci-dessous.
+                La formation comprend le quiz préalable et 4 heures guidées avec le formateur, en classe virtuelle
+                ou en présentiel. Sa durée totale estimée est de 4 h 45.
               </p>
             </div>
             <div className="ai-act-price-card">
@@ -280,7 +285,7 @@ export default function FormationAIAct() {
                     <Link to="/course/formation-ia-act" className="btn btn-primary">
                       Accéder à ma formation
                     </Link>
-                    <Link to="/reservation-formation" className="btn ai-act-secondary-btn">
+                    <Link to={getBookingUrl('formation-ia-act')} className="btn ai-act-secondary-btn">
                       Réserver mes 4 heures
                     </Link>
                   </div>
