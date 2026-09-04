@@ -1,3 +1,9 @@
+<IfModule mod_dir.c>
+  # Le pré-rendu crée un dossier /blog sur IONOS. Sans cela, DirectorySlash
+  # redirige /blog vers /blog/ avant que la règle canonique puisse s'appliquer.
+  DirectorySlash Off
+</IfModule>
+
 <IfModule mod_rewrite.c>
   Options -MultiViews
   RewriteEngine On
