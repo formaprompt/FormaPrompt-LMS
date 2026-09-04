@@ -1,22 +1,61 @@
 <IfModule mod_rewrite.c>
+  Options -MultiViews
   RewriteEngine On
   RewriteBase /
-  # Une seule URL publique pour le Studio afin d'éviter les boucles de collecte Open Graph.
+
+  # Un seul protocole et un seul domaine canonique pour toutes les pages.
+  RewriteCond %{HTTPS} !=on [OR]
   RewriteCond %{HTTP_HOST} ^www\.formaprompt\.com$ [NC]
-  RewriteRule ^studio/?$ https://formaprompt.com/studio/ [R=301,L]
-  RewriteRule ^index\.html$ - [L]
-  # Le dossier de pré-rendu des articles ne doit pas intercepter la route React /blog.
-  RewriteRule ^blog/?$ /index.html [L]
+  RewriteRule ^ https://formaprompt.com%{REQUEST_URI} [R=301,L,NE]
+
+  # Redirections des anciennes URL déjà connues de Google.
+  RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+  RewriteRule ^index\.html$ / [R=301,L]
+  RewriteCond %{THE_REQUEST} \s/+contact\.html[\s?] [NC]
+  RewriteRule ^contact\.html$ /contact [R=301,L]
+  RewriteRule ^privacy/?$ /politique-confidentialite [R=301,L]
+  RewriteRule ^formation-ia-formateur/?$ /formation-organismes [R=301,L]
+  RewriteRule ^studio$ /studio/ [R=301,L]
+
+  # Ces deux routes ont aussi des dossiers physiques de pré-rendu sur IONOS.
+  # Les traiter avant le test de dossier évite DirectorySlash et les boucles.
+  RewriteRule ^contact/$ /contact [R=301,L]
+  RewriteRule ^blog/$ /blog [R=301,L]
+  RewriteRule ^contact$ contact.html [END]
+  RewriteRule ^blog$ blog.html [END]
+
+  # Toutes les autres pages publiques utilisent une URL sans slash final.
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ /$1 [R=301,L]
+
   # Les anciens supports désormais privés ne doivent pas retomber sur la SPA.
   # Un futur document réellement présent reste servi normalement.
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^assets/.*\.(?:pdf|docx)$ - [R=404,L,NC]
+
+  # Fichiers, ressources et dossiers réellement présents.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteRule ^diagnostic-ia/(?:confirmation|reserver|questionnaire|restitution)/?$ app-shell.html [END]
+
+  # Pages publiques pré-rendues générées sous la forme route.html.
   RewriteCond %{REQUEST_FILENAME}.html -f
-  RewriteRule ^(.+?)/?$ $1.html [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  RewriteRule ^(.+)$ $1.html [L]
+
+  # Un futur article dynamique reste rendu par React.
+  RewriteRule ^blog/[^/]+$ /public-shell.html [L]
+
+  # Les parcours applicatifs restent accessibles mais ne sont pas indexables.
+  RewriteRule ^(?:login|forgot-password|reset-password|register|dashboard|feedback|paiement-reussi|reservation-formation|retractation)/?$ /app-shell.html [L]
+  RewriteRule ^(?:admin|course|parcours|attestations|dossiers)(?:/.*)?$ /app-shell.html [L]
+
+  # Toute autre URL doit être une vraie 404, pas une copie de l'accueil.
+  RewriteRule ^ - [R=404,L]
 </IfModule>
+
+ErrorDocument 404 /404.html
 
 # La capsule payante reste physiquement sur IONOS mais n'est jamais servie
 # directement. paid-video.php la diffuse après validation d'une URL HMAC courte.
