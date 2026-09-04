@@ -11,10 +11,18 @@
   # Redirections des anciennes URL déjà connues de Google.
   RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
   RewriteRule ^index\.html$ / [R=301,L]
+  RewriteCond %{THE_REQUEST} \s/+contact\.html[\s?] [NC]
   RewriteRule ^contact\.html$ /contact [R=301,L]
   RewriteRule ^privacy/?$ /politique-confidentialite [R=301,L]
   RewriteRule ^formation-ia-formateur/?$ /formation-organismes [R=301,L]
   RewriteRule ^studio$ /studio/ [R=301,L]
+
+  # Ces deux routes ont aussi des dossiers physiques de pré-rendu sur IONOS.
+  # Les traiter avant le test de dossier évite DirectorySlash et les boucles.
+  RewriteRule ^contact/$ /contact [R=301,L]
+  RewriteRule ^blog/$ /blog [R=301,L]
+  RewriteRule ^contact$ contact.html [END]
+  RewriteRule ^blog$ blog.html [END]
 
   # Toutes les autres pages publiques utilisent une URL sans slash final.
   RewriteCond %{REQUEST_FILENAME} !-d
