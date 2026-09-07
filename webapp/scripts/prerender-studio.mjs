@@ -1,7 +1,8 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 import { preview } from 'vite';
+import { checkPublicHtml, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
 
 const host = '127.0.0.1';
 const port = 4175;
@@ -79,6 +80,15 @@ const pages = [
   },
 ];
 
+// Compléter les pages existantes avec les routes publiques réellement publiées.
+// Garder l'accueil en dernier : il sert de shell à Vite pendant le pré-rendu.
+const sitemap = await readFile(path.resolve('public', 'sitemap.xml'), 'utf8');
+const existingPaths = new Set(pages.map(page => new URL(page.url).pathname.replace(/\/$/, '') || '/'));
+const additionalPages = publicRoutes(sitemap)
+  .filter(route => !existingPaths.has(route.replace(/\/$/, '') || '/'))
+  .map(route => ({ name: route, url: `http://${host}:${port}${route}`, outputPath: path.resolve('dist', outputForRoute(route)), heading: /./, markers: [] }));
+pages.splice(pages.length - 1, 0, ...additionalPages);
+
 const server = await preview({
   logLevel: 'error',
   preview: { host, port, strictPort: true },
@@ -87,12 +97,32 @@ const server = await preview({
 let browser;
 
 try {
+  const shells = createShells(await readFile(path.resolve('dist', 'index.html'), 'utf8'));
+  await writeFile(path.resolve('dist', 'public-shell.html'), shells.publicShell, 'utf8');
+  await writeFile(path.resolve('dist', 'app-shell.html'), shells.appShell, 'utf8');
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   for (const pageConfig of pages) {
     const page = await browser.newPage();
+    let mutationAttempted = false;
+    await page.route('**/*', route => {
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(route.request().method())) {
+        mutationAttempted = true;
+        return route.abort();
+      }
+      return route.continue();
+    });
+    const routePath = new URL(pageConfig.url).pathname;
+    const blogResponse = routePath === '/blog'
+      ? page.waitForResponse(response => new URL(response.url()).pathname === '/rest/v1/blog_posts')
+      : null;
     await page.goto(pageConfig.url, { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { level: 1, name: pageConfig.heading }).waitFor();
     await page.waitForFunction(() => Boolean(document.querySelector('link[rel="canonical"]')));
+    if (blogResponse) {
+      if (!(await blogResponse).ok()) throw new Error('Lecture publique du blog échouée');
+      await page.getByText('Chargement des articles...', { exact: true }).waitFor({ state: 'hidden' });
+    }
+    if (mutationAttempted) throw new Error(`Opération non autorisée pendant le pré-rendu : ${pageConfig.name}`);
 
     const html = await page.content();
     const normalizedHtml = html.toLocaleLowerCase('fr');
@@ -131,6 +161,7 @@ try {
       .replace(/<link rel="canonical"\s*\/?>\s*/g, '')
       .replace(/<script id="vite-plugin-pwa:register-sw"[^>]*><\/script>/, '');
 
+    checkPublicHtml(serializedHtml, routePath === '/studio' ? '/studio/' : routePath);
     await mkdir(path.dirname(pageConfig.outputPath), { recursive: true });
     await writeFile(pageConfig.outputPath, serializedHtml, 'utf8');
     console.log(`Pré-rendu ${pageConfig.name} créé : ${pageConfig.outputPath}`);

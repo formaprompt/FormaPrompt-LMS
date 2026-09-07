@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run build:app && npm run prerender:public",
+    "build": "npm run build:app && npm run prerender:public && npm run verify:release",
+    "verify:release": "node scripts/release-artifact.mjs",
+    "test:release": "node --test scripts/release-artifact.test.mjs",
     "build:app": "vite build",
     "prerender:public": "node scripts/prerender-studio.mjs",
     "prerender:studio": "npm run prerender:public",

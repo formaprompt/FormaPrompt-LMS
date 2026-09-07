@@ -1,6 +1,9 @@
 import { Helmet } from 'react-helmet-async';
+import { SITE_CONFIG } from '../config/site';
 
-export default function SEO({ title, description, url, image, type = 'website', jsonLd, robots = '' }) {
+export default function SEO({ title, description, url: suppliedUrl, image, type = 'website', jsonLd, robots = '' }) {
+  // Même origine canonique dans le pré-rendu et après le démarrage de React.
+  const url = suppliedUrl?.replace(/^https?:\/\/(?:www\.)?formaprompt\.com(?=\/|$)/, SITE_CONFIG.baseUrl);
   const structuredData = jsonLd || {
     '@context': 'https://schema.org',
     '@type': 'Organization',
