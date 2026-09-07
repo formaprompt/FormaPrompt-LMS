@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
 
 export default function FormationOF() {
   return (
@@ -7,7 +8,7 @@ export default function FormationOF() {
       <SEO
         title="Formation IA pour Formateurs (RS6891) – FormaPrompt"
         description="Certification RS6891 pour formateurs. Apprenez à produire et réviser des contenus pédagogiques avec l'IA."
-        url="https://www.formaprompt.com/formation-ia-formateur"
+        url={`${SITE_CONFIG.baseUrl}/formation-organismes`}
         image="https://www.formaprompt.com/assets/ia-formateur.jpg"
       />
       <div className="container section">

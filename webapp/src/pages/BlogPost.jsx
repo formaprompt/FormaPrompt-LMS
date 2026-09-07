@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import SEO from '../components/SEO';
+import { SITE_CONFIG } from '../config/site';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -39,7 +40,7 @@ export default function BlogPost() {
     return <Navigate to="/blog" replace />;
   }
 
-  const canonicalUrl = `https://www.formaprompt.com/blog/${post.slug}`;
+  const canonicalUrl = `${SITE_CONFIG.baseUrl}/blog/${post.slug}`;
   const seoTitle = post.seo_title || `${post.title} – FormaPrompt`;
   const seoDescription = post.meta_description
     || post.excerpt

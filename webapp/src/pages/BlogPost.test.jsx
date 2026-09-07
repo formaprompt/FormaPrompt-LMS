@@ -3,6 +3,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import BlogPost from './BlogPost';
+import FormationOF from './FormationOF';
 
 const { singlePostMock } = vi.hoisted(() => ({
   singlePostMock: vi.fn(),
@@ -56,6 +57,17 @@ describe('article de blog et métadonnées SEO', () => {
     });
   });
 
+  it('déclare la destination de l’ancienne formation comme canonical sans www', async () => {
+    render(<HelmetProvider><MemoryRouter><FormationOF /></MemoryRouter></HelmetProvider>);
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    await waitFor(() => {
+      expect(document.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
+      expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+        'href', 'https://formaprompt.com/formation-organismes',
+      );
+    });
+  });
+
   it('utilise les champs SEO, le texte alternatif et un balisage Article', async () => {
     renderBlogPost();
 
@@ -81,7 +93,7 @@ describe('article de blog et métadonnées SEO', () => {
       expect(document.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
       expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
         'href',
-        'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+        'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
       );
     });
 
@@ -90,7 +102,7 @@ describe('article de blog et métadonnées SEO', () => {
       '@type': 'Article',
       headline: 'Quel est le meilleur générateur de prompts en 2026 ?',
       author: { '@type': 'Person', name: 'Thierry FREZARD' },
-      mainEntityOfPage: 'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+      mainEntityOfPage: 'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
     });
   });
 });

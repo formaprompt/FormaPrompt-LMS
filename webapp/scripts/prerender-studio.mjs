@@ -27,7 +27,7 @@ const pages = [
     heading: /quel est le meilleur générateur de prompts en 2026/i,
     markers: [
       'meilleur générateur de prompts en 2026 : comparatif',
-      'https://www.formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
+      'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
       'https://schema.org',
       'comparatif des générateurs de prompts en 2026',
     ],
