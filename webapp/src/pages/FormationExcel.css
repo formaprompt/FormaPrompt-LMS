@@ -1,0 +1,72 @@
+.excel-page { color: var(--color-text); }
+.excel-page [id] { scroll-margin-top: 7rem; }
+.excel-page h2 { font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1.2; margin-bottom: 1rem; }
+.excel-page h3 { font-size: 1.3rem; line-height: 1.4; margin-bottom: 1rem; }
+.excel-page p { line-height: 1.7; }
+.excel-page a:focus-visible, .excel-page summary:focus-visible { outline: 3px solid #b45309; outline-offset: 5px; border-radius: 4px; }
+.excel-hero { background: linear-gradient(120deg, #0b3a3d, #075f59); color: #fff; padding: 1.5rem 0 3rem; }
+.excel-hero h1 { color: #fff; max-width: 900px; font-size: clamp(2.1rem, 4.5vw, 3.65rem); line-height: 1.13; margin: 1rem 0 1.5rem; }
+.excel-breadcrumb { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; font-size: .9rem; margin-bottom: 2.5rem; }
+.excel-breadcrumb a { color: #e5f5ef; text-decoration: underline; text-underline-offset: 3px; }
+.excel-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #065f46; margin-bottom: .7rem; }
+.excel-hero .excel-eyebrow { color: #b8efdb; }
+.excel-lead { max-width: 760px; font-size: 1.15rem; color: #e5f5ef; }
+.excel-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.6rem; }
+.excel-hero .course-summary { margin-top: 2.5rem; }
+.excel-btn-light { color: #065f46; background: #fff; }
+.excel-btn-light:hover { color: #064e3b; background: #e5f5ef; }
+.excel-btn-ghost { color: #fff; border: 1px solid #b8efdb; background: transparent; }
+.excel-btn-ghost:hover { color: #fff; background: #ffffff18; }
+.excel-section { padding-top: 4rem; padding-bottom: 4rem; }
+.excel-intro { max-width: 850px; margin-bottom: 2rem; }
+.excel-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.excel-card { background: #fff; border: 1px solid #dbe5e0; border-radius: 18px; padding: 1.75rem; min-width: 0; }
+.excel-level-card { display: flex; flex-direction: column; }
+.excel-step { font-size: .9rem; font-weight: 700; color: #065f46; margin-bottom: .8rem; }
+.excel-level-card h3 { color: #065f46; }
+.excel-promise { border-top: 1px solid #dbe5e0; margin-top: 1.25rem; padding-top: 1.25rem; font-weight: 600; }
+.excel-text-link, .excel-help a { color: #065f46; text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+.excel-level-card .excel-text-link { margin-top: auto; padding-top: 1.5rem; }
+.excel-help { margin-top: 1.5rem; }
+.excel-tinted { background: #edf4f0; }
+.excel-programmes { display: grid; gap: 1.5rem; }
+.excel-duration { color: #065f46; font-weight: 700; font-size: .9rem; margin-bottom: .75rem; }
+.excel-objective { max-width: 950px; }
+.excel-programme-context { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin: 1.5rem 0; }
+.excel-programme-context strong { display: block; margin-bottom: .4rem; color: #0f172a; }
+.excel-programme details { border-top: 1px solid #dbe5e0; border-bottom: 1px solid #dbe5e0; }
+.excel-programme summary { cursor: pointer; padding: 1rem .25rem; font-weight: 700; color: #065f46; }
+.excel-programme summary:hover { background: #f3f8f5; }
+.excel-sequences { padding: 0 1rem 0 1.75rem; }
+.excel-sequences li { padding: .5rem 0 .8rem .3rem; }
+.excel-sequences h4 { margin-bottom: .4rem; font-size: 1rem; }
+.excel-boundary { margin: 1rem 0; padding: 1rem; background: #f8fafc; border-left: 3px solid #64748b; }
+.excel-outcome { margin-top: 1.25rem; }
+.excel-note { border-left: 3px solid #047857; padding: .5rem 0 .5rem 1.5rem; margin-top: 2rem; }
+.excel-note p + p, .excel-grid-two p + p { margin-top: 1rem; }
+.excel-price { color: #065f46; font-size: 2.4rem; font-weight: 700; margin: .75rem 0 0; }
+.excel-price-unit { font-weight: 600; margin-bottom: 1rem; }
+.excel-tax { margin-top: 1rem; font-size: .9rem; }
+.excel-grid-two { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 2rem; }
+.excel-grid-two .excel-text-link { display: inline-block; margin-top: 1rem; }
+.excel-closing p { max-width: 750px; }
+.excel-enrollment { margin-top: 1.5rem; }
+.excel-enrollment > p { margin-top: 1rem; }
+.excel-modalities { border: 0; padding: 1rem 0; margin: 0; min-width: 0; }
+.excel-modalities legend { font-weight: 600; }
+.excel-modalities label { display: flex; align-items: baseline; gap: .6rem; padding: .65rem 0; cursor: pointer; }
+.excel-checkout { margin: 1.5rem 0; }
+.excel-intra { border-top: 1px solid #dbe5e0; margin-top: 1.5rem; padding: 1rem 0; }
+@media (max-width: 960px) {
+  .excel-grid:not(.excel-grid-two) { grid-template-columns: 1fr; }
+  .excel-programme-context { grid-template-columns: 1fr; gap: 1rem; }
+}
+@media (max-width: 600px) {
+  .excel-page .container { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .excel-section { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+  .excel-breadcrumb { margin-bottom: 2rem; }
+  .excel-card { padding: 1.25rem; }
+  .excel-grid-two { grid-template-columns: 1fr; }
+  .excel-actions { align-items: stretch; flex-direction: column; }
+  .excel-actions .btn { text-align: center; white-space: normal; }
+}

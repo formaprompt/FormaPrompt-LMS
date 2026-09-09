@@ -35,7 +35,7 @@ Deno.serve(async (request) => {
 
     const body = await request.json().catch(() => ({}));
     const purchase = getPurchaseConfig(body?.course_id);
-    if (!purchase) return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
+    if (!purchase || !purchase.checkoutEnabled) return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
     const normalizedCode = normalizeCoursePromotionCode(body?.promo_code);
     if (!hasCoursePromotionInput(body?.promo_code) || !normalizedCode) {
       return invalidPromotionResponse(purchase.amountTotal);

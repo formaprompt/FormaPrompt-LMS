@@ -8,6 +8,7 @@ import DiagnosticDashboardSection from '../components/DiagnosticDashboardSection
 import LearningPathAccessCard from '../components/LearningPathAccessCard';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
+import { EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import { DEMO_LEARNING_PATH_SLUG, learningPathCatalog } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
@@ -413,6 +414,7 @@ export default function Dashboard() {
 
             <div className="learner-course-grid">
               {activeCourseAccesses.map((access) => {
+                const excelOffer = EXCEL_PURCHASES[access.course_id];
                 const purchasedCourse = courseCatalog[access.course_id];
                 const progress = calculateCourseProgress(
                   purchasedCourse?.exercises,
@@ -422,12 +424,13 @@ export default function Dashboard() {
 
                 return (
                   <article key={access.id} className="learner-course-card">
-                    <h3>{courseNames[access.course_id] || access.course_id}</h3>
-                    {progressAvailable && (
+                    <h3>{excelOffer?.label || courseNames[access.course_id] || access.course_id}</h3>
+                    {progressAvailable && !excelOffer && (
                       <CourseProgress progress={progress} compact headingLevel={4} />
                     )}
-                    <Link to={`/course/${access.course_id}`} className="btn btn-primary learner-course-card__action">
-                      ▶ Voir la formation
+                    {excelOffer && <p>Supports en ligne et réservation des séances Excel en préparation.</p>}
+                    <Link to={excelOffer ? `/paiement-reussi?course=${access.course_id}` : `/course/${access.course_id}`} className="btn btn-primary learner-course-card__action">
+                      {excelOffer ? 'Consulter mon inscription Excel' : '▶ Voir la formation'}
                     </Link>
                   </article>
                 );

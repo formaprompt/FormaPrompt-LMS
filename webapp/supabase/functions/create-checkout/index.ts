@@ -3,6 +3,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
   CONSENT_TYPES,
+  EXCEL_PURCHASES,
   getCommercialRoute,
   getConsentDocumentVersion,
   getPurchaseConfig,
@@ -96,7 +97,7 @@ Deno.serve(async (request) => {
 
     const body = await request.json().catch(() => ({}));
     const purchase = getPurchaseConfig(body.course_id);
-    if (!purchase) {
+    if (!purchase || !purchase.checkoutEnabled) {
       return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
     }
     const checkoutRequestId = normalizeCheckoutRequestId(body.checkout_request_id);
@@ -164,7 +165,10 @@ Deno.serve(async (request) => {
     if (purchaseError) throw purchaseError;
     if (existingPurchase) return jsonResponse({ alreadyPurchased: true });
 
-    const priceId = requiredEnv(purchase.priceEnvName);
+    const priceId = Deno.env.get(purchase.priceEnvName)?.trim();
+    if (!priceId) {
+      return jsonResponse({ error: 'Le paiement de cette offre n’est pas encore ouvert. Aucun montant n’a été débité.', checkout_unavailable: true }, 503);
+    }
     const stripe = new Stripe(stripeSecretKey);
     const price = await stripe.prices.retrieve(priceId);
     if (
@@ -179,6 +183,17 @@ Deno.serve(async (request) => {
     const catalogProductId = typeof price.product === 'string' ? price.product : price.product?.id;
     if (typeof catalogProductId !== 'string' || !catalogProductId.startsWith('prod_')) {
       throw new Error('Le produit Stripe de la formation est invalide.');
+    }
+    const excelOffer = Object.hasOwn(EXCEL_PURCHASES, purchase.courseId) ? EXCEL_PURCHASES[purchase.courseId] : null;
+    if (excelOffer) {
+      const product = await stripe.products.retrieve(catalogProductId);
+      if ('deleted' in product && product.deleted) throw new Error('Le produit Stripe Excel a été supprimé.');
+      if (price.metadata?.course_id !== purchase.courseId || price.metadata?.modality !== excelOffer.modality
+        || !product.active || product.livemode !== (stripeMode === 'live')
+        || product.metadata?.pedagogical_level !== excelOffer.pedagogicalLevel
+        || product.metadata?.duration_hours !== String(excelOffer.durationHours)) {
+        throw new Error('Le produit ou la modalité du tarif Stripe Excel ne correspond pas à l’offre choisie.');
+      }
     }
 
     const requiredConsentTypes = getRequiredConsentTypes(commercialRoute) as ConsentType[];
@@ -316,6 +331,7 @@ Deno.serve(async (request) => {
       sales_context: commercialRoute.salesContext,
       access_activation_policy: commercialRoute.accessActivationPolicy,
       payment_type: 'course',
+      ...(excelOffer ? { pedagogical_level: excelOffer.pedagogicalLevel, modality: excelOffer.modality } : {}),
       ...(checkoutConfiguration.promo_redemption_id
         ? { promo_redemption_id: checkoutConfiguration.promo_redemption_id }
         : {}),
@@ -341,7 +357,17 @@ Deno.serve(async (request) => {
         phone_number_collection: { enabled: true },
         allow_promotion_codes: false,
         automatic_tax: { enabled: false },
-        invoice_creation: { enabled: true },
+        invoice_creation: {
+          enabled: true,
+          ...(excelOffer ? { invoice_data: {
+            description: `${excelOffer.label} — ${excelOffer.durationHours} heures`,
+            custom_fields: [{ name: 'Modalité', value: excelOffer.modalityLabel }],
+            metadata: { course_id: excelOffer.courseId, pedagogical_level: excelOffer.pedagogicalLevel, modality: excelOffer.modality },
+          } } : {}),
+        },
+        ...(excelOffer ? { custom_text: { submit: {
+          message: `${excelOffer.label} — ${excelOffer.durationHours} heures.`,
+        } } } : {}),
         locale: 'fr',
         metadata,
         payment_intent_data: { metadata },

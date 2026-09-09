@@ -1,9 +1,14 @@
+import { EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+
 export const PROMOTION_TARGET_OPTIONS = [
   { target_type: 'diagnostic', target_key: 'diagnostic-ia-express', label: 'Diagnostic IA Express' },
   { target_type: 'all', target_key: 'all', label: 'Toutes les offres FormaPrompt' },
   { target_type: 'course', target_key: 'formation-ia', label: 'Formation IA générative' },
   { target_type: 'course', target_key: 'formation-ia-act', label: 'Formation IA Act' },
   { target_type: 'course', target_key: 'formation-prompt-level-1', label: 'Formation Prompt Engineering – Niveau 1' },
+  ...Object.values(EXCEL_PURCHASES).map((offer) => ({
+    target_type: 'course', target_key: offer.courseId, label: offer.label,
+  })),
 ];
 
 const GENERIC_ERROR = 'L’opération sur la promotion n’a pas abouti.';

@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import CommercialCheckout from './CommercialCheckout'
-import { AI_ACT_PURCHASE, SALES_CONTEXTS } from '../../supabase/functions/_shared/purchaseConfig.js'
+import { AI_ACT_PURCHASE, EXCEL_PURCHASES, SALES_CONTEXTS } from '../../supabase/functions/_shared/purchaseConfig.js'
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('../lib/supabaseClient', () => ({
@@ -34,6 +34,22 @@ describe('CommercialCheckout', () => {
     cleanup()
     vi.restoreAllMocks()
     invoke.mockReset()
+  })
+
+  it.each(Object.keys(EXCEL_PURCHASES))('présente l’achat Excel au bon montant pour %s', (courseId) => {
+    const offer = EXCEL_PURCHASES[courseId]
+    render(<MemoryRouter><CommercialCheckout courseId={courseId} user={{ id: 'user-test' }} /></MemoryRouter>)
+    expect(screen.getByRole('button', { name: new RegExp(`Commander et payer.*${offer.amountTotal / 100}`) })).toBeVisible()
+    expect(screen.queryByRole('link', { name: /devis/i })).not.toBeInTheDocument()
+    expect(invoke).not.toHaveBeenCalled()
+  })
+
+  it('affiche le blocage de configuration Stripe sans proposer un nouveau paiement', async () => {
+    invoke.mockResolvedValue({ error: { context: { json: async () => ({ checkout_unavailable: true, error: 'Le paiement de cette offre n’est pas encore ouvert. Aucun montant n’a été débité.' }) } } })
+    renderCheckout()
+    await acceptAllVisibleConsents()
+    await userEvent.click(screen.getByRole('button', { name: /commander et payer/i }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Le paiement de cette offre n’est pas encore ouvert')
   })
 
   it('affiche la qualification et conserve une action d’achat pour un visiteur', () => {

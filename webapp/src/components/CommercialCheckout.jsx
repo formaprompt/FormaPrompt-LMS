@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ACCESS_START_CHOICES,
   CONSENT_TYPES,
+  EXCEL_PURCHASES,
   getCommercialRoute,
   getPurchaseConfig,
   SALES_CONTEXTS,
@@ -75,7 +76,7 @@ export default function CommercialCheckout({
   const route = getCommercialRoute(purchase, checkoutContext)
   const displayedAmount = promoStatus === 'valid' ? promoAmounts?.final_amount_cents : purchase?.amountTotal
 
-  if (!purchase) return <p role="alert">Cette offre n’est pas disponible.</p>
+  if (!purchase || !purchase.checkoutEnabled) return <p role="alert">Cette offre n’est pas disponible au paiement.</p>
   if (accessLoading) return <p role="status">Vérification de votre accès…</p>
   if (hasActiveAccess) return activeAccessActions
 
@@ -181,7 +182,9 @@ export default function CommercialCheckout({
         return
       }
       if (data?.alreadyPurchased) {
-        window.location.assign(`/course/${encodeURIComponent(courseId)}`)
+        window.location.assign(Object.hasOwn(EXCEL_PURCHASES, courseId)
+          ? `/paiement-reussi?course=${encodeURIComponent(courseId)}`
+          : `/course/${encodeURIComponent(courseId)}`)
         return
       }
       if (data?.confirmationPending) {
@@ -193,6 +196,11 @@ export default function CommercialCheckout({
       window.location.assign(checkoutUrl.toString())
     } catch (error) {
       const errorPayload = await readFunctionErrorPayload(error)
+      if (errorPayload?.checkout_unavailable) {
+        setCheckoutConfigurationLocked(false)
+        setCheckoutError(errorPayload.error)
+        return
+      }
       if (errorPayload?.checkout_context_reset) {
         checkoutRequestId.current = newCheckoutRequestId()
         setCheckoutConfigurationLocked(false)
@@ -210,6 +218,17 @@ export default function CommercialCheckout({
 
   return (
     <div className="commercial-checkout">
+      {Object.hasOwn(EXCEL_PURCHASES, courseId) && (
+        <section className="commercial-checkout__group" aria-label={`Récapitulatif de votre formation Excel — ${purchase.label}`}>
+          <p><strong>{purchase.label}</strong></p>
+          <dl className="commercial-checkout__amounts">
+            <div><dt>Modalité</dt><dd>{purchase.modalityLabel}</dd></div>
+            <div><dt>Durée</dt><dd>{purchase.durationHours} heures</dd></div>
+            <div><dt>Tarif catalogue</dt><dd>{formatEuros(purchase.amountTotal)}{purchase.modality === 'inter' ? ' / participant' : ''}</dd></div>
+            <div><dt>Total à payer</dt><dd>{formatEuros(displayedAmount)}</dd></div>
+          </dl>
+        </section>
+      )}
       <fieldset className="commercial-checkout__group">
         <legend>Vous achetez cette formation :</legend>
         {SALES_CONTEXT_OPTIONS.map(([value, label]) => (

@@ -82,14 +82,48 @@ export const GENERATIVE_AI_PURCHASE = Object.freeze({
   ...MIXED_DIRECT_PURCHASE,
 });
 
+// Formation accompagnée et futur espace en ligne, selon le modèle existant.
+// Le paiement reste conditionné aux six prix Stripe configurés côté serveur.
+// courseId conserve le contrat historique de l'API : il identifie ici l'offre
+// commerciale. pedagogicalLevel et modality décrivent séparément la prestation.
+function excelPurchase(courseId, pedagogicalLevel, modality, priceEnvName) {
+  return Object.freeze({
+    courseId,
+    pedagogicalLevel,
+    modality,
+    modalityLabel: modality === 'inter' ? 'Inter-entreprises' : 'Individuel',
+    durationHours: 14,
+    deliveryKind: 'instructor_led_with_online_course',
+    requiresLmsAccess: true,
+    amountTotal: modality === 'inter' ? 69_000 : 99_000,
+    currency: 'eur',
+    priceEnvName,
+    landingPath: `/formation-excel#${pedagogicalLevel}`,
+    label: `Excel ${{ initiation: 'Initiation', perfectionnement: 'Perfectionnement', avance: 'Avancé' }[pedagogicalLevel]} – ${modality === 'inter' ? 'Inter-entreprises' : 'Individuel'}`,
+    ...MIXED_DIRECT_PURCHASE,
+  });
+}
+
+export const EXCEL_PURCHASES = Object.freeze({
+  'excel-initiation-inter': excelPurchase('excel-initiation-inter', 'initiation', 'inter', 'STRIPE_EXCEL_INITIATION_INTER_PRICE_ID'),
+  'excel-initiation-individuel': excelPurchase('excel-initiation-individuel', 'initiation', 'individuel', 'STRIPE_EXCEL_INITIATION_INDIVIDUEL_PRICE_ID'),
+  'excel-perfectionnement-inter': excelPurchase('excel-perfectionnement-inter', 'perfectionnement', 'inter', 'STRIPE_EXCEL_PERFECTIONNEMENT_INTER_PRICE_ID'),
+  'excel-perfectionnement-individuel': excelPurchase('excel-perfectionnement-individuel', 'perfectionnement', 'individuel', 'STRIPE_EXCEL_PERFECTIONNEMENT_INDIVIDUEL_PRICE_ID'),
+  'excel-avance-inter': excelPurchase('excel-avance-inter', 'avance', 'inter', 'STRIPE_EXCEL_AVANCE_INTER_PRICE_ID'),
+  'excel-avance-individuel': excelPurchase('excel-avance-individuel', 'avance', 'individuel', 'STRIPE_EXCEL_AVANCE_INDIVIDUEL_PRICE_ID'),
+});
+
 export const COURSE_PURCHASES = Object.freeze({
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
   [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
+  ...EXCEL_PURCHASES,
 });
 
 export function getPurchaseConfig(courseId) {
-  return COURSE_PURCHASES[courseId] || null;
+  return typeof courseId === 'string' && Object.hasOwn(COURSE_PURCHASES, courseId)
+    ? COURSE_PURCHASES[courseId]
+    : null;
 }
 
 export function getCommercialRoute(purchase, checkoutContext) {

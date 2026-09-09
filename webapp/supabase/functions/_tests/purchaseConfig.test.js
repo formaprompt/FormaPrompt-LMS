@@ -6,6 +6,7 @@ import {
   AI_ACT_PURCHASE,
   CONSENT_TYPES,
   COURSE_PURCHASES,
+  EXCEL_PURCHASES,
   GENERATIVE_AI_PURCHASE,
   getCommercialRoute,
   IN_PERSON_TRAVEL_FEE,
@@ -56,14 +57,28 @@ function validConsentPayload(purchase, route) {
 }
 
 test('les trois offres publiques conservent le paiement direct et une configuration mixte explicite', () => {
-  assert.deepEqual(Object.keys(COURSE_PURCHASES).sort(), [
+  const enabledPurchases = [AI_ACT_PURCHASE, PROMPT_LEVEL_ONE_PURCHASE, GENERATIVE_AI_PURCHASE];
+  assert.deepEqual(enabledPurchases.map((purchase) => purchase.courseId).sort(), [
     'formation-ia',
     'formation-ia-act',
     'formation-prompt-level-1',
   ]);
-  for (const purchase of Object.values(COURSE_PURCHASES)) {
+  for (const purchase of enabledPurchases) {
     assert.equal(purchase.checkoutEnabled, true);
     assert.equal(purchase.components.service, true);
+    assert.equal(purchase.components.digitalContent, true);
+    const route = getCommercialRoute(purchase, personalContext());
+    assert.equal(route.directCheckoutEnabled, true);
+    assert.equal(validateCommercialCheckoutRequest(purchase, personalContext(), validConsentPayload(purchase, route)), null);
+  }
+});
+
+test('les six offres Excel suivent le modèle en ligne et accompagnement sans désactiver les offres IA', () => {
+  assert.equal(Object.keys(COURSE_PURCHASES).length, 9);
+  assert.equal(Object.keys(EXCEL_PURCHASES).length, 6);
+  for (const purchase of Object.values(EXCEL_PURCHASES)) {
+    assert.equal(purchase.checkoutEnabled, true);
+    assert.equal(purchase.requiresLmsAccess, true);
     assert.equal(purchase.components.digitalContent, true);
     const route = getCommercialRoute(purchase, personalContext());
     assert.equal(route.directCheckoutEnabled, true);

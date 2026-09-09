@@ -41,7 +41,8 @@ export default function FormationBureautique() {
         <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', textAlign: 'left' }}>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
             <h4 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Excel</h4>
-            <p style={{ fontSize: '0.95rem' }}>Tableaux, formules, tris, filtres, graphiques, mise en forme conditionnelle, tableaux croisés dynamiques selon le niveau.</p>
+            <p style={{ fontSize: '0.95rem' }}>Initiation, Perfectionnement et Avancé : trois formations de 14 heures pour créer ses tableaux, fiabiliser ses données et approfondir ses analyses.</p>
+            <Link to="/formation-excel" className="btn btn-primary" style={{ marginTop: '1rem' }}>Découvrir les 3 niveaux Excel</Link>
           </div>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
             <h4 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Word</h4>

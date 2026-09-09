@@ -5,8 +5,19 @@ import SEO from '../components/SEO';
 import { useAuth } from '../contexts/useAuth';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
+import { EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import ExcelPurchaseConfirmation from '../components/ExcelPurchaseConfirmation';
 
 export default function PaymentSuccess() {
+  const [searchParams] = useSearchParams();
+  const offerId = searchParams.get('course');
+  if (Object.hasOwn(EXCEL_PURCHASES, offerId)) {
+    return <ExcelPurchaseConfirmation key={offerId} offer={EXCEL_PURCHASES[offerId]} />;
+  }
+  return <ExistingCoursePaymentSuccess />;
+}
+
+function ExistingCoursePaymentSuccess() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const requestedCourseId = searchParams.get('course') || DEFAULT_BOOKING_COURSE_ID;

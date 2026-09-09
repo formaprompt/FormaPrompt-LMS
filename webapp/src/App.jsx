@@ -13,6 +13,7 @@ const FormationIA = lazy(() => import("./pages/FormationIA"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
+const FormationExcel = lazy(() => import("./pages/FormationExcel"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
 const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
 const DiagnosticPaymentConfirmation = lazy(() => import("./pages/DiagnosticPaymentConfirmation"));
@@ -93,6 +94,7 @@ function App() {
             <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
+            <Route path="formation-excel" element={<FormationExcel />} />
             <Route path="formation-organismes" element={<FormationOF />} />
             <Route path="diagnostic-ia" element={<DiagnosticIA />} />
             <Route path="diagnostic-ia/confirmation" element={<DiagnosticPaymentConfirmation />} />
