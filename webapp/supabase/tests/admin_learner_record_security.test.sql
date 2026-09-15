@@ -19,9 +19,9 @@ ON CONFLICT (id) DO UPDATE
 SET email = EXCLUDED.email,
     role = EXCLUDED.role;
 
-INSERT INTO public.course_lesson_progress (user_id, course_id, lesson_id, status, progress_percent) VALUES
-  ('71000000-0000-4000-8000-000000000003', 'formation-ia', 'fiche-lesson-camille', 'completed', 100),
-  ('71000000-0000-4000-8000-000000000004', 'formation-ia', 'fiche-lesson-alex', 'in_progress', 25);
+INSERT INTO public.course_lesson_progress (user_id, course_id, lesson_id, status, progress_percent, completed_at) VALUES
+  ('71000000-0000-4000-8000-000000000003', 'formation-ia', 'fiche-lesson-camille', 'completed', 100, now()),
+  ('71000000-0000-4000-8000-000000000004', 'formation-ia', 'fiche-lesson-alex', 'in_progress', 25, NULL);
 
 SELECT ok(NOT has_function_privilege('public', 'public.admin_get_learner_record(uuid)', 'EXECUTE'), 'PUBLIC ne peut pas executer la RPC');
 SELECT ok(NOT has_function_privilege('anon', 'public.admin_get_learner_record(uuid)', 'EXECUTE'), 'anon ne peut pas executer la RPC');
