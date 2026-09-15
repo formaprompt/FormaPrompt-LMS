@@ -40,7 +40,7 @@ SELECT is((public.admin_get_learner_record('71000000-0000-4000-8000-000000000003
 SELECT is(jsonb_array_length(public.admin_get_learner_record('71000000-0000-4000-8000-000000000003')->'progress'), 1, 'la progression cible est retournee');
 SELECT is((public.admin_get_learner_record('71000000-0000-4000-8000-000000000003')->'progress'->0->>'lessonId'), 'fiche-lesson-camille', 'aucune progression d un autre apprenant ne fuit');
 SELECT throws_ok($$SELECT public.admin_get_learner_record(NULL)$$, '22004', 'Identifiant apprenant requis.', 'un UUID absent est refuse');
-SELECT throws_ok($$SELECT public.admin_get_learner_record('71000000-0000-4000-8000-000000000099')$$, 'P0002', 'Apprenant introuvable.', 'un UUID inconnu est refuse');
+SELECT throws_ok($$SELECT public.admin_get_learner_record('71000000-0000-4000-8000-000000000099')$$, 'P0002', 'Compte introuvable.', 'un UUID inconnu est refuse');
 
 SELECT * FROM finish();
 ROLLBACK;
