@@ -14,7 +14,10 @@ INSERT INTO public.profiles (id, email, role) VALUES
   ('71000000-0000-4000-8000-000000000001', 'admin.fiche@example.test', 'admin'),
   ('71000000-0000-4000-8000-000000000002', 'employee.fiche@example.test', 'employee'),
   ('71000000-0000-4000-8000-000000000003', 'camille.fiche@example.test', 'user'),
-  ('71000000-0000-4000-8000-000000000004', 'alex.fiche@example.test', 'user');
+  ('71000000-0000-4000-8000-000000000004', 'alex.fiche@example.test', 'user')
+ON CONFLICT (id) DO UPDATE
+SET email = EXCLUDED.email,
+    role = EXCLUDED.role;
 
 INSERT INTO public.course_lesson_progress (user_id, course_id, lesson_id, status, progress_percent) VALUES
   ('71000000-0000-4000-8000-000000000003', 'formation-ia', 'fiche-lesson-camille', 'completed', 100),

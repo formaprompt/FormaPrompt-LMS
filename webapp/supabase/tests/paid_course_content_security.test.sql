@@ -17,12 +17,19 @@ SELECT is(
 );
 
 SELECT ok(
-  (SELECT allowed_mime_types = ARRAY[
+  (SELECT array_agg(mime_type ORDER BY mime_type) = ARRAY[
       'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/x-zip-compressed',
+      'application/zip',
+      'image/png',
+      'text/markdown'
     ]::text[]
-   FROM storage.buckets WHERE id = 'paid-course-content'),
-  'Seuls PDF et DOCX sont prévus dans le bucket'
+   FROM storage.buckets
+   CROSS JOIN LATERAL unnest(allowed_mime_types) AS mime_type
+   WHERE id = 'paid-course-content'),
+  'Seuls les formats privés publiés sont prévus dans le bucket'
 );
 
 SELECT ok(

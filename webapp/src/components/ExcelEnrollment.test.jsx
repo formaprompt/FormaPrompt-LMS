@@ -24,7 +24,7 @@ for (const course of excelCourses) {
       await userEvent.click(screen.getByRole('button', { name: 'Voir le tarif et s’inscrire' }));
       const checkout = screen.getByRole('region', { name: `Inscription Excel ${course.level} — ${modality}` });
       const button = await within(checkout).findByRole('button', { name: /Commander et payer/ });
-      const recap = within(checkout).getByRole('region', { name: /^Récapitulatif de votre formation Excel/ });
+      const recap = within(checkout).getByRole('region', { name: /^Récapitulatif de votre formation bureautique — Excel/ });
       expect(within(recap).getByText(modality === 'inter' ? 'Inter-entreprises' : 'Individuel', { exact: true })).toBeVisible();
       expect(recap).toHaveTextContent(`Excel ${course.level}`);
       expect(recap).toHaveTextContent('14 heures');
