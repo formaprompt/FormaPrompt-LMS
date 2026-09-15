@@ -114,8 +114,9 @@ export default function Header() {
               <Link to="/formation-organismes" onClick={() => setIsMenuOpen(false)}>Pour les OF</Link>
           </NavigationGroup>
           
-          <NavigationGroup id="navigation-ressources" label="Outils et ressources">
+          <NavigationGroup id="navigation-ressources" label="Ressources">
               <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio — outil gratuit</Link>
+              <Link to="/guides" onClick={() => setIsMenuOpen(false)}>Guides pratiques</Link>
               <Link to="/blog" onClick={() => setIsMenuOpen(false)}>Blog</Link>
               <Link to="/guide-gpt-5-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑5.6</Link>
           </NavigationGroup>

@@ -162,6 +162,10 @@ export default function FormationAIAct() {
               Pour développer des usages professionnels à encadrer, découvrez la{' '}
               <Link to="/formation-ia-generative">formation IA générative</Link>.
             </p>
+            <p>
+              <strong>Pour aller plus loin :</strong>{' '}
+              <Link to="/guides/checklist-ai-act-organisme-formation">la checklist AI Act pour un organisme de formation</Link>.
+            </p>
           </div>
 
           <div className="ai-act-objectives-grid">

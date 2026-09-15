@@ -505,6 +505,7 @@ export default function StudioPage() {
             <p>Le Studio complète les parcours pédagogiques et les ressources consacrés aux usages professionnels responsables.</p>
             <div className="studio-internal-links">
               <Link to="/formation-prompt-engineering">Formation Prompt Engineering</Link>
+              <Link to="/guides/prompt-engineering-professionnel-methode">Comment structurer mon prompt&nbsp;?</Link>
               <Link to="/formation-ia-generative">Formation IA générative</Link>
               <Link to="/blog">Ressources et articles</Link>
               <Link to="/dashboard">Accéder à l’espace apprenant</Link>

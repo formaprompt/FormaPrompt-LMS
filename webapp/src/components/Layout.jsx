@@ -10,6 +10,7 @@ export default function Layout() {
     '/',
     '/a-propos',
     '/blog',
+    '/guides',
     '/cgv',
     '/informations-precontractuelles',
     '/contact',

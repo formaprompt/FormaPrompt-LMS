@@ -190,6 +190,10 @@ export default function FormationPrompt() {
                 Pour situer cette méthode dans des usages plus larges, découvrez la{' '}
                 <Link to="/formation-ia-generative">formation IA générative</Link>.
               </p>
+              <p>
+                <strong>Pour aller plus loin :</strong>{' '}
+                <Link to="/guides/prompt-engineering-professionnel-methode">la méthode de prompt engineering professionnel</Link>.
+              </p>
             </div>
           </div>
         </section>

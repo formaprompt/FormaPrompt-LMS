@@ -23,12 +23,14 @@
   RewriteRule ^formation-ia-formateur/?$ /formation-organismes [R=301,L]
   RewriteRule ^studio$ /studio/ [R=301,L]
 
-  # Ces deux routes ont aussi des dossiers physiques de pré-rendu sur IONOS.
+  # Ces routes ont aussi des dossiers physiques de pré-rendu sur IONOS.
   # Les traiter avant le test de dossier évite DirectorySlash et les boucles.
   RewriteRule ^contact/$ /contact [R=301,L]
   RewriteRule ^blog/$ /blog [R=301,L]
+  RewriteRule ^guides/$ /guides [R=301,L]
   RewriteRule ^contact$ contact.html [END]
   RewriteRule ^blog$ blog.html [END]
+  RewriteRule ^guides$ guides.html [END]
 
   # Ces trois formations sont pré-rendues dans un dossier, avec une URL sans slash.
   # Les cibler avant le test de dossier, sans capturer les autres ressources physiques.

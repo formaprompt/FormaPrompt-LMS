@@ -196,6 +196,10 @@ export default function FormationIA() {
                 Pour approfondir la construction de demandes précises et réutilisables, consultez la{' '}
                 <Link to="/formation-prompt-engineering">formation Prompt Engineering – Niveau 1</Link>.
               </p>
+              <p>
+                <strong>Pour aller plus loin :</strong>{' '}
+                <Link to="/guides/ia-generative-debutants">le guide pour débuter avec l’IA générative</Link>.
+              </p>
             </div>
           </div>
         </section>

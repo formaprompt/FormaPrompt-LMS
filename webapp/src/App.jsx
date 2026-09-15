@@ -28,6 +28,8 @@ const DiagnosticRestitution = lazy(() => import("./pages/DiagnosticRestitution")
 const About = lazy(() => import("./pages/About"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Guides = lazy(() => import("./pages/Guides"));
+const GuidePage = lazy(() => import("./pages/GuidePage"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Legal = lazy(() => import("./pages/Legal"));
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -116,6 +118,8 @@ function App() {
             <Route path="a-propos" element={<About />} />
             <Route path="blog" element={<Blog />} />
             <Route path="blog/:slug" element={<BlogPost />} />
+            <Route path="guides" element={<Guides />} />
+            <Route path="guides/:slug" element={<GuidePage />} />
             <Route path="contact" element={<Contact />} />
             <Route path="mentions-legales" element={<Legal />} />
             <Route path="privacy" element={<Privacy />} />

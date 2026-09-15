@@ -28,9 +28,10 @@ describe('Navigation publique', () => {
   it('ferme le groupe après sélection et expose le contact sans accès public au Lab', async () => {
     const user = userEvent.setup();
     mount();
-    await user.click(screen.getByRole('button', { name: 'Outils et ressources' }));
+    await user.click(screen.getByRole('button', { name: 'Ressources' }));
+    expect(screen.getByRole('link', { name: 'Guides pratiques' })).toHaveAttribute('href', '/guides');
     await user.click(screen.getByRole('link', { name: 'Studio — outil gratuit' }));
-    expect(screen.getByRole('button', { name: 'Outils et ressources' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('button', { name: 'Ressources' })).toHaveAttribute('aria-expanded', 'false');
     expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
     expect(screen.queryByRole('link', { name: /Training Lab/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/login');
