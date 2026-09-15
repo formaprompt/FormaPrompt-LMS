@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createBookingCandidates,
+  createFlexibleSplitDayCandidates,
   createSplitDayBookingCandidates,
   createVariableSessionBookingCandidates,
   flattenSelectedSlotIds,
   getLastBookedSession,
   groupBookedSessions,
   hasLearnerSignedLastSession,
+  validateBureautiqueCandidateSelection,
 } from './courseBookingSlots.js';
 
 function slot(id, startHour, endHour, day = '2026-07-20') {
@@ -90,6 +92,61 @@ test('compose une demi-journée de 3 h 30 à partir des demi-heures', () => {
   const candidates = createBookingCandidates(halfHourSlots(), { duration: 210, deliveryMode: 'remote' });
   assert.equal(candidates.length, 2);
   assert.ok(candidates.every((candidate) => candidate.slotIds.length === 7));
+});
+
+test('valide quatre demi-journées de 3 h 30 sur quatre dates distinctes', () => {
+  const days = ['20', '21', '22', '23'];
+  const candidates = days.map((day) => (
+    createBookingCandidates(continuousHalfHourSlots(`2026-07-${day}`, 7), {
+      duration: 210,
+      deliveryMode: 'remote',
+    })[0]
+  ));
+
+  assert.equal(validateBureautiqueCandidateSelection(
+    candidates,
+    candidates.map(({ id }) => id),
+    'four_half_days_3h30',
+  ), true);
+  assert.equal(validateBureautiqueCandidateSelection(
+    candidates,
+    candidates.slice(0, 3).map(({ id }) => id),
+    'four_half_days_3h30',
+  ), false);
+});
+
+test('compose deux journées de deux demi-journées séparées par une pause', () => {
+  const slots = ['20', '21'].flatMap((day) => [
+    ...continuousHalfHourSlots(`2026-07-${day}`, 7, 8 * 60),
+    ...continuousHalfHourSlots(`2026-07-${day}`, 7, 12 * 60),
+  ]);
+  const candidates = createFlexibleSplitDayCandidates(slots, {
+    deliveryMode: 'in_person',
+    segmentDuration: 210,
+  });
+  const selected = ['2026-07-20', '2026-07-21'].map((day) => (
+    candidates.find(({ starts_at }) => starts_at.startsWith(day))
+  ));
+
+  assert.ok(selected.every(Boolean));
+  assert.ok(selected.every(({ slotIds, segments }) => slotIds.length === 14 && segments.length === 2));
+  assert.equal(validateBureautiqueCandidateSelection(
+    candidates,
+    selected.map(({ id }) => id),
+    'two_days_2x3h30',
+  ), true);
+});
+
+test('regroupe les 28 demi-heures bureautiques en quatre séances de 3 h 30', () => {
+  const sessions = ['20', '21', '22', '23'].flatMap((day) => (
+    continuousHalfHourSlots(`2026-07-${day}`, 7)
+  )).map((item) => ({ ...item, duration_minutes: 30, status: 'confirmed' }));
+
+  for (const format of ['four_half_days_3h30', 'two_days_2x3h30']) {
+    const grouped = groupBookedSessions(sessions, format);
+    assert.equal(grouped.length, 4);
+    assert.ok(grouped.every((session) => session.duration_minutes === 210));
+  }
 });
 
 test('compose la journée présentielle 4 h + pause déjeuner + 3 h', () => {

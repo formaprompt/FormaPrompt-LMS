@@ -1,5 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
+import {
+  BUREAUTIQUE_INDIVIDUAL_COURSE_IDS,
+  BUREAUTIQUE_SCHEDULE_FORMATS,
+} from '../_shared/bureautiqueBooking.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -30,6 +34,7 @@ Deno.serve(async (request) => {
       'formation-ia': 20,
       'formation-ia-act': 8,
       'formation-prompt-level-1': 14,
+      ...Object.fromEntries(BUREAUTIQUE_INDIVIDUAL_COURSE_IDS.map((courseId) => [courseId, 28])),
     };
     const expectedSlotCount = allowedSlotCounts[body.course_id];
     if (!expectedSlotCount
@@ -39,12 +44,17 @@ Deno.serve(async (request) => {
       || !body.slot_ids.every((slotId: unknown) => typeof slotId === 'string' && uuidPattern.test(slotId))) {
       return jsonResponse({ error: 'Les horaires choisis sont invalides.' }, 400);
     }
+    const isBureautique = BUREAUTIQUE_INDIVIDUAL_COURSE_IDS.includes(body.course_id);
+    if (isBureautique && !Object.hasOwn(BUREAUTIQUE_SCHEDULE_FORMATS, body.schedule_format)) {
+      return jsonResponse({ error: 'Le format de 14 heures est invalide.' }, 400);
+    }
 
     const supabaseUser = createClient(supabaseUrl, requiredEnv('SUPABASE_ANON_KEY'), {
       auth: { persistSession: false, autoRefreshToken: false },
       global: { headers: { Authorization: authorization } },
     });
-    const { data, error } = await supabaseUser.rpc('create_course_booking_request', {
+    const { data, error } = await supabaseUser.rpc(
+      isBureautique ? 'create_bureautique_booking_request' : 'create_course_booking_request', {
       p_course_id: body.course_id,
       p_delivery_mode: body.delivery_mode,
       p_schedule_format: body.schedule_format,
@@ -55,6 +65,7 @@ Deno.serve(async (request) => {
 
     if (error) {
       if (error.code === '42501') return jsonResponse({ error: error.message }, 403);
+      if (error.code === '23P01') return jsonResponse({ error: 'Un autre créneau chevauchant est déjà réservé.' }, 409);
       if (error.code === '23505') return jsonResponse({ error: error.message }, 409);
       throw error;
     }

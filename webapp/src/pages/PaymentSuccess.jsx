@@ -5,14 +5,14 @@ import SEO from '../components/SEO';
 import { useAuth } from '../contexts/useAuth';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
-import { EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
-import ExcelPurchaseConfirmation from '../components/ExcelPurchaseConfirmation';
+import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import BureautiquePurchaseConfirmation from '../components/BureautiquePurchaseConfirmation';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const offerId = searchParams.get('course');
-  if (Object.hasOwn(EXCEL_PURCHASES, offerId)) {
-    return <ExcelPurchaseConfirmation key={offerId} offer={EXCEL_PURCHASES[offerId]} />;
+  if (Object.hasOwn(BUREAUTIQUE_PURCHASES, offerId)) {
+    return <BureautiquePurchaseConfirmation key={offerId} offer={BUREAUTIQUE_PURCHASES[offerId]} />;
   }
   return <ExistingCoursePaymentSuccess />;
 }

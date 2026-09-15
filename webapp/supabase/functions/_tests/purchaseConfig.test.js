@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import {
   ACCESS_ACTIVATION_POLICIES,
   ACCESS_START_CHOICES,
+  ADMIN_GIFT_COURSES,
   AI_ACT_PURCHASE,
   CONSENT_TYPES,
   COURSE_PURCHASES,
   EXCEL_PURCHASES,
+  OFFICE_PURCHASES,
   GENERATIVE_AI_PURCHASE,
   getCommercialRoute,
   IN_PERSON_TRAVEL_FEE,
@@ -73,16 +75,30 @@ test('les trois offres publiques conservent le paiement direct et une configurat
   }
 });
 
-test('les six offres Excel suivent le modèle en ligne et accompagnement sans désactiver les offres IA', () => {
-  assert.equal(Object.keys(COURSE_PURCHASES).length, 9);
+test('les douze offres bureautiques suivent le modèle en ligne et accompagnement sans désactiver les offres IA', () => {
+  assert.equal(Object.keys(COURSE_PURCHASES).length, 15);
   assert.equal(Object.keys(EXCEL_PURCHASES).length, 6);
-  for (const purchase of Object.values(EXCEL_PURCHASES)) {
+  assert.equal(Object.keys(OFFICE_PURCHASES).length, 6);
+  for (const purchase of [...Object.values(EXCEL_PURCHASES), ...Object.values(OFFICE_PURCHASES)]) {
     assert.equal(purchase.checkoutEnabled, true);
     assert.equal(purchase.requiresLmsAccess, true);
     assert.equal(purchase.components.digitalContent, true);
     const route = getCommercialRoute(purchase, personalContext());
     assert.equal(route.directCheckoutEnabled, true);
     assert.equal(validateCommercialCheckoutRequest(purchase, personalContext(), validConsentPayload(purchase, route)), null);
+  }
+});
+
+test('le registre cadeau reprend les trois formations IA et les douze offres bureautiques exactes', () => {
+  assert.equal(Object.keys(ADMIN_GIFT_COURSES).length, 15);
+  assert.deepEqual(
+    Object.keys(ADMIN_GIFT_COURSES).filter((courseId) => (
+      Object.hasOwn(EXCEL_PURCHASES, courseId) || Object.hasOwn(OFFICE_PURCHASES, courseId)
+    )),
+    [...Object.keys(EXCEL_PURCHASES), ...Object.keys(OFFICE_PURCHASES)],
+  );
+  for (const forbiddenId of ['word-initiation', 'excel-initiation-intra', 'powerpoint-initiation-intra']) {
+    assert.equal(Object.hasOwn(ADMIN_GIFT_COURSES, forbiddenId), false);
   }
 });
 

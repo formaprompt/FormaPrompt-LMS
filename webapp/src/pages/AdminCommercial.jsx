@@ -12,6 +12,7 @@ import {
   REQUEST_STATUS_LABELS,
   REQUEST_TYPE_LABELS,
 } from '../lib/commercialAdministration';
+import { learnerRecordPath } from '../lib/adminLearnerRecord';
 import './AdminCommercial.css';
 
 function qualificationFrom(request) {
@@ -70,6 +71,7 @@ export default function AdminCommercial() {
   const [followUps, setFollowUps] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [profiles, setProfiles] = useState([]);
+  const [trainingEnrollments, setTrainingEnrollments] = useState([]);
   const [selectedId, setSelectedId] = useState('');
   const selectedIdRef = useRef('');
   const [search, setSearch] = useState('');
@@ -93,12 +95,13 @@ export default function AdminCommercial() {
       supabase.from('commercial_follow_ups').select('*').order('scheduled_for', { ascending: false }),
       supabase.from('purchases').select('id,user_id,course_id,payment_status,purchased_at').eq('payment_status', 'paid').order('purchased_at', { ascending: false }),
       supabase.from('profiles').select('id,email,role').eq('role', 'user'),
+      supabase.from('training_enrollments').select('id,user_id,commercial_request_id'),
     ]);
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) setFeedback({ type: 'error', message: 'Le module commercial ne peut pas être chargé. Appliquez la migration Sprint 3 localement.' });
     setRequests(results[0].data || []); setQuotes(results[1].data || []);
     setHistory(results[2].data || []); setCommunications(results[3].data || []);
-    setFollowUps(results[4].data || []); setPurchases(results[5].data || []); setProfiles(results[6].data || []);
+    setFollowUps(results[4].data || []); setPurchases(results[5].data || []); setProfiles(results[6].data || []); setTrainingEnrollments(results[7].data || []);
     const nextSelectedId = selectedIdRef.current || results[0].data?.[0]?.id || '';
     selectedIdRef.current = nextSelectedId;
     setSelectedId(nextSelectedId);
@@ -125,6 +128,7 @@ export default function AdminCommercial() {
   const selectedCommunications = communications.filter((item) => item.contact_request_id === selectedId);
   const selectedFollowUps = followUps.filter((item) => item.contact_request_id === selectedId);
   const acceptedQuote = selectedQuotes.find((quote) => quote.status === 'accepted');
+  const selectedEnrollment = trainingEnrollments.find((item) => item.id === selected?.converted_enrollment_id || item.commercial_request_id === selected?.id);
   const matchingPurchases = purchases.filter((purchase) => {
     const profile = profiles.find((item) => item.id === purchase.user_id);
     return profile?.email?.toLowerCase() === selected?.email?.toLowerCase()
@@ -204,7 +208,7 @@ export default function AdminCommercial() {
         </aside>
         <section className="admin-commercial__detail">
           {!selected ? <p>Sélectionnez une demande.</p> : <>
-            <header className="admin-commercial__request-header"><div><h2>{selected.name}</h2><p>{selected.email} · {REQUEST_TYPE_LABELS[selected.request_type]}</p></div><span className={`admin-commercial__badge is-${selected.status}`}>{REQUEST_STATUS_LABELS[selected.status]}</span></header>
+            <header className="admin-commercial__request-header"><div><h2>{selectedEnrollment?.user_id ? <Link to={learnerRecordPath(selectedEnrollment.user_id)}>{selected.name}</Link> : selected.name}</h2><p>{selected.email} · {REQUEST_TYPE_LABELS[selected.request_type]}</p>{!selectedEnrollment?.user_id && <small>Demande non reliée à un compte apprenant par identifiant exact.</small>}</div><span className={`admin-commercial__badge is-${selected.status}`}>{REQUEST_STATUS_LABELS[selected.status]}</span></header>
             <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small></article>
 
             <details open><summary>Qualification et notes</summary>

@@ -6,8 +6,8 @@ export default function FormationOF() {
   return (
     <>
       <SEO
-        title="Formation IA pour Formateurs (RS6891) – FormaPrompt"
-        description="Certification RS6891 pour formateurs. Apprenez à produire et réviser des contenus pédagogiques avec l'IA."
+        title="Formation IA pour formateurs et équipes pédagogiques | FormaPrompt"
+        description="Formation IA générative de 21 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA."
         url={`${SITE_CONFIG.baseUrl}/formation-organismes`}
         image="https://www.formaprompt.com/assets/ia-formateur.jpg"
       />
@@ -43,7 +43,7 @@ export default function FormationOF() {
         </div>
 
         <h3 className="mb-2">Objectifs de la formation</h3>
-        <p className="mb-4">Cette formation certifiante permet aux formateurs et ingénieurs pédagogiques d’utiliser l’Intelligence Artificielle Générative (IAG) de manière professionnelle et éthique.</p>
+        <p className="mb-4">Cette formation certifiante permet aux formateurs et ingénieurs pédagogiques d’utiliser l’Intelligence Artificielle Générative (IAG) de manière professionnelle et éthique. Pour approfondir la structuration des demandes, découvrez aussi la <Link to="/formation-prompt-engineering">formation Prompt Engineering – Niveau 1</Link>.</p>
 
         <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', textAlign: 'left' }}>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>

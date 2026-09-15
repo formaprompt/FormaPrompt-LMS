@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createPromotion, formatPromotionDiscount, listPromotions, normalizePromotionCode,
-  parseEurosToCents, promotionDraftToRpc, promotionStatus, setPromotionActive,
+  parseEurosToCents, PROMOTION_TARGET_OPTIONS, promotionDraftToRpc, promotionStatus, setPromotionActive,
   updatePromotion, validatePromotionDraft,
 } from './promotionAdministration.js';
+import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 
 function validDraft(overrides = {}) {
   return {
@@ -50,6 +51,19 @@ test('valide global, multi-cible et identifiants produit stables', () => {
     { target_type: 'all', target_key: 'all' },
     { target_type: 'course', target_key: 'formation-ia' },
   ] })).targets);
+});
+
+test('propose les douze offres bureautiques avec niveau et modalité explicites', () => {
+  const bureautiqueTargets = PROMOTION_TARGET_OPTIONS.filter(({ target_key: targetKey }) => (
+    Object.hasOwn(BUREAUTIQUE_PURCHASES, targetKey)
+  ));
+  assert.equal(bureautiqueTargets.length, 12);
+  assert.deepEqual(bureautiqueTargets.map(({ target_key: targetKey }) => targetKey), Object.keys(BUREAUTIQUE_PURCHASES));
+  for (const target of bureautiqueTargets) {
+    assert.match(target.label, /Excel|Word|PowerPoint/);
+    assert.match(target.label, /Inter-entreprises|Individuel/);
+  }
+  assert.equal(PROMOTION_TARGET_OPTIONS.some(({ target_key: targetKey }) => targetKey.endsWith('-intra')), false);
 });
 
 test('prépare les paramètres autoritatifs du RPC et convertit les montants en cents', () => {

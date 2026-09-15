@@ -8,7 +8,8 @@ import DiagnosticDashboardSection from '../components/DiagnosticDashboardSection
 import LearningPathAccessCard from '../components/LearningPathAccessCard';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
-import { EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { BUREAUTIQUE_PURCHASES, EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { OFFICE_SUPPORTS, bureautiqueResourceRoute } from '../lib/officeAccessRoutes';
 import { DEMO_LEARNING_PATH_SLUG, learningPathCatalog } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
 import { calculateCourseProgress } from '../lib/courseProgress';
@@ -24,7 +25,16 @@ const courseNames = {
   'formation-ia': 'Formation IA Générative',
   'formation-ia-act': 'IA : acculturation et préparation à la conformité AI Act',
   'formation-prompt-level-1': 'Formation Prompt Engineering – Niveau 1',
+  'word-initiation': 'Word Initiation',
+  'word-perfectionnement': 'Word Perfectionnement',
+  'powerpoint-initiation': 'PowerPoint Initiation',
 };
+
+function learnerCoursePath(courseId) {
+  const bureautiquePath = bureautiqueResourceRoute(courseId);
+  if (bureautiquePath) return bureautiquePath;
+  return `/course/${courseId}`;
+}
 
 const bookingStatusLabels = {
   pending_distance: 'Distance à vérifier',
@@ -322,6 +332,7 @@ export default function Dashboard() {
               const course = BOOKING_COURSES[access.course_id];
               const currentBooking = bookings.find((item) => item.course_id === access.course_id);
               const hasActiveBooking = currentBooking && !['cancelled', 'rejected'].includes(currentBooking.status);
+              const isCohortCourse = course.bookingKind === 'cohort';
               return (
                 <section
                   key={`booking-${access.course_id}`}
@@ -334,15 +345,21 @@ export default function Dashboard() {
                   <div className="booking-next-step__content">
                     <p className="booking-next-step__course">{course.title}</p>
                     <p className="booking-next-step__eyebrow">
-                      {hasActiveBooking ? 'Réservation enregistrée' : 'Étape suivante'}
+                      {hasActiveBooking ? 'Réservation enregistrée' : isCohortCourse ? 'Session inter' : 'Étape suivante'}
                     </p>
                     <h3>
-                      {hasActiveBooking ? 'Vos heures avec le formateur sont planifiées' : `Réservez vos ${course.guidedHoursLabel} avec le formateur`}
+                      {hasActiveBooking
+                        ? 'Vos heures avec le formateur sont planifiées'
+                        : isCohortCourse
+                          ? 'Choisissez ou consultez votre session partagée'
+                          : `Réservez vos ${course.guidedHoursLabel} avec le formateur`}
                     </h3>
                     <p>
                       {hasActiveBooking
                         ? `État actuel : ${bookingStatusLabels[currentBooking.status] || currentBooking.status}.`
-                        : `Votre accès à « ${course.shortTitle} » est actif. Choisissez maintenant votre modalité et vos horaires.`}
+                        : isCohortCourse
+                          ? `Votre accès à « ${course.shortTitle} » est actif. Consultez les prochaines dates inter ou votre inscription.`
+                          : `Votre accès à « ${course.shortTitle} » est actif. Choisissez maintenant votre modalité et vos horaires.`}
                     </p>
                     {bookingLoadError && (
                       <p className="booking-next-step__warning" role="status">
@@ -351,7 +368,7 @@ export default function Dashboard() {
                     )}
                   </div>
                   <Link to={getBookingUrl(access.course_id)} className="btn booking-next-step__action">
-                    {hasActiveBooking ? 'Voir mes séances' : 'Choisir mes horaires'}
+                    {hasActiveBooking ? 'Voir mes séances' : isCohortCourse ? 'Voir les sessions inter' : 'Choisir mes horaires'}
                   </Link>
                 </section>
               );
@@ -415,6 +432,8 @@ export default function Dashboard() {
             <div className="learner-course-grid">
               {activeCourseAccesses.map((access) => {
                 const excelOffer = EXCEL_PURCHASES[access.course_id];
+                const bureautiqueOffer = BUREAUTIQUE_PURCHASES[access.course_id];
+                const officeSupport = OFFICE_SUPPORTS[access.course_id];
                 const purchasedCourse = courseCatalog[access.course_id];
                 const progress = calculateCourseProgress(
                   purchasedCourse?.exercises,
@@ -424,13 +443,17 @@ export default function Dashboard() {
 
                 return (
                   <article key={access.id} className="learner-course-card">
-                    <h3>{excelOffer?.label || courseNames[access.course_id] || access.course_id}</h3>
-                    {progressAvailable && !excelOffer && (
+                    <h3>{excelOffer?.label || officeSupport?.label || courseNames[access.course_id] || access.course_id}</h3>
+                    {progressAvailable && !excelOffer && !officeSupport && (
                       <CourseProgress progress={progress} compact headingLevel={4} />
                     )}
-                    {excelOffer && <p>Supports en ligne et réservation des séances Excel en préparation.</p>}
-                    <Link to={excelOffer ? `/paiement-reussi?course=${access.course_id}` : `/course/${access.course_id}`} className="btn btn-primary learner-course-card__action">
-                      {excelOffer ? 'Consulter mon inscription Excel' : '▶ Voir la formation'}
+                    {excelOffer && <p>Vos supports protégés sont disponibles. La réservation se gère dans l’étape affichée plus haut.</p>}
+                    {officeSupport && <p>Vos exercices et fichiers de travail sont disponibles dans un pack protégé.</p>}
+                    <Link
+                      to={learnerCoursePath(access.course_id)}
+                      className="btn btn-primary learner-course-card__action"
+                    >
+                      {bureautiqueOffer?.accessActionLabel || (officeSupport ? 'Télécharger mes supports' : '▶ Voir la formation')}
                     </Link>
                   </article>
                 );

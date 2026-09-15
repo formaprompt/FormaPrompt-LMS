@@ -12,8 +12,13 @@ const CookieConsent = lazy(() => import("react-cookie-consent"));
 const FormationIA = lazy(() => import("./pages/FormationIA"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
+const FormationAgentsIA = lazy(() => import("./pages/FormationAgentsIA"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationExcel = lazy(() => import("./pages/FormationExcel"));
+const FormationWord = lazy(() => import("./pages/FormationWord"));
+const FormationPowerPoint = lazy(() => import("./pages/FormationPowerPoint"));
+const ExcelInitiationResources = lazy(() => import("./pages/ExcelInitiationResources"));
+const OfficeResources = lazy(() => import("./pages/OfficeResources"));
 const FormationOF = lazy(() => import("./pages/FormationOF"));
 const DiagnosticIA = lazy(() => import("./pages/DiagnosticIA"));
 const DiagnosticPaymentConfirmation = lazy(() => import("./pages/DiagnosticPaymentConfirmation"));
@@ -52,6 +57,7 @@ const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
 const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
 const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
+const AdminLearnerRecord = lazy(() => import("./pages/AdminLearnerRecord"));
 const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
 const AdminPrivacyRequests = lazy(() => import("./pages/AdminPrivacyRequests"));
 const AdminCommercial = lazy(() => import("./pages/AdminCommercial"));
@@ -93,8 +99,14 @@ function App() {
             <Route path="formation-ia-generative" element={<FormationIA />} />
             <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
+            <Route path="formation-agents-ia-workflows" element={<FormationAgentsIA />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-excel" element={<FormationExcel />} />
+            <Route path="formation-word" element={<FormationWord />} />
+            <Route path="formation-powerpoint" element={<FormationPowerPoint />} />
+            <Route path="course/excel-initiation-supports/:courseId" element={<RequireAuth><ExcelInitiationResources /></RequireAuth>} />
+            <Route path="course/excel-supports/:courseId" element={<RequireAuth><ExcelInitiationResources /></RequireAuth>} />
+            <Route path="course/office-supports/:courseId" element={<RequireAuth><OfficeResources /></RequireAuth>} />
             <Route path="formation-organismes" element={<FormationOF />} />
             <Route path="diagnostic-ia" element={<DiagnosticIA />} />
             <Route path="diagnostic-ia/confirmation" element={<DiagnosticPaymentConfirmation />} />
@@ -126,6 +138,7 @@ function App() {
             <Route path="admin/pedagogique" element={<AdminShell><AdminDashboard /></AdminShell>} />
             <Route path="admin/emargements" element={<AdminShell><AttendanceSheets /></AdminShell>} />
             <Route path="admin/dossiers" element={<RequireAuth><AdminShell><AdminEnrollments /></AdminShell></RequireAuth>} />
+            <Route path="admin/apprenants/:userId" element={<RequireAuth><AdminShell><AdminLearnerRecord /></AdminShell></RequireAuth>} />
             <Route path="admin/acces-incidents" element={<RequireAuth><AdminShell><AdminAccessIncidents /></AdminShell></RequireAuth>} />
             <Route path="admin/demandes-rgpd" element={<RequireAuth><AdminShell><AdminPrivacyRequests /></AdminShell></RequireAuth>} />
             <Route path="admin/commercial" element={<RequireAuth><AdminShell><AdminCommercial /></AdminShell></RequireAuth>} />

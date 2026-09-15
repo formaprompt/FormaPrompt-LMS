@@ -1,3 +1,5 @@
+import { BUREAUTIQUE_BOOKING_COURSES } from '../../supabase/functions/_shared/bureautiqueBooking.js'
+
 export const BOOKING_COURSES = {
   'formation-ia': {
     id: 'formation-ia',
@@ -84,6 +86,7 @@ export const BOOKING_COURSES = {
       },
     },
   },
+  ...BUREAUTIQUE_BOOKING_COURSES,
 }
 
 export const DEFAULT_BOOKING_COURSE_ID = 'formation-ia-act'

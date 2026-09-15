@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarClock, CheckCircle, MapPin, Monitor, RefreshCw } from 'lucide-react'
 import SEO from '../components/SEO'
+import CourseCohortPicker from '../components/CourseCohortPicker'
 import SignaturePad from '../components/SignaturePad'
 import { useAuth } from '../contexts/useAuth'
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog'
@@ -9,11 +10,19 @@ import { supabase } from '../lib/supabaseClient'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import {
   createBookingCandidates,
+  createFlexibleSplitDayCandidates,
   createSplitDayBookingCandidates,
   createVariableSessionBookingCandidates,
   flattenSelectedSlotIds,
   groupBookedSessions,
+  validateBureautiqueCandidateSelection,
 } from '../lib/courseBookingSlots'
+import {
+  cancelCourseCohortEnrollment,
+  fetchAvailableCourseCohorts,
+  fetchMyCourseCohortEnrollment,
+  joinCourseCohort,
+} from '../lib/courseCohorts'
 import './CourseBooking.css'
 
 const STATUS_LABELS = {
@@ -70,6 +79,9 @@ export default function CourseBooking() {
   const [hasAccess, setHasAccess] = useState(false)
   const [slots, setSlots] = useState([])
   const [booking, setBooking] = useState(null)
+  const [cohorts, setCohorts] = useState([])
+  const [cohortEnrollment, setCohortEnrollment] = useState(null)
+  const [joiningCohortId, setJoiningCohortId] = useState('')
   const [deliveryMode, setDeliveryMode] = useState('remote')
   const [scheduleFormat, setScheduleFormat] = useState(course.defaultFormat)
   const [city, setCity] = useState('')
@@ -86,8 +98,40 @@ export default function CourseBooking() {
     setLoading(true)
     setFeedback('')
 
-    const [accessResult, bookingResult, slotsResult] = await Promise.all([
-      fetchActiveCourseAccess(user.id, courseId),
+    const accessResult = await fetchActiveCourseAccess(user.id, courseId)
+    setHasAccess(Boolean(accessResult.data))
+    if (accessResult.error || !accessResult.data) {
+      if (accessResult.error) {
+        console.error('Chargement du droit de réservation impossible :', accessResult.error)
+        setFeedback('Impossible de vérifier votre accès pour le moment.')
+      }
+      setBooking(null)
+      setCohorts([])
+      setCohortEnrollment(null)
+      setSlots([])
+      setLoading(false)
+      return
+    }
+
+    if (course.bookingKind === 'cohort') {
+      try {
+        const [loadedCohorts, loadedEnrollment] = await Promise.all([
+          fetchAvailableCourseCohorts(supabase, courseId),
+          fetchMyCourseCohortEnrollment(supabase, courseId),
+        ])
+        setCohorts(loadedCohorts)
+        setCohortEnrollment(loadedEnrollment)
+        setBooking(null)
+        setSlots([])
+      } catch (error) {
+        console.error('Chargement des cohortes impossible :', error)
+        setFeedback(error?.message || 'Impossible de charger les sessions inter pour le moment.')
+      }
+      setLoading(false)
+      return
+    }
+
+    const [bookingResult, slotsResult] = await Promise.all([
       supabase
         .from('course_booking_requests')
         .select(`
@@ -112,20 +156,20 @@ export default function CourseBooking() {
         .order('starts_at'),
     ])
 
-    if (accessResult.error || bookingResult.error || slotsResult.error) {
+    if (bookingResult.error || slotsResult.error) {
       console.error('Chargement des réservations impossible :', {
-        access: accessResult.error,
         booking: bookingResult.error,
         slots: slotsResult.error,
       })
       setFeedback('Impossible de charger les disponibilités pour le moment.')
     }
 
-    setHasAccess(Boolean(accessResult.data))
     setBooking(bookingResult.data || null)
+    setCohorts([])
+    setCohortEnrollment(null)
     setSlots(slotsResult.data || [])
     setLoading(false)
-  }, [user, courseId])
+  }, [user, courseId, course.bookingKind])
 
   useEffect(() => {
     if (!user) {
@@ -150,7 +194,12 @@ export default function CourseBooking() {
   const currentScheduleFormat = course.formats[scheduleFormat] ? scheduleFormat : course.defaultFormat
   const selectedFormat = course.formats[currentScheduleFormat]
   const compatibleCandidates = useMemo(() => (
-    selectedFormat.type === 'split_day'
+    selectedFormat.type === 'flexible_split_day'
+      ? createFlexibleSplitDayCandidates(slots, {
+        deliveryMode,
+        segmentDuration: selectedFormat.segmentDuration,
+      })
+      : selectedFormat.type === 'split_day'
       ? createSplitDayBookingCandidates(slots, {
         deliveryMode,
         morningDuration: selectedFormat.segmentDurations[0],
@@ -170,7 +219,9 @@ export default function CourseBooking() {
     return compatibleCandidates.filter((candidate) => selectedIds.has(candidate.id))
   }, [compatibleCandidates, selectedCandidateIds])
 
-  const hasCompleteSelection = selectedCandidateIds.length === selectedFormat.sessionCount
+  const hasCompleteSelection = course.bookingKind === 'individual'
+    ? validateBureautiqueCandidateSelection(compatibleCandidates, selectedCandidateIds, currentScheduleFormat)
+    : selectedCandidateIds.length === selectedFormat.sessionCount
   const bookingActionLabel = submitting
     ? 'Enregistrement…'
     : deliveryMode === 'remote'
@@ -221,7 +272,7 @@ export default function CourseBooking() {
 
   const submitBooking = async (event) => {
     event.preventDefault()
-    if (selectedCandidateIds.length !== selectedFormat.sessionCount) {
+    if (!hasCompleteSelection) {
       setFeedback(`Sélectionnez ${selectedFormat.sessionCount} proposition${selectedFormat.sessionCount > 1 ? 's' : ''}.`)
       return
     }
@@ -268,6 +319,31 @@ export default function CourseBooking() {
       await loadData()
     }
     setSubmitting(false)
+  }
+
+  const joinCohort = async (cohortId) => {
+    setJoiningCohortId(cohortId)
+    setFeedback('')
+    try {
+      await joinCourseCohort(supabase, cohortId)
+      await loadData()
+    } finally {
+      setJoiningCohortId('')
+    }
+  }
+
+  const cancelCohortEnrollment = async () => {
+    if (!cohortEnrollment?.id) return
+    setSubmitting(true)
+    setFeedback('')
+    try {
+      await cancelCourseCohortEnrollment(supabase, cohortEnrollment.id)
+      await loadData()
+    } catch (error) {
+      setFeedback(error?.message || "L'inscription ne peut pas être annulée pour le moment.")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const startTravelPayment = async () => {
@@ -335,6 +411,41 @@ export default function CourseBooking() {
             <p>La réservation est disponible après le paiement ou l’attribution de la formation par FormaPrompt.</p>
             <Link to={course.landingPath} className="btn btn-primary">Voir la formation</Link>
           </section>
+        ) : course.bookingKind === 'cohort' ? (
+          cohortEnrollment ? (
+            <section className="booking-panel booking-summary" aria-live="polite">
+              <CheckCircle size={36} aria-hidden="true" />
+              <div>
+                <p className="booking-kicker">Inscription inter enregistrée</p>
+                <h2>{cohortEnrollment.delivery_mode === 'remote' ? 'Classe virtuelle' : 'Présentiel'} – {course.formats[cohortEnrollment.schedule_format]?.label}</h2>
+                <div className="booking-session-list">
+                  {(cohortEnrollment.sessions || []).map((session) => (
+                    <article key={session.id}>
+                      <strong>{formatSlot(session)}</strong>
+                      {cohortEnrollment.delivery_mode === 'remote' && session.meeting_url ? (
+                        <a className="meeting-access-link" href={session.meeting_url} target="_blank" rel="noreferrer">Rejoindre la visioconférence</a>
+                      ) : cohortEnrollment.delivery_mode === 'remote' ? (
+                        <span className="meeting-link-pending">Le lien de visioconférence sera ajouté ici par le formateur.</span>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+                {feedback && <p role="alert" className="booking-error">{feedback}</p>}
+                <button type="button" className="btn" onClick={cancelCohortEnrollment} disabled={submitting}>
+                  {submitting ? 'Annulation…' : 'Annuler mon inscription à cette session'}
+                </button>
+                <button type="button" className="btn booking-refresh" onClick={loadData}><RefreshCw size={17} aria-hidden="true" /> Actualiser</button>
+              </div>
+            </section>
+          ) : (
+            <CourseCohortPicker
+              courseId={courseId}
+              cohorts={cohorts}
+              error={feedback}
+              joiningCohortId={joiningCohortId}
+              onJoin={joinCohort}
+            />
+          )
         ) : booking ? (
           <section className="booking-panel booking-summary" aria-live="polite">
             <CheckCircle size={36} aria-hidden="true" />

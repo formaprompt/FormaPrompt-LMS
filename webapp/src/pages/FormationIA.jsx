@@ -134,8 +134,8 @@ export default function FormationIA() {
   return (
     <>
       <SEO
-        title="Formation IA générative de 10 heures | FormaPrompt"
-        description="Formation professionnelle de 10 heures pour comprendre l'IA générative, développer des usages concrets, vérifier les résultats et protéger les données."
+        title="Formation IA à Calais et à distance · 10 h | FormaPrompt"
+        description="Formation IA générative de 10 heures avec Thierry FREZARD : usages professionnels, prompts, vérification et confidentialité. À Calais ou en classe virtuelle."
         url={`${SITE_CONFIG.baseUrl}/formation-ia-generative`}
         image={`${SITE_CONFIG.baseUrl}/assets/acculturation-ia.png`}
       />
@@ -144,18 +144,19 @@ export default function FormationIA() {
         <section className="generative-ai-hero">
           <div className="container generative-ai-hero-grid">
             <div>
-              <p className="generative-ai-kicker">Formation professionnelle · Acculturation et pratique</p>
+              <p className="generative-ai-kicker">Formation professionnelle · Calais et à distance</p>
               <h1>IA générative : comprendre, pratiquer et sécuriser ses usages</h1>
               <p className="generative-ai-lead">
-                Une formation accompagnée pour intégrer l&apos;IA dans son activité avec méthode, recul critique et
-                validation humaine, à partir de situations professionnelles concrètes.
+                Avec Thierry FREZARD, apprenez à rédiger un courriel, synthétiser un document et préparer un support
+                avec l&apos;IA générative. Dix heures accompagnées pour structurer vos demandes, vérifier les réponses
+                et protéger vos informations, en présentiel autour de Calais ou en classe virtuelle.
               </p>
               <CourseSummary
                 id="formation-ia-summary"
                 items={[
                   { label: 'Durée', value: '10 heures accompagnées' },
                   { label: 'Public', value: 'Professionnels, formateurs et personnes en reconversion' },
-                  { label: 'Modalités', value: 'Présentiel ou classe virtuelle' },
+                  { label: 'Modalités', value: 'Présentiel autour de Calais ou classe virtuelle' },
                   { label: 'Objectif', value: 'Intégrer l’IA dans son activité avec méthode et validation humaine' },
                   { label: 'Tarif individuel', value: '497 € par apprenant' },
                   { label: 'Groupe ou entreprise', value: 'Programme et tarif adaptés sur devis' },
@@ -190,6 +191,10 @@ export default function FormationIA() {
               <p>
                 Les exemples et exercices sont adaptés au niveau initial, au métier et aux situations rencontrées
                 par chaque participant.
+              </p>
+              <p>
+                Pour approfondir la construction de demandes précises et réutilisables, consultez la{' '}
+                <Link to="/formation-prompt-engineering">formation Prompt Engineering – Niveau 1</Link>.
               </p>
             </div>
           </div>
@@ -321,6 +326,24 @@ export default function FormationIA() {
               <Link to="/contact">Échanger au sujet d&apos;un besoin particulier</Link>
             </div>
           </article>
+        </section>
+
+        <section className="container generative-ai-section" aria-labelledby="formation-ia-trainer-title">
+          <div className="generative-ai-introduction">
+            <div>
+              <p className="generative-ai-kicker">Votre formateur</p>
+              <h2 id="formation-ia-trainer-title">Thierry FREZARD, fondateur de FormaPrompt</h2>
+            </div>
+            <div>
+              <p>
+                Formateur Professionnel d&apos;Adultes, Thierry FREZARD intervient en bureautique, outils numériques,
+                prompt engineering et IA générative. Les exercices partent de situations professionnelles et
+                intègrent la vérification des résultats avant leur utilisation.
+              </p>
+              <p><Link to="/a-propos">Consulter son parcours et ses qualifications</Link></p>
+              <p><a href={SITE_CONFIG.socialProfiles.superprof} target="_blank" rel="noreferrer">Lire les recommandations publiques sur son accompagnement</a></p>
+            </div>
+          </div>
         </section>
 
         <section id="inscription" className="generative-ai-pricing-section">

@@ -16,6 +16,15 @@ vi.mock('../components/CommercialCheckout', () => ({
 
 afterEach(cleanup)
 
+it('situe la formation IA et relie le programme au formateur sans changer le tarif', () => {
+  render(<MemoryRouter><FormationIA /></MemoryRouter>)
+  const summary = screen.getByRole('complementary', { name: 'En bref' })
+  expect(within(summary).getByText('Présentiel autour de Calais ou classe virtuelle')).toBeInTheDocument()
+  expect(within(summary).getByText('497 € par apprenant')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Consulter son parcours et ses qualifications' })).toHaveAttribute('href', '/a-propos')
+  expect(screen.getByText(/rayon maximal de 100 km autour de Calais/)).toBeInTheDocument()
+})
+
 const formations = [
   {
     Page: FormationIA,

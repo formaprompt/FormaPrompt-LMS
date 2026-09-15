@@ -99,8 +99,8 @@ export default function FormationAIAct() {
   return (
     <>
       <SEO
-        title="Formation AI Act : acculturation et préparation à la conformité – FormaPrompt"
-        description="Formation estimée à 4 h 45 pour comprendre l'AI Act, acculturer les équipes et préparer un premier plan d'action avant l'application générale du 2 août 2026."
+        title="Formation AI Act : acculturation IA pour les équipes | FormaPrompt"
+        description="Formation AI Act : comprendre le cadre européen, repérer les usages à encadrer et préparer un premier plan d’action adapté à l’organisation."
         url={`${SITE_CONFIG.baseUrl}/formation-ia-act-conformite`}
         image="https://formaprompt.com/assets/IA%20ACT%20Blog.png"
       />
@@ -157,6 +157,10 @@ export default function FormationAIAct() {
               Cette formation d'acculturation donne des repères opérationnels aux structures qui utilisent ou
               envisagent d'utiliser des systèmes d'IA. Elle aide à poser les bonnes questions et à identifier
               les sujets qui nécessitent une expertise complémentaire.
+            </p>
+            <p>
+              Pour développer des usages professionnels à encadrer, découvrez la{' '}
+              <Link to="/formation-ia-generative">formation IA générative</Link>.
             </p>
           </div>
 

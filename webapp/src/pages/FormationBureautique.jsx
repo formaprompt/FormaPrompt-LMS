@@ -47,10 +47,12 @@ export default function FormationBureautique() {
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
             <h4 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Word</h4>
             <p style={{ fontSize: '0.95rem' }}>Mise en page, styles, sommaire automatique, modèles, documents longs, publipostage et bonnes pratiques de structuration.</p>
+            <Link to="/formation-word" className="btn btn-primary" style={{ marginTop: '1rem' }}>Découvrir les formations Word</Link>
           </div>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
             <h4 style={{ color: '#f97316', marginBottom: '0.5rem' }}>PowerPoint</h4>
             <p style={{ fontSize: '0.95rem' }}>Présentations claires, hiérarchie visuelle, masques, animations utiles et supports adaptés à une prise de parole.</p>
+            <Link to="/formation-powerpoint" className="btn btn-primary" style={{ marginTop: '1rem' }}>Découvrir la formation PowerPoint</Link>
           </div>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
             <h4 style={{ color: '#0ea5e9', marginBottom: '0.5rem' }}>Outlook</h4>

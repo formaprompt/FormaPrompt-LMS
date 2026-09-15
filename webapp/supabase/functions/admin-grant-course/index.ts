@@ -1,11 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { ADMIN_GIFT_COURSES } from '../_shared/purchaseConfig.js';
 
-const ALLOWED_COURSE_IDS = new Set([
-  'formation-ia',
-  'formation-ia-act',
-  'formation-prompt-level-1',
-]);
+const ALLOWED_COURSE_IDS = new Set(Object.keys(ADMIN_GIFT_COURSES));
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -78,6 +75,17 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'Le compte apprenant est introuvable.' }, 404);
     }
 
+    const { data: existingAccess, error: existingAccessError } = await supabaseAdmin
+      .from('course_access')
+      .select('id, status, access_source, purchase_id, expires_at')
+      .eq('user_id', targetUserId)
+      .eq('course_id', courseId)
+      .maybeSingle();
+
+    if (existingAccessError) throw existingAccessError;
+    const alreadyGranted = existingAccess?.status === 'active'
+      && (!existingAccess.expires_at || new Date(existingAccess.expires_at) > new Date());
+
     const { data: grantedAccess, error: grantError } = await supabaseAuth
       .rpc('admin_grant_course_access', {
         p_target_user_id: targetUserId,
@@ -98,7 +106,7 @@ Deno.serve(async (request) => {
       courseId,
     });
 
-    return jsonResponse({ granted: true, access: grantedAccess }, 201);
+    return jsonResponse({ granted: !alreadyGranted, alreadyGranted, access: grantedAccess }, alreadyGranted ? 200 : 201);
   } catch (error) {
     console.error('admin-grant-course:', error);
     return jsonResponse({ error: "L'accès ne peut pas être attribué pour le moment." }, 500);

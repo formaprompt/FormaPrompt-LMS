@@ -2,8 +2,8 @@ import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
+  BUREAUTIQUE_PURCHASES,
   CONSENT_TYPES,
-  EXCEL_PURCHASES,
   getCommercialRoute,
   getConsentDocumentVersion,
   getPurchaseConfig,
@@ -184,15 +184,17 @@ Deno.serve(async (request) => {
     if (typeof catalogProductId !== 'string' || !catalogProductId.startsWith('prod_')) {
       throw new Error('Le produit Stripe de la formation est invalide.');
     }
-    const excelOffer = Object.hasOwn(EXCEL_PURCHASES, purchase.courseId) ? EXCEL_PURCHASES[purchase.courseId] : null;
-    if (excelOffer) {
+    const bureautiqueOffer = Object.hasOwn(BUREAUTIQUE_PURCHASES, purchase.courseId)
+      ? BUREAUTIQUE_PURCHASES[purchase.courseId]
+      : null;
+    if (bureautiqueOffer) {
       const product = await stripe.products.retrieve(catalogProductId);
-      if ('deleted' in product && product.deleted) throw new Error('Le produit Stripe Excel a été supprimé.');
-      if (price.metadata?.course_id !== purchase.courseId || price.metadata?.modality !== excelOffer.modality
+      if ('deleted' in product && product.deleted) throw new Error('Le produit Stripe bureautique a été supprimé.');
+      if (price.metadata?.course_id !== purchase.courseId || price.metadata?.modality !== bureautiqueOffer.modality
         || !product.active || product.livemode !== (stripeMode === 'live')
-        || product.metadata?.pedagogical_level !== excelOffer.pedagogicalLevel
-        || product.metadata?.duration_hours !== String(excelOffer.durationHours)) {
-        throw new Error('Le produit ou la modalité du tarif Stripe Excel ne correspond pas à l’offre choisie.');
+        || product.metadata?.pedagogical_level !== bureautiqueOffer.pedagogicalLevel
+        || product.metadata?.duration_hours !== String(bureautiqueOffer.durationHours)) {
+        throw new Error('Le produit ou la modalité du tarif Stripe bureautique ne correspond pas à l’offre choisie.');
       }
     }
 
@@ -331,7 +333,10 @@ Deno.serve(async (request) => {
       sales_context: commercialRoute.salesContext,
       access_activation_policy: commercialRoute.accessActivationPolicy,
       payment_type: 'course',
-      ...(excelOffer ? { pedagogical_level: excelOffer.pedagogicalLevel, modality: excelOffer.modality } : {}),
+      ...(bureautiqueOffer ? {
+        pedagogical_level: bureautiqueOffer.pedagogicalLevel,
+        modality: bureautiqueOffer.modality,
+      } : {}),
       ...(checkoutConfiguration.promo_redemption_id
         ? { promo_redemption_id: checkoutConfiguration.promo_redemption_id }
         : {}),
@@ -359,14 +364,18 @@ Deno.serve(async (request) => {
         automatic_tax: { enabled: false },
         invoice_creation: {
           enabled: true,
-          ...(excelOffer ? { invoice_data: {
-            description: `${excelOffer.label} — ${excelOffer.durationHours} heures`,
-            custom_fields: [{ name: 'Modalité', value: excelOffer.modalityLabel }],
-            metadata: { course_id: excelOffer.courseId, pedagogical_level: excelOffer.pedagogicalLevel, modality: excelOffer.modality },
+          ...(bureautiqueOffer ? { invoice_data: {
+            description: `${bureautiqueOffer.label} — ${bureautiqueOffer.durationHours} heures`,
+            custom_fields: [{ name: 'Modalité', value: bureautiqueOffer.modalityLabel }],
+            metadata: {
+              course_id: bureautiqueOffer.courseId,
+              pedagogical_level: bureautiqueOffer.pedagogicalLevel,
+              modality: bureautiqueOffer.modality,
+            },
           } } : {}),
         },
-        ...(excelOffer ? { custom_text: { submit: {
-          message: `${excelOffer.label} — ${excelOffer.durationHours} heures.`,
+        ...(bureautiqueOffer ? { custom_text: { submit: {
+          message: `${bureautiqueOffer.label} — ${bureautiqueOffer.durationHours} heures.`,
         } } } : {}),
         locale: 'fr',
         metadata,

@@ -18,4 +18,8 @@ it('oriente vers les formations et le diagnostic, sans ouvrir le Lab au public',
   expect(screen.getByText(/espace de pratique réservé aux apprenants/)).toBeInTheDocument();
   expect(container.querySelector('a[href*="lab.formaprompt"]')).toBeNull();
   expect(container.querySelectorAll('h1')).toHaveLength(1);
+  expect(screen.getByRole('link', { name: /Découvrir le parcours Agents IA/ })).toHaveAttribute('href', '/formation-agents-ia-workflows');
+  expect(screen.getByText('À Calais, dans le Pas-de-Calais, et à distance')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Découvrir le parcours de Thierry FREZARD' })).toHaveAttribute('href', '/a-propos');
+  expect(screen.getByRole('link', { name: 'Lire les recommandations publiques sur Superprof' })).toHaveAttribute('href', 'https://www.superprof.fr/formez-prompt-engineering-revolutionnez-facon-dinteragir-lia.html');
 });

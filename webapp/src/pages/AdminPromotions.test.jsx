@@ -66,6 +66,9 @@ describe('AdminPromotions', () => {
     await screen.findByText('Aucune promotion enregistrée.');
     await userEvent.click(screen.getByRole('button', { name: 'Créer une promotion' }));
     expect(screen.getByLabelText(/Diagnostic IA Express/)).not.toBeChecked();
+    expect(screen.getByLabelText(/Word Initiation.*Inter-entreprises/)).not.toBeChecked();
+    expect(screen.getByLabelText(/Word Perfectionnement.*Individuel/)).not.toBeChecked();
+    expect(screen.getByLabelText(/PowerPoint Initiation.*Inter-entreprises/)).not.toBeChecked();
     await userEvent.type(screen.getByLabelText('Code'), ' fixe20 ');
     await userEvent.selectOptions(screen.getByLabelText('Type de remise'), 'fixed_amount');
     await userEvent.type(screen.getByLabelText('Montant fixe (€)'), '20,00');

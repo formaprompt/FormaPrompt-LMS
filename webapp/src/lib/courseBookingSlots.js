@@ -9,6 +9,8 @@ const SESSION_GROUP_MINUTES = {
   two_5h: [300, 300],
   four_2h30: [150, 150, 150, 150],
   three_4h_4h_2h: [240, 240, 120],
+  four_half_days_3h30: [210, 210, 210, 210],
+  two_days_2x3h30: [210, 210, 210, 210],
 }
 
 function durationMinutes(slot) {
@@ -89,6 +91,36 @@ export function createSplitDayBookingCandidates(slots, {
       segments: [morning, afternoon],
     }]
   })
+}
+
+export function createFlexibleSplitDayCandidates(slots, {
+  deliveryMode,
+  segmentDuration = 210,
+}) {
+  const segments = createBookingCandidates(slots, { duration: segmentDuration, deliveryMode })
+  return segments.flatMap((first, firstIndex) => segments.slice(firstIndex + 1).flatMap((second) => {
+    const sameDay = parisDateKey(first.starts_at) === parisDateKey(second.starts_at)
+    const hasPause = new Date(second.starts_at) > new Date(first.ends_at)
+    if (!sameDay || !hasPause) return []
+    return [{
+      id: `${first.id}|${second.id}`,
+      slotIds: [...first.slotIds, ...second.slotIds],
+      starts_at: first.starts_at,
+      ends_at: second.ends_at,
+      segments: [first, second],
+    }]
+  }))
+}
+
+export function validateBureautiqueCandidateSelection(candidates, selectedCandidateIds, scheduleFormat) {
+  const selected = candidates.filter(({ id }) => selectedCandidateIds.includes(id))
+  if (scheduleFormat === 'four_half_days_3h30') {
+    return selected.length === 4 && new Set(selected.map(({ starts_at }) => parisDateKey(starts_at))).size === 4
+  }
+  if (scheduleFormat === 'two_days_2x3h30') {
+    return selected.length === 2 && new Set(selected.map(({ starts_at }) => parisDateKey(starts_at))).size === 2
+  }
+  return true
 }
 
 export function createVariableSessionBookingCandidates(slots, { deliveryMode, sessionDurations }) {

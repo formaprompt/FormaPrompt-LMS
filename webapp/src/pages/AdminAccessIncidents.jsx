@@ -14,6 +14,7 @@ import {
   COURSE_ACCESS_STATUS_LABELS,
   isCourseAccessOpen,
 } from '../lib/courseAccessLifecycle';
+import { learnerRecordPath } from '../lib/adminLearnerRecord';
 import { DISCIPLINARY_INCIDENT_STATUS_LABELS } from '../lib/disciplinaryIncidentAdministration';
 import './AdminAccessIncidents.css';
 
@@ -448,7 +449,7 @@ export default function AdminAccessIncidents() {
                 <article key={access.id} className="access-card">
                   <header>
                     <div>
-                      <h3>{learner.fullName}</h3>
+                      <h3><Link to={learnerRecordPath(access.user_id)}>{learner.fullName}</Link></h3>
                       <p className="access-learner-email">{learner.email}</p>
                       <p>{COURSE_LABELS[access.course_id] || access.course_id}</p>
                     </div>

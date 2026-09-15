@@ -67,8 +67,8 @@ export default function FormationPrompt() {
   return (
     <>
       <SEO
-        title="Formation Prompt Engineering – Niveau 1 | FormaPrompt"
-        description="Formation de 7 heures pour apprendre à concevoir, tester et améliorer des prompts professionnels. Présentiel ou classe virtuelle."
+        title="Formation Prompt Engineering 7 h à Calais ou à distance | FormaPrompt"
+        description="Formation Prompt Engineering de 7 h pour concevoir, tester et améliorer des prompts professionnels, en présentiel à Calais ou à distance."
         url={`${SITE_CONFIG.baseUrl}/formation-prompt-engineering`}
         image="https://www.formaprompt.com/assets/Formation%20prompt%20engineering.png"
       />
@@ -186,6 +186,10 @@ export default function FormationPrompt() {
                 collection de recettes figées.
               </p>
               <p>Sont également fournis : une trame de conception, une grille de vérification et les exercices corrigés.</p>
+              <p>
+                Pour situer cette méthode dans des usages plus larges, découvrez la{' '}
+                <Link to="/formation-ia-generative">formation IA générative</Link>.
+              </p>
             </div>
           </div>
         </section>
@@ -244,7 +248,7 @@ export default function FormationPrompt() {
 
         <section className="container prompt-level-two">
           <strong>Pour aller plus loin</strong>
-          <p>Un futur Niveau 2 abordera les agents, les automatisations et l’utilisation des API.</p>
+          <p>Pour choisir et construire une automatisation encadrée, découvrez la formation <Link to="/formation-agents-ia-workflows">Agents IA &amp; Workflows</Link> : 28 heures en distanciel synchrone, sur devis. Consultez ses prérequis avant de demander un devis.</p>
         </section>
       </main>
     </>

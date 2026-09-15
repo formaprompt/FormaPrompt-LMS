@@ -18,12 +18,14 @@ const homeStructuredData = {
       name: SITE_CONFIG.name,
       url: SITE_CONFIG.urls.home,
       logo: SITE_CONFIG.assets.logo,
-      description: 'Organisme de formation professionnelle en intelligence artificielle générative, prompt engineering et outils bureautiques.',
+      description: 'Formations professionnelles en IA générative, prompt engineering et bureautique à Calais et à distance, animées par Thierry FREZARD.',
       founder: {
         '@type': 'Person',
+        '@id': `${SITE_CONFIG.urls.about}#thierry-frezard`,
         name: SITE_CONFIG.responsibleName,
+        url: SITE_CONFIG.urls.about,
+        sameAs: [SUPERPROF_PROFILE_URL],
       },
-      sameAs: [SUPERPROF_PROFILE_URL],
     },
     {
       '@type': 'WebSite',
@@ -118,8 +120,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="FormaPrompt | Formations IA, prompts et bureautique"
-        description="Formations en IA générative, prompt engineering et bureautique. Découvrez les parcours FormaPrompt et le Diagnostic IA Express pour préciser vos besoins."
+        title="Formation IA à Calais et à distance | FormaPrompt"
+        description="Formations professionnelles en IA générative, prompt engineering et bureautique avec Thierry FREZARD, à Calais et à distance. Programmes, modalités et tarifs."
         url={SITE_CONFIG.urls.home}
         image={SITE_CONFIG.assets.logo}
         jsonLd={homeStructuredData}
@@ -130,9 +132,10 @@ export default function Home() {
           <div className="container hero-container">
             <div className="grid grid-cols-2" style={{alignItems: 'center', gap: '3rem'}}>
               <div className="hero-content" style={{textAlign: 'left', margin: '0', maxWidth: '100%'}}>
+                <p className="mb-2">À Calais, dans le Pas-de-Calais, et à distance</p>
                 <h1 style={{textAlign: 'left'}}>Formations en IA, Prompt Engineering et Bureautique</h1>
                 <p className="hero-subtitle" style={{textAlign: 'left'}}>
-                  FormaPrompt forme les professionnels, étudiants et personnes en reconversion aux usages concrets de l'IA générative, du prompt engineering et des outils bureautiques.
+                  Avec Thierry FREZARD, apprenez à rédiger, synthétiser et organiser votre travail avec l'IA et les outils bureautiques. Des formations pour les professionnels, les organismes de formation et les personnes en reconversion, avec des exercices adaptés à votre activité.
                 </p>
                 <div className="hero-actions" style={{justifyContent: 'flex-start'}}>
                   <a href="#formations" className="btn btn-primary">Voir les formations</a>
@@ -190,6 +193,13 @@ export default function Home() {
                 <Link to="/formation-prompt-engineering" className="link-arrow">Voir le programme Prompt Engineering &rarr;</Link>
               </div>
               {/* Offer 3 */}
+              <div className="card">
+                <Bot size={40} color="var(--color-primary)" className="mb-2" aria-hidden="true" />
+                <h3 className="card-title">Agents IA &amp; Workflows</h3>
+                <p className="mb-3">28 heures en distanciel synchrone pour choisir, construire et tester une automatisation encadrée avec CADRES. Formation sur devis.</p>
+                <Link to="/formation-agents-ia-workflows" className="link-arrow">Découvrir le parcours Agents IA &rarr;</Link>
+              </div>
+              {/* Bureautique */}
               <div className="card">
                 <Monitor size={40} color="var(--color-primary)" className="mb-2" />
                 <h3 className="card-title">Bureautique Pro</h3>
@@ -315,6 +325,23 @@ export default function Home() {
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               </div>
+            </div>
+          </div>
+        </section>
+        <section className="section section-light" aria-labelledby="home-trainer-title">
+          <div className="container">
+            <div className="card">
+              <h2 id="home-trainer-title">Un formateur identifié, des usages concrets</h2>
+              <p className="mb-3">
+                Thierry FREZARD, fondateur de FormaPrompt et titulaire du titre de Formateur Professionnel d'Adultes,
+                intervient en bureautique, outils numériques, prompt engineering et IA générative.
+                L'accompagnement associe des explications progressives, des essais et la vérification des résultats.
+              </p>
+              <p>
+                <Link to="/a-propos">Découvrir le parcours de Thierry FREZARD</Link>
+                {' · '}
+                <a href={SUPERPROF_PROFILE_URL} target="_blank" rel="noreferrer">Lire les recommandations publiques sur Superprof</a>
+              </p>
             </div>
           </div>
         </section>

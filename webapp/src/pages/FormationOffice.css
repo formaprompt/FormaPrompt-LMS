@@ -1,0 +1,64 @@
+.office-page { color: var(--color-text); }
+.office-page [id] { scroll-margin-top: 7rem; }
+.office-page h2 { font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1.2; margin-bottom: 1rem; }
+.office-page h3 { font-size: 1.3rem; line-height: 1.4; margin-bottom: 1rem; }
+.office-page p { line-height: 1.7; }
+.office-page a:focus-visible,
+.office-page summary:focus-visible { outline: 3px solid #b45309; outline-offset: 5px; border-radius: 4px; }
+.office-hero { background: linear-gradient(120deg, #1e3a5f, #1d4f91); color: #fff; padding: 1.5rem 0 3rem; }
+.office-hero h1 { color: #fff; max-width: 900px; font-size: clamp(2.1rem, 4.5vw, 3.65rem); line-height: 1.13; margin: 1rem 0 1.5rem; }
+.office-breadcrumb { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; font-size: .9rem; margin-bottom: 2.5rem; }
+.office-breadcrumb a { color: #e8f2ff; text-decoration: underline; text-underline-offset: 3px; }
+.office-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #1d4f91; margin-bottom: .7rem; }
+.office-hero .office-eyebrow { color: #c9e0ff; }
+.office-lead { max-width: 780px; font-size: 1.15rem; color: #e8f2ff; }
+.office-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin-top: 1.6rem; }
+.office-hero .course-summary { margin-top: 2.5rem; }
+.office-btn-light { color: #173b65; background: #fff; }
+.office-btn-light:hover { color: #173b65; background: #e8f2ff; }
+.office-btn-ghost { color: #fff; border: 1px solid #c9e0ff; background: transparent; }
+.office-btn-ghost:hover { color: #fff; background: #ffffff18; }
+.office-section { padding-top: 4rem; padding-bottom: 4rem; }
+.office-intro { max-width: 850px; margin-bottom: 2rem; }
+.office-programmes { display: grid; gap: 1.5rem; }
+.office-card { background: #fff; border: 1px solid #d8e3ef; border-radius: 18px; padding: 1.75rem; min-width: 0; }
+.office-duration { color: #1d4f91; font-weight: 700; font-size: .9rem; margin-bottom: .75rem; }
+.office-programme-context { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin: 1.5rem 0; }
+.office-programme-context strong { display: block; margin-bottom: .4rem; color: #0f172a; }
+.office-objective { max-width: 950px; }
+.office-programme details { border-top: 1px solid #d8e3ef; border-bottom: 1px solid #d8e3ef; margin-top: 1rem; }
+.office-programme summary { cursor: pointer; padding: 1rem .25rem; font-weight: 700; color: #1d4f91; }
+.office-programme summary:hover { background: #f4f8fc; }
+.office-sequences { padding: 0 1rem 0 1.75rem; }
+.office-sequences li { padding: .5rem 0 .8rem .3rem; }
+.office-sequences h4 { margin-bottom: .4rem; font-size: 1rem; }
+.office-outcome { margin-top: 1.25rem; }
+.office-evaluation { margin-top: 2rem; padding: 1.5rem; background: #f4f8fc; border-radius: 14px; }
+.office-note { border-left: 3px solid #1d4f91; padding: .5rem 0 .5rem 1.5rem; margin-top: 2rem; }
+.office-note p + p { margin-top: 1rem; }
+.office-tinted { background: #edf3f9; }
+.office-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.office-price { color: #1d4f91; font-size: 2.4rem; font-weight: 700; margin: .75rem 0 0; }
+.office-price-unit { font-weight: 600; margin-bottom: 1rem; }
+.office-tax { margin-top: 1rem; font-size: .9rem; }
+.office-text-link { color: #1d4f91; text-decoration: underline; text-underline-offset: 4px; font-weight: 600; }
+.office-closing p { max-width: 760px; }
+.office-enrollment { margin-top: 1.5rem; }
+.office-enrollment > p { margin-top: 1rem; }
+.office-modalities { border: 0; padding: 1rem 0; margin: 0; min-width: 0; }
+.office-modalities legend { font-weight: 600; }
+.office-modalities label { display: flex; align-items: baseline; gap: .6rem; padding: .65rem 0; cursor: pointer; }
+.office-checkout { margin: 1.5rem 0; }
+.office-intra { border-top: 1px solid #d8e3ef; margin-top: 1.5rem; padding: 1rem 0; }
+@media (max-width: 960px) {
+  .office-grid { grid-template-columns: 1fr; }
+  .office-programme-context { grid-template-columns: 1fr; gap: 1rem; }
+}
+@media (max-width: 600px) {
+  .office-page .container { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .office-section { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+  .office-breadcrumb { margin-bottom: 2rem; }
+  .office-card { padding: 1.25rem; }
+  .office-actions { align-items: stretch; flex-direction: column; }
+  .office-actions .btn { text-align: center; white-space: normal; }
+}

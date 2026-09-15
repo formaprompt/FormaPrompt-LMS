@@ -1,11 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchPaidCourseContent, fetchTrainerGuideUrl } from './paidCourseContent.js';
+import {
+  fetchExcelResources,
+  fetchExcelTrainerResources,
+  fetchOfficeResources,
+  fetchOfficeTrainerResources,
+  fetchPaidCourseContent,
+  fetchTrainerGuideUrl,
+} from './paidCourseContent.js';
 
 test('le contenu et le guide passent par l unique Edge Function sécurisée', async (t) => {
   const calls = [];
   const supabase = { functions: { invoke: t.mock.fn(async (name, options) => {
       calls.push({ name, body: options.body });
+      if (options.body.action === 'course') {
+        return { data: { course: { title: 'Cours protégé' } }, error: null };
+      }
+      if (options.body.action.startsWith('excel_') || options.body.action.startsWith('office_')) {
+        return { data: { resources: [{ title: 'Fichier protégé' }] }, error: null };
+      }
       return options.body.action === 'course'
         ? { data: { course: { title: 'Cours protégé' } }, error: null }
         : { data: { signedUrl: 'https://signed.invalid/temporary' }, error: null };
@@ -13,9 +26,17 @@ test('le contenu et le guide passent par l unique Edge Function sécurisée', as
 
   assert.equal((await fetchPaidCourseContent(supabase, 'formation-ia')).title, 'Cours protégé');
   assert.equal(await fetchTrainerGuideUrl(supabase, 'formation-ia'), 'https://signed.invalid/temporary');
+  assert.equal((await fetchExcelResources(supabase, 'excel-perfectionnement-inter'))[0].title, 'Fichier protégé');
+  assert.equal((await fetchExcelTrainerResources(supabase, 'excel-avance-inter'))[0].title, 'Fichier protégé');
+  assert.equal((await fetchOfficeResources(supabase, 'word-initiation'))[0].title, 'Fichier protégé');
+  assert.equal((await fetchOfficeTrainerResources(supabase, 'powerpoint-initiation'))[0].title, 'Fichier protégé');
   assert.deepEqual(calls, [
     { name: 'paid-course-content', body: { action: 'course', courseId: 'formation-ia' } },
     { name: 'paid-course-content', body: { action: 'trainer_guide', courseId: 'formation-ia' } },
+    { name: 'paid-course-content', body: { action: 'excel_resources', courseId: 'excel-perfectionnement-inter' } },
+    { name: 'paid-course-content', body: { action: 'excel_trainer_resources', courseId: 'excel-avance-inter' } },
+    { name: 'paid-course-content', body: { action: 'office_resources', courseId: 'word-initiation' } },
+    { name: 'paid-course-content', body: { action: 'office_trainer_resources', courseId: 'powerpoint-initiation' } },
   ]);
 });
 

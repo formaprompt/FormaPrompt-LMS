@@ -99,6 +99,8 @@ function excelPurchase(courseId, pedagogicalLevel, modality, priceEnvName) {
     currency: 'eur',
     priceEnvName,
     landingPath: `/formation-excel#${pedagogicalLevel}`,
+    resourcePath: `/course/excel-supports/${courseId}`,
+    accessActionLabel: 'Accéder à mes exercices',
     label: `Excel ${{ initiation: 'Initiation', perfectionnement: 'Perfectionnement', avance: 'Avancé' }[pedagogicalLevel]} – ${modality === 'inter' ? 'Inter-entreprises' : 'Individuel'}`,
     ...MIXED_DIRECT_PURCHASE,
   });
@@ -113,11 +115,54 @@ export const EXCEL_PURCHASES = Object.freeze({
   'excel-avance-individuel': excelPurchase('excel-avance-individuel', 'avance', 'individuel', 'STRIPE_EXCEL_AVANCE_INDIVIDUEL_PRICE_ID'),
 });
 
+function officePurchase(courseId, tool, pedagogicalLevel, modality, priceEnvName) {
+  const levelLabel = pedagogicalLevel === 'initiation' ? 'Initiation' : 'Perfectionnement';
+  return Object.freeze({
+    courseId,
+    tool,
+    pedagogicalLevel,
+    modality,
+    modalityLabel: modality === 'inter' ? 'Inter-entreprises' : 'Individuel',
+    durationHours: 14,
+    deliveryKind: 'instructor_led_with_online_course',
+    requiresLmsAccess: true,
+    amountTotal: modality === 'inter' ? 69_000 : 99_000,
+    currency: 'eur',
+    priceEnvName,
+    landingPath: `/formation-${tool}#${pedagogicalLevel}`,
+    resourcePath: `/course/office-supports/${courseId}`,
+    accessActionLabel: 'Accéder à mes exercices',
+    label: `${tool === 'word' ? 'Word' : 'PowerPoint'} ${levelLabel} – ${modality === 'inter' ? 'Inter-entreprises' : 'Individuel'}`,
+    ...MIXED_DIRECT_PURCHASE,
+  });
+}
+
+export const OFFICE_PURCHASES = Object.freeze({
+  'word-initiation-inter': officePurchase('word-initiation-inter', 'word', 'initiation', 'inter', 'STRIPE_WORD_INITIATION_INTER_PRICE_ID'),
+  'word-initiation-individuel': officePurchase('word-initiation-individuel', 'word', 'initiation', 'individuel', 'STRIPE_WORD_INITIATION_INDIVIDUEL_PRICE_ID'),
+  'word-perfectionnement-inter': officePurchase('word-perfectionnement-inter', 'word', 'perfectionnement', 'inter', 'STRIPE_WORD_PERFECTIONNEMENT_INTER_PRICE_ID'),
+  'word-perfectionnement-individuel': officePurchase('word-perfectionnement-individuel', 'word', 'perfectionnement', 'individuel', 'STRIPE_WORD_PERFECTIONNEMENT_INDIVIDUEL_PRICE_ID'),
+  'powerpoint-initiation-inter': officePurchase('powerpoint-initiation-inter', 'powerpoint', 'initiation', 'inter', 'STRIPE_POWERPOINT_INITIATION_INTER_PRICE_ID'),
+  'powerpoint-initiation-individuel': officePurchase('powerpoint-initiation-individuel', 'powerpoint', 'initiation', 'individuel', 'STRIPE_POWERPOINT_INITIATION_INDIVIDUEL_PRICE_ID'),
+});
+
+export const BUREAUTIQUE_PURCHASES = Object.freeze({
+  ...EXCEL_PURCHASES,
+  ...OFFICE_PURCHASES,
+});
+
 export const COURSE_PURCHASES = Object.freeze({
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
   [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
-  ...EXCEL_PURCHASES,
+  ...BUREAUTIQUE_PURCHASES,
+});
+
+export const ADMIN_GIFT_COURSES = Object.freeze({
+  [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
+  [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
+  [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
+  ...BUREAUTIQUE_PURCHASES,
 });
 
 export function getPurchaseConfig(courseId) {

@@ -22,7 +22,7 @@ function ExcelCheckout({ offer }) {
     accessLoading={Boolean(user) && access.userId !== user.id}
     hasActiveAccess={Boolean(user) && access.userId === user.id && access.active}
     priceLabel={`${offer.amountTotal / 100} €`}
-    activeAccessActions={<Link className="btn btn-primary" to={`/paiement-reussi?course=${offer.courseId}`}>Consulter mon inscription Excel</Link>}
+    activeAccessActions={<Link className="btn btn-primary" to={`/course/excel-supports/${offer.courseId}`}>Accéder à mes exercices</Link>}
   />;
 }
 

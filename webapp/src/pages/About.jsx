@@ -7,22 +7,37 @@ export default function About() {
   return (
     <>
       <SEO
-        title="À propos – FormaPrompt"
-        description="Découvrez la mission, l'équipe et les valeurs de FormaPrompt pour rendre l'IA et la bureautique accessibles à tous."
+        title="Thierry FREZARD, formateur IA et bureautique | FormaPrompt"
+        description="Découvrez Thierry FREZARD, fondateur de FormaPrompt et formateur professionnel d'adultes : IA générative, prompts et bureautique à Calais et à distance."
         url={SITE_CONFIG.urls.about}
         image={SITE_CONFIG.assets.portrait}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'ProfilePage',
+          url: SITE_CONFIG.urls.about,
+          mainEntity: {
+            '@type': 'Person',
+            '@id': `${SITE_CONFIG.urls.about}#thierry-frezard`,
+            name: SITE_CONFIG.responsibleName,
+            url: SITE_CONFIG.urls.about,
+            image: SITE_CONFIG.assets.portrait,
+            jobTitle: "Formateur professionnel d'adultes",
+            sameAs: [SITE_CONFIG.socialProfiles.superprof],
+            worksFor: { '@type': 'EducationalOrganization', '@id': `${SITE_CONFIG.baseUrl}/#organization`, name: SITE_CONFIG.name, url: SITE_CONFIG.urls.home },
+          },
+        }}
       />
       <div className="container section">
       {/* Hero Section */}
       <div className="grid grid-cols-2 mb-8" style={{ alignItems: 'center', gap: '4rem' }}>
         <div>
           <h1 className="mb-2" style={{ color: 'var(--color-primary)', fontSize: '2.5rem' }}>
-            Rendre l'IA accessible à tous
+            Thierry FREZARD, formateur en IA et bureautique
           </h1>
           <p className="text-large mb-4" style={{ color: 'var(--color-text-light)', fontSize: '1.2rem', lineHeight: '1.6' }}>
-            Derrière FormaPrompt se trouve une conviction forte : l'intelligence artificielle ne doit pas être réservée à une élite technique. Elle doit devenir un outil du quotidien, maîtrisé par tous les professionnels.
+            À Calais et à distance, j'accompagne les professionnels, les organismes de formation et les personnes en reconversion dans leurs usages de l'IA générative et des outils numériques. L'objectif : comprendre ce que l'outil peut apporter, pratiquer et savoir vérifier le résultat.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem' }}>
             <Link to="/contact" className="btn btn-primary">
               Me contacter
             </Link>
@@ -69,7 +84,11 @@ export default function About() {
               Actif dans le domaine de la formation depuis plus de <strong>15 ans</strong>, j'ai eu l'opportunité d'accompagner une grande diversité de publics au sein de nombreux centres de formation reconnus : <em>SJT, ABC formation continue, A3C Hazebrouck, Manager's solutions Calais, Enablers, Senza, Evogue</em>, et bien d'autres.
             </p>
             <p className="mb-3">
-              J'ai créé FormaPrompt pour répondre à un besoin crucial : démystifier l'Intelligence Artificielle et outiller concrètement les travailleurs d'aujourd'hui.
+              J'ai créé FormaPrompt pour rendre les usages de l'IA plus compréhensibles : formuler une demande, comparer les réponses, produire un document et garder la maîtrise des informations utilisées.
+            </p>
+            <p>
+              <a href={SITE_CONFIG.socialProfiles.superprof} target="_blank" rel="noreferrer">Consulter mon profil et les recommandations publiques sur Superprof</a>.
+              {' '}Ces recommandations concernent mon accompagnement ; elles ne constituent pas une certification des formations FormaPrompt.
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', justifyContent: 'center' }}>
@@ -96,16 +115,16 @@ export default function About() {
       </div>
 
       {/* Methodology & Certifications */}
-      <h2 className="text-center mb-4 mt-8">Ma promesse pédagogique & Mon expertise</h2>
+      <h2 className="text-center mb-4 mt-8">Mon approche pédagogique et mes qualifications</h2>
       <div className="grid grid-cols-3 mb-8">
         
         <div className="card text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--color-primary)', borderRadius: '16px', marginBottom: '1.5rem' }}>
             <Target size={36} />
           </div>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Le Sur-Mesure Absolu</h3>
+          <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Des exemples adaptés à votre activité</h3>
           <p style={{ color: 'var(--color-text-light)' }}>
-            Je ne délivre jamais un cours magistral standard. J'adapte toutes mes formations aux personnes qui les suivent en les personnalisant au maximum, selon leur niveau, leur métier et leurs objectifs concrets.
+            Le niveau de départ, le métier et les objectifs orientent le choix des exemples et des exercices. Nous partons de situations de travail pour mettre les outils en pratique.
           </p>
         </div>
 
@@ -115,7 +134,7 @@ export default function About() {
           </div>
           <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Pédagogie Éprouvée</h3>
           <p style={{ color: 'var(--color-text-light)' }}>
-            Titulaire du titre <strong>FPA (Formateur Professionnel d'Adultes)</strong>, ma méthode d'apprentissage est structurée, progressive et garantie de faire acquérir de véritables compétences, conformes aux exigences des OF.
+            Titulaire du titre <strong>FPA (Formateur Professionnel d'Adultes)</strong>, je construis une progression avec des explications, des exercices et des temps de retour pour vérifier les acquis.
           </p>
         </div>
 
@@ -138,7 +157,7 @@ export default function About() {
           Vous cherchez un formateur indépendant, fiable et expert pour animer vos sessions en Bureautique ou Intelligence Artificielle ? 
           Consultez mon agenda pour bloquer une date, ou contactez-moi directement pour échanger sur vos besoins.
         </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
           <Link to="/disponibilites" className="btn btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.1rem' }}>
             Consulter mes disponibilités
           </Link>

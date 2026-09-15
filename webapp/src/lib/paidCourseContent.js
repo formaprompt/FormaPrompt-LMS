@@ -49,3 +49,27 @@ export async function fetchTrainerGuideUrl(supabase, courseId) {
   if (!result?.signedUrl) throw new Error('Le guide formateur est indisponible.');
   return result.signedUrl;
 }
+
+export async function fetchExcelResources(supabase, courseId) {
+  const result = await invokePaidCourseContent(supabase, { action: 'excel_resources', courseId });
+  if (!Array.isArray(result?.resources)) throw new Error('Les exercices Excel sont indisponibles.');
+  return result.resources;
+}
+
+export async function fetchExcelTrainerResources(supabase, courseId) {
+  const result = await invokePaidCourseContent(supabase, { action: 'excel_trainer_resources', courseId });
+  if (!Array.isArray(result?.resources)) throw new Error('Les corrigés Excel sont indisponibles.');
+  return result.resources;
+}
+
+export async function fetchOfficeResources(supabase, courseId) {
+  const result = await invokePaidCourseContent(supabase, { action: 'office_resources', courseId });
+  if (!Array.isArray(result?.resources)) throw new Error('Les supports bureautiques sont indisponibles.');
+  return result.resources;
+}
+
+export async function fetchOfficeTrainerResources(supabase, courseId) {
+  const result = await invokePaidCourseContent(supabase, { action: 'office_trainer_resources', courseId });
+  if (!Array.isArray(result?.resources)) throw new Error('Les corrigés bureautiques sont indisponibles.');
+  return result.resources;
+}

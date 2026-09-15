@@ -4,6 +4,7 @@ import { courseCatalog } from '../_shared/paidCourseCatalog.js';
 import {
   courseHasIonVideo,
   hasUsableCourseAccess,
+  hasTrainerRole,
   PAID_COURSE_BUCKET,
   PAID_RESOURCE_URL_SECONDS,
   PAID_VIDEO_URL_SECONDS,
@@ -11,6 +12,16 @@ import {
   trainerGuideObjectPath,
   validatePaidCourseId,
 } from '../_shared/paidCourseAccess.js';
+import {
+  excelResourceObjectPath,
+  excelResourcesForCourse,
+  validateExcelCourseId,
+} from '../_shared/excelInitiationResources.js';
+import {
+  officeResourceObjectPath,
+  officeResourcesForCourse,
+  validateOfficeCourseId,
+} from '../_shared/officeResources.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -92,6 +103,34 @@ async function signCourseResources(adminClient: ServerClient, courseId: string, 
   return result;
 }
 
+async function signExcelResources(adminClient: ServerClient, courseId: string, audience: 'learner' | 'trainer') {
+  const resources = excelResourcesForCourse(courseId, audience);
+  return Promise.all(resources.map(async (resource) => ({
+    ...resource,
+    href: await signUrl(
+      adminClient,
+      excelResourceObjectPath(courseId, audience, resource),
+      PAID_RESOURCE_URL_SECONDS,
+      typeof resource.fileName === 'string' ? resource.fileName : undefined,
+    ),
+    download: resource.fileName,
+  })));
+}
+
+async function signOfficeResources(adminClient: ServerClient, courseId: string, audience: 'learner' | 'trainer') {
+  const resources = officeResourcesForCourse(courseId, audience);
+  return Promise.all(resources.map(async (resource) => ({
+    ...resource,
+    href: await signUrl(
+      adminClient,
+      officeResourceObjectPath(courseId, audience, resource),
+      PAID_RESOURCE_URL_SECONDS,
+      resource.fileName,
+    ),
+    download: resource.fileName,
+  })));
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return jsonResponse({ error: 'Méthode non autorisée.' }, 405);
@@ -110,7 +149,17 @@ Deno.serve(async (request) => {
 
     const payload = await request.json().catch(() => ({})) as Record<string, unknown>;
     action = typeof payload.action === 'string' ? payload.action.trim() : '';
-    const courseId = validatePaidCourseId(payload.courseId);
+    const isExcelLearnerRequest = action === 'excel_resources' || action === 'excel_initiation_resources';
+    const isExcelTrainerRequest = action === 'excel_trainer_resources' || action === 'excel_initiation_trainer_resources';
+    const isExcelResourceRequest = isExcelLearnerRequest || isExcelTrainerRequest;
+    const isOfficeLearnerRequest = action === 'office_resources';
+    const isOfficeTrainerRequest = action === 'office_trainer_resources';
+    const isOfficeResourceRequest = isOfficeLearnerRequest || isOfficeTrainerRequest;
+    const courseId = isExcelResourceRequest
+      ? validateExcelCourseId(payload.courseId)
+      : isOfficeResourceRequest
+        ? validateOfficeCourseId(payload.courseId)
+        : validatePaidCourseId(payload.courseId);
     const adminClient = createServerClient(supabaseUrl, serviceRoleKey);
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
@@ -118,10 +167,44 @@ Deno.serve(async (request) => {
       .eq('id', authData.user.id)
       .maybeSingle();
     if (profileError) throw profileError;
-    const isAdmin = profile?.role === 'admin';
+    const canAccessTrainerContent = hasTrainerRole(profile?.role);
+
+    if (isOfficeTrainerRequest) {
+      if (!canAccessTrainerContent) return jsonResponse({ error: 'Accès refusé.' }, 403);
+      return jsonResponse({ resources: await signOfficeResources(adminClient, courseId, 'trainer') });
+    }
+
+    if (isOfficeLearnerRequest) {
+      const { data: access, error: accessError } = await adminClient
+        .from('course_access')
+        .select('status, expires_at')
+        .eq('user_id', authData.user.id)
+        .eq('course_id', courseId)
+        .maybeSingle();
+      if (accessError) throw accessError;
+      if (!hasUsableCourseAccess(access)) return jsonResponse({ error: 'Accès à la formation refusé.' }, 403);
+      return jsonResponse({ resources: await signOfficeResources(adminClient, courseId, 'learner') });
+    }
+
+    if (isExcelTrainerRequest) {
+      if (!canAccessTrainerContent) return jsonResponse({ error: 'Accès refusé.' }, 403);
+      return jsonResponse({ resources: await signExcelResources(adminClient, courseId, 'trainer') });
+    }
+
+    if (isExcelLearnerRequest) {
+      const { data: access, error: accessError } = await adminClient
+        .from('course_access')
+        .select('status, expires_at')
+        .eq('user_id', authData.user.id)
+        .eq('course_id', courseId)
+        .maybeSingle();
+      if (accessError) throw accessError;
+      if (!hasUsableCourseAccess(access)) return jsonResponse({ error: 'Accès à la formation refusé.' }, 403);
+      return jsonResponse({ resources: await signExcelResources(adminClient, courseId, 'learner') });
+    }
 
     if (action === 'trainer_guide') {
-      if (!isAdmin) return jsonResponse({ error: 'Accès refusé.' }, 403);
+      if (!canAccessTrainerContent) return jsonResponse({ error: 'Accès refusé.' }, 403);
       const objectPath = trainerGuideObjectPath(courseId);
       const download = objectPath.split('/').at(-1);
       const signedUrl = await signUrl(adminClient, objectPath, PAID_RESOURCE_URL_SECONDS, download);
@@ -130,7 +213,7 @@ Deno.serve(async (request) => {
 
     if (action !== 'course') return jsonResponse({ error: 'Action inconnue.' }, 400);
 
-    if (!isAdmin) {
+    if (!canAccessTrainerContent) {
       const { data: access, error: accessError } = await adminClient
         .from('course_access')
         .select('status, expires_at')

@@ -3,7 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import CommercialCheckout from './CommercialCheckout'
-import { AI_ACT_PURCHASE, EXCEL_PURCHASES, SALES_CONTEXTS } from '../../supabase/functions/_shared/purchaseConfig.js'
+import { AI_ACT_PURCHASE, BUREAUTIQUE_PURCHASES, SALES_CONTEXTS } from '../../supabase/functions/_shared/purchaseConfig.js'
 
 const { invoke } = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('../lib/supabaseClient', () => ({
@@ -36,8 +36,8 @@ describe('CommercialCheckout', () => {
     invoke.mockReset()
   })
 
-  it.each(Object.keys(EXCEL_PURCHASES))('présente l’achat Excel au bon montant pour %s', (courseId) => {
-    const offer = EXCEL_PURCHASES[courseId]
+  it.each(Object.keys(BUREAUTIQUE_PURCHASES))('présente l’achat bureautique au bon montant pour %s', (courseId) => {
+    const offer = BUREAUTIQUE_PURCHASES[courseId]
     render(<MemoryRouter><CommercialCheckout courseId={courseId} user={{ id: 'user-test' }} /></MemoryRouter>)
     expect(screen.getByRole('button', { name: new RegExp(`Commander et payer.*${offer.amountTotal / 100}`) })).toBeVisible()
     expect(screen.queryByRole('link', { name: /devis/i })).not.toBeInTheDocument()

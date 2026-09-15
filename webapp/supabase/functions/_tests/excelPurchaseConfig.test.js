@@ -6,8 +6,9 @@ import ts from 'typescript';
 import * as purchaseConfig from '../_shared/purchaseConfig.js';
 import * as coursePromotion from '../_shared/coursePromotion.js';
 import { buildStripePostPaymentPayload } from '../_shared/stripePostPayment.js';
+import { officeResourceObjectPath, officeResourcesForCourse } from '../_shared/officeResources.js';
 
-const expectedOffers = [
+const excelExpectedOffers = [
   ['excel-initiation-inter', 'initiation', 'inter', 69000, 'STRIPE_EXCEL_INITIATION_INTER_PRICE_ID'],
   ['excel-initiation-individuel', 'initiation', 'individuel', 99000, 'STRIPE_EXCEL_INITIATION_INDIVIDUEL_PRICE_ID'],
   ['excel-perfectionnement-inter', 'perfectionnement', 'inter', 69000, 'STRIPE_EXCEL_PERFECTIONNEMENT_INTER_PRICE_ID'],
@@ -15,6 +16,15 @@ const expectedOffers = [
   ['excel-avance-inter', 'avance', 'inter', 69000, 'STRIPE_EXCEL_AVANCE_INTER_PRICE_ID'],
   ['excel-avance-individuel', 'avance', 'individuel', 99000, 'STRIPE_EXCEL_AVANCE_INDIVIDUEL_PRICE_ID'],
 ];
+const officeExpectedOffers = [
+  ['word-initiation-inter', 'initiation', 'inter', 69000, 'STRIPE_WORD_INITIATION_INTER_PRICE_ID', 'word'],
+  ['word-initiation-individuel', 'initiation', 'individuel', 99000, 'STRIPE_WORD_INITIATION_INDIVIDUEL_PRICE_ID', 'word'],
+  ['word-perfectionnement-inter', 'perfectionnement', 'inter', 69000, 'STRIPE_WORD_PERFECTIONNEMENT_INTER_PRICE_ID', 'word'],
+  ['word-perfectionnement-individuel', 'perfectionnement', 'individuel', 99000, 'STRIPE_WORD_PERFECTIONNEMENT_INDIVIDUEL_PRICE_ID', 'word'],
+  ['powerpoint-initiation-inter', 'initiation', 'inter', 69000, 'STRIPE_POWERPOINT_INITIATION_INTER_PRICE_ID', 'powerpoint'],
+  ['powerpoint-initiation-individuel', 'initiation', 'individuel', 99000, 'STRIPE_POWERPOINT_INITIATION_INDIVIDUEL_PRICE_ID', 'powerpoint'],
+];
+const bureautiqueExpectedOffers = [...excelExpectedOffers, ...officeExpectedOffers];
 
 // References publiques validees, utilisees seulement par des doubles sans reseau.
 const approvedStripeReferences = {
@@ -29,12 +39,12 @@ const localEnvPath = new URL('../.env.excel-live.local', import.meta.url);
 test('le fichier local optionnel contient exclusivement les six references LIVE approuvees', { skip: !existsSync(localEnvPath) }, () => {
   const entries = Object.fromEntries(readFileSync(localEnvPath, 'utf8').split(/\r?\n/)
     .filter((line) => line.trim() && !line.startsWith('#')).map((line) => line.split('=')));
-  assert.deepEqual(entries, Object.fromEntries(expectedOffers.map(([id, , , , env]) => [env, approvedStripeReferences[id][0]])));
+  assert.deepEqual(entries, Object.fromEntries(excelExpectedOffers.map(([id, , , , env]) => [env, approvedStripeReferences[id][0]])));
 });
 
 test('les six offres distinguent niveau, modalité, montant serveur et référence de configuration Stripe', () => {
-  assert.deepEqual(Object.keys(purchaseConfig.EXCEL_PURCHASES), expectedOffers.map(([id]) => id));
-  for (const [id, level, modality, cents, envName] of expectedOffers) {
+  assert.deepEqual(Object.keys(purchaseConfig.EXCEL_PURCHASES), excelExpectedOffers.map(([id]) => id));
+  for (const [id, level, modality, cents, envName] of excelExpectedOffers) {
     const offer = purchaseConfig.getPurchaseConfig(id);
     assert.equal(offer.courseId, id);
     assert.equal(offer.pedagogicalLevel, level);
@@ -50,14 +60,63 @@ test('les six offres distinguent niveau, modalité, montant serveur et référen
   }
 });
 
+test('les six offres Office gardent un droit commercial distinct et un chemin de supports exact', () => {
+  assert.deepEqual(Object.keys(purchaseConfig.OFFICE_PURCHASES), officeExpectedOffers.map(([id]) => id));
+  for (const [id, level, modality, cents, envName, tool] of officeExpectedOffers) {
+    const offer = purchaseConfig.getPurchaseConfig(id);
+    assert.equal(offer.courseId, id);
+    assert.equal(offer.tool, tool);
+    assert.equal(offer.pedagogicalLevel, level);
+    assert.equal(offer.modality, modality);
+    assert.equal(offer.amountTotal, cents);
+    assert.equal(offer.priceEnvName, envName);
+    assert.equal(offer.resourcePath, `/course/office-supports/${id}`);
+    assert.equal(offer.deliveryKind, 'instructor_led_with_online_course');
+    assert.equal(offer.requiresLmsAccess, true);
+    assert.equal(offer.checkoutEnabled, true);
+    assert.ok(Object.isFrozen(offer));
+  }
+});
+
 test('les identifiants inconnus, pédagogiques seuls, intra et propriétés héritées sont refusés', () => {
-  for (const id of ['formation-excel', 'initiation', 'excel-initiation-intra', 'excel-avance', 'toString', '__proto__', 'constructor', null, {}, 69000]) {
+  for (const id of [
+    'formation-excel', 'initiation', 'excel-initiation-intra', 'excel-avance',
+    'word-initiation', 'word-initiation-intra', 'powerpoint-perfectionnement-inter',
+    'toString', '__proto__', 'constructor', null, {}, 69000,
+  ]) {
     assert.equal(purchaseConfig.getPurchaseConfig(id), null);
   }
 });
 
+test('deux modalités Office restent deux droits exacts vers un seul pack pédagogique', () => {
+  const inter = purchaseConfig.getPurchaseConfig('word-initiation-inter');
+  const individuel = purchaseConfig.getPurchaseConfig('word-initiation-individuel');
+  assert.notEqual(inter.courseId, individuel.courseId);
+  assert.equal(
+    officeResourceObjectPath(inter.courseId, 'learner', officeResourcesForCourse(inter.courseId, 'learner')[0]),
+    officeResourceObjectPath(individuel.courseId, 'learner', officeResourcesForCourse(individuel.courseId, 'learner')[0]),
+  );
+});
+
+test('le remboursement existant cible achat, utilisateur et offre exacte et préserve l autre modalité', () => {
+  const processor = readFileSync(new URL('../../migrations/20260822110413_sprint_5_stripe_post_payment.sql', import.meta.url), 'utf8');
+  assert.match(processor, /WHERE purchase_id = v_transaction\.purchase_id\s+AND user_id IS NOT DISTINCT FROM v_transaction\.user_id\s+AND course_id IS NOT DISTINCT FROM v_transaction\.course_id/);
+  assert.match(processor, /IF FOUND AND v_access\.status IN \('active', 'suspended'\)/);
+});
+
+test('la migration promotion autorise seulement les six offres Office aux montants catalogue', () => {
+  const migration = readFileSync(new URL('../../migrations/20260913114223_add_office_commercial_offers.sql', import.meta.url), 'utf8');
+  for (const [id, , modality, cents] of officeExpectedOffers) {
+    assert.match(migration, new RegExp(`'${id}'`));
+    const amountGroup = modality === 'inter' ? '69000' : '99000';
+    assert.equal(String(cents), amountGroup);
+  }
+  assert.doesNotMatch(migration, /word-initiation-intra|powerpoint-perfectionnement/);
+  assert.doesNotMatch(migration, /(?:INSERT INTO|UPDATE|DELETE FROM) public\.(?:purchases|course_access|stripe_payment_transactions)/i);
+});
+
 test('les six achats conservent offre, acheteur, montant et references dans le traitement apres paiement existant', () => {
-  for (const [id, level, modality, amount] of expectedOffers) {
+  for (const [id, level, modality, amount] of bureautiqueExpectedOffers) {
     const payload = buildStripePostPaymentPayload({ id: 'evt_local', type: 'checkout.session.completed', created: 1700000000,
       livemode: false, data: { object: { id: 'cs_local', payment_intent: 'pi_local', amount_total: amount, currency: 'eur',
         metadata: { course_id: id, user_id: 'user_local', payment_type: 'course', checkout_intent_id: 'intent_local',
@@ -75,7 +134,7 @@ test('les six achats conservent offre, acheteur, montant et references dans le t
 });
 
 test('le calcul des lignes Stripe conserve le catalogue sans promotion et refuse les montants incohérents', () => {
-  for (const [id, , , cents] of expectedOffers) {
+  for (const [id, , , cents] of bureautiqueExpectedOffers) {
     const offer = purchaseConfig.getPurchaseConfig(id);
     // Aucun identifiant Stripe réel ou fictif n'est nécessaire pour ce contrôle pur.
     assert.deepEqual(coursePromotion.buildCourseStripeLineItem({
@@ -157,7 +216,7 @@ function checkoutHarness(offer, { missingPrice = false, invalidPromotion = false
   };
   const env = { STRIPE_SECRET_KEY: 'sk_test_local_fixture', SUPABASE_URL: 'https://supabase.invalid',
     SUPABASE_ANON_KEY: 'local-anon', SUPABASE_SERVICE_ROLE_KEY: 'local-service', SITE_URL: 'https://formaprompt.com',
-    ...Object.fromEntries(expectedOffers.map(([id, , , , envName]) => [envName, approvedStripeReferences[id][0]])),
+    ...Object.fromEntries(excelExpectedOffers.map(([id, , , , envName]) => [envName, approvedStripeReferences[id][0]])),
     [offer.priceEnvName]: missingPrice ? undefined : expectedPriceId };
   runInNewContext(compiled.outputText, {
     exports: {}, require: (name) => { assert.ok(deps[name]); return deps[name]; },
@@ -172,7 +231,7 @@ function checkoutHarness(offer, { missingPrice = false, invalidPromotion = false
   })) };
 }
 
-for (const [id, , , amount] of expectedOffers) {
+for (const [id, , , amount] of bureautiqueExpectedOffers) {
   test(`${id} ignore le prix frontend et utilise le catalogue serveur sans promotion`, async () => {
     const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(id));
     const response = await harness.invoke({ amount_total: 1, price: 1 });
@@ -180,11 +239,12 @@ for (const [id, , , amount] of expectedOffers) {
     assert.equal((await response.json()).final_amount_cents, amount);
     assert.equal(harness.calls.find(({ name }) => name === 'prepare_course_promotion_checkout').args.p_original_amount_cents, amount);
     assert.equal(harness.stripeSessions.length, 1);
-    assert.equal(harness.stripeSessions[0].line_items[0].price, approvedStripeReferences[id][0]);
+    const [expectedPriceId, expectedProductId] = approvedStripeReferences[id] || ['price_local_fixture', 'prod_local_fixture'];
+    assert.equal(harness.stripeSessions[0].line_items[0].price, expectedPriceId);
     assert.equal(harness.stripeSessions[0].metadata.course_id, id);
     const session = harness.stripeSessions[0], offer = purchaseConfig.getPurchaseConfig(id);
-    assert.equal(session.metadata.price_id, approvedStripeReferences[id][0]);
-    assert.equal(session.metadata.stripe_product_id, approvedStripeReferences[id][1]);
+    assert.equal(session.metadata.price_id, expectedPriceId);
+    assert.equal(session.metadata.stripe_product_id, expectedProductId);
     assert.equal(session.metadata.modality, offer.modality);
     assert.equal(session.metadata.pedagogical_level, offer.pedagogicalLevel);
     assert.equal(session.payment_intent_data.metadata.modality, offer.modality);
@@ -223,7 +283,7 @@ test('les trois formations IA conservent leurs parametres Stripe sans ajout Exce
 });
 
 test('une référence Stripe manquante bloque le checkout avant toute création de session', async () => {
-  for (const [id] of expectedOffers) {
+  for (const [id] of bureautiqueExpectedOffers) {
     const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(id), { missingPrice: true });
     const response = await harness.invoke();
     assert.equal(response.status, 503);
@@ -234,14 +294,14 @@ test('une référence Stripe manquante bloque le checkout avant toute création 
 });
 
 test('le checkout refuse un prix Stripe incohérent et un identifiant non reconnu', async () => {
-  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(expectedOffers[0][0]), { wrongStripeAmount: true });
+  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(excelExpectedOffers[0][0]), { wrongStripeAmount: true });
   assert.equal((await harness.invoke()).status, 500);
   assert.equal((await harness.invoke({ course_id: 'excel-initiation-intra' })).status, 400);
   assert.equal(harness.stripeSessions.length, 0);
 });
 
 test('une promotion invalide refuse la session et libère la tentative via le mécanisme existant', async () => {
-  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(expectedOffers[0][0]), { invalidPromotion: true });
+  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(excelExpectedOffers[0][0]), { invalidPromotion: true });
   const response = await harness.invoke({ promo_code: 'INVALID' });
   assert.equal((await response.json()).promotion_invalid, true);
   assert.equal(harness.stripeSessions.length, 0);
@@ -249,9 +309,22 @@ test('une promotion invalide refuse la session et libère la tentative via le m�
 });
 
 test('une promotion validée utilise le montant réservé côté serveur sans modifier le tarif catalogue', async () => {
-  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(expectedOffers[0][0]));
+  const harness = checkoutHarness(purchaseConfig.getPurchaseConfig(excelExpectedOffers[0][0]));
   const response = await harness.invoke({ promo_code: 'VALID', amount_total: 1 });
   assert.equal(response.status, 200);
   assert.equal(harness.stripeSessions[0].line_items[0].price_data.unit_amount, 68000);
-  assert.equal(purchaseConfig.getPurchaseConfig(expectedOffers[0][0]).amountTotal, 69000);
+  assert.equal(purchaseConfig.getPurchaseConfig(excelExpectedOffers[0][0]).amountTotal, 69000);
+});
+
+test('une promotion Office conserve cible, montant serveur et métadonnées de modalité dans Checkout', async () => {
+  const offer = purchaseConfig.getPurchaseConfig('powerpoint-initiation-individuel');
+  const harness = checkoutHarness(offer);
+  const response = await harness.invoke({ promo_code: 'VALID', amount_total: 1 });
+  assert.equal(response.status, 200);
+  const promotionCall = harness.calls.find(({ name }) => name === 'prepare_course_promotion_checkout');
+  assert.equal(promotionCall.args.p_course_id, offer.courseId);
+  assert.equal(promotionCall.args.p_original_amount_cents, 99000);
+  assert.equal(harness.stripeSessions[0].line_items[0].price_data.unit_amount, 98000);
+  assert.equal(harness.stripeSessions[0].metadata.course_id, offer.courseId);
+  assert.equal(harness.stripeSessions[0].metadata.modality, 'individuel');
 });

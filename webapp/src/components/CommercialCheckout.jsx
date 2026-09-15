@@ -2,8 +2,8 @@ import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ACCESS_START_CHOICES,
+  BUREAUTIQUE_PURCHASES,
   CONSENT_TYPES,
-  EXCEL_PURCHASES,
   getCommercialRoute,
   getPurchaseConfig,
   SALES_CONTEXTS,
@@ -182,7 +182,7 @@ export default function CommercialCheckout({
         return
       }
       if (data?.alreadyPurchased) {
-        window.location.assign(Object.hasOwn(EXCEL_PURCHASES, courseId)
+        window.location.assign(Object.hasOwn(BUREAUTIQUE_PURCHASES, courseId)
           ? `/paiement-reussi?course=${encodeURIComponent(courseId)}`
           : `/course/${encodeURIComponent(courseId)}`)
         return
@@ -218,8 +218,8 @@ export default function CommercialCheckout({
 
   return (
     <div className="commercial-checkout">
-      {Object.hasOwn(EXCEL_PURCHASES, courseId) && (
-        <section className="commercial-checkout__group" aria-label={`Récapitulatif de votre formation Excel — ${purchase.label}`}>
+      {Object.hasOwn(BUREAUTIQUE_PURCHASES, courseId) && (
+        <section className="commercial-checkout__group" aria-label={`Récapitulatif de votre formation bureautique — ${purchase.label}`}>
           <p><strong>{purchase.label}</strong></p>
           <dl className="commercial-checkout__amounts">
             <div><dt>Modalité</dt><dd>{purchase.modalityLabel}</dd></div>

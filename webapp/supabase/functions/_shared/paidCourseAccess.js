@@ -8,6 +8,10 @@ export const PAID_COURSE_IDS = Object.freeze([
 export const PAID_RESOURCE_URL_SECONDS = 120;
 export const PAID_VIDEO_URL_SECONDS = 300;
 
+export function hasTrainerRole(role) {
+  return role === 'admin' || role === 'employee';
+}
+
 export function validatePaidCourseId(value) {
   const courseId = typeof value === 'string' ? value.trim() : '';
   if (!PAID_COURSE_IDS.includes(courseId)) throw new Error('Formation invalide.');

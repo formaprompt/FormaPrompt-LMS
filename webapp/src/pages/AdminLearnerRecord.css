@@ -1,0 +1,42 @@
+.learner-record { color: #e5e7eb; }
+.learner-record__back { margin-bottom: 1rem; }
+.learner-record__back a, .learner-record a { color: #67e8f9; text-underline-offset: .2em; }
+.learner-record__back a { color: #155e75; font-weight: 650; }
+.learner-record__hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .8fr); gap: 1.25rem; padding: 1.5rem; border: 1px solid #334155; border-radius: 16px; background: linear-gradient(135deg, #172033, #102b32); }
+.learner-record__hero h1 { margin: .25rem 0; color: #fff; font-size: clamp(1.8rem, 4vw, 2.7rem); }
+.learner-record__hero p { margin: .35rem 0 0; overflow-wrap: anywhere; }
+.learner-record__eyebrow, .learner-record__type { color: #5eead4; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.learner-record__hero dl { display: grid; gap: .75rem; margin: 0; }
+.learner-record__hero dl div { padding: .75rem; border-radius: 10px; background: rgb(15 23 42 / .55); }
+.learner-record__hero dt { color: #94a3b8; font-size: .8rem; }
+.learner-record__hero dd { margin: .2rem 0 0; color: #fff; font-weight: 700; }
+.learner-record__section { margin-top: 1.25rem; padding: 1.25rem; border: 1px solid #334155; border-radius: 14px; background: #172033; }
+.learner-record__section h2 { margin: 0 0 1rem; color: #fff; font-size: 1.25rem; }
+.learner-record__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .85rem; }
+.learner-record__cards article, .learner-record__notes li { padding: 1rem; border: 1px solid #3b4a60; border-radius: 10px; background: #101827; }
+.learner-record__cards h3 { margin: .5rem 0; color: #fff; font-size: 1rem; }
+.learner-record__cards p { margin: .35rem 0; }
+.learner-record__metric { color: #5eead4; font-size: 1.55rem; font-weight: 800; }
+.learner-record__metric--money { font-size: 1.25rem; }
+.learner-record__subheading { margin: 1.25rem 0 .75rem; color: #fff; font-size: 1rem; }
+.learner-record progress { width: 100%; accent-color: #14b8a6; }
+.learner-record__list, .learner-record__notes { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.learner-record__list li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1rem; border-radius: 9px; background: #101827; }
+.learner-record__list li > div { display: grid; gap: .25rem; }
+.learner-record__list li > div:last-child { justify-items: end; text-align: right; }
+.learner-record__status { font-weight: 700; }
+.learner-record__notes p { margin: .55rem 0; white-space: pre-wrap; }
+.learner-record__disclosures { display: grid; gap: .65rem; }
+.learner-record__disclosures details { padding: .9rem 1rem; border-radius: 9px; background: #101827; }
+.learner-record__disclosures summary { display: flex; justify-content: space-between; gap: 1rem; cursor: pointer; }
+.learner-record__disclosures details p { white-space: pre-wrap; }
+.learner-record__empty { margin: 0; color: #94a3b8; font-style: italic; }
+.learner-record__error { max-width: 680px; padding: 1.5rem; border: 1px solid #f87171; border-radius: 12px; background: #3f1d24; }
+@media (max-width: 650px) {
+  .learner-record__hero { grid-template-columns: 1fr; padding: 1rem; }
+  .learner-record__section { padding: 1rem; }
+  .learner-record__cards { grid-template-columns: 1fr; }
+  .learner-record__list li { align-items: flex-start; flex-direction: column; }
+  .learner-record__list li > div:last-child { justify-items: start; text-align: left; }
+  .learner-record__disclosures summary { align-items: flex-start; flex-direction: column; }
+}

@@ -1,0 +1,55 @@
+.agents-ia-page .generative-ai-hero h1 {
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  line-height: 1.15;
+}
+
+.agents-ia-page .course-summary {
+  margin-top: 0;
+}
+
+.agents-ia-page .course-summary__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.agents-ia-page .agents-ia-price {
+  color: #075f59;
+  font-size: 1.4rem;
+  font-weight: 750;
+  margin-bottom: 0.5rem;
+}
+
+.agents-ia-tariffs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .agents-ia-page .course-summary__grid { grid-template-columns: 1fr; }
+}
+
+.agents-ia-objectives {
+  columns: 2;
+  column-gap: 3rem;
+  padding-left: 1.4rem;
+  margin: 1.5rem 0;
+}
+
+.agents-ia-objectives li {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+  padding-left: 0.3rem;
+}
+
+.agents-ia-page a:not(.btn) {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.agents-ia-page a:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 4px;
+}
+
+@media (max-width: 650px) {
+  .agents-ia-objectives { columns: 1; }
+  .agents-ia-tariffs { grid-template-columns: 1fr; }
+}

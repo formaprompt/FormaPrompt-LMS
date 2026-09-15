@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import EnrollmentLifecyclePanel from '../components/EnrollmentLifecyclePanel';
 import { filterAdministrativeEnrollments } from '../lib/enrollmentLifecycle';
+import { learnerRecordPath } from '../lib/adminLearnerRecord';
 import './AdminEnrollments.css';
 
 const COURSE_OPTIONS = {
@@ -461,7 +462,7 @@ export default function AdminEnrollments() {
               <article key={enrollment.id} className="admin-enrollments__file">
                 <header>
                   <div>
-                    <h3>{enrollment.learner_first_name} {enrollment.learner_last_name}</h3>
+                    <h3><Link to={learnerRecordPath(enrollment.user_id)}>{enrollment.learner_first_name} {enrollment.learner_last_name}</Link></h3>
                     <p>{enrollment.profiles?.email} · {COURSE_OPTIONS[enrollment.course_id]?.title || enrollment.course_id}</p>
                   </div>
                   <span className={`admin-enrollments__status is-${enrollment.status}`}>{enrollment.status}</span>

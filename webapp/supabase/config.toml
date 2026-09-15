@@ -45,6 +45,9 @@ verify_jwt = true
 [functions.create-course-booking]
 verify_jwt = true
 
+[functions.manage-course-cohorts]
+verify_jwt = true
+
 # Ancien point d'entrée conservé uniquement pour répondre 410. Il ne traite
 # plus aucun événement et ne peut donc plus créer d'accès sans signature.
 [functions.stripe-webhook]

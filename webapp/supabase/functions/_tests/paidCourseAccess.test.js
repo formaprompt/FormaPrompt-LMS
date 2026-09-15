@@ -3,10 +3,22 @@ import assert from 'node:assert/strict';
 import {
   courseHasIonVideo,
   hasUsableCourseAccess,
+  hasTrainerRole,
   paidResourceObjectPath,
   trainerGuideObjectPath,
   validatePaidCourseId,
 } from '../_shared/paidCourseAccess.js';
+import {
+  excelResourceObjectPath,
+  excelResourcesForCourse,
+  validateExcelCourseId,
+} from '../_shared/excelInitiationResources.js';
+import {
+  canonicalOfficeCourseId,
+  officeResourceObjectPath,
+  officeResourcesForCourse,
+  validateOfficeCourseId,
+} from '../_shared/officeResources.js';
 
 test('seul un course_access active autorise le contenu', () => {
   assert.equal(hasUsableCourseAccess({ status: 'active', expires_at: null }), true);
@@ -47,4 +59,74 @@ test('les chemins Storage sont construits sans traversée', () => {
 test('la vidéo Prompt reste signalée comme média IONOS hors Storage', () => {
   assert.equal(courseHasIonVideo('formation-ia'), false);
   assert.equal(courseHasIonVideo('formation-prompt-level-1'), true);
+});
+
+test('les contenus formateur sont réservés aux rôles admin et employee', () => {
+  assert.equal(hasTrainerRole('admin'), true);
+  assert.equal(hasTrainerRole('employee'), true);
+  assert.equal(hasTrainerRole('user'), false);
+  assert.equal(hasTrainerRole(undefined), false);
+});
+
+test('les ressources Excel sont isolées par niveau, audience et offre exacte', () => {
+  for (const level of ['initiation', 'perfectionnement', 'avance']) {
+    for (const modality of ['inter', 'individuel']) {
+      const courseId = `excel-${level}-${modality}`;
+      assert.equal(validateExcelCourseId(courseId), courseId);
+      assert.ok(excelResourcesForCourse(courseId, 'learner').length > 0);
+      assert.ok(excelResourcesForCourse(courseId, 'trainer').length > 0);
+    }
+  }
+  assert.throws(() => validateExcelCourseId('excel-initiation-intra'), /invalide/i);
+  assert.equal(
+    excelResourceObjectPath('excel-initiation-inter', 'learner', excelResourcesForCourse('excel-initiation-inter', 'learner')[0]),
+    'excel-initiation/apprenants/Exercices_Excel_Initiation_Apprenant.xlsx',
+  );
+  assert.equal(
+    excelResourceObjectPath('excel-avance-individuel', 'trainer', excelResourcesForCourse('excel-avance-individuel', 'trainer')[5]),
+    'excel-avance/formateur/Grille_evaluation_cas_final.md',
+  );
+  assert.throws(() => excelResourcesForCourse('excel-avance-inter', 'apprenants'), /Audience/i);
+});
+
+test('les packs Word et PowerPoint sont isolés par formation, offre et audience', () => {
+  for (const courseId of ['word-initiation', 'word-perfectionnement', 'powerpoint-initiation']) {
+    assert.equal(validateOfficeCourseId(courseId), courseId);
+    assert.equal(officeResourcesForCourse(courseId, 'learner').length, 1);
+    assert.equal(officeResourcesForCourse(courseId, 'trainer').length, 1);
+  }
+  assert.equal(
+    officeResourceObjectPath(
+      'word-initiation',
+      'learner',
+      officeResourcesForCourse('word-initiation', 'learner')[0],
+    ),
+    'word-initiation/apprenants/Pack_apprenant_Word_Initiation.zip',
+  );
+  assert.equal(
+    officeResourceObjectPath(
+      'powerpoint-initiation',
+      'trainer',
+      officeResourcesForCourse('powerpoint-initiation', 'trainer')[0],
+    ),
+    'powerpoint-initiation/formateur/PowerPoint_Initiation_14h_Pack_formateur.zip',
+  );
+  for (const [alias, canonical] of [
+    ['word-initiation-inter', 'word-initiation'],
+    ['word-initiation-individuel', 'word-initiation'],
+    ['word-perfectionnement-inter', 'word-perfectionnement'],
+    ['word-perfectionnement-individuel', 'word-perfectionnement'],
+    ['powerpoint-initiation-inter', 'powerpoint-initiation'],
+    ['powerpoint-initiation-individuel', 'powerpoint-initiation'],
+  ]) {
+    assert.equal(validateOfficeCourseId(alias), alias);
+    assert.equal(canonicalOfficeCourseId(alias), canonical);
+    assert.equal(
+      officeResourceObjectPath(alias, 'learner', officeResourcesForCourse(alias, 'learner')[0]),
+      officeResourceObjectPath(canonical, 'learner', officeResourcesForCourse(canonical, 'learner')[0]),
+    );
+  }
+  assert.throws(() => validateOfficeCourseId('word-initiation-intra'), /invalide/i);
+  assert.throws(() => validateOfficeCourseId('powerpoint-perfectionnement-inter'), /invalide/i);
+  assert.throws(() => officeResourcesForCourse('word-initiation', 'formateur'), /Audience/i);
 });

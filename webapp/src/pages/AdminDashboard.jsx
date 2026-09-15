@@ -4,15 +4,37 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { courseCatalog } from '../data/courseCatalog';
+import { BOOKING_COURSES } from '../data/bookingCatalog';
+import { adminBookingAnchor, adminCorrectionAnchor, adminWorkTarget, exactTargetRows } from '../lib/adminLearnerRecord';
+import { ADMIN_GIFT_COURSES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import { createAvailabilitySlots, createInitialAvailabilityForm, formatDateInput } from '../lib/availabilitySlots';
 import { groupBookedSessions } from '../lib/courseBookingSlots';
+import {
+  cancelAdminCourseCohort,
+  cleanupAdminCourseCohortMeetingEvents,
+  fetchAdminBookingAvailabilitySlots,
+  confirmAdminCourseCohort,
+  fetchAdminAvailabilitySlotsForMonth,
+  fetchAdminCourseCohorts,
+  generateAdminCourseCohortMeetingLinks,
+  publishAdminCourseCohort,
+  saveAdminCourseCohort,
+  setAdminCourseCohortMeetingUrl,
+} from '../lib/courseCohorts';
 import {
   calculateFinalProjectReviewStatus,
   FINAL_PROJECT_REVIEW_FIELDS,
 } from '../lib/finalProjectEvaluation';
 import { buildAttestationDossier, formatAttestationDuration } from '../lib/attestationDossier';
-import { fetchTrainerGuideUrl } from '../lib/paidCourseContent';
+import { learnerRecordPath } from '../lib/adminLearnerRecord';
+import {
+  fetchExcelTrainerResources,
+  fetchOfficeTrainerResources,
+  fetchTrainerGuideUrl,
+} from '../lib/paidCourseContent';
 import SignaturePad from '../components/SignaturePad';
+import AdminCourseCohorts from '../components/AdminCourseCohorts';
+import AdminLearnerDirectory from '../components/AdminLearnerDirectory';
 import './AdminDashboard.css';
 
 const MAX_BLOG_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -26,11 +48,28 @@ const COURSE_LABELS = {
   'formation-ia': 'Formation IA générative',
   'formation-ia-act': 'IA Act – acculturation et conformité',
   'formation-prompt-level-1': 'Prompt Engineering – Niveau 1',
+  ...Object.fromEntries(Object.values(ADMIN_GIFT_COURSES)
+    .filter(({ courseId }) => courseId.includes('-inter') || courseId.includes('-individuel'))
+    .map(({ courseId, label }) => [courseId, label])),
 };
 
 const COURSE_OPTIONS = Object.entries(COURSE_LABELS).map(([id, label]) => ({ id, label }));
+const COHORT_COURSE_OPTIONS = Object.values(BOOKING_COURSES)
+  .filter(({ bookingKind }) => bookingKind === 'cohort')
+  .map(({ id, title }) => ({ id, label: `${title} — Inter` }));
+const ADMIN_DASHBOARD_TABS = ['overview', 'users', 'contacts', 'blog', 'purchases', 'bookings', 'positioning', 'corrections', 'trainer-guides', 'feedback'];
+
+function adminDashboardTab(requestedTab) {
+  return ADMIN_DASHBOARD_TABS.includes(requestedTab) ? requestedTab : 'overview';
+}
 
 const TRAINER_GUIDES = [
+  { id: 'excel-initiation-inter', kind: 'excel_corrections', title: 'Corrigés Excel Initiation', description: 'Corrigés réservés au formateur : exercices et cas pratique final.' },
+  { id: 'excel-perfectionnement-inter', kind: 'excel_corrections', title: 'Corrigés Excel Perfectionnement', description: 'Corrigé, version PDF et guide réservés au formateur.' },
+  { id: 'excel-avance-inter', kind: 'excel_corrections', title: 'Corrigés Excel Avancé', description: 'Quatre corrigés, guide et grille d’évaluation réservés au formateur.' },
+  { id: 'word-initiation', kind: 'office_corrections', title: 'Corrigés Word Initiation', description: 'Pack formateur avec corrigés, guide 14 h et grille d’évaluation.' },
+  { id: 'word-perfectionnement', kind: 'office_corrections', title: 'Corrigés Word Perfectionnement', description: 'Pack formateur avec corrigés, guide 14 h et grille d’évaluation.' },
+  { id: 'powerpoint-initiation', kind: 'office_corrections', title: 'Corrigés PowerPoint Initiation', description: 'Pack formateur avec corrigés, guide 14 h et grille d’évaluation.' },
   {
     id: 'formation-ia',
     title: 'Guide formateur IA générative',
@@ -51,6 +90,11 @@ const TRAINER_GUIDES = [
 function TrainerGuideLink({ guide }) {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
+  const actionLabel = guide.kind === 'excel_corrections'
+    ? 'Ouvrir les corrigés'
+    : guide.kind === 'office_corrections'
+      ? 'Télécharger le pack formateur'
+      : 'Ouvrir le guide PDF';
 
   async function openGuide() {
     setFeedback('');
@@ -62,8 +106,17 @@ function TrainerGuideLink({ guide }) {
     targetWindow.opener = null;
     setLoading(true);
     try {
-      const signedUrl = await fetchTrainerGuideUrl(supabase, guide.id);
-      targetWindow.location.replace(signedUrl);
+      if (guide.kind === 'excel_corrections') {
+        const resources = await fetchExcelTrainerResources(supabase, guide.id);
+        targetWindow.location.replace(resources[0]?.href || 'about:blank');
+        resources.slice(1).forEach((resource) => window.open(resource.href, '_blank', 'noopener,noreferrer'));
+      } else if (guide.kind === 'office_corrections') {
+        const resources = await fetchOfficeTrainerResources(supabase, guide.id);
+        targetWindow.location.replace(resources[0]?.href || 'about:blank');
+      } else {
+        const signedUrl = await fetchTrainerGuideUrl(supabase, guide.id);
+        targetWindow.location.replace(signedUrl);
+      }
     } catch (error) {
       targetWindow.close();
       setFeedback(error.message || 'Le guide ne peut pas être ouvert pour le moment.');
@@ -80,7 +133,7 @@ function TrainerGuideLink({ guide }) {
         onClick={openGuide}
         disabled={loading}
       >
-        {loading ? 'Vérification…' : 'Ouvrir le guide PDF'}
+        {loading ? 'Vérification…' : actionLabel}
       </button>
       {feedback && <p role="alert">{feedback}</p>}
     </>
@@ -361,6 +414,7 @@ function VisibleDateField({ id, label, min, value, onChange }) {
 
 function BookingRequestsSection({
   bookingRequests,
+  targetBookingId,
   positioningAssessments,
   attendanceRecords,
   attendanceDrafts,
@@ -372,7 +426,7 @@ function BookingRequestsSection({
 }) {
   const [learnerSearch, setLearnerSearch] = useState('');
   const [courseFilter, setCourseFilter] = useState('all');
-  const [administrativeFilter, setAdministrativeFilter] = useState('active');
+  const [administrativeFilter, setAdministrativeFilter] = useState(targetBookingId ? 'all' : 'active');
   const [administrativeReferenceTime] = useState(() => new Date());
   const todayKey = administrativeReferenceTime.toLocaleDateString('fr-CA', { timeZone: 'Europe/Paris' });
   const courseOptions = useMemo(() => Array.from(new Set(bookingRequests.map((booking) => booking.course_id))), [bookingRequests]);
@@ -412,6 +466,7 @@ function BookingRequestsSection({
     const query = normalizeAdministrativeSearch(learnerSearch);
     return enrichedBookings
       .filter(({ booking, learner, needsAttention, hasSessionToday }) => {
+        if (targetBookingId && booking.id !== targetBookingId) return false;
         if (courseFilter !== 'all' && booking.course_id !== courseFilter) return false;
         if (administrativeFilter === 'active' && ['completed', 'cancelled', 'rejected'].includes(booking.status)) return false;
         if (administrativeFilter === 'attention' && !needsAttention) return false;
@@ -443,7 +498,7 @@ function BookingRequestsSection({
         if (firstTime !== secondTime) return firstTime - secondTime;
         return first.learner.name.localeCompare(second.learner.name, 'fr-FR');
       });
-  }, [administrativeFilter, courseFilter, enrichedBookings, learnerSearch]);
+  }, [administrativeFilter, courseFilter, enrichedBookings, learnerSearch, targetBookingId]);
 
   const attentionCount = enrichedBookings.filter((item) => item.needsAttention).length;
   const todayCount = enrichedBookings.filter((item) => item.hasSessionToday).length;
@@ -514,7 +569,7 @@ function BookingRequestsSection({
       ) : (
         <div className="administrative-booking-list">
           {visibleBookings.map(({ booking, sessions, learner, displaySession, displaySessionLabel, needsAttention, hasSessionToday }) => (
-            <article key={booking.id} className={booking.status === 'pending_distance' ? 'booking-request-card booking-request-card--pending' : 'booking-request-card'}>
+            <article id={adminBookingAnchor(booking.id)} tabIndex={-1} key={booking.id} className={booking.status === 'pending_distance' ? 'booking-request-card booking-request-card--pending' : 'booking-request-card'}>
               <div className="administrative-booking-header">
                 <div className="administrative-learner-identity">
                   <span>APPRENANT</span>
@@ -611,16 +666,13 @@ function BookingRequestsSection({
 export default function AdminDashboard() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const requestedTab = searchParams.get('onglet');
-  const [activeTab, setActiveTab] = useState(
-    ['overview', 'users', 'contacts', 'blog', 'purchases', 'bookings', 'positioning', 'corrections', 'trainer-guides', 'feedback'].includes(requestedTab)
-      ? requestedTab
-      : 'overview',
-  );
+  const { correction: requestedCorrection, submissionId: targetSubmissionId, bookingId: targetBookingId } = adminWorkTarget(searchParams);
+  const activeTab = adminDashboardTab(requestedTab);
   const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState('sessions');
-  const [correctionWorkspaceTab, setCorrectionWorkspaceTab] = useState('exercises');
+  const [correctionWorkspaceTab, setCorrectionWorkspaceTab] = useState(requestedCorrection === 'project' ? 'evaluations' : 'exercises');
   const [correctionSearch, setCorrectionSearch] = useState('');
   const [users, setUsers] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -650,6 +702,7 @@ export default function AdminDashboard() {
   const [grantFeedback, setGrantFeedback] = useState(null);
   const [availabilitySlots, setAvailabilitySlots] = useState([]);
   const [bookingRequests, setBookingRequests] = useState([]);
+  const [courseCohorts, setCourseCohorts] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [attendanceDrafts, setAttendanceDrafts] = useState({});
   const [attendanceSessionFeedbacks, setAttendanceSessionFeedbacks] = useState({});
@@ -675,13 +728,19 @@ export default function AdminDashboard() {
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const selectDashboardTab = (tab) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('onglet', tab);
+      return next;
+    });
+  };
+
   const fetchBookingManagement = useCallback(async () => {
-    const [slotsResult, requestsResult, attendanceResult] = await Promise.all([
-      supabase
-        .from('training_availability_slots')
-        .select('*')
-        .or('is_active.eq.true,is_reserved.eq.true')
-        .order('starts_at', { ascending: true }),
+    const [slotsResult, requestsResult, attendanceResult, cohortsResult] = await Promise.all([
+      fetchAdminBookingAvailabilitySlots(supabase)
+        .then((data) => ({ data, error: null }))
+        .catch((error) => ({ data: [], error })),
       supabase
         .from('course_booking_requests')
         .select(`
@@ -694,13 +753,19 @@ export default function AdminDashboard() {
         .from('course_session_attendance')
         .select('id, booking_request_id, user_id, session_starts_at, session_ends_at, delivery_mode, meeting_url, check_in_opened_at, check_in_closed_at, learner_confirmed_at, learner_confirmation_version, learner_signature_sha256, learner_signed_payload_sha256, trainer_status, actual_ends_at, trainer_note, trainer_validated_by, trainer_validated_at, trainer_signature_sha256, trainer_signed_payload_sha256, locked_at, created_at, updated_at')
         .order('session_starts_at', { ascending: true }),
+      role === 'admin'
+        ? fetchAdminCourseCohorts(supabase)
+          .then((data) => ({ data, error: null }))
+          .catch((error) => ({ data: [], error }))
+        : Promise.resolve({ data: [], error: null }),
     ]);
 
-    if (slotsResult.error || requestsResult.error || attendanceResult.error) {
+    if (slotsResult.error || requestsResult.error || attendanceResult.error || cohortsResult.error) {
       console.error('Gestion des réservations indisponible :', {
         slots: slotsResult.error,
         requests: requestsResult.error,
         attendance: attendanceResult.error,
+        cohorts: cohortsResult.error,
       });
       setBookingError("Les réservations ne peuvent pas être chargées. Vérifiez que la migration Supabase est appliquée.");
       return;
@@ -725,10 +790,16 @@ export default function AdminDashboard() {
 
     setAvailabilitySlots(slotsResult.data || []);
     setBookingRequests(loadedBookings);
+    setCourseCohorts(cohortsResult.data || []);
     setAttendanceRecords(loadedAttendance);
     setAttendanceDrafts(nextDrafts);
     setBookingError('');
-  }, []);
+  }, [role]);
+
+  const loadCourseCohortAvailabilityMonth = useCallback(
+    (monthKey) => fetchAdminAvailabilitySlotsForMonth(supabase, monthKey),
+    [],
+  );
 
   const fetchCourseCorrections = useCallback(async () => {
     const [submissionsResult, historyResult] = await Promise.all([
@@ -808,7 +879,7 @@ export default function AdminDashboard() {
 
     async function fetchData() {
       // Fetch users
-      const { data: profilesData } = await supabase.from('profiles').select('*');
+      const { data: profilesData } = await supabase.from('profiles').select('id, email, role, created_at');
       if (profilesData) setUsers(profilesData);
 
       // Fetch purchases and the phone number supplied for pedagogical follow-up
@@ -991,6 +1062,9 @@ export default function AdminDashboard() {
     [finalProjectEvaluations],
   );
   const visibleExerciseCorrections = useMemo(() => {
+    if (targetSubmissionId && requestedCorrection !== 'project') {
+      return exactTargetRows(exerciseCorrections, targetSubmissionId);
+    }
     if (!normalizedCorrectionSearch) return pendingExerciseCorrections;
     return exerciseCorrections.filter((submission) => normalizeAdministrativeSearch([
       submission.learnerName,
@@ -999,8 +1073,11 @@ export default function AdminDashboard() {
       submission.exerciseTitle,
       submission.response_text,
     ].join(' ')).includes(normalizedCorrectionSearch));
-  }, [exerciseCorrections, normalizedCorrectionSearch, pendingExerciseCorrections]);
+  }, [exerciseCorrections, normalizedCorrectionSearch, pendingExerciseCorrections, requestedCorrection, targetSubmissionId]);
   const visibleFinalProjectEvaluations = useMemo(() => {
+    if (targetSubmissionId && requestedCorrection === 'project') {
+      return exactTargetRows(finalProjectEvaluations, targetSubmissionId);
+    }
     if (!normalizedCorrectionSearch) return pendingFinalProjectEvaluations;
     return finalProjectEvaluations.filter((submission) => normalizeAdministrativeSearch([
       submission.learnerName,
@@ -1009,8 +1086,24 @@ export default function AdminDashboard() {
       submission.learner_note,
       ...submission.deliverables.map((deliverable) => deliverable.value),
     ].join(' ')).includes(normalizedCorrectionSearch));
-  }, [finalProjectEvaluations, normalizedCorrectionSearch, pendingFinalProjectEvaluations]);
+  }, [finalProjectEvaluations, normalizedCorrectionSearch, pendingFinalProjectEvaluations, requestedCorrection, targetSubmissionId]);
   const pendingPedagogicalWorkCount = pendingExerciseCorrections.length + pendingFinalProjectEvaluations.length;
+
+  useEffect(() => {
+    if (loading) return undefined;
+    const targetId = targetBookingId
+      ? adminBookingAnchor(targetBookingId)
+      : targetSubmissionId
+        ? adminCorrectionAnchor(requestedCorrection, targetSubmissionId)
+        : null;
+    if (!targetId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(targetId);
+      target?.scrollIntoView({ block: 'start' });
+      target?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [correctionWorkspaceTab, finalProjectSubmissions.length, exerciseSubmissions.length, loading, requestedCorrection, targetBookingId, targetSubmissionId]);
 
   if (!user || (role !== 'admin' && role !== 'employee')) return null;
 
@@ -1140,6 +1233,44 @@ export default function AdminDashboard() {
     }
     setBookingAction('');
   };
+
+  const runCohortMutation = async (successMessage, mutation) => {
+    setBookingError('');
+    setBookingFeedback('');
+    const result = await mutation();
+    await fetchBookingManagement();
+    setBookingFeedback(successMessage);
+    return result;
+  };
+
+  const handleSaveCourseCohort = (draft) => runCohortMutation(
+    'Le brouillon de cohorte est enregistré.',
+    () => saveAdminCourseCohort(supabase, draft),
+  );
+  const handlePublishCourseCohort = (cohortId) => runCohortMutation(
+    'La cohorte est publiée et visible par les apprenants autorisés.',
+    () => publishAdminCourseCohort(supabase, cohortId),
+  );
+  const handleConfirmCourseCohort = (cohortId) => runCohortMutation(
+    'La cohorte est confirmée.',
+    () => confirmAdminCourseCohort(supabase, cohortId),
+  );
+  const handleCancelCourseCohort = (cohortId, reason) => runCohortMutation(
+    'La cohorte est annulée. Les remboursements éventuels restent à traiter séparément.',
+    () => cancelAdminCourseCohort(supabase, cohortId, reason),
+  );
+  const handleSetCourseCohortMeetingUrl = (cohortId, sessionId, meetingUrl) => runCohortMutation(
+    'Le lien de visioconférence de la séance est enregistré.',
+    () => setAdminCourseCohortMeetingUrl(supabase, cohortId, sessionId, meetingUrl),
+  );
+  const handleGenerateCourseCohortMeetingLinks = (cohortId) => runCohortMutation(
+    'La génération des liens Google Meet a été traitée.',
+    () => generateAdminCourseCohortMeetingLinks(supabase, cohortId),
+  );
+  const handleCleanupCourseCohortMeetingEvents = (cohortId) => runCohortMutation(
+    'Le nettoyage des événements Google Meet a été traité.',
+    () => cleanupAdminCourseCohortMeetingEvents(supabase, cohortId),
+  );
 
   const handleBookingDecision = async (booking, action) => {
     const changes = {};
@@ -1616,56 +1747,56 @@ export default function AdminDashboard() {
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         <button 
-          onClick={() => setActiveTab('overview')} 
+          onClick={() => selectDashboardTab('overview')} 
           className={`btn ${activeTab === 'overview' ? 'btn-primary' : ''}`}
           style={activeTab !== 'overview' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Vue d'ensemble
         </button>
         <button 
-          onClick={() => setActiveTab('users')} 
+          onClick={() => selectDashboardTab('users')} 
           className={`btn ${activeTab === 'users' ? 'btn-primary' : ''}`}
           style={activeTab !== 'users' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
-          Clients & Inscriptions
+          Apprenants
         </button>
         <button 
-          onClick={() => setActiveTab('contacts')} 
+          onClick={() => selectDashboardTab('contacts')} 
           className={`btn ${activeTab === 'contacts' ? 'btn-primary' : ''}`}
           style={activeTab !== 'contacts' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Demandes de Devis
         </button>
         <button 
-          onClick={() => setActiveTab('blog')} 
+          onClick={() => selectDashboardTab('blog')} 
           className={`btn ${activeTab === 'blog' ? 'btn-primary' : ''}`}
           style={activeTab !== 'blog' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Blog & Actualités
         </button>
         <button
-          onClick={() => setActiveTab('purchases')}
+          onClick={() => selectDashboardTab('purchases')}
           className={`btn ${activeTab === 'purchases' ? 'btn-primary' : ''}`}
           style={activeTab !== 'purchases' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Achats, accès & appels
         </button>
         <button
-          onClick={() => setActiveTab('bookings')}
+          onClick={() => selectDashboardTab('bookings')}
           className={`btn ${activeTab === 'bookings' ? 'btn-primary' : ''}`}
           style={activeTab !== 'bookings' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Séances & disponibilités
         </button>
         <button
-          onClick={() => setActiveTab('positioning')}
+          onClick={() => selectDashboardTab('positioning')}
           className={`btn ${activeTab === 'positioning' ? 'btn-primary' : ''}`}
           style={activeTab !== 'positioning' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Positionnements
         </button>
         <button
-          onClick={() => setActiveTab('corrections')}
+          onClick={() => selectDashboardTab('corrections')}
           className={`btn ${activeTab === 'corrections' ? 'btn-primary' : ''}`}
           style={activeTab !== 'corrections' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
@@ -1675,14 +1806,14 @@ export default function AdminDashboard() {
             : ''}
         </button>
         <button
-          onClick={() => setActiveTab('trainer-guides')}
+          onClick={() => selectDashboardTab('trainer-guides')}
           className={`btn ${activeTab === 'trainer-guides' ? 'btn-primary' : ''}`}
           style={activeTab !== 'trainer-guides' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
           Guides formateur ({TRAINER_GUIDES.length})
         </button>
         <button 
-          onClick={() => setActiveTab('feedback')} 
+          onClick={() => selectDashboardTab('feedback')} 
           className={`btn ${activeTab === 'feedback' ? 'btn-primary' : ''}`}
           style={activeTab !== 'feedback' ? { background: '#2a2a2a', border: '1px solid #444', color: '#fff' } : {}}
         >
@@ -1757,126 +1888,43 @@ export default function AdminDashboard() {
 
             {activeTab === 'users' && (
               <div>
-                <h2 style={{ marginBottom: '0.5rem' }}>Liste des clients</h2>
-                {role === 'admin' && (
-                  <p style={{ color: '#aaa', margin: '0 0 1.5rem' }}>
-                    Sélectionnez une formation pour l'offrir immédiatement à un apprenant inscrit.
-                  </p>
-                )}
                 {grantFeedback && (
-                  <div
-                    role={grantFeedback.type === 'error' ? 'alert' : 'status'}
-                    style={{
-                      padding: '1rem',
-                      marginBottom: '1.25rem',
-                      borderRadius: '8px',
-                      color: grantFeedback.type === 'error' ? '#fecaca' : '#d1fae5',
-                      background: grantFeedback.type === 'error' ? '#3f1d24' : '#123c32',
-                      border: `1px solid ${grantFeedback.type === 'error' ? '#f87171' : '#34d399'}`,
-                    }}
-                  >
+                  <div role={grantFeedback.type === 'error' ? 'alert' : 'status'} style={{ padding: '1rem', marginBottom: '1.25rem', borderRadius: '8px', color: grantFeedback.type === 'error' ? '#fecaca' : '#d1fae5', background: grantFeedback.type === 'error' ? '#3f1d24' : '#123c32', border: `1px solid ${grantFeedback.type === 'error' ? '#f87171' : '#34d399'}` }}>
                     {grantFeedback.message}
                   </div>
                 )}
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '1px solid #444', color: '#aaa' }}>
-                        <th style={{ padding: '1rem' }}>Email</th>
-                        <th style={{ padding: '1rem' }}>Rôle</th>
-                        <th style={{ padding: '1rem' }}>Date d'inscription</th>
-                        {role === 'admin' && <th style={{ padding: '1rem' }}>Offrir une formation</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map(u => (
-                        <tr key={u.id} style={{ borderBottom: '1px solid #333' }}>
-                          <td style={{ padding: '1rem' }}>{u.email}</td>
-                          <td style={{ padding: '1rem' }}>
-                            <span style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', background: u.role === 'admin' ? '#ef4444' : '#3b82f6', color: '#fff' }}>
-                              {u.role}
-                            </span>
-                          </td>
-                          <td style={{ padding: '1rem', color: '#aaa' }}>{new Date(u.created_at).toLocaleDateString()}</td>
-                          {role === 'admin' && (
-                            <td style={{ padding: '1rem', minWidth: '340px' }}>
-                              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                <label
-                                  htmlFor={`gift-course-${u.id}`}
-                                  style={{
-                                    position: 'absolute',
-                                    width: '1px',
-                                    height: '1px',
-                                    padding: 0,
-                                    margin: '-1px',
-                                    overflow: 'hidden',
-                                    clip: 'rect(0, 0, 0, 0)',
-                                    whiteSpace: 'nowrap',
-                                    border: 0,
-                                  }}
-                                >
-                                  Formation à offrir à {u.email}
-                                </label>
-                                <select
-                                  id={`gift-course-${u.id}`}
-                                  value={selectedCourseByUser[u.id] || ''}
-                                  onChange={(event) => {
-                                    setSelectedCourseByUser((current) => ({
-                                      ...current,
-                                      [u.id]: event.target.value,
-                                    }));
-                                    setGrantFeedback(null);
-                                  }}
-                                  style={{
-                                    flex: '1 1 210px',
-                                    padding: '0.65rem',
-                                    borderRadius: '6px',
-                                    border: '1px solid #555',
-                                    background: '#161616',
-                                    color: '#fff',
-                                  }}
-                                >
-                                  <option value="">Choisir une formation</option>
-                                  {COURSE_OPTIONS.map((course) => {
-                                    const learnerHasAccess = courseAccesses.some(
-                                      (access) => access.user_id === u.id
-                                        && access.course_id === course.id
-                                        && access.status === 'active'
-                                        && (!access.expires_at || new Date(access.expires_at) > new Date()),
-                                    );
-                                    return (
-                                      <option key={course.id} value={course.id} disabled={learnerHasAccess}>
-                                        {course.label}{learnerHasAccess ? ' — déjà accessible' : ''}
-                                      </option>
-                                    );
-                                  })}
-                                </select>
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  disabled={
-                                    !selectedCourseByUser[u.id]
-                                    || Boolean(grantingAccess)
-                                    || courseAccesses.some(
-                                      (access) => access.user_id === u.id
-                                        && access.course_id === selectedCourseByUser[u.id]
-                                        && access.status === 'active'
-                                        && (!access.expires_at || new Date(access.expires_at) > new Date()),
-                                    )
-                                  }
-                                  onClick={() => handleGrantCourse(u)}
-                                  style={{ whiteSpace: 'nowrap' }}
-                                >
-                                  {grantingAccess === `${u.id}:${selectedCourseByUser[u.id]}` ? 'Attribution…' : 'Offrir'}
-                                </button>
-                              </div>
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <AdminLearnerDirectory
+                  role={role}
+                  renderActions={(learner) => (
+                    <div className="learner-directory__actions">
+                      <label htmlFor={`gift-course-${learner.userId}`}>Formation à offrir</label>
+                      <div>
+                        <select
+                          id={`gift-course-${learner.userId}`}
+                          value={selectedCourseByUser[learner.userId] || ''}
+                          onChange={(event) => {
+                            setSelectedCourseByUser((current) => ({ ...current, [learner.userId]: event.target.value }));
+                            setGrantFeedback(null);
+                          }}
+                        >
+                          <option value="">Choisir une formation</option>
+                          {COURSE_OPTIONS.map((course) => {
+                            const learnerHasAccess = courseAccesses.some((access) => access.user_id === learner.userId && access.course_id === course.id && access.status === 'active' && (!access.expires_at || new Date(access.expires_at) > new Date()));
+                            return <option key={course.id} value={course.id} disabled={learnerHasAccess}>{course.label}{learnerHasAccess ? ' — déjà accessible' : ''}</option>;
+                          })}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          disabled={!selectedCourseByUser[learner.userId] || Boolean(grantingAccess) || courseAccesses.some((access) => access.user_id === learner.userId && access.course_id === selectedCourseByUser[learner.userId] && access.status === 'active' && (!access.expires_at || new Date(access.expires_at) > new Date()))}
+                          onClick={() => handleGrantCourse({ id: learner.userId, email: learner.email })}
+                        >
+                          {grantingAccess === `${learner.userId}:${selectedCourseByUser[learner.userId]}` ? 'Attribution…' : 'Offrir'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                />
               </div>
             )}
 
@@ -1928,7 +1976,7 @@ export default function AdminDashboard() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2 style={{ margin: 0 }}>Gestion du Blog</h2>
-                  <button 
+                  <button
                     onClick={() => {
                       if (isAddingPost) resetForm();
                       else setIsAddingPost(true);
@@ -2114,6 +2162,17 @@ export default function AdminDashboard() {
                   >
                     Mes disponibilités
                   </button>
+                  {role === 'admin' && (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={bookingWorkspaceTab === 'cohorts'}
+                      className={bookingWorkspaceTab === 'cohorts' ? 'is-active' : ''}
+                      onClick={() => setBookingWorkspaceTab('cohorts')}
+                    >
+                      Cohortes inter
+                    </button>
+                  )}
                 </div>
 
                 {bookingError && (
@@ -2131,6 +2190,7 @@ export default function AdminDashboard() {
                 {bookingWorkspaceTab === 'sessions' && (
                   <BookingRequestsSection
                     bookingRequests={bookingRequests}
+                    targetBookingId={targetBookingId}
                     positioningAssessments={positioningAssessments}
                     attendanceRecords={attendanceRecords}
                     attendanceDrafts={attendanceDrafts}
@@ -2262,6 +2322,25 @@ export default function AdminDashboard() {
                   </>
                 )}
 
+                {bookingWorkspaceTab === 'cohorts' && role === 'admin' && (
+                  <AdminCourseCohorts
+                    courseOptions={COHORT_COURSE_OPTIONS}
+                    cohorts={courseCohorts}
+                    availableSlots={availabilitySlots.filter((slot) => (
+                      slot.is_active && !slot.is_reserved && new Date(slot.starts_at) > new Date()
+                    ))}
+                    onLoadAvailabilityMonth={loadCourseCohortAvailabilityMonth}
+                    error={bookingError}
+                    onSaveDraft={handleSaveCourseCohort}
+                    onPublish={handlePublishCourseCohort}
+                    onConfirm={handleConfirmCourseCohort}
+                    onCancel={handleCancelCourseCohort}
+                    onSetMeetingUrl={handleSetCourseCohortMeetingUrl}
+                    onGenerateMeetingLinks={handleGenerateCourseCohortMeetingLinks}
+                    onCleanupMeetingEvents={handleCleanupCourseCohortMeetingEvents}
+                  />
+                )}
+
               </div>
             )}
 
@@ -2369,7 +2448,7 @@ export default function AdminDashboard() {
                         const calculatedStatus = calculateFinalProjectReviewStatus(selectedLevels);
 
                         return (
-                          <article key={submission.id} className="final-project-evaluation-card">
+                          <article id={adminCorrectionAnchor('project', submission.id)} tabIndex={-1} key={submission.id} className="final-project-evaluation-card">
                             <header className="exercise-correction-card__header">
                               <div>
                                 <p className="exercise-correction-card__learner">{submission.learnerName}</p>
@@ -2737,7 +2816,7 @@ export default function AdminDashboard() {
                       const isSaving = correctionSaving === String(submission.id);
 
                       return (
-                        <article key={submission.id} className="exercise-correction-card">
+                        <article id={adminCorrectionAnchor('exercise', submission.id)} tabIndex={-1} key={submission.id} className="exercise-correction-card">
                           <header className="exercise-correction-card__header">
                             <div>
                               <p className="exercise-correction-card__learner">{submission.learnerName}</p>
@@ -2962,7 +3041,7 @@ export default function AdminDashboard() {
 
                           return (
                             <tr key={purchase.id} style={{ borderBottom: '1px solid #333' }}>
-                              <td style={{ padding: '1rem' }}>{learner?.email || purchase.user_id}</td>
+                              <td style={{ padding: '1rem' }}>{purchase.user_id ? <Link to={learnerRecordPath(purchase.user_id)}>{learner?.email || 'Nom non renseigné'}</Link> : 'Apprenant non renseigné'}</td>
                               <td style={{ padding: '1rem' }}>{COURSE_LABELS[purchase.course_id] || purchase.course_id}</td>
                               <td style={{ padding: '1rem' }}>
                                 {phoneHref ? <a href={`tel:${phoneHref}`} style={{ color: '#60a5fa' }}>{purchase.customer_phone}</a> : 'Non renseigné'}

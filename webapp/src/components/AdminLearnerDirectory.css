@@ -1,0 +1,32 @@
+.learner-directory { display: grid; gap: 1.25rem; }
+.learner-directory header h2 { margin: 0 0 .4rem; }
+.learner-directory header p { margin: 0; color: #334155; }
+.learner-directory__eyebrow { color: #5eead4 !important; font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.learner-directory__search { display: grid; gap: .45rem; max-width: 760px; }
+.learner-directory__search label { font-weight: 700; }
+.learner-directory__search > div { display: flex; gap: .6rem; flex-wrap: wrap; }
+.learner-directory__search input { flex: 1 1 260px; min-width: 0; padding: .75rem; border: 1px solid #64748b; border-radius: 8px; background: #111827; color: #fff; }
+.learner-directory__count { margin: 0; color: #475569; }
+.admin-dashboard__panel .learner-directory header p,
+.admin-dashboard__panel .learner-directory__count { color: #cbd5e1; }
+.learner-directory__list { display: grid; gap: .85rem; margin: 0; padding: 0; list-style: none; }
+.learner-directory__card { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem; border: 1px solid #475569; border-radius: 10px; background: #20242b; }
+.learner-directory__identity { min-width: 0; }
+.learner-directory__identity h3, .learner-directory__identity p { margin: 0; overflow-wrap: anywhere; }
+.learner-directory__identity h3 a { color: #67e8f9; }
+.learner-directory__identity p { margin-top: .3rem; color: #cbd5e1; }
+.learner-directory__role { display: inline-block; margin-top: .55rem; padding: .2rem .5rem; border-radius: 999px; background: #334155; color: #e2e8f0; font-size: .78rem; font-weight: 700; }
+.learner-directory__actions { display: grid; gap: .35rem; min-width: min(360px, 100%); }
+.learner-directory__actions label { font-size: .82rem; font-weight: 700; color: #cbd5e1; }
+.learner-directory__actions > div { display: flex; gap: .55rem; flex-wrap: wrap; }
+.learner-directory__actions select { flex: 1 1 210px; min-width: 0; padding: .65rem; border: 1px solid #64748b; border-radius: 6px; background: #111827; color: #fff; }
+.learner-directory__message { padding: 1rem; border: 1px solid #64748b; border-radius: 8px; background: #1e293b; }
+.learner-directory__message p { margin-top: 0; }
+.learner-directory__pagination { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+@media (max-width: 700px) {
+  .learner-directory__card { align-items: stretch; flex-direction: column; }
+  .learner-directory__card > :last-child { width: 100%; }
+  .learner-directory__search button { flex: 1 1 auto; }
+  .learner-directory__pagination { display: grid; grid-template-columns: 1fr; text-align: center; }
+  .learner-directory__pagination button { width: 100%; }
+}
