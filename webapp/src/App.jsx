@@ -53,6 +53,7 @@ const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const AttendanceSheets = lazy(() => import("./pages/AttendanceSheets"));
 const GuideGPT56 = lazy(() => import("./pages/GuideGPT56"));
+const GuideGPT6 = lazy(() => import("./pages/GuideGPT6"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const CourseBooking = lazy(() => import("./pages/CourseBooking"));
 const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
@@ -161,6 +162,7 @@ function App() {
               element={<RequireAuth><LearningPath /></RequireAuth>}
             />
             <Route path="guide-gpt-5-6-codex" element={<GuideGPT56 />} />
+            <Route path="guide-gpt-6-codex" element={<GuideGPT6 />} />
             <Route path="paiement-reussi" element={<PaymentSuccess />} />
             <Route path="reservation-formation" element={<CourseBooking />} />
             <Route path="admin/emargements/:bookingId" element={<AdminShell><AttendanceSheet /></AdminShell>} />

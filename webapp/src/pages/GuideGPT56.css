@@ -42,6 +42,8 @@
 .gpt-hero h1 { max-width: 900px; margin: 1.5rem auto; color: white; font-size: clamp(2.6rem, 6vw, 5rem); letter-spacing: -.055em; }
 .gpt-hero h1 span { color: #5eead4; }
 .gpt-hero-lead { max-width: 720px; margin: 0 auto 2.25rem; color: #d9e8eb; font-size: clamp(1.05rem, 2vw, 1.3rem); }
+.gpt-hero-lead a { color: #5eead4; text-decoration: underline; text-underline-offset: 3px; }
+.gpt-hero-lead a:hover { color: white; }
 
 .gpt-equation { max-width: 850px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 1rem; }
 .gpt-equation > div { min-height: 88px; display: flex; align-items: center; gap: .8rem; padding: 1rem 1.25rem; border-radius: 18px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); text-align: left; }
@@ -74,6 +76,8 @@
 .gpt-surface-note { display: inline-block; margin-top: 1.25rem; padding: .4rem .65rem; border-radius: 8px; background: #f1f5f9; color: #475569; font-size: .75rem; font-weight: 700; }
 .gpt-surface-summary { max-width: 900px; margin: 2rem auto 0; display: flex; align-items: center; gap: 1rem; padding: 1.2rem 1.4rem; border-radius: 16px; color: #134e4a; background: #ccfbf1; border: 1px solid #99f6e4; }
 .gpt-surface-summary svg { flex: 0 0 auto; color: #0f766e; }
+.gpt-current-note { max-width: 900px; margin: 1.5rem auto 0; color: var(--gpt-muted); }
+.gpt-current-note a { text-decoration: underline; text-underline-offset: 2px; }
 
 .gpt-model-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; align-items: stretch; }
 .gpt-model-card { position: relative; padding: 2rem; border-radius: 24px; background: white; border: 1px solid #e8ebf0; box-shadow: 0 16px 45px rgba(26, 43, 70, .08); }
@@ -124,6 +128,7 @@
 .gpt-choices button:hover { background: white; }
 .gpt-choices button.active { background: white; color: #0f766e; box-shadow: 0 5px 18px rgba(26, 43, 70, .08); }
 .gpt-choices button.active small { color: #45736f; }
+.gpt-guide a:focus-visible, .gpt-choices button:focus-visible { outline: 3px solid #fbbf24; outline-offset: 3px; }
 .gpt-recommendation { padding: 2.5rem; background: linear-gradient(145deg, #0f766e, #115e59); color: white; }
 .gpt-reco-label { display: flex; align-items: center; gap: .5rem; text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 800; color: #99f6e4; }
 .gpt-reco-pills { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.2rem 0; }

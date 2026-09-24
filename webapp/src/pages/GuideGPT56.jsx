@@ -6,9 +6,7 @@ import {
   ChevronRight,
   Clock3,
   Gauge,
-  Globe2,
   Lightbulb,
-  MonitorSmartphone,
   Rocket,
   Scale,
   ShieldCheck,
@@ -16,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { Link } from 'react-router-dom';
 import './GuideGPT56.css';
 
 const models = [
@@ -134,9 +133,9 @@ export default function GuideGPT56() {
   return (
     <>
       <SEO
-        title="GPT-5.6 dans ChatGPT et Codex : quel modèle choisir ? – FormaPrompt"
-        description="Guide visuel pour comprendre GPT-5.6 Sol, Terra et Luna dans ChatGPT, Codex et l’API, ainsi que les niveaux d’effort de raisonnement."
-        url="https://www.formaprompt.com/guide-gpt-5-6-codex"
+        title="Guide GPT-5.6 : choisir Sol, Terra ou Luna – FormaPrompt"
+        description="Repère pédagogique sur la génération GPT-5.6 (juillet 2026) : choisir Sol, Terra ou Luna selon la tâche et l’effort de raisonnement."
+        url="https://formaprompt.com/guide-gpt-5-6-codex"
       />
 
       <div className="gpt-guide">
@@ -145,10 +144,10 @@ export default function GuideGPT56() {
           <div className="gpt-orb gpt-orb-two" aria-hidden="true" />
           <div className="container gpt-hero-inner">
             <p className="gpt-eyebrow"><BrainCircuit size={18} /> Le guide simple de FormaPrompt</p>
-            <h1 id="gpt-title">GPT‑5.6 dans ChatGPT et Codex :<br /><span>que faut-il vraiment choisir ?</span></h1>
+            <h1 id="gpt-title">GPT‑5.6 :<br /><span>un repère sur la génération précédente</span></h1>
             <p className="gpt-hero-lead">
-              GPT‑5.6 n’est pas réservé à Codex : il est également proposé dans ChatGPT sur ordinateur,
-              sur le site web et progressivement sur mobile. Les choix visibles dépendent toutefois du produit et de l’abonnement.
+              Ce guide conserve les exemples de choix entre Sol, Terra et Luna tels qu’ils étaient présentés en juillet 2026.
+              Pour choisir dans la famille actuelle, consultez le <Link to="/guide-gpt-6-codex">guide GPT‑6</Link>.
             </p>
             <div className="gpt-equation" aria-label="Trois modèles multipliés par cinq niveaux d'effort">
               <div><strong>1</strong><span>Je choisis le moteur</span></div>
@@ -165,41 +164,15 @@ export default function GuideGPT56() {
           <section className="gpt-surfaces-section" aria-labelledby="surfaces-title">
             <div className="container">
               <div className="gpt-section-heading">
-                <span className="gpt-step">Avant de choisir</span>
-                <h2 id="surfaces-title">Où peut-on utiliser GPT‑5.6 ?</h2>
-                <p>La même famille de modèles est disponible dans plusieurs produits OpenAI, mais l’écran de sélection n’est pas toujours identique.</p>
+                <span className="gpt-step">Mise à jour du 24 septembre 2026</span>
+                <h2 id="surfaces-title">Un guide conservé pour comprendre les choix de 2026</h2>
+                <p>Les exemples ci-dessous décrivent la famille GPT‑5.6 à la date de rédaction initiale. Ils ne garantissent pas que ces modèles ou réglages soient encore proposés dans votre interface.</p>
               </div>
-
-              <div className="gpt-surfaces-grid">
-                <article>
-                  <div className="gpt-surface-icon chat"><MonitorSmartphone size={27} /></div>
-                  <h3>ChatGPT classique</h3>
-                  <p className="gpt-surface-where">Application, site web et mobile</p>
-                  <p>Sur les abonnements éligibles, <strong>GPT‑5.6 Sol</strong> alimente les niveaux Moyen, Élevé et Très élevé. Le mode Instant reste basé sur GPT‑5.5.</p>
-                  <span className="gpt-surface-note">Déploiement progressif selon le compte</span>
-                </article>
-
-                <article className="featured">
-                  <div className="gpt-surface-icon work"><BrainCircuit size={27} /></div>
-                  <h3>ChatGPT Work et Codex</h3>
-                  <p className="gpt-surface-where">Travail avec fichiers, outils et projets</p>
-                  <p>Selon l’abonnement, vous pouvez choisir <strong>Sol, Terra ou Luna</strong>, puis régler leur niveau d’effort.</p>
-                  <span className="gpt-surface-note">C’est ici que les choix sont les plus complets</span>
-                </article>
-
-                <article>
-                  <div className="gpt-surface-icon api"><Globe2 size={27} /></div>
-                  <h3>API OpenAI</h3>
-                  <p className="gpt-surface-where">Pour les applications et automatisations</p>
-                  <p>Les développeurs peuvent intégrer <strong>Sol, Terra et Luna</strong> dans leurs propres outils et définir l’effort par programmation.</p>
-                  <span className="gpt-surface-note">Usage technique facturé selon la consommation</span>
-                </article>
-              </div>
-
               <div className="gpt-surface-summary">
                 <Lightbulb size={24} />
-                <p><strong>À retenir :</strong> si vous voyez seulement « Moyen », « Élevé » ou « Très élevé » dans le ChatGPT classique, vous utilisez bien GPT‑5.6 Sol sans forcément voir son nom partout.</p>
+                <p><strong>À retenir :</strong> la famille GPT‑6 comprend Astra, Sol et Luna ; elle ne comprend pas Terra. Les noms et niveaux visibles varient selon le produit et le compte. <Link to="/guide-gpt-6-codex">Voir le guide GPT‑6</Link>.</p>
               </div>
+              <p className="gpt-current-note">Selon l’<a href="https://help.openai.com/en/articles/20001354-gpt-56-and-gpt-6-pro-in-chatgpt" target="_blank" rel="noreferrer">aide officielle OpenAI consultée le 24 septembre 2026</a>, GPT‑5.6 Sol peut alimenter Instant ainsi que plusieurs niveaux de raisonnement pour les forfaits éligibles ; GPT‑5.6 Luna est indiqué comme modèle par défaut pour Free et Go. Ces indications peuvent évoluer avec les déploiements.</p>
             </div>
           </section>
 
@@ -207,7 +180,7 @@ export default function GuideGPT56() {
             <div className="gpt-section-heading">
               <span className="gpt-step">Étape 1</span>
               <h2 id="models-title">Les trois modèles : choisissez le moteur</h2>
-              <p>Ils appartiennent à la même famille GPT‑5.6, mais privilégient différemment la vitesse, le coût et la capacité.</p>
+              <p>Dans cette génération précédente, les trois modèles répondaient à des besoins différents. Ces conseils sont des exemples pédagogiques datés.</p>
             </div>
 
             <div className="gpt-model-grid">
@@ -242,7 +215,7 @@ export default function GuideGPT56() {
               <div className="gpt-section-heading light">
                 <span className="gpt-step">Étape 2</span>
                 <h2 id="efforts-title">Les cinq niveaux : réglez le temps de réflexion</h2>
-              <p>Ce réglage indique au modèle combien d’effort de raisonnement il doit consacrer à votre demande. Les intitulés exacts peuvent varier entre ChatGPT, ChatGPT Work, Codex et l’API.</p>
+              <p>Ce réglage illustre l’effort de raisonnement consacré à une demande. Les niveaux réellement disponibles dépendent du modèle et du produit ; vérifiez les options affichées dans votre interface.</p>
               </div>
 
               <div className="gpt-analogy">
@@ -291,7 +264,7 @@ export default function GuideGPT56() {
               </div>
 
               <div className="gpt-recommendation" aria-live="polite">
-                <p className="gpt-reco-label"><Rocket size={18} /> Notre conseil</p>
+                <p className="gpt-reco-label"><Rocket size={18} /> Conseil de juillet 2026</p>
                 <div className="gpt-reco-pills">
                   <span>GPT‑5.6 <strong>{recommendation.model}</strong></span>
                   <span>Effort <strong>{recommendation.effort}</strong></span>
@@ -309,7 +282,7 @@ export default function GuideGPT56() {
                 <h2 id="rules-title">Les quatre règles à retenir</h2>
               </div>
               <div className="gpt-rules-grid">
-                <article><span>01</span><h3>Commencez au milieu</h3><p>En cas de doute, choisissez <strong>Terra + Moyen</strong>. C’est le réglage polyvalent.</p></article>
+                <article><span>01</span><h3>Le repère de juillet 2026</h3><p><strong>Terra + Moyen</strong> servait alors de point de départ polyvalent.</p></article>
                 <article><span>02</span><h3>Montez progressivement</h3><p>Si le résultat manque de profondeur, augmentez d’abord l’effort, puis passez à Sol.</p></article>
                 <article><span>03</span><h3>Ne surdimensionnez pas</h3><p>Sol + Très élevé n’est pas automatiquement meilleur pour une tâche simple. Il sera surtout plus lent.</p></article>
                 <article><span>04</span><h3>Le prompt reste essentiel</h3><p>Un objectif clair, du contexte et des critères précis comptent davantage qu’un réglage maximal.</p></article>
@@ -322,15 +295,15 @@ export default function GuideGPT56() {
             <div>
               <h2 id="sources-title">Une précision importante</h2>
               <p>
-                GPT‑5.6 est disponible dans ChatGPT, ChatGPT Work, Codex et l’API OpenAI. Cependant, le modèle exact, les niveaux proposés et les limites d’utilisation dépendent de l’abonnement, du produit et des réglages éventuels de l’organisation.
+                Cette page documente les choix GPT‑5.6 présentés en juillet 2026. Elle ne décrit pas la disponibilité actuelle de ces modèles dans ChatGPT, Codex ou l’API. Pour un choix aujourd’hui, reportez-vous au guide GPT‑6 et vérifiez les options de votre compte.
               </p>
               <p className="gpt-source-links">
-                Sources officielles consultées le 11 juillet 2026 :{' '}
+                Sources de la version initiale, consultées le 11 juillet 2026 :{' '}
                 <a href="https://openai.com/index/gpt-5-6/" target="_blank" rel="noreferrer">annonce générale de GPT‑5.6</a>,{' '}
                 <a href="https://help.openai.com/en/articles/20001354-gpt-56-in-chatgpt" target="_blank" rel="noreferrer">GPT‑5.6 dans ChatGPT</a>,{' '}
                 <a href="https://developers.openai.com/api/docs/models/gpt-5.6-sol" target="_blank" rel="noreferrer">Sol</a>,{' '}
                 <a href="https://developers.openai.com/api/docs/models/gpt-5.6-terra" target="_blank" rel="noreferrer">Terra</a> et{' '}
-                <a href="https://developers.openai.com/api/docs/models/gpt-5.6-luna" target="_blank" rel="noreferrer">Luna</a>.
+                <a href="https://developers.openai.com/api/docs/models/gpt-5.6-luna" target="_blank" rel="noreferrer">Luna</a>. Pour l’état de la famille actuelle, consultez le <a href="https://developers.openai.com/api/docs/models" target="_blank" rel="noreferrer">catalogue officiel des modèles</a>.
               </p>
             </div>
           </section>

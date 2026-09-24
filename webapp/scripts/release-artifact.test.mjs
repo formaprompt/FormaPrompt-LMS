@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { checkApacheTargets, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
 
@@ -31,6 +32,15 @@ test('la liste publique refuse www, doublons et ancienne URL, sans pré-rendre l
   assert.throws(() => publicRoutes(sitemap + sitemap));
   assert.throws(() => publicRoutes('<loc>https://www.formaprompt.com/contact</loc>'));
   assert.throws(() => publicRoutes('<loc>https://formaprompt.com/formation-ia-formateur</loc>'));
+});
+
+test('les deux guides GPT ont une route publique pré-rendue', () => {
+  const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  const routes = publicRoutes(sitemap);
+  for (const route of ['/guide-gpt-6-codex', '/guide-gpt-5-6-codex']) {
+    assert.ok(routes.includes(route));
+    assert.equal(outputForRoute(route), `${route.slice(1)}.html`);
+  }
 });
 
 test('une page publique doit avoir un H1 et la canonical exacte, sans noindex', () => {

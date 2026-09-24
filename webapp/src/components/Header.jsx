@@ -118,7 +118,8 @@ export default function Header() {
               <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio — outil gratuit</Link>
               <Link to="/guides" onClick={() => setIsMenuOpen(false)}>Guides pratiques</Link>
               <Link to="/blog" onClick={() => setIsMenuOpen(false)}>Blog</Link>
-              <Link to="/guide-gpt-5-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑5.6</Link>
+              <Link to="/guide-gpt-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑6</Link>
+              <Link to="/guide-gpt-5-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑5.6 (repère 2026)</Link>
           </NavigationGroup>
           <NavigationGroup id="navigation-informations" label="Informations">
             <Link to="/disponibilites" onClick={() => setIsMenuOpen(false)}>Disponibilités</Link>

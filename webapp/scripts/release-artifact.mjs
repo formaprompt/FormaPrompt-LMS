@@ -19,7 +19,7 @@ export function publicRoutes(sitemap) {
   }
   // La rétractation utilise le shell applicatif prévu par .htaccess.
   return [...new Set([...urls.map(url => new URL(url).pathname).filter(route => route !== '/retractation'),
-    '/diagnostic-ia', '/faq', '/guide-gpt-5-6-codex'])];
+    '/diagnostic-ia', '/faq'])];
 }
 
 export function outputForRoute(route) {
