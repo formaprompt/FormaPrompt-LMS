@@ -29,9 +29,13 @@ function summary(overrides = {}) {
     priority_actions: [],
     stripe_financial_by_currency: [{
       currency: 'eur',
+      gross_training_cents: 22000,
+      travel_fee_cents: 3000,
       estimated_net_stripe_cents: 15000,
       successful_refund_cents: 2000,
       open_dispute_cents: 0,
+      lost_dispute_cents: 500,
+      estimated_net_training_cents: 19500,
       is_estimate: true,
     }],
     ...overrides,
@@ -90,6 +94,10 @@ describe('AdminCockpit', () => {
     expect(screen.getByText('Apprenants actifs').closest('article')).toHaveTextContent('4');
     expect(screen.getByText('Source : course_access')).toBeVisible();
     expect(screen.getAllByText('150,00 €')[0]).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Recherche globale' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Suivi financier détaillé' })).toBeVisible();
+    expect(screen.getByText('Formation encaissée brute').closest('div')).toHaveTextContent('220,00 €');
+    expect(screen.getByRole('link', { name: 'Ouvrir la synthèse financière' })).toHaveAttribute('href', '/admin/finance');
     expect(rpcMock).toHaveBeenCalledWith('admin_get_cockpit_summary', expect.any(Object));
   });
 
@@ -119,10 +127,28 @@ describe('AdminCockpit', () => {
     await userEvent.type(screen.getByLabelText('Du'), '2026-07-01');
     await userEvent.click(screen.getByRole('button', { name: 'Appliquer' }));
 
-    await waitFor(() => expect(rpcMock).toHaveBeenLastCalledWith('admin_get_cockpit_summary', expect.objectContaining({
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledWith('admin_get_cockpit_summary', expect.objectContaining({
       p_date_from: '2026-07-01',
       p_course_id: 'formation-ia-act',
     })));
+  });
+
+  it('affiche les rubriques opérationnelles prioritaires même lorsqu’elles sont vides', async () => {
+    renderCockpit();
+
+    expect(await screen.findByRole('heading', { name: 'Pilotage quotidien' })).toBeVisible();
+    [
+      'Émargements',
+      'Heures non planifiées',
+      'Formations pas prêtes',
+      'Prochaines séances',
+      'Disponibilités libres',
+      'Prochaines formations',
+      'Formations en cours et terminées',
+      'Formations à clôturer',
+      'Questionnaires',
+      'Évaluations',
+    ].forEach((heading) => expect(screen.getByRole('heading', { name: heading })).toBeVisible());
   });
 
   it('place les actions client avant la technique et navigue vers l’écran existant', async () => {

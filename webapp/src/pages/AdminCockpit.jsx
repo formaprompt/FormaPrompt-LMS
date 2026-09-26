@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import AdminShell from '../components/AdminShell';
 import CockpitActionList from '../components/CockpitActionList';
+import CockpitFinancialSummary from '../components/CockpitFinancialSummary';
+import CockpitGlobalSearch from '../components/CockpitGlobalSearch';
+import OperationalCockpit from '../components/OperationalCockpit';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -174,6 +177,13 @@ export default function AdminCockpit() {
 
         {!loading && !error && summary && (
           <>
+            <CockpitGlobalSearch entries={summary.operational_cockpit?.searchIndex || []} />
+            <OperationalCockpit sections={summary.operational_cockpit?.sections || []} />
+
+            <div className="cockpit-secondary-heading">
+              <p>Autres alertes utiles</p>
+              <h2>Contrôles administratifs</h2>
+            </div>
             <div className="cockpit-primary-grid">
               <section className="cockpit-panel cockpit-actions-panel" aria-labelledby="actions-title">
                 <div className="cockpit-section-heading">
@@ -240,11 +250,16 @@ export default function AdminCockpit() {
               </div>
             </section>
 
+            <CockpitFinancialSummary
+              rows={financialRows}
+              stripeActionCount={Number(summary.action_counts_by_domain?.stripe || 0)}
+            />
+
             <section className="cockpit-panel cockpit-synthesis" aria-labelledby="synthesis-title">
               <div className="cockpit-section-heading">
                 <div><p>Lecture utile, sans graphique décoratif</p><h2 id="synthesis-title">Tendances et synthèse</h2></div>
               </div>
-              <div className="cockpit-synthesis__grid">
+              <div className="cockpit-synthesis__grid is-single">
                 <div>
                   <h3>Actions par domaine</h3>
                   {domainCounts.length ? (
@@ -257,17 +272,6 @@ export default function AdminCockpit() {
                       ))}
                     </ul>
                   ) : <p className="cockpit-muted">Aucune action à répartir.</p>}
-                </div>
-                <div>
-                  <h3>Synthèse financière locale</h3>
-                  {financialRows.length ? financialRows.map((row) => (
-                    <dl className="cockpit-finance-summary" key={row.currency}>
-                      <div><dt>Net Stripe estimé</dt><dd>{formatMoney(row.estimated_net_stripe_cents, row.currency)}</dd></div>
-                      <div><dt>Remboursements confirmés</dt><dd>{formatMoney(row.successful_refund_cents, row.currency)}</dd></div>
-                      <div><dt>Litiges ouverts</dt><dd>{formatMoney(row.open_dispute_cents, row.currency)}</dd></div>
-                    </dl>
-                  )) : <p className="cockpit-muted">Aucun mouvement Stripe sur la période.</p>}
-                  <p className="cockpit-data-note">Ces montants sont des estimations issues des registres locaux, pas un solde Stripe ou bancaire.</p>
                 </div>
               </div>
             </section>

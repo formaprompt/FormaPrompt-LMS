@@ -5,9 +5,14 @@ import {
   deriveIncidentCockpitActions,
   deriveQualityRiskCockpitActions,
   fetchCockpitSummary,
+  formatMoney,
   getActionDestination,
   prioritizeCockpitActions,
 } from './cockpitAdministration.js';
+
+test('un montant sans devise valide reste lisible sans inventer une devise', () => {
+  assert.equal(formatMoney(12345, 'unknown'), '123,45 — devise inconnue');
+});
 
 test('les incidents ouverts remontent dans le cockpit, les incidents clôturés non', () => {
   const actions = deriveIncidentCockpitActions([
