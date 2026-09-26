@@ -66,21 +66,24 @@ Pour les formulaires, comptes utilisateurs, inscriptions, paiements, emails ou d
 
 Signaler tout traitement de données personnelles ou toute transmission à un service externe.
 
-## Git et GitHub
+## Git et demandes de fusion
 
-Le projet est travaillé localement sous Windows et peut être synchronisé avec GitHub.
+Le projet est travaillé localement sous Windows et synchronisé avec GitHub.
 
-Ne jamais exécuter sans confirmation :
+- Toujours travailler sur une branche de travail dédiée, jamais directement sur la branche principale `main`.
+- Avant toute modification, vérifier la branche active, l'état du dépôt et les changements déjà présents avec `git status`.
+- Préserver les travaux existants et limiter chaque lot à un périmètre cohérent.
+- Quand un lot est terminé et réellement testé, préparer son enregistrement, son envoi et une demande de fusion vers la branche principale. Exécuter ces actions uniquement après l'autorisation explicite de Thierry.
+- La création d'une demande de fusion n'autorise jamais sa fusion.
+- Ne jamais fusionner dans la branche principale sans autorisation explicite de Thierry.
+- Ne jamais déclencher ou déduire une mise en production depuis un enregistrement, un envoi, une demande de fusion ou une fusion. Toute mise en production exige une autorisation explicite distincte.
+- Ne jamais supprimer une branche, réécrire son historique ou forcer un envoi sans confirmation explicite.
 
-- suppression de branche.
+La demande de fusion doit rester concise et utiliser le modèle `.github/pull_request_template.md`. Le coordinateur choisit un contrôle proportionné au risque et indique clairement à Thierry si la fusion est recommandée maintenant.
 
-Avant une modification importante, recommander de vérifier l'état du dépôt avec :
+Protection GitHub recommandée pour `main`, à activer séparément après validation de Thierry : exiger une demande de fusion, interdire les envois forcés et interdire la suppression de la branche. Ne pas activer l'auto-fusion ni ajouter de contrôles complexes sans besoin démontré.
 
-```powershell
-git status
-```
-
-Proposer un message de commit clair après une modification utile, mais ne pas exécuter le commit sans demande explicite.
+Proposer un message d'enregistrement clair après une modification utile, mais ne pas l'exécuter sans demande explicite.
 
 ## Tests et validation
 
