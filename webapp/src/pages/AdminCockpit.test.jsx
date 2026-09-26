@@ -72,11 +72,12 @@ describe('AdminCockpit', () => {
   beforeEach(() => {
     rpcMock.mockResolvedValue({ data: summary(), error: null });
     const builder = {
-      select: vi.fn(), gte: vi.fn(), lte: vi.fn(), eq: vi.fn(), neq: vi.fn(),
+      select: vi.fn(), gte: vi.fn(), lte: vi.fn(), eq: vi.fn(), neq: vi.fn(), order: vi.fn(),
       then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
     };
     builder.select.mockReturnValue(builder); builder.gte.mockReturnValue(builder);
     builder.lte.mockReturnValue(builder); builder.eq.mockReturnValue(builder); builder.neq.mockReturnValue(builder);
+    builder.order.mockReturnValue(builder);
     fromMock.mockReturnValue(builder);
   });
 

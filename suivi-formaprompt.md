@@ -411,7 +411,10 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - La recherche globale inclut les cohortes actives, y compris une formation Excel planifiée sans participant, et ouvre directement le résultat unique. Plusieurs résultats restent proposés au choix.
 - Aucune migration Supabase n'est nécessaire. Les colonnes et la fonction de lecture des cohortes existent déjà et restent protégées par les droits administrateur.
 - Validation locale : 19 tests de logique, 9 tests d'interface, lint ciblé, `git diff --check` et build complet réussis. La release contient 281 fichiers et 32 pages pré-rendues.
-- Aucun commit, push, demande de fusion, fusion ou déploiement n'a été effectué.
+- Le commit `a10bd93` est poussé et la demande de fusion GitHub n°15 est ouverte vers `main`.
+- Le premier contrôle GitHub « Node, React and build » a détecté un faux accès Supabase incomplet dans `AdminCockpit.test.jsx` : la méthode chaînée `order` manquait au mock alors que la lecture réelle trie désormais les identités.
+- Le mock a été corrigé sans modifier le comportement applicatif. Le contrôle Vitest complet demandé par la CI réussit : 78 fichiers et 403 tests.
+- Aucune fusion ni mise en production n'a été effectuée à ce stade.
 
 ## Commandes utiles
 
