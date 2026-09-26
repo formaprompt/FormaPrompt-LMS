@@ -4,6 +4,7 @@ import {
   isDisciplinaryIncidentOpen,
 } from './disciplinaryIncidentAdministration.js';
 import { buildQualityOverview } from './qualityAdministration.js';
+import { fetchOperationalCockpit } from './operationalCockpit.js';
 
 const ALLOWED_COURSE_IDS = new Set([
   'formation-ia',
@@ -44,10 +45,6 @@ function ageInSeconds(value, now) {
   return Number.isNaN(timestamp) ? 0 : Math.max(0, Math.floor((now.getTime() - timestamp) / 1000));
 }
 
-function shortReference(id) {
-  return String(id || '').slice(0, 8).toUpperCase();
-}
-
 export function deriveIncidentCockpitActions(incidents = [], now = new Date()) {
   return incidents
     .filter(isDisciplinaryIncidentOpen)
@@ -57,7 +54,7 @@ export function deriveIncidentCockpitActions(incidents = [], now = new Date()) {
       item_type: 'disciplinary_incident',
       item_id: incident.id,
       course_id: incident.course_id || null,
-      neutral_label: `Incident — ${DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status] || 'À instruire'} · dossier ${shortReference(incident.id)}`,
+      neutral_label: `Incident — ${DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status] || 'À instruire'}`,
       created_at: incident.reported_at || incident.created_at || null,
       due_at: null,
       age_seconds: ageInSeconds(incident.reported_at || incident.created_at, now),
@@ -74,7 +71,7 @@ export function deriveQualityRiskCockpitActions(data = {}, now = new Date()) {
       item_type: 'quality_risk_review',
       item_id: risk.id,
       course_id: null,
-      neutral_label: `Qualité — revue de risque requise · dossier ${shortReference(risk.id)}`,
+      neutral_label: 'Qualité — revue de risque requise',
       created_at: risk.created_at || risk.parent.detected_at || risk.review_due_at,
       due_at: risk.review_due_at,
       age_seconds: ageInSeconds(risk.created_at || risk.parent.detected_at || risk.review_due_at, now),
@@ -158,7 +155,7 @@ export async function fetchCockpitSummary(client, filters) {
     .neq('incident_status', 'closed');
   if (courseId) activityQuery = activityQuery.eq('course_id', courseId);
   if (courseId) incidentsQuery = incidentsQuery.eq('course_id', courseId);
-  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult] = await Promise.all([
+  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult, operationalCockpit] = await Promise.all([
     client.rpc('admin_get_cockpit_summary', {
       p_date_from: dateFrom,
       p_date_to: dateTo,
@@ -168,6 +165,7 @@ export async function fetchCockpitSummary(client, filters) {
     incidentsQuery,
     client.from('quality_risks').select('id, quality_record_id, status, review_due_at, created_at'),
     client.from('quality_records').select('id, severity, detected_at'),
+    fetchOperationalCockpit(client),
   ]);
 
   if (error) throw new Error(error.message || 'Le cockpit ne peut pas être chargé.');
@@ -191,6 +189,7 @@ export async function fetchCockpitSummary(client, filters) {
   const priorityActions = [...(data.priority_actions || []), ...additions];
   return {
     ...data,
+    operational_cockpit: operationalCockpit,
     priority_actions: priorityActions,
     action_counts_by_domain: {
       ...(data.action_counts_by_domain || {}),
@@ -208,9 +207,19 @@ export async function fetchCockpitSummary(client, filters) {
 }
 
 export function formatMoney(cents, currency = 'eur') {
+  const normalizedCurrency = String(currency || '').trim().toUpperCase();
+  const amount = Number(cents || 0) / 100;
+
+  if (!/^[A-Z]{3}$/.test(normalizedCurrency)) {
+    return `${new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount)} — devise inconnue`;
+  }
+
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: String(currency).toUpperCase(),
+    currency: normalizedCurrency,
     maximumFractionDigits: 2,
-  }).format(Number(cents || 0) / 100);
+  }).format(amount);
 }

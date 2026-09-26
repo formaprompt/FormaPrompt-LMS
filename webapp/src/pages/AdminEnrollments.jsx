@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import EnrollmentLifecyclePanel from '../components/EnrollmentLifecyclePanel';
@@ -82,6 +82,7 @@ function toLocalDateTime(value) {
 export default function AdminEnrollments() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [profiles, setProfiles] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [form, setForm] = useState(createInitialForm);
@@ -90,7 +91,7 @@ export default function AdminEnrollments() {
   const [actionRunning, setActionRunning] = useState('');
   const [editingEnrollmentId, setEditingEnrollmentId] = useState('');
   const [feedback, setFeedback] = useState(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('recherche') || '');
   const [statusFilter, setStatusFilter] = useState('');
   const [fundingFilter, setFundingFilter] = useState('');
 

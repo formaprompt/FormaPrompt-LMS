@@ -58,6 +58,7 @@ const COHORT_COURSE_OPTIONS = Object.values(BOOKING_COURSES)
   .filter(({ bookingKind }) => bookingKind === 'cohort')
   .map(({ id, title }) => ({ id, label: `${title} — Inter` }));
 const ADMIN_DASHBOARD_TABS = ['overview', 'users', 'contacts', 'blog', 'purchases', 'bookings', 'positioning', 'corrections', 'trainer-guides', 'feedback'];
+const BOOKING_WORKSPACE_TABS = ['sessions', 'availability', 'cohorts'];
 
 function adminDashboardTab(requestedTab) {
   return ADMIN_DASHBOARD_TABS.includes(requestedTab) ? requestedTab : 'overview';
@@ -669,9 +670,12 @@ export default function AdminDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   
   const requestedTab = searchParams.get('onglet');
+  const requestedBookingWorkspace = searchParams.get('workspace');
   const { correction: requestedCorrection, submissionId: targetSubmissionId, bookingId: targetBookingId } = adminWorkTarget(searchParams);
   const activeTab = adminDashboardTab(requestedTab);
-  const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState('sessions');
+  const [bookingWorkspaceTab, setBookingWorkspaceTab] = useState(
+    BOOKING_WORKSPACE_TABS.includes(requestedBookingWorkspace) ? requestedBookingWorkspace : 'sessions',
+  );
   const [correctionWorkspaceTab, setCorrectionWorkspaceTab] = useState(requestedCorrection === 'project' ? 'evaluations' : 'exercises');
   const [correctionSearch, setCorrectionSearch] = useState('');
   const [users, setUsers] = useState([]);
@@ -732,6 +736,16 @@ export default function AdminDashboard() {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
       next.set('onglet', tab);
+      return next;
+    });
+  };
+
+  const selectBookingWorkspace = (workspace) => {
+    setBookingWorkspaceTab(workspace);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.set('onglet', 'bookings');
+      next.set('workspace', workspace);
       return next;
     });
   };
@@ -2149,7 +2163,7 @@ export default function AdminDashboard() {
                     role="tab"
                     aria-selected={bookingWorkspaceTab === 'sessions'}
                     className={bookingWorkspaceTab === 'sessions' ? 'is-active' : ''}
-                    onClick={() => setBookingWorkspaceTab('sessions')}
+                    onClick={() => selectBookingWorkspace('sessions')}
                   >
                     Suivi des séances
                   </button>
@@ -2158,7 +2172,7 @@ export default function AdminDashboard() {
                     role="tab"
                     aria-selected={bookingWorkspaceTab === 'availability'}
                     className={bookingWorkspaceTab === 'availability' ? 'is-active' : ''}
-                    onClick={() => setBookingWorkspaceTab('availability')}
+                    onClick={() => selectBookingWorkspace('availability')}
                   >
                     Mes disponibilités
                   </button>
@@ -2168,7 +2182,7 @@ export default function AdminDashboard() {
                       role="tab"
                       aria-selected={bookingWorkspaceTab === 'cohorts'}
                       className={bookingWorkspaceTab === 'cohorts' ? 'is-active' : ''}
-                      onClick={() => setBookingWorkspaceTab('cohorts')}
+                      onClick={() => selectBookingWorkspace('cohorts')}
                     >
                       Cohortes inter
                     </button>
@@ -2324,6 +2338,7 @@ export default function AdminDashboard() {
 
                 {bookingWorkspaceTab === 'cohorts' && role === 'admin' && (
                   <AdminCourseCohorts
+                    targetCohortId={searchParams.get('cohortId')}
                     courseOptions={COHORT_COURSE_OPTIONS}
                     cohorts={courseCohorts}
                     availableSlots={availabilitySlots.filter((slot) => (
