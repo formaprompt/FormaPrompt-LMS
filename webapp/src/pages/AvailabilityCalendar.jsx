@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './AvailabilityCalendar.css';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info, Trash2, Check, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
@@ -18,44 +18,69 @@ function parseDatabaseDate(value) {
   return new Date(year, month - 1, day);
 }
 
+function bookingStatusLabel(booking) {
+  if (booking.source === 'learner') return 'Indisponible';
+  return booking.type === 'option' ? 'Option en attente' : 'Réservé';
+}
+
 export default function AvailabilityCalendar() {
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'employee';
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(true);
+  const [bookingsError, setBookingsError] = useState(false);
+  const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAdminEditModalOpen, setIsAdminEditModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const bookingTriggerRef = useRef(null);
+  const bookingNameRef = useRef(null);
   
   const [bookingForm, setBookingForm] = useState({ slot: 'Matin', type: 'option', ofName: '', comments: '' });
+
+  useEffect(() => {
+    if (!isModalOpen) return undefined;
+    bookingNameRef.current?.focus();
+    return () => {
+      if (bookingTriggerRef.current?.isConnected) bookingTriggerRef.current.focus();
+    };
+  }, [isModalOpen]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadBookings() {
+      setBookingsLoading(true);
+      setBookingsError(false);
       const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      const [ofResult, learnerResult] = await Promise.all([
-        supabase
-          .from('calendar_bookings')
-          .select('*')
-          .gte('date', formatDatabaseDate(monthStart))
-          .lte('date', formatDatabaseDate(monthEnd)),
-        supabase
-          .from('learner_calendar_blocks')
-          .select('booking_date, slot')
-          .gte('booking_date', formatDatabaseDate(monthStart))
-          .lte('booking_date', formatDatabaseDate(monthEnd)),
-      ]);
+      const monthKey = formatDatabaseDate(monthStart);
+      try {
+        const [ofResult, learnerResult] = await Promise.all([
+          supabase
+            .from('calendar_bookings')
+            .select('*')
+            .gte('date', formatDatabaseDate(monthStart))
+            .lte('date', formatDatabaseDate(monthEnd)),
+          supabase
+            .from('learner_calendar_blocks')
+            .select('booking_date, slot')
+            .gte('booking_date', formatDatabaseDate(monthStart))
+            .lte('booking_date', formatDatabaseDate(monthEnd)),
+        ]);
 
-      if (ofResult.error || learnerResult.error) {
-        console.error('Erreur lors du chargement des réservations:', {
-          organismes: ofResult.error,
-          apprenants: learnerResult.error,
-        });
-      } else if (isActive) {
+        if (ofResult.error || learnerResult.error) {
+          console.error('Erreur lors du chargement des réservations:', {
+            organismes: ofResult.error,
+            apprenants: learnerResult.error,
+          });
+          if (isActive) setBookingsError(true);
+          return;
+        }
+        if (!isActive) return;
         const ofBookings = (ofResult.data || []).map((booking) => ({
           ...booking,
           date: parseDatabaseDate(booking.date),
@@ -72,6 +97,12 @@ export default function AvailabilityCalendar() {
           source: 'learner',
         }));
         setBookings([...ofBookings, ...learnerBlocks]);
+        setLoadedMonthKey(monthKey);
+      } catch (error) {
+        console.error('Erreur lors du chargement des réservations:', error);
+        if (isActive) setBookingsError(true);
+      } finally {
+        if (isActive) setBookingsLoading(false);
       }
     }
 
@@ -83,6 +114,8 @@ export default function AvailabilityCalendar() {
   }, [currentDate]);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const currentMonthKey = formatDatabaseDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
+  const hasCurrentBookings = !bookingsLoading && !bookingsError && loadedMonthKey === currentMonthKey;
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
   // Adjust so Monday is 0, Sunday is 6
   const startDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
@@ -91,14 +124,19 @@ export default function AvailabilityCalendar() {
   const dayNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
   const prevMonth = () => {
+    setBookingsLoading(true);
+    setLoadedMonthKey(null);
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
   const nextMonth = () => {
+    setBookingsLoading(true);
+    setLoadedMonthKey(null);
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
-  const handleDateClick = (day, isDisabled) => {
+  const handleDateClick = (day, isDisabled, preferredSlot = null, triggerElement = null) => {
+    if (!hasCurrentBookings) return;
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -121,10 +159,11 @@ export default function AvailabilityCalendar() {
       }
 
       setSelectedDate(clickedDate);
+      bookingTriggerRef.current = triggerElement;
       setIsModalOpen(true);
       // Reset form defaults based on role
       setBookingForm({ 
-        slot: availableSlots[0],
+        slot: preferredSlot && availableSlots.includes(preferredSlot) ? preferredSlot : availableSlots[0],
         type: isAdmin ? 'confirmé' : 'option', 
         ofName: isAdmin ? 'Indisponibilité' : '', 
         comments: '' 
@@ -223,6 +262,48 @@ export default function AvailabilityCalendar() {
   const selectedMorningBusy = selectedDateBookings.some((booking) => booking.slot === 'Matin' || booking.slot === 'Journée');
   const selectedAfternoonBusy = selectedDateBookings.some((booking) => booking.slot === 'Après-midi' || booking.slot === 'Journée');
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(today);
+  weekEnd.setDate(today.getDate() + (7 - (today.getDay() || 7)));
+  const mobileAvailableDays = Array.from({ length: daysInMonth }, (_, index) => index + 1)
+    .map((day) => {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      if (date < today || isJourFerie(date) || date.getDay() === 0) return null;
+      const dayBookings = getBookingsForDay(day);
+      const morningBusy = dayBookings.some((booking) => booking.slot === 'Matin' || booking.slot === 'Journée');
+      const afternoonBusy = dayBookings.some((booking) => booking.slot === 'Après-midi' || booking.slot === 'Journée');
+      const slots = [
+        !morningBusy && 'Matin',
+        date.getDay() !== 6 && !afternoonBusy && 'Après-midi',
+      ].filter(Boolean);
+      return slots.length ? { day, date, slots } : null;
+    })
+    .filter(Boolean);
+  const thisWeekDays = mobileAvailableDays.filter(({ date }) => date <= weekEnd);
+  const laterDays = mobileAvailableDays.filter(({ date }) => date > weekEnd);
+
+  const renderMobileDays = (days) => days.map(({ day, date, slots }) => (
+    <li className="calendar-list-day" key={day}>
+      <span className="calendar-list-date">
+        {new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(date)}
+      </span>
+      <div className="calendar-list-slots">
+        {slots.map((slot) => (
+          <button
+            key={slot}
+            type="button"
+            className="calendar-list-slot"
+            onClick={(event) => handleDateClick(day, false, slot, event.currentTarget)}
+            aria-label={`Choisir ${slot.toLowerCase()} le ${date.toLocaleDateString('fr-FR')}`}
+          >
+            {slot === 'Matin' ? 'Matin · 9 h–12 h 30' : 'Après-midi · 13 h 30–17 h'}
+          </button>
+        ))}
+      </div>
+    </li>
+  ));
+
   const renderDays = () => {
     const days = [];
     const today = new Date();
@@ -249,7 +330,7 @@ export default function AvailabilityCalendar() {
       if (!isDisabled || isAdmin) dayClass += ' available';
 
       days.push(
-        <div key={i} className={dayClass} onClick={() => (!isDisabled || isAdmin) && handleDateClick(i, isDisabled)}>
+        <div key={i} className={dayClass} onClick={(event) => (!isDisabled || isAdmin) && handleDateClick(i, isDisabled, null, event.currentTarget)}>
           <div className="calendar-date" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {i}
             {ferie && <small style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--color-text-light)' }}>Férié</small>}
@@ -266,7 +347,7 @@ export default function AvailabilityCalendar() {
                     style={{ cursor: isAdmin && dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source !== 'learner' ? 'pointer' : 'default' }}
                     title={dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source === 'learner' ? 'Indisponible : séance apprenant' : isAdmin ? "Cliquez pour gérer" : ""}
                   >
-                    Matin ({dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').source === 'learner' ? 'formation' : dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée').type})
+                    Matin ({bookingStatusLabel(dayBookings.find(b => b.slot === 'Matin' || b.slot === 'Journée'))})
                   </div>
                 ) : <div className="slot-badge slot-available">Matin libre</div>}
                 
@@ -277,7 +358,7 @@ export default function AvailabilityCalendar() {
                     style={{ cursor: isAdmin && dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source !== 'learner' ? 'pointer' : 'default' }}
                     title={dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source === 'learner' ? 'Indisponible : séance apprenant' : isAdmin ? "Cliquez pour gérer" : ""}
                    >
-                   A-M ({dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').source === 'learner' ? 'formation' : dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée').type})
+                   A-M ({bookingStatusLabel(dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée'))})
                  </div>
                 ) : <div className="slot-badge slot-available">A-M libre</div>}
               </>
@@ -319,36 +400,68 @@ export default function AvailabilityCalendar() {
 
       <div className="calendar-container">
         <div className="calendar-header">
-          <button onClick={prevMonth}><ChevronLeft size={24} /></button>
+          <button type="button" onClick={prevMonth} aria-label="Mois précédent"><ChevronLeft size={24} /></button>
           <h2>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</h2>
-          <button onClick={nextMonth}><ChevronRight size={24} /></button>
+          <button type="button" onClick={nextMonth} aria-label="Mois suivant"><ChevronRight size={24} /></button>
         </div>
 
-        <div className="calendar-grid">
+        {!hasCurrentBookings && (
+          <p className="calendar-status" role={bookingsError ? 'alert' : 'status'}>
+            {bookingsError
+              ? 'Les disponibilités ne peuvent pas être affichées pour le moment. Réessayez plus tard.'
+              : 'Chargement des disponibilités…'}
+          </p>
+        )}
+
+        {!isAdmin && hasCurrentBookings && (
+          <div className="calendar-mobile-list">
+            <h3>Prochains créneaux disponibles</h3>
+            {mobileAvailableDays.length === 0 ? (
+              <p>Aucun créneau disponible ce mois-ci. Consultez le mois suivant.</p>
+            ) : (
+              <>
+                {thisWeekDays.length > 0 && (
+                  <section aria-label="Cette semaine">
+                    <h4>Cette semaine</h4>
+                    <ul>{renderMobileDays(thisWeekDays)}</ul>
+                  </section>
+                )}
+                {laterDays.length > 0 && (
+                  <section aria-label="Ce mois-ci">
+                    <h4>Ce mois-ci</h4>
+                    <ul>{renderMobileDays(laterDays)}</ul>
+                  </section>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {hasCurrentBookings && <div className={`calendar-grid${isAdmin ? '' : ' calendar-grid-public'}`}>
           {dayNames.map(day => (
             <div key={day} className="calendar-day-header">{day}</div>
           ))}
           {renderDays()}
-        </div>
+        </div>}
 
-        <div className="legend card">
+        {hasCurrentBookings && <div className="legend card">
           <div className="legend-item">
             <div className="legend-color slot-available"></div>
-            <span>Créneau Libre</span>
+            <span>Disponible</span>
           </div>
           <div className="legend-item">
             <div className="legend-color slot-option"></div>
-            <span>Option (Non sûr)</span>
+            <span>Option en attente</span>
           </div>
           <div className="legend-item">
             <div className="legend-color slot-booked"></div>
-            <span>Réservé (Sûr)</span>
+            <span>Réservé</span>
           </div>
           <div className="legend-item">
             <div className="legend-color legend-ferie"></div>
             <span>Jour Férié</span>
           </div>
-        </div>
+        </div>}
       </div>
 
       {/* MODAL AJOUT RÉSERVATION */}
@@ -360,8 +473,11 @@ export default function AvailabilityCalendar() {
             
             <form onSubmit={handleBookingSubmit}>
               <div className="form-group">
-                <label>Nom de l'Organisme de Formation (OF) *</label>
+                <label htmlFor="booking-of-name">Nom de l'Organisme de Formation (OF) *</label>
                 <input 
+                  id="booking-of-name"
+                  name="of_name"
+                  ref={bookingNameRef}
                   type="text" 
                   required 
                   value={bookingForm.ofName}
@@ -371,8 +487,10 @@ export default function AvailabilityCalendar() {
               </div>
 
               <div className="form-group">
-                <label>Créneau *</label>
+                <label htmlFor="booking-slot">Créneau *</label>
                 <select 
+                  id="booking-slot"
+                  name="slot"
                   value={bookingForm.slot} 
                   onChange={e => setBookingForm({...bookingForm, slot: e.target.value})}
                   disabled={!isAdmin && selectedDate?.getDay() === 6}
@@ -394,13 +512,15 @@ export default function AvailabilityCalendar() {
               </div>
 
               <div className="form-group">
-                <label>Type de réservation *</label>
+                <label htmlFor="booking-type">Type de réservation *</label>
                 <select 
+                  id="booking-type"
+                  name="type"
                   value={bookingForm.type} 
                   onChange={e => setBookingForm({...bookingForm, type: e.target.value})}
                 >
-                  <option value="option">Option (Non sûr / À confirmer)</option>
-                  {isAdmin && <option value="confirmé">Réservation ferme (Sûr)</option>}
+                  <option value="option">Option en attente</option>
+                  {isAdmin && <option value="confirmé">Réservé</option>}
                 </select>
                 {!isAdmin && (
                   <small style={{ color: 'var(--color-text-light)', display: 'block', marginTop: '0.25rem' }}>
@@ -411,8 +531,10 @@ export default function AvailabilityCalendar() {
               </div>
 
               <div className="form-group">
-                <label>Commentaires / Sujet de formation</label>
+                <label htmlFor="booking-comments">Commentaires / Sujet de formation</label>
                 <textarea 
+                  id="booking-comments"
+                  name="comments"
                   rows="3" 
                   style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
                   value={bookingForm.comments}
@@ -443,7 +565,7 @@ export default function AvailabilityCalendar() {
               <p><strong>Date :</strong> {selectedBooking.date.toLocaleDateString('fr-FR')}</p>
               <p><strong>Créneau :</strong> {selectedBooking.slot}</p>
               <p><strong>Client / OF :</strong> {selectedBooking.of}</p>
-              <p><strong>Statut actuel :</strong> <span className={`slot-badge slot-${selectedBooking.type === 'option' ? 'option' : 'booked'}`}>{selectedBooking.type}</span></p>
+              <p><strong>Statut actuel :</strong> <span className={`slot-badge slot-${selectedBooking.type === 'option' ? 'option' : 'booked'}`}>{bookingStatusLabel(selectedBooking)}</span></p>
             </div>
 
             <div className="modal-actions" style={{ justifyContent: 'center', gap: '1rem' }}>
