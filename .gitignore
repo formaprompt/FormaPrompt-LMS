@@ -28,3 +28,4 @@ Thumbs.db
 
 # Fichiers de travail générés localement
 output/
+webapp/supabase/.branches/
