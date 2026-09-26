@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -88,8 +88,9 @@ function createHearingForm() {
 export default function AdminAccessIncidents() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const firstDialogFieldRef = useRef(null);
-  const [section, setSection] = useState('accesses');
+  const [section, setSection] = useState(hash.startsWith('#incident-') ? 'incidents' : 'accesses');
   const [profiles, setProfiles] = useState([]);
   const [trainingIdentities, setTrainingIdentities] = useState([]);
   const [positioningIdentities, setPositioningIdentities] = useState([]);
@@ -184,6 +185,13 @@ export default function AdminAccessIncidents() {
     }, 0);
     return () => window.clearTimeout(loadTimer);
   }, [loadData, navigate, user]);
+
+  useEffect(() => {
+    if (!hash.startsWith('#incident-')) return;
+    if (!loading && section === 'incidents') {
+      document.getElementById(hash.slice(1))?.scrollIntoView?.();
+    }
+  }, [hash, loading, section]);
 
   useEffect(() => {
     if (accessAction || incidentDialogOpen || hearingIncident) firstDialogFieldRef.current?.focus();
@@ -524,7 +532,7 @@ export default function AdminAccessIncidents() {
               const draft = incidentDrafts[incident.id] || {};
               const learner = identityByUserId.get(incident.learner_user_id);
               return (
-                <article key={incident.id} className="incident-card">
+                <article key={incident.id} id={`incident-${incident.id}`} className="incident-card">
                   <header>
                     <div>
                       <p className="incident-reference">Dossier {incident.id.slice(0, 8).toUpperCase()}</p>

@@ -404,6 +404,18 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Le test pgTAP Sprint 3 est ajouté mais non exécuté : Docker et Podman sont absents du PATH, et la sonde WSL n'a pas fourni d'environnement exploitable.
 - Aucune migration ou Edge Function n'a été déployée, aucune donnée réelle n'a été modifiée et aucun média n'a été transféré.
 
+## Cockpit administrateur - incidents identifiables et recherche étendue - 26 septembre 2026
+
+- Branche de travail : `codex/admin-cockpit-incidents-search-20260926`, issue de `origin/main` au commit `abe639d`.
+- Les alertes d'incident affichent l'entreprise et le nom disponibles, la formation et le statut, sans référence technique comme libellé principal. Leur lien ouvre directement la carte concernée dans l'onglet Incidents.
+- La recherche globale inclut les cohortes actives, y compris une formation Excel planifiée sans participant, et ouvre directement le résultat unique. Plusieurs résultats restent proposés au choix.
+- Aucune migration Supabase n'est nécessaire. Les colonnes et la fonction de lecture des cohortes existent déjà et restent protégées par les droits administrateur.
+- Validation locale : 19 tests de logique, 9 tests d'interface, lint ciblé, `git diff --check` et build complet réussis. La release contient 281 fichiers et 32 pages pré-rendues.
+- Le commit `a10bd93` est poussé et la demande de fusion GitHub n°15 est ouverte vers `main`.
+- Le premier contrôle GitHub « Node, React and build » a détecté un faux accès Supabase incomplet dans `AdminCockpit.test.jsx` : la méthode chaînée `order` manquait au mock alors que la lecture réelle trie désormais les identités.
+- Le mock a été corrigé sans modifier le comportement applicatif. Le contrôle Vitest complet demandé par la CI réussit : 78 fichiers et 403 tests.
+- Aucune fusion ni mise en production n'a été effectuée à ce stade.
+
 ## Commandes utiles
 
 À lancer dans `C:\Users\Thier\OneDrive\Documents\formation\Formaprompt\webapp` :

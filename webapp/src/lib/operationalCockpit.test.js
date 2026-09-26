@@ -179,6 +179,21 @@ test('un groupe affiche le nombre de participants sans noms individuels', () => 
   assert.match(evaluations.items[0].href, /onglet=corrections/);
 });
 
+test('une cohorte Excel planifiée sans inscription reste trouvable dans la recherche globale', () => {
+  const result = buildOperationalCockpit({
+    cohorts: [{
+      id: 'cohort-excel', course_id: 'excel-initiation-inter', status: 'published', enrolled_count: 0,
+      sessions: [{ id: 'session-excel', starts_at: '2026-10-12T08:00:00Z', ends_at: '2026-10-12T12:00:00Z' }],
+    }],
+    enrollments: [],
+  }, { now: NOW });
+
+  assert.equal(result.searchIndex.length, 1);
+  assert.match(result.searchIndex[0].title, /Excel.*0 participant/);
+  assert.match(result.searchIndex[0].searchText, /Excel/);
+  assert.match(result.searchIndex[0].href, /workspace=cohorts&cohortId=cohort-excel/);
+});
+
 test('les questionnaires et évaluations mènent vers un contrôle directement exploitable', () => {
   const result = buildOperationalCockpit({
     bookings: [{

@@ -82,9 +82,9 @@ function resetDatabase() {
   database.audit_log = [];
 }
 
-function renderPage() {
+function renderPage(path = '/admin/acces-incidents') {
   return render(
-    <MemoryRouter initialEntries={['/admin/acces-incidents']}>
+    <MemoryRouter initialEntries={[path]}>
       <AdminAccessIncidents />
     </MemoryRouter>,
   );
@@ -146,6 +146,19 @@ describe('administration sécurisée des accès', () => {
   afterEach(() => {
     cleanup();
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
+  });
+
+  it('ouvre le registre sur la carte précise depuis un lien profond', async () => {
+    const incidentId = '123e4567-e89b-42d3-a456-426614174000';
+    database.disciplinary_incidents = [{
+      id: incidentId, learner_user_id: USER_B_ID, course_id: 'formation-ia',
+      incident_status: 'reported', severity: 'medium', reported_at: '2026-08-11T10:00:00Z',
+      incident_categories: { label: 'Autre' }, disciplinary_hearings: [],
+    }];
+    renderPage(`/admin/acces-incidents#incident-${incidentId}`);
+    const card = await screen.findByText('Dossier 123E4567');
+    expect(card.closest('article')).toHaveAttribute('id', `incident-${incidentId}`);
+    expect(screen.getByRole('button', { name: /Incidents & discipline/ })).toHaveClass('is-active');
   });
 
   it('révoque puis restaure B sans modifier A, y compris après rafraîchissement', async () => {

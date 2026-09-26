@@ -19,10 +19,10 @@ function LocationProbe() {
   return <div data-testid="location">{location.pathname}{location.search}</div>;
 }
 
-function renderSearch() {
+function renderSearch(searchEntries = entries) {
   return render(
     <MemoryRouter initialEntries={['/admin']}>
-      <CockpitGlobalSearch entries={entries} />
+      <CockpitGlobalSearch entries={searchEntries} />
       <LocationProbe />
     </MemoryRouter>,
   );
@@ -44,7 +44,26 @@ describe('CockpitGlobalSearch', () => {
     renderSearch();
     const input = screen.getByRole('searchbox', { name: 'Que recherchez-vous ?' });
     await userEvent.type(input, 'Société inconnue');
-    await userEvent.click(screen.getByRole('button', { name: 'Rechercher dans tous les apprenants' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Rechercher dans l’annuaire des apprenants' }));
     expect(screen.getByTestId('location')).toHaveTextContent('/admin/pedagogique?onglet=users&recherche=Soci%C3%A9t%C3%A9%20inconnue');
+  });
+
+  it('ouvre directement la seule cohorte trouvée via Entrée', async () => {
+    renderSearch([{ id: 'cohort-excel', title: 'Excel — 0 participant', detail: '12 octobre', href: '/admin/pedagogique?onglet=bookings&workspace=cohorts&cohortId=cohort-excel', searchText: 'Excel initiation' }]);
+    const input = screen.getByRole('searchbox', { name: 'Que recherchez-vous ?' });
+    await userEvent.type(input, 'Excel{enter}');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin/pedagogique?onglet=bookings&workspace=cohorts&cohortId=cohort-excel');
+  });
+
+  it('conserve les choix visibles si plusieurs résultats correspondent', async () => {
+    renderSearch([
+      { ...entries[0], searchText: 'Excel entreprise Bêta' },
+      { id: 'cohort-excel', title: 'Excel — 0 participant', detail: '12 octobre', href: '/admin/pedagogique?onglet=bookings&workspace=cohorts&cohortId=cohort-excel', searchText: 'Excel initiation' },
+    ]);
+    const input = screen.getByRole('searchbox', { name: 'Que recherchez-vous ?' });
+    await userEvent.type(input, 'Excel{enter}');
+    expect(screen.getByTestId('location')).toHaveTextContent('/admin');
+    expect(screen.getByText(/2 résultats trouvés/)).toBeVisible();
+    expect(screen.getAllByRole('link', { name: 'Ouvrir' })).toHaveLength(2);
   });
 });
