@@ -25,7 +25,11 @@ export default function CockpitGlobalSearch({ entries = [] }) {
   function submit(event) {
     event.preventDefault();
     if (!query.trim()) return;
-    navigate(learnerDirectoryPath(query));
+    if (results.length === 1) {
+      navigate(results[0].href);
+    } else if (results.length === 0) {
+      navigate(learnerDirectoryPath(query));
+    }
   }
 
   return (
@@ -33,7 +37,7 @@ export default function CockpitGlobalSearch({ entries = [] }) {
       <div>
         <p>Accès direct</p>
         <h2 id="cockpit-global-search-title">Recherche globale</h2>
-        <span>Nom, entreprise ou formation</span>
+        <span>Nom, entreprise, formation ou groupe planifié</span>
       </div>
       <form role="search" onSubmit={submit}>
         <label htmlFor="cockpit-global-search-input">Que recherchez-vous ?</label>
@@ -46,12 +50,14 @@ export default function CockpitGlobalSearch({ entries = [] }) {
             placeholder="Ex. Marie Dupont, Entreprise Alpha ou IA générative"
             maxLength="200"
           />
-          <button type="submit">Rechercher dans tous les apprenants</button>
+          <button type="submit">{results.length === 0 ? 'Rechercher dans l’annuaire des apprenants' : 'Voir les résultats'}</button>
         </div>
       </form>
       {normalizedQuery.length >= 2 && (
         <div className="cockpit-global-search__results" aria-live="polite">
           {results.length ? (
+            <>
+              <p>{results.length} résultat{results.length > 1 ? 's' : ''} trouvé{results.length > 1 ? 's' : ''}. {results.length > 1 ? 'Choisissez le dossier ou le groupe à ouvrir.' : 'Ouvrez le résultat proposé.'}</p>
             <ul>
               {results.map((entry) => (
                 <li key={entry.id}>
@@ -60,8 +66,9 @@ export default function CockpitGlobalSearch({ entries = [] }) {
                 </li>
               ))}
             </ul>
+            </>
           ) : (
-            <p>Aucun dossier de formation ne correspond. Lancez la recherche complète pour vérifier l’annuaire.</p>
+            <p>Aucun dossier ou groupe planifié ne correspond. Lancez la recherche complète pour vérifier l’annuaire des apprenants.</p>
           )}
         </div>
       )}

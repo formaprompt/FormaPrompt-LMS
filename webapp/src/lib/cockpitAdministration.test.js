@@ -16,13 +16,22 @@ test('un montant sans devise valide reste lisible sans inventer une devise', () 
 
 test('les incidents ouverts remontent dans le cockpit, les incidents clôturés non', () => {
   const actions = deriveIncidentCockpitActions([
-    { id: 'incident-open-123', incident_status: 'decision_pending', severity: 'high', course_id: 'formation-ia', reported_at: '2026-08-20T12:00:00Z' },
+    { id: 'incident-open-123', learner_user_id: 'user-1', incident_status: 'decision_pending', severity: 'high', course_id: 'formation-ia', reported_at: '2026-08-20T12:00:00Z' },
     { id: 'incident-closed-456', incident_status: 'closed', severity: 'critical', course_id: 'formation-ia', reported_at: '2026-08-20T12:00:00Z' },
-  ], new Date('2026-08-22T12:00:00Z'));
+  ], new Date('2026-08-22T12:00:00Z'), [{ user_id: 'user-1', course_id: 'formation-ia', learner_first_name: 'Marie', learner_last_name: 'Dupont', organization_name: 'Entreprise Alpha' }]);
 
   assert.deepEqual(actions.map((action) => action.item_id), ['incident-open-123']);
-  assert.equal(actions[0].destination_path, '/admin/acces-incidents');
-  assert.match(actions[0].neutral_label, /^Incident — Décision attendue/);
+  assert.equal(actions[0].destination_path, '/admin/acces-incidents#incident-incident-open-123');
+  assert.match(actions[0].neutral_label, /^Incident — Entreprise Alpha — Marie DUPONT · Formation IA générative · Décision attendue/);
+  assert.doesNotMatch(actions[0].neutral_label, /incident-open-123|user-1/);
+});
+
+test('un incident conserve un nom exploitable issu du positionnement sans inscription', () => {
+  const [action] = deriveIncidentCockpitActions([
+    { id: 'incident-2', learner_user_id: 'user-2', course_id: 'formation-ia', incident_status: 'reported' },
+  ], new Date(), [], [{ user_id: 'user-2', learner_name: 'Alice Martin' }]);
+  assert.match(action.neutral_label, /Alice Martin/);
+  assert.doesNotMatch(action.neutral_label, /user-2|incident-2/);
 });
 
 test('seuls les risques dont needsReview est vrai remontent dans le cockpit', () => {
@@ -73,7 +82,7 @@ test('une alerte critique remonte immédiatement et les retards départagent un 
 test('le chargement combine les sources de pilotage sans lire course_access directement', async () => {
   const calls = [];
   const builder = {
-    select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; },
+    select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; }, order() { return builder; },
     then(resolve) { return Promise.resolve({ data: [], error: null }).then(resolve); },
   };
   const client = {
@@ -104,7 +113,7 @@ test('le chargement combine les sources de pilotage sans lire course_access dire
 test('le chargement conserve les actions existantes lorsque les nouveaux registres sont vides', async () => {
   function query(data) {
     const builder = {
-      select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; },
+      select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; }, order() { return builder; },
       then(resolve) { return Promise.resolve({ data, error: null }).then(resolve); },
     };
     return builder;
@@ -140,4 +149,7 @@ test('les destinations sont limitées aux écrans administratifs existants', () 
   assert.equal(getActionDestination({ destination_path: '/admin/bpf' }), '/admin/bpf');
   assert.equal(getActionDestination({ item_type: 'withdrawal_request', destination_path: '/admin' }), '/admin/retractations');
   assert.equal(getActionDestination({ destination_path: 'https://example.invalid' }), null);
+  const incidentId = '123e4567-e89b-42d3-a456-426614174000';
+  assert.equal(getActionDestination({ item_type: 'disciplinary_incident', item_id: incidentId, destination_path: `/admin/acces-incidents#incident-${incidentId}` }), `/admin/acces-incidents#incident-${incidentId}`);
+  assert.equal(getActionDestination({ item_type: 'disciplinary_incident', item_id: incidentId, destination_path: '/admin/acces-incidents#incident-other' }), null);
 });

@@ -138,7 +138,7 @@ function buildAdministrativeItems(rows, identities, actionLabel) {
     .map((item) => Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'sortValue')));
 }
 
-function buildCockpitSearchIndex(enrollments, identities) {
+function buildCockpitSearchIndex(enrollments, cohorts, identities) {
   const groups = new Map();
   enrollments.forEach((enrollment) => {
     const key = administrativeGroupKey(enrollment);
@@ -147,7 +147,7 @@ function buildCockpitSearchIndex(enrollments, identities) {
     groups.set(key, current);
   });
 
-  return [...groups.values()].map((entries) => {
+  const enrollmentEntries = [...groups.values()].map((entries) => {
     const first = entries[0];
     const organizationName = String(first.organization_name || '').trim();
     const isGroup = Boolean(organizationName && entries.length > 1);
@@ -171,7 +171,22 @@ function buildCockpitSearchIndex(enrollments, identities) {
         : identity.href,
       searchText: [title, detail, organizationName, ...individualNames].join(' '),
     };
-  }).sort((left, right) => left.title.localeCompare(right.title, 'fr'));
+  });
+  const cohortEntries = cohorts
+    .filter((cohort) => ACTIVE_COHORT_STATUSES.has(cohort.status))
+    .map((cohort) => {
+      const title = `${courseLabel(cohort.course_id)} — groupe de ${Number(cohort.enrolled_count || 0)} participant${Number(cohort.enrolled_count || 0) === 1 ? '' : 's'}`;
+      const detail = dateRangeLabel(plannedCohortSessions(cohort));
+      return {
+        id: `search-cohort-${cohort.id}`,
+        title,
+        detail,
+        href: cohortDestination(cohort.id),
+        searchText: `${title} ${detail} ${cohort.course_id}`,
+      };
+    });
+  return [...enrollmentEntries, ...cohortEntries]
+    .sort((left, right) => left.title.localeCompare(right.title, 'fr'));
 }
 
 function courseLabel(courseId) {
@@ -731,7 +746,7 @@ export function buildOperationalCockpit(data = {}, { now = new Date() } = {}) {
   const [upcomingTrainings, currentRecentTrainings] = buildTrainingSections(bookings, cohorts, identities, now);
   return {
     generatedAt: now.toISOString(),
-    searchIndex: buildCockpitSearchIndex(data.enrollments || [], identities),
+    searchIndex: buildCockpitSearchIndex(data.enrollments || [], cohorts, identities),
     sections: [
       buildAttendanceSection(bookings, data.attendance || [], identities, now),
       buildUnscheduledSection(bookings, cohorts, identities),

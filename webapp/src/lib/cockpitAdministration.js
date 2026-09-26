@@ -5,6 +5,7 @@ import {
 } from './disciplinaryIncidentAdministration.js';
 import { buildQualityOverview } from './qualityAdministration.js';
 import { fetchOperationalCockpit } from './operationalCockpit.js';
+import { LEARNER_RECORD_COURSE_LABELS } from './adminLearnerRecord.js';
 
 const ALLOWED_COURSE_IDS = new Set([
   'formation-ia',
@@ -45,7 +46,19 @@ function ageInSeconds(value, now) {
   return Number.isNaN(timestamp) ? 0 : Math.max(0, Math.floor((now.getTime() - timestamp) / 1000));
 }
 
-export function deriveIncidentCockpitActions(incidents = [], now = new Date()) {
+function incidentIdentity(incident, enrollments, assessments) {
+  const enrollment = enrollments.find((entry) => entry.user_id === incident.learner_user_id && entry.course_id === incident.course_id)
+    || enrollments.find((entry) => entry.user_id === incident.learner_user_id);
+  const firstName = String(enrollment?.learner_first_name || '').trim();
+  const lastName = String(enrollment?.learner_last_name || '').trim();
+  const name = [firstName, lastName.toLocaleUpperCase('fr-FR')].filter(Boolean).join(' ')
+    || String(assessments.find((entry) => entry.user_id === incident.learner_user_id)?.learner_name || '').trim();
+  const organization = String(enrollment?.organization_name || '').trim();
+  if (organization && name) return `${organization} — ${name}`;
+  return organization || name || 'Identité à compléter';
+}
+
+export function deriveIncidentCockpitActions(incidents = [], now = new Date(), enrollments = [], assessments = []) {
   return incidents
     .filter(isDisciplinaryIncidentOpen)
     .map((incident) => ({
@@ -54,11 +67,11 @@ export function deriveIncidentCockpitActions(incidents = [], now = new Date()) {
       item_type: 'disciplinary_incident',
       item_id: incident.id,
       course_id: incident.course_id || null,
-      neutral_label: `Incident — ${DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status] || 'À instruire'}`,
+      neutral_label: `Incident — ${incidentIdentity(incident, enrollments, assessments)} · ${LEARNER_RECORD_COURSE_LABELS[incident.course_id] || 'Formation à identifier'} · ${DISCIPLINARY_INCIDENT_STATUS_LABELS[incident.incident_status] || 'À instruire'}`,
       created_at: incident.reported_at || incident.created_at || null,
       due_at: null,
       age_seconds: ageInSeconds(incident.reported_at || incident.created_at, now),
-      destination_path: '/admin/acces-incidents',
+      destination_path: `/admin/acces-incidents#incident-${encodeURIComponent(incident.id)}`,
     }));
 }
 
@@ -123,6 +136,11 @@ export function prioritizeCockpitActions(actions = [], now = new Date()) {
 
 export function getActionDestination(action) {
   if (action?.item_type === 'withdrawal_request') return '/admin/retractations';
+  if (action?.item_type === 'disciplinary_incident') {
+    const expected = `/admin/acces-incidents#incident-${encodeURIComponent(action.item_id || '')}`;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(action.item_id || '')
+      && action.destination_path === expected ? expected : null;
+  }
   const destinations = {
     '/admin/stripe-apres-paiement': '/admin/stripe-apres-paiement',
     '/admin/commercial': '/admin/commercial',
@@ -151,11 +169,11 @@ export async function fetchCockpitSummary(client, filters) {
   let activityQuery = client.from('admin_training_activity_all_sources').select('*')
     .gte('starts_on', dateFrom).lte('starts_on', dateTo);
   let incidentsQuery = client.from('disciplinary_incidents')
-    .select('id, incident_status, severity, course_id, reported_at, created_at')
+    .select('id, learner_user_id, incident_status, severity, course_id, reported_at, created_at')
     .neq('incident_status', 'closed');
   if (courseId) activityQuery = activityQuery.eq('course_id', courseId);
   if (courseId) incidentsQuery = incidentsQuery.eq('course_id', courseId);
-  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult, operationalCockpit] = await Promise.all([
+  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult, operationalCockpit, identitiesResult, assessmentsResult] = await Promise.all([
     client.rpc('admin_get_cockpit_summary', {
       p_date_from: dateFrom,
       p_date_to: dateTo,
@@ -166,15 +184,19 @@ export async function fetchCockpitSummary(client, filters) {
     client.from('quality_risks').select('id, quality_record_id, status, review_due_at, created_at'),
     client.from('quality_records').select('id, severity, detected_at'),
     fetchOperationalCockpit(client),
+    client.from('training_enrollments').select('user_id, course_id, learner_first_name, learner_last_name, organization_name, updated_at').order('updated_at', { ascending: false }),
+    client.from('course_positioning_assessments').select('user_id, learner_name, submitted_at').order('submitted_at', { ascending: false }),
   ]);
 
   if (error) throw new Error(error.message || 'Le cockpit ne peut pas être chargé.');
   if (!data || typeof data !== 'object') throw new Error('Le résumé du cockpit est indisponible.');
   if (activitiesResult.error) throw new Error(activitiesResult.error.message || 'Le contrôle BPF du cockpit est indisponible.');
   if (incidentsResult.error) throw new Error(incidentsResult.error.message || 'Les incidents du cockpit sont indisponibles.');
+  if (identitiesResult.error) throw new Error(identitiesResult.error.message || 'Les identités des incidents sont indisponibles.');
+  if (assessmentsResult.error) throw new Error(assessmentsResult.error.message || 'Les identités pédagogiques des incidents sont indisponibles.');
   if (risksResult.error || recordsResult.error) throw new Error('Les risques qualité du cockpit sont indisponibles.');
   const bpfActions = deriveBpfCockpitActions(activitiesResult.data || []);
-  const incidentActions = deriveIncidentCockpitActions(incidentsResult.data || []);
+  const incidentActions = deriveIncidentCockpitActions(incidentsResult.data || [], new Date(), identitiesResult.data || [], assessmentsResult.data || []);
   const qualityRiskActions = deriveQualityRiskCockpitActions({
     records: recordsResult.data || [],
     risks: risksResult.data || [],
