@@ -42,6 +42,18 @@
   margin-bottom: 2rem;
 }
 
+.calendar-mobile-list {
+  display: none;
+}
+
+.calendar-status {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
 .calendar-day-header {
   text-align: center;
   font-weight: bold;
@@ -209,4 +221,94 @@
 .legend-ferie {
   background: var(--color-bg);
   border: 1px dashed var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .calendar-header {
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .calendar-header h2 {
+    font-size: 1.15rem;
+    text-align: center;
+  }
+
+  .calendar-header button {
+    flex: 0 0 auto;
+    padding: 0.5rem;
+  }
+
+  .calendar-grid-public {
+    display: none;
+  }
+
+  .calendar-mobile-list {
+    display: block;
+  }
+
+  .calendar-mobile-list h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .calendar-mobile-list h4 {
+    margin: 1.25rem 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  .calendar-mobile-list ul {
+    list-style: none;
+  }
+
+  .calendar-list-day {
+    padding: 0.85rem;
+    margin-bottom: 0.6rem;
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+  }
+
+  .calendar-list-date {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-weight: 700;
+    text-transform: capitalize;
+  }
+
+  .calendar-list-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .calendar-list-slot {
+    flex: 1 1 100%;
+    min-height: 44px;
+    padding: 0.6rem;
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--color-primary-dark);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .calendar-list-slot:hover,
+  .calendar-list-slot:focus-visible {
+    background: rgba(16, 185, 129, 0.18);
+  }
+
+  .booking-modal {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 1.25rem;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+  }
 }
