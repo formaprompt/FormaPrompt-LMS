@@ -78,6 +78,31 @@ function groupIdentity(cohort) {
   return `${count} participant${count === 1 ? '' : 's'} concerné${count === 1 ? '' : 's'}`;
 }
 
+function cohortReadinessIssues(cohort) {
+  const issues = [];
+  const count = Number(cohort.enrolled_count || 0);
+  const minimum = Number(cohort.minimum_participants);
+  if (cohort.status !== 'confirmed') issues.push('groupe à confirmer');
+  if (!Number.isFinite(minimum) || minimum <= 0) issues.push('seuil minimum à renseigner');
+  else if (count < minimum) issues.push(`seuil non atteint (${count}/${minimum} participants)`);
+  return issues;
+}
+
+function cohortStatusLabel(cohort, now) {
+  if (cohort.status === 'completed') return 'Réalisation déclarée terminée';
+  if (cohort.status === 'draft') return 'Groupe en brouillon';
+  const sessions = plannedCohortSessions(cohort);
+  const endsAt = timestamp(sessions.at(-1)?.ends_at);
+  if (cohort.status === 'confirmed') {
+    return endsAt && endsAt < now.getTime()
+      ? 'Groupe confirmé — réalisation à vérifier'
+      : 'Groupe confirmé';
+  }
+  return endsAt && endsAt < now.getTime()
+    ? 'Groupe ouvert — dates passées, réalisation non confirmée'
+    : 'Groupe ouvert — confirmation attendue';
+}
+
 function enrollmentDocuments(enrollment) {
   return new Map((enrollment.training_documents || []).map((document) => [document.document_type, document]));
 }
@@ -322,7 +347,7 @@ function readinessIssues(enrollment) {
   return issues;
 }
 
-function buildTrainingReadinessSection(enrollments, identities, now) {
+function buildTrainingReadinessSection(enrollments, cohorts, identities, now) {
   const nowTime = now.getTime();
   const horizonTime = nowTime + (30 * DAY_MS);
   const rows = enrollments
@@ -337,17 +362,31 @@ function buildTrainingReadinessSection(enrollments, identities, now) {
       sortValue: timestamp(enrollment.starts_at),
     }))
     .filter((row) => row.issues.length);
-  const items = buildAdministrativeItems(rows, identities, 'Préparer');
+  const cohortItems = cohorts
+    .filter((cohort) => ACTIVE_COHORT_STATUSES.has(cohort.status))
+    .map((cohort) => ({ cohort, sessions: plannedCohortSessions(cohort), issues: cohortReadinessIssues(cohort) }))
+    .filter(({ sessions, issues }) => {
+      const startsAt = timestamp(sessions[0]?.starts_at);
+      return startsAt && startsAt > nowTime && startsAt <= horizonTime && issues.length;
+    })
+    .map(({ cohort, sessions, issues }) => ({
+      id: `readiness-cohort-${cohort.id}`,
+      title: groupIdentity(cohort),
+      detail: `${courseLabel(cohort.course_id)} · ${dateRangeLabel(sessions)} · ${issueSummary(issues)}`,
+      href: cohortDestination(cohort.id),
+      actionLabel: 'Préparer',
+    }));
+  const items = [...buildAdministrativeItems(rows, identities, 'Préparer'), ...cohortItems];
   return {
     id: 'training-readiness',
     title: 'Formations pas prêtes',
     count: items.length,
     tone: items.length ? 'warning' : 'success',
     summary: items.length
-      ? `${items.length} dossier${items.length > 1 ? 's' : ''} à sécuriser avant le démarrage.`
+      ? `${items.length} dossier${items.length > 1 ? 's' : ''} ou groupe${items.length > 1 ? 's' : ''} à sécuriser avant le démarrage.`
       : 'Toutes les formations des 30 prochains jours sont prêtes.',
     items,
-    emptyLabel: 'Aucun dossier incomplet dans les 30 prochains jours.',
+    emptyLabel: 'Aucun dossier ou groupe à préparer dans les 30 prochains jours.',
     href: '/admin/dossiers',
     actionLabel: 'Voir les dossiers',
   };
@@ -519,7 +558,7 @@ function buildUpcomingSessionsSection(bookings, cohorts, identities, now) {
   };
 }
 
-function trainingEntries(bookings, cohorts, identities) {
+function trainingEntries(bookings, cohorts, identities, now) {
   const individual = bookings.flatMap((booking) => {
     const sessions = plannedBookingSessions(booking);
     if (!sessions.length || ['cancelled', 'rejected'].includes(booking.status)) return [];
@@ -541,12 +580,13 @@ function trainingEntries(bookings, cohorts, identities) {
     return [{
       id: `cohort-training-${cohort.id}`,
       title: groupIdentity(cohort),
-      detail: `${courseLabel(cohort.course_id)} · ${dateRangeLabel(sessions)}`,
+      detail: `${courseLabel(cohort.course_id)} · ${dateRangeLabel(sessions)} · ${cohortStatusLabel(cohort, now)}`,
       href: cohortDestination(cohort.id),
       actionLabel: 'Ouvrir',
       startsAt: sessions[0].starts_at,
       endsAt: sessions[sessions.length - 1].ends_at,
       status: cohort.status,
+      isCohort: true,
     }];
   });
   return [...individual, ...grouped];
@@ -555,7 +595,7 @@ function trainingEntries(bookings, cohorts, identities) {
 function buildTrainingSections(bookings, cohorts, identities, now) {
   const nowTime = now.getTime();
   const recentLimit = nowTime - (30 * DAY_MS);
-  const entries = trainingEntries(bookings, cohorts, identities);
+  const entries = trainingEntries(bookings, cohorts, identities, now);
   const upcoming = entries
     .filter((item) => timestamp(item.startsAt) > nowTime)
     .sort((left, right) => timestamp(left.startsAt) - timestamp(right.startsAt));
@@ -568,7 +608,7 @@ function buildTrainingSections(bookings, cohorts, identities, now) {
     .sort((left, right) => timestamp(right.endsAt) - timestamp(left.endsAt))
     .map((item) => ({
       ...item,
-      detail: `${item.detail} · ${timestamp(item.endsAt) >= nowTime ? 'En cours' : 'Terminée'}`,
+      detail: item.isCohort ? item.detail : `${item.detail} · ${timestamp(item.endsAt) >= nowTime ? 'En cours' : 'Terminée'}`,
     }));
 
   return [
@@ -588,9 +628,9 @@ function buildTrainingSections(bookings, cohorts, identities, now) {
       title: 'Formations en cours et terminées',
       count: currentAndRecent.length,
       tone: 'info',
-      summary: 'Formations en cours ou terminées depuis moins de 30 jours.',
+      summary: 'Formations en cours et groupes aux dates passées à vérifier depuis moins de 30 jours. Les dates seules ne prouvent pas la réalisation.',
       items: currentAndRecent,
-      emptyLabel: 'Aucune formation en cours ou récemment terminée.',
+      emptyLabel: 'Aucune période prévue en cours ou récemment achevée.',
       href: OPERATIONAL_DESTINATIONS.sessions,
       actionLabel: 'Voir les formations',
     },
@@ -750,7 +790,7 @@ export function buildOperationalCockpit(data = {}, { now = new Date() } = {}) {
     sections: [
       buildAttendanceSection(bookings, data.attendance || [], identities, now),
       buildUnscheduledSection(bookings, cohorts, identities),
-      buildTrainingReadinessSection(data.enrollments || [], identities, now),
+      buildTrainingReadinessSection(data.enrollments || [], cohorts, identities, now),
       buildUpcomingSessionsSection(bookings, cohorts, identities, now),
       buildAvailabilitySection(data.availabilitySlots || [], now),
       upcomingTrainings,

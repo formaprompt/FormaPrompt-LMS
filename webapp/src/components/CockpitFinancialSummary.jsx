@@ -5,12 +5,12 @@ function FinancialRow({ label, value, important = false }) {
   return <div className={important ? 'is-important' : ''}><dt>{label}</dt><dd>{value}</dd></div>;
 }
 
-export default function CockpitFinancialSummary({ rows = [], stripeActionCount = 0 }) {
+export default function CockpitFinancialSummary({ rows = [], stripeActionCount = 0, exclusions = {} }) {
   return (
     <section className="cockpit-panel cockpit-financial-detail" aria-labelledby="cockpit-finance-title">
       <div className="cockpit-section-heading">
         <div>
-          <p>Période sélectionnée</p>
+          <p>Période sélectionnée · paiements réels uniquement</p>
           <h2 id="cockpit-finance-title">Suivi financier détaillé</h2>
         </div>
         <span>{stripeActionCount} alerte{stripeActionCount === 1 ? '' : 's'} Stripe</span>
@@ -33,7 +33,15 @@ export default function CockpitFinancialSummary({ rows = [], stripeActionCount =
             </article>
           ))}
         </div>
-      ) : <p className="cockpit-muted">Aucun mouvement Stripe sur la période.</p>}
+      ) : <p className="cockpit-muted">Aucun mouvement Stripe réel sur la période.</p>}
+
+      {Boolean(exclusions.test || exclusions.unknown) && (
+        <p className="cockpit-muted">
+          Exclus des montants : {Number(exclusions.test || 0)} paiement(s) de test
+          {' et '}{Number(exclusions.unknown || 0)} de mode indéterminé.
+          {' '}Ils restent consultables dans la synthèse financière.
+        </p>
+      )}
 
       <footer>
         <p>Ces montants proviennent des registres locaux. Ils ne remplacent ni le solde Stripe ni le relevé bancaire.</p>

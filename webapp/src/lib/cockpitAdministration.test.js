@@ -83,7 +83,8 @@ test('le chargement combine les sources de pilotage sans lire course_access dire
   const calls = [];
   const builder = {
     select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; }, order() { return builder; },
-    then(resolve) { return Promise.resolve({ data: [], error: null }).then(resolve); },
+    range() { return builder; },
+    then(resolve) { return Promise.resolve({ data: [], count: 0, error: null }).then(resolve); },
   };
   const client = {
     rpc: async (name, parameters) => {
@@ -100,7 +101,7 @@ test('le chargement combine les sources de pilotage sans lire course_access dire
   });
 
   assert.deepEqual(calls[0], ['from', 'admin_training_activity_all_sources']);
-  assert.deepEqual(calls[2], [
+  assert.deepEqual(calls.find(([name]) => name === 'admin_get_cockpit_summary'), [
     'admin_get_cockpit_summary',
     { p_date_from: '2026-01-01', p_date_to: '2026-08-22', p_course_id: 'formation-ia' },
   ]);
@@ -114,7 +115,8 @@ test('le chargement conserve les actions existantes lorsque les nouveaux registr
   function query(data) {
     const builder = {
       select() { return builder; }, gte() { return builder; }, lte() { return builder; }, eq() { return builder; }, neq() { return builder; }, order() { return builder; },
-      then(resolve) { return Promise.resolve({ data, error: null }).then(resolve); },
+      range() { return builder; },
+      then(resolve) { return Promise.resolve({ data, count: data.length, error: null }).then(resolve); },
     };
     return builder;
   }
@@ -152,4 +154,45 @@ test('les destinations sont limitées aux écrans administratifs existants', () 
   const incidentId = '123e4567-e89b-42d3-a456-426614174000';
   assert.equal(getActionDestination({ item_type: 'disciplinary_incident', item_id: incidentId, destination_path: `/admin/acces-incidents#incident-${incidentId}` }), `/admin/acces-incidents#incident-${incidentId}`);
   assert.equal(getActionDestination({ item_type: 'disciplinary_incident', item_id: incidentId, destination_path: '/admin/acces-incidents#incident-other' }), null);
+  const bpf = { item_type: 'bpf_missing_hours', item_id: incidentId, source_kind: 'internal_lms', starts_on: '2026-03-01', ends_on: '2026-03-02' };
+  const path = `/admin/bpf?du=2026-03-01&au=2026-03-02#bpf-activity-internal_lms-${incidentId}`;
+  assert.equal(getActionDestination({ ...bpf, destination_path: path }), path);
+  assert.equal(getActionDestination({ ...bpf, destination_path: 'https://example.invalid' }), null);
+  assert.equal(getActionDestination({ ...bpf, destination_path: '/admin/bpf#bpf-activity-external-other' }), null);
+});
+
+test('les montants cockpit excluent test et indéterminé et respectent les filtres de la vue', async () => {
+  const filters = [];
+  const rows = [
+    { transaction_id: 'test', currency: 'eur', gross_training_cents: 18700, estimated_net_stripe_cents: 18700 },
+    { transaction_id: 'live', currency: 'eur', gross_training_cents: 935, successful_refund_cents: 935, estimated_net_stripe_cents: 0 },
+    { transaction_id: 'unknown', currency: 'eur', gross_training_cents: 50000 },
+  ];
+  const client = {
+    rpc: async (name) => ({ data: name === 'admin_list_course_cohorts' ? [] : { stripe_financial_by_currency: [{ currency: 'eur', estimated_net_stripe_cents: 18700 }] }, error: null }),
+    from(source) {
+      const data = source === 'admin_stripe_financial_summary' ? rows : source === 'stripe_payment_transactions' ? [
+        { id: 'test', stripe_checkout_session_id: 'cs_test_fixture' },
+        { id: 'live', last_event: { livemode: true } },
+      ] : [];
+      const query = {
+        select() { return query; }, order() { return query; }, neq() { return query; }, in() { return query; },
+        range() { return query; },
+        gte(...args) { filters.push([source, 'gte', ...args]); return query; },
+        lte(...args) { filters.push([source, 'lte', ...args]); return query; },
+        eq(...args) { filters.push([source, 'eq', ...args]); return query; },
+        then(resolve) { return Promise.resolve({ data, count: data.length, error: null }).then(resolve); },
+      };
+      return query;
+    },
+  };
+  const result = await fetchCockpitSummary(client, { dateFrom: '2026-01-01', dateTo: '2026-09-30', courseId: 'formation-ia' });
+  assert.equal(result.stripe_financial_by_currency[0].gross_training_cents, 935);
+  assert.equal(result.stripe_financial_by_currency[0].estimated_net_stripe_cents, 0);
+  assert.deepEqual(result.stripe_financial_exclusions, { test: 1, unknown: 1 });
+  assert.deepEqual(filters.filter(([source]) => source === 'admin_stripe_financial_summary'), [
+    ['admin_stripe_financial_summary', 'gte', 'occurred_on', '2026-01-01'],
+    ['admin_stripe_financial_summary', 'lte', 'occurred_on', '2026-09-30'],
+    ['admin_stripe_financial_summary', 'eq', 'course_id', 'formation-ia'],
+  ]);
 });

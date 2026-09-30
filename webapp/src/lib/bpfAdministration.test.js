@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildBpfCsv, buildBpfSummary, createExternalActivity, deriveBpfCockpitActions,
+  bpfActivityPath, buildBpfCsv, buildBpfSummary, createExternalActivity, deriveBpfCockpitActions, describeBpfActivity,
   fetchBpfAdministration, filterExternalActivities, findBpfDataIssues,
   updateExternalActivity,
 } from './bpfAdministration.js';
@@ -101,7 +101,7 @@ test('les contrôles signalent doublons et données BPF incomplètes sans faux s
 test('les alertes BPF du cockpit restent actionnables et orientent vers la page BPF', () => {
   const actions = deriveBpfCockpitActions([activity({ invoice_status: 'not_invoiced' })], new Date('2026-08-24T10:00:00Z'));
   assert.equal(actions.length, 1);
-  assert.equal(actions[0].destination_path, '/admin/bpf');
+  assert.equal(actions[0].destination_path, '/admin/bpf?du=2026-03-01&au=2026-03-02#bpf-activity-external-ext-1');
   assert.equal(actions[0].domain, 'bpf');
 });
 
@@ -119,13 +119,58 @@ test('les filtres recherchent sans dupliquer ni modifier les activités', () => 
   assert.equal(rows.length, 2);
 });
 
-test('le chargement lit uniquement le registre et les trois vues du Lot 1', async () => {
+test('le chargement lit le registre, les vues et les identités nécessaires sans toucher aux droits ni aux paiements', async () => {
   const sources = [];
   const builderFor = (source) => {
-    const builder = { select() { return builder; }, gte() { return builder; }, lte() { return builder; }, order() { return Promise.resolve({ data: [], error: null }); } };
+    const builder = { select(fields) {
+      if (source === 'training_enrollments') {
+        assert.equal(fields, 'id, user_id, course_id, learner_first_name, learner_last_name, organization_name');
+        return Promise.resolve({ data: [{ id: 'int-1', learner_first_name: 'Marie' }], error: null });
+      }
+      return builder;
+    }, gte() { return builder; }, lte() { return builder; }, order() { return Promise.resolve({ data: [], error: null }); } };
     sources.push(source); return builder;
   };
-  await fetchBpfAdministration({ from: builderFor }, { dateFrom: '2026-01-01', dateTo: '2026-12-31' });
-  assert.deepEqual(sources, ['external_training_activities', 'admin_internal_training_activity', 'admin_training_activity_all_sources', 'admin_bpf_preparation_rows']);
-  assert.ok(!sources.includes('purchases') && !sources.includes('course_access') && !sources.includes('training_enrollments'));
+  const result = await fetchBpfAdministration({ from: builderFor }, { dateFrom: '2026-01-01', dateTo: '2026-12-31' });
+  assert.deepEqual(sources, ['external_training_activities', 'admin_internal_training_activity', 'admin_training_activity_all_sources', 'admin_bpf_preparation_rows', 'training_enrollments']);
+  assert.deepEqual(result.identities, [{ id: 'int-1', learner_first_name: 'Marie' }]);
+  assert.ok(!sources.includes('purchases') && !sources.includes('course_access'));
+});
+
+test('les activités individuelles sont nominatives et les groupes affichent seulement leur effectif', () => {
+  const identities = [{ id: 'int-1', user_id: 'user-1', course_id: 'formation-ia', learner_first_name: 'Marie', learner_last_name: 'Dupont', organization_name: 'Entreprise Alpha' }];
+  const internal = activity({ source_kind: 'internal_lms', activity_id: 'int-1', course_id: 'formation-ia', trainee_count: 1 });
+  assert.match(describeBpfActivity(internal, identities), /^Entreprise Alpha — Marie Dupont · Formation IA générative/);
+  assert.match(describeBpfActivity(internal, [{ ...identities[0], organization_name: '' }]), /^Marie Dupont · Formation IA générative/);
+  const groupLabel = describeBpfActivity({ ...internal, trainee_count: 3 }, identities);
+  assert.match(groupLabel, /Entreprise Alpha — 3 participants concernés/);
+  assert.doesNotMatch(groupLabel, /Marie|Dupont/);
+  assert.match(describeBpfActivity(activity({ ordering_organization: 'OF partenaire' }), identities), /OF partenaire — 3 participants concernés/);
+  assert.match(describeBpfActivity({ ...internal, activity_id: 'unknown' }, identities), /Identité à compléter/);
+});
+
+test('la correspondance BPF par dossier prime sur un autre dossier du même utilisateur', () => {
+  const identities = [
+    { id: 'other', user_id: 'user-1', course_id: 'formation-ia', learner_first_name: 'Autre', learner_last_name: 'Dossier' },
+    { id: 'exact', user_id: 'user-1', course_id: 'formation-ia', learner_first_name: 'Nora', learner_last_name: 'Bernard' },
+  ];
+  const row = activity({ source_kind: 'internal_lms', activity_id: 'projection', training_enrollment_id: 'exact', trainee_reference: 'user-1', course_id: 'formation-ia', trainee_count: 1 });
+  assert.match(describeBpfActivity(row, identities), /^Nora Bernard/);
+  assert.match(describeBpfActivity({ ...row, training_enrollment_id: undefined }, identities), /^Autre Dossier/);
+});
+
+test('une alerte interne hors consolidation conserve son identité et sa destination ciblée', () => {
+  const row = activity({ source_kind: 'internal_lms', activity_id: 'int-missing', course_id: 'formation-ia', trainee_count: 1 });
+  const issues = findBpfDataIssues([], [row], [{ id: 'int-missing', learner_first_name: 'Nora', learner_last_name: 'Bernard' }]);
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].type, 'missing_internal');
+  assert.match(issues[0].activityLabel, /^Nora Bernard/);
+  assert.equal(issues[0].destinationPath, '/admin/bpf?du=2026-03-01&au=2026-03-02#bpf-activity-internal_lms-int-missing');
+});
+
+test('les liens BPF ciblent chaque activité et ne créent pas de période invalide', () => {
+  assert.notEqual(bpfActivityPath(activity()), bpfActivityPath(activity({ activity_id: 'ext-2' })));
+  assert.equal(bpfActivityPath(activity({ ends_on: '2026-01-01' })), '/admin/bpf#bpf-activity-external-ext-1');
+  assert.equal(bpfActivityPath(activity({ source_kind: 'unknown' })), null);
+  assert.equal(bpfActivityPath(activity({ activity_id: null })), null);
 });

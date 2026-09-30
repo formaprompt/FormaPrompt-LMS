@@ -1,3 +1,5 @@
+import { LEARNER_RECORD_COURSE_LABELS } from './adminLearnerRecord.js';
+
 export const ACTIVITY_RELATIONSHIPS = Object.freeze({
   direct: 'Directe FormaPrompt hors LMS',
   subcontracted_to_us: 'Sous-traitance confiée à FormaPrompt',
@@ -45,17 +47,20 @@ function periodQuery(client, source, filters) {
 
 export async function fetchBpfAdministration(client, filters) {
   validateFilters(filters);
-  const [external, internal, allSources, bpfRows] = await Promise.all([
+  const [external, internal, allSources, bpfRows, identities] = await Promise.all([
     periodQuery(client, 'external_training_activities', filters),
     periodQuery(client, 'admin_internal_training_activity', filters),
     periodQuery(client, 'admin_training_activity_all_sources', filters),
     periodQuery(client, 'admin_bpf_preparation_rows', filters),
+    client.from('training_enrollments')
+      .select('id, user_id, course_id, learner_first_name, learner_last_name, organization_name'),
   ]);
   return {
     externalActivities: throwIfError(external, 'Les activités externes sont indisponibles.'),
     internalActivities: throwIfError(internal, 'Les activités internes sont indisponibles.'),
     allActivities: throwIfError(allSources, 'La consolidation des activités est indisponible.'),
     bpfRows: throwIfError(bpfRows, 'La préparation BPF est indisponible.'),
+    identities: throwIfError(identities, 'Les identités des activités BPF sont indisponibles.'),
   };
 }
 
@@ -143,7 +148,37 @@ export function buildBpfSummary(allActivities = [], bpfRows = []) {
   };
 }
 
-export function findBpfDataIssues(allActivities = [], internalActivities = []) {
+export function bpfActivityAnchor(row) {
+  return `bpf-activity-${row.source_kind}-${row.activity_id}`;
+}
+
+export function bpfActivityPath(row) {
+  if (!['external', 'internal_lms'].includes(row.source_kind) || !row.activity_id) return null;
+  const dates = /^\d{4}-\d{2}-\d{2}$/;
+  const period = dates.test(row.starts_on || '') && dates.test(row.ends_on || '')
+    && row.ends_on >= row.starts_on
+    ? `?du=${row.starts_on}&au=${row.ends_on}` : '';
+  return `/admin/bpf${period}#${encodeURIComponent(bpfActivityAnchor(row))}`;
+}
+
+export function describeBpfActivity(row, identities = []) {
+  const title = LEARNER_RECORD_COURSE_LABELS[row.course_id || row.title]
+    || row.title || 'Formation à préciser';
+  const enrollment = row.source_kind === 'internal_lms' ? identities.find((entry) =>
+    entry.id === (row.training_enrollment_id || row.activity_id))
+    || identities.find((entry) => row.trainee_reference && entry.user_id === row.trainee_reference
+      && entry.course_id === row.course_id) : null;
+  const name = [enrollment?.learner_first_name, enrollment?.learner_last_name]
+    .filter(Boolean).join(' ').trim();
+  const organization = row.ordering_organization || enrollment?.organization_name;
+  const participantCount = Number(row.trainee_count || 0);
+  const identity = row.source_kind === 'external' || participantCount > 1
+    ? [organization, `${participantCount} participant${participantCount === 1 ? '' : 's'} concerné${participantCount === 1 ? '' : 's'}`].filter(Boolean).join(' — ')
+    : [organization, name].filter(Boolean).join(' — ') || 'Identité à compléter';
+  return `${identity} · ${title}${row.starts_on ? ` · ${row.starts_on}` : ''}`;
+}
+
+export function findBpfDataIssues(allActivities = [], internalActivities = [], identities = []) {
   const issues = [];
   const seen = new Set();
   for (const row of allActivities) {
@@ -161,18 +196,32 @@ export function findBpfDataIssues(allActivities = [], internalActivities = []) {
   for (const row of internalActivities) {
     if (!consolidatedInternal.has(row.activity_id)) issues.push({ key: `missing-internal:${row.activity_id}`, severity: 'critical', type: 'missing_internal', activityId: row.activity_id, label: 'Activité interne absente de la consolidation.' });
   }
-  return issues;
+  return issues.map((issue) => {
+    const row = [...allActivities, ...internalActivities].find((entry) =>
+      issue.key.endsWith(`${entry.source_kind}:${entry.activity_id}`)
+      || (issue.type === 'missing_internal' && entry.activity_id === issue.activityId));
+    return {
+      ...issue,
+      activityLabel: row ? describeBpfActivity(row, identities) : 'Activité à identifier',
+      destinationPath: row ? bpfActivityPath(row) : null,
+      sourceKind: row?.source_kind,
+      startsOn: row?.starts_on,
+      endsOn: row?.ends_on,
+    };
+  });
 }
 
-export function deriveBpfCockpitActions(rows = [], now = new Date()) {
-  return findBpfDataIssues(rows)
+export function deriveBpfCockpitActions(rows = [], now = new Date(), identities = []) {
+  return findBpfDataIssues(rows, [], identities)
     .filter((issue) => issue.type !== 'duplicate')
     .slice(0, 8)
     .map((issue) => ({
       domain: 'bpf', severity: issue.severity, item_type: `bpf_${issue.type}`,
-      item_id: issue.activityId, course_id: null, neutral_label: issue.label,
+      item_id: issue.activityId, course_id: null,
+      neutral_label: `${issue.activityLabel} — ${issue.label}`,
+      source_kind: issue.sourceKind, starts_on: issue.startsOn, ends_on: issue.endsOn,
       created_at: now.toISOString(), due_at: null, age_seconds: 0,
-      destination_path: '/admin/bpf',
+      destination_path: issue.destinationPath,
     }));
 }
 

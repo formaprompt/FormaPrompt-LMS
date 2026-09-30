@@ -414,7 +414,24 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Le commit `a10bd93` est poussé et la demande de fusion GitHub n°15 est ouverte vers `main`.
 - Le premier contrôle GitHub « Node, React and build » a détecté un faux accès Supabase incomplet dans `AdminCockpit.test.jsx` : la méthode chaînée `order` manquait au mock alors que la lecture réelle trie désormais les identités.
 - Le mock a été corrigé sans modifier le comportement applicatif. Le contrôle Vitest complet demandé par la CI réussit : 78 fichiers et 403 tests.
-- Aucune fusion ni mise en production n'a été effectuée à ce stade.
+- État vérifié le 30 septembre : la demande n°15 a été fusionnée le 26 septembre dans `main` (`b7bb735`). Les contrôles GitHub pré/post-fusion ont terminé avec succès. Le plan SFTP `dry-run-20260926-193532.json` a ensuite été appliqué après autorisation distincte : 141 ajouts, 35 remplacements, aucune suppression ; contrôle final sans différence.
+
+## Fiabilité du cockpit — corrections locales du 30 septembre 2026
+
+- Branche dédiée `codex/cockpit-fiabilite-20260930`, dans `C:\fp-cockpit-fiabilite-20260930`, depuis `origin/main` (`b7bb735`). Le dépôt de travail habituel et ses fichiers non suivis ont été préservés.
+- Audit administrateur authentifié : recherche, liens incidents, disponibilités, finance et BPF contrôlés en lecture seule. Trois anomalies motivent ce lot : un paiement de test inclus dans le net réel, des groupes publiés sans inscrit affichés comme réalisés selon leurs dates, des alertes BPF identifiées seulement par référence technique.
+- Finance : seuls les paiements dont le mode réel est établi alimentent les indicateurs. Les modes test et indéterminé restent consultables séparément. La preuve réutilise le webhook `livemode` et le préfixe Checkout historique ; une contradiction reste indéterminée. Les remboursements et litiges conservent le calcul SQL existant.
+- La lecture financière est paginée dans un ordre stable avec comptage exact : un plafond serveur ou une erreur ne peut pas produire silencieusement des totaux partiels. Les devises absentes ne sont pas ajoutées aux euros.
+- Groupes : confirmation et seuil minimum contrôlés avant les démarrages des 30 prochains jours. Les dates seules ne prouvent pas la réalisation. L'affichage conserve l'effectif et non les noms individuels.
+- BPF : nom/entreprise et intitulé lisibles, lien vers la période et la carte exacte, focus clavier et repère visuel. Les activités LMS hors projection restent contrôlables sans inventer de produit ni transformer des heures manquantes en zéro.
+- Fichiers fonctionnels : `webapp/src/lib/stripeFinancialMode.js` (nouveau), `financeAdministration.js`, `cockpitAdministration.js`, `operationalCockpit.js`, `bpfAdministration.js` ; `webapp/src/components/CockpitFinancialSummary.jsx` ; `webapp/src/pages/AdminFinance.jsx`, `AdminCockpit.jsx`, `AdminBpfPreparation.jsx` et son CSS. Tests associés créés/étendus. `webapp/supabase/functions/_tests/stripeWebhookCompatibility.test.js` corrigé pour les fins de ligne Windows : l'échec était aussi reproductible sur `main`, aucun traitement serveur n'est modifié.
+- Contrôle renforcé : réalisation déléguée sur finance/groupes, revue indépendante des contrats et intégration contrôlée par le coordinateur. Aucune migration nécessaire, aucun paiement, compte, droit LMS ou donnée de production modifié ; aucun nettoyage de données de test exécuté.
+- Validation locale finale : 186 tests applicatifs, 311 tests serveur réussis (1 ignoré), 409 tests React/Studio dans 78 fichiers, lint, TypeScript et `git diff --check` réussis. Build complet validé : 281 fichiers, 32 pages pré-rendues, 924 références d'assets. Les tests d'interface sont automatisés ; le parcours de cette nouvelle version n'a pas encore été contrôlé avec les données réelles en production.
+- Pour tester : dans `C:\fp-cockpit-fiabilite-20260930\webapp`, lancer `npm test`, `npm run lint`, `npm run typecheck` et `npm run build` avec les seules variables publiques Vite validées. Contrôler ensuite les modes financiers, un groupe vide/sous le seuil, et les liens BPF individuels/groupes/hors projection.
+- Point de vigilance : les registres locaux donnent une estimation administrative, pas un solde bancaire ni une déclaration BPF officielle. Les données d'activité manquantes restent à compléter par l'administrateur ; elles ne sont pas inventées par l'interface.
+- Après autorisation explicite de Thierry, le lot de 20 fichiers a été enregistré dans `f02281e4b13ce5c5c1dfbb44327fa5f50621010a` puis poussé sur `origin/codex/cockpit-fiabilite-20260930` ; SHA local/distant identiques vérifiés. Scan des ajouts sans secret détecté.
+- La demande de fusion [n°16](https://github.com/formaprompt/FormaPrompt-LMS/pull/16) est ouverte vers `main` et rattachée à la discussion Codex. Les contrôles GitHub restent à terminer/vérifier. Fusion recommandée maintenant : NON, tant que leurs résultats finaux ne sont pas confirmés.
+- L'autorisation de ce lot porte uniquement sur commit, push et création de la demande. Aucune fusion ni mise en production réalisée ou autorisée pour ce lot.
 
 ## Commandes utiles
 
