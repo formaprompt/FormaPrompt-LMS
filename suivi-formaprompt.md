@@ -429,8 +429,9 @@ Les formations IA générative, Prompt Engineering — Niveau 1 et IA Act sont p
 - Validation locale finale : 186 tests applicatifs, 311 tests serveur réussis (1 ignoré), 409 tests React/Studio dans 78 fichiers, lint, TypeScript et `git diff --check` réussis. Build complet validé : 281 fichiers, 32 pages pré-rendues, 924 références d'assets. Les tests d'interface sont automatisés ; le parcours de cette nouvelle version n'a pas encore été contrôlé avec les données réelles en production.
 - Pour tester : dans `C:\fp-cockpit-fiabilite-20260930\webapp`, lancer `npm test`, `npm run lint`, `npm run typecheck` et `npm run build` avec les seules variables publiques Vite validées. Contrôler ensuite les modes financiers, un groupe vide/sous le seuil, et les liens BPF individuels/groupes/hors projection.
 - Point de vigilance : les registres locaux donnent une estimation administrative, pas un solde bancaire ni une déclaration BPF officielle. Les données d'activité manquantes restent à compléter par l'administrateur ; elles ne sont pas inventées par l'interface.
-- Aucun commit, push, demande de fusion, fusion ou déploiement exécuté pour ce nouveau lot. Fusion recommandée maintenant : NON, en attente de l'autorisation de créer la demande et des contrôles GitHub.
-- Thierry a ensuite autorisé explicitement le commit, le push et la création de la demande de fusion pour ce lot. Cette autorisation n'inclut ni fusion ni mise en production ; les opérations sont en cours et seront confirmées par leurs preuves Git/GitHub.
+- Après autorisation explicite de Thierry, le lot de 20 fichiers a été enregistré dans `f02281e4b13ce5c5c1dfbb44327fa5f50621010a` puis poussé sur `origin/codex/cockpit-fiabilite-20260930` ; SHA local/distant identiques vérifiés. Scan des ajouts sans secret détecté.
+- La demande de fusion [n°16](https://github.com/formaprompt/FormaPrompt-LMS/pull/16) est ouverte vers `main` et rattachée à la discussion Codex. Les contrôles GitHub restent à terminer/vérifier. Fusion recommandée maintenant : NON, tant que leurs résultats finaux ne sont pas confirmés.
+- L'autorisation de ce lot porte uniquement sur commit, push et création de la demande. Aucune fusion ni mise en production réalisée ou autorisée pour ce lot.
 
 ## Commandes utiles
 
