@@ -71,14 +71,18 @@ function cockpitActions(count) {
 describe('AdminCockpit', () => {
   beforeEach(() => {
     rpcMock.mockResolvedValue({ data: summary(), error: null });
-    const builder = {
-      select: vi.fn(), gte: vi.fn(), lte: vi.fn(), eq: vi.fn(), neq: vi.fn(), order: vi.fn(),
-      then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
-    };
-    builder.select.mockReturnValue(builder); builder.gte.mockReturnValue(builder);
-    builder.lte.mockReturnValue(builder); builder.eq.mockReturnValue(builder); builder.neq.mockReturnValue(builder);
-    builder.order.mockReturnValue(builder);
-    fromMock.mockReturnValue(builder);
+    fromMock.mockImplementation((source) => {
+      const data = source === 'admin_stripe_financial_summary'
+        ? [{ ...summary().stripe_financial_by_currency[0], transaction_id: 'live-1' }]
+        : source === 'stripe_payment_transactions' ? [{ id: 'live-1', stripe_checkout_session_id: 'cs_live_fixture' }] : [];
+      const builder = {
+        select() { return builder; }, gte() { return builder; }, lte() { return builder; },
+        eq() { return builder; }, neq() { return builder; }, order() { return builder; }, in() { return builder; },
+        range() { return builder; },
+        then: (resolve) => Promise.resolve({ data, count: data.length, error: null }).then(resolve),
+      };
+      return builder;
+    });
   });
 
   afterEach(() => {
@@ -108,6 +112,26 @@ describe('AdminCockpit', () => {
     expect(await screen.findByText('Aucune action prioritaire actuellement')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Échéances proches' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Activité récente' })).toBeVisible();
+  });
+
+  it('explique les exclusions financières sans recycler les agrégats mélangés du RPC', async () => {
+    const original = fromMock.getMockImplementation();
+    fromMock.mockImplementation((source) => {
+      if (!['admin_stripe_financial_summary', 'stripe_payment_transactions'].includes(source)) return original(source);
+      const data = source === 'admin_stripe_financial_summary'
+        ? [{ transaction_id: 'test-1', currency: 'eur', estimated_net_stripe_cents: 18700 }, { transaction_id: 'unknown-1', currency: 'eur', estimated_net_stripe_cents: 20000 }]
+        : [{ id: 'test-1', stripe_checkout_session_id: 'cs_test_fixture' }];
+      const builder = {
+        select() { return builder; }, gte() { return builder; }, lte() { return builder; }, in() { return builder; },
+        order() { return builder; }, range() { return builder; },
+        then: (resolve) => Promise.resolve({ data, count: data.length, error: null }).then(resolve),
+      };
+      return builder;
+    });
+    renderCockpit();
+    expect(await screen.findByText('Aucun mouvement Stripe réel sur la période.')).toBeVisible();
+    expect(screen.getByText(/Exclus des montants/)).toHaveTextContent('1 paiement(s) de test et 1 de mode indéterminé');
+    expect(screen.queryByText('150,00 €')).not.toBeInTheDocument();
   });
 
   it('affiche une erreur récupérable lorsque le RPC échoue', async () => {

@@ -252,6 +252,7 @@ export default function AdminCockpit() {
 
             <CockpitFinancialSummary
               rows={financialRows}
+              exclusions={summary.stripe_financial_exclusions}
               stripeActionCount={Number(summary.action_counts_by_domain?.stripe || 0)}
             />
 

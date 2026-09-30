@@ -474,6 +474,10 @@ test('contre-test : supprimer le routage Diagnostic fait réellement échouer le
 });
 test('contre-test : supprimer la confirmation Diagnostic fait réellement échouer le contrat', async () => {
   await assert.rejects(requireHistoricalDiagnostic(harness({
-    mutate: (code) => code.replace("diagnosticEvent\n      && ['checkout.session.completed'", "false\n      && ['checkout.session.completed'"),
+    mutate: (code) => {
+      const mutated = code.replace(/diagnosticEvent\r?\n {6}&& \['checkout.session.completed'/, "false\n      && ['checkout.session.completed'");
+      assert.notEqual(mutated, code, 'Le contre-test doit modifier la confirmation, même avec des fins de ligne Windows.');
+      return mutated;
+    },
   })), { name: 'AssertionError' });
 });

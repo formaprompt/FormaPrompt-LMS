@@ -1,4 +1,4 @@
-import { deriveBpfCockpitActions } from './bpfAdministration.js';
+import { bpfActivityPath, deriveBpfCockpitActions } from './bpfAdministration.js';
 import {
   DISCIPLINARY_INCIDENT_STATUS_LABELS,
   isDisciplinaryIncidentOpen,
@@ -6,6 +6,8 @@ import {
 import { buildQualityOverview } from './qualityAdministration.js';
 import { fetchOperationalCockpit } from './operationalCockpit.js';
 import { LEARNER_RECORD_COURSE_LABELS } from './adminLearnerRecord.js';
+import { enrichStripeFinancialRows } from './stripeFinancialMode.js';
+import { fetchStripeFinancialRows, summarizeStripeFinance } from './financeAdministration.js';
 
 const ALLOWED_COURSE_IDS = new Set([
   'formation-ia',
@@ -141,6 +143,10 @@ export function getActionDestination(action) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(action.item_id || '')
       && action.destination_path === expected ? expected : null;
   }
+  if (action?.item_type?.startsWith('bpf_') && action.source_kind) {
+    const expected = bpfActivityPath({ ...action, activity_id: action.item_id });
+    return expected && action.destination_path === expected ? expected : null;
+  }
   const destinations = {
     '/admin/stripe-apres-paiement': '/admin/stripe-apres-paiement',
     '/admin/commercial': '/admin/commercial',
@@ -173,7 +179,7 @@ export async function fetchCockpitSummary(client, filters) {
     .neq('incident_status', 'closed');
   if (courseId) activityQuery = activityQuery.eq('course_id', courseId);
   if (courseId) incidentsQuery = incidentsQuery.eq('course_id', courseId);
-  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult, operationalCockpit, identitiesResult, assessmentsResult] = await Promise.all([
+  const [{ data, error }, activitiesResult, incidentsResult, risksResult, recordsResult, operationalCockpit, identitiesResult, assessmentsResult, financialResult] = await Promise.all([
     client.rpc('admin_get_cockpit_summary', {
       p_date_from: dateFrom,
       p_date_to: dateTo,
@@ -184,8 +190,9 @@ export async function fetchCockpitSummary(client, filters) {
     client.from('quality_risks').select('id, quality_record_id, status, review_due_at, created_at'),
     client.from('quality_records').select('id, severity, detected_at'),
     fetchOperationalCockpit(client),
-    client.from('training_enrollments').select('user_id, course_id, learner_first_name, learner_last_name, organization_name, updated_at').order('updated_at', { ascending: false }),
+    client.from('training_enrollments').select('id, user_id, course_id, learner_first_name, learner_last_name, organization_name, updated_at').order('updated_at', { ascending: false }),
     client.from('course_positioning_assessments').select('user_id, learner_name, submitted_at').order('submitted_at', { ascending: false }),
+    fetchStripeFinancialRows(client, { dateFrom, dateTo, courseId }),
   ]);
 
   if (error) throw new Error(error.message || 'Le cockpit ne peut pas être chargé.');
@@ -195,7 +202,20 @@ export async function fetchCockpitSummary(client, filters) {
   if (identitiesResult.error) throw new Error(identitiesResult.error.message || 'Les identités des incidents sont indisponibles.');
   if (assessmentsResult.error) throw new Error(assessmentsResult.error.message || 'Les identités pédagogiques des incidents sont indisponibles.');
   if (risksResult.error || recordsResult.error) throw new Error('Les risques qualité du cockpit sont indisponibles.');
-  const bpfActions = deriveBpfCockpitActions(activitiesResult.data || []);
+  const financialRows = await enrichStripeFinancialRows(client, financialResult);
+  const realFinancialSummary = Object.values(summarizeStripeFinance(financialRows)).map((row) => ({
+    currency: row.currency,
+    gross_training_cents: row.grossTrainingCents,
+    travel_fee_cents: row.travelFeeCents,
+    successful_refund_cents: row.successfulRefundCents,
+    open_dispute_cents: row.openDisputeCents,
+    lost_dispute_cents: row.lostDisputeCents,
+    estimated_net_training_cents: row.estimatedNetTrainingCents,
+    estimated_net_stripe_cents: row.estimatedNetStripeCents,
+    transaction_count: row.transactionCount,
+    is_estimate: true,
+  }));
+  const bpfActions = deriveBpfCockpitActions(activitiesResult.data || [], new Date(), identitiesResult.data || []);
   const incidentActions = deriveIncidentCockpitActions(incidentsResult.data || [], new Date(), identitiesResult.data || [], assessmentsResult.data || []);
   const qualityRiskActions = deriveQualityRiskCockpitActions({
     records: recordsResult.data || [],
@@ -211,6 +231,11 @@ export async function fetchCockpitSummary(client, filters) {
   const priorityActions = [...(data.priority_actions || []), ...additions];
   return {
     ...data,
+    stripe_financial_by_currency: realFinancialSummary,
+    stripe_financial_exclusions: {
+      test: financialRows.filter((row) => row.stripe_mode === 'test').length,
+      unknown: financialRows.filter((row) => row.stripe_mode === 'unknown').length,
+    },
     operational_cockpit: operationalCockpit,
     priority_actions: priorityActions,
     action_counts_by_domain: {

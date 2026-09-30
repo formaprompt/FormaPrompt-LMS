@@ -194,6 +194,99 @@ test('une cohorte Excel planifiée sans inscription reste trouvable dans la rech
   assert.match(result.searchIndex[0].href, /workspace=cohorts&cohortId=cohort-excel/);
 });
 
+function cohort(overrides = {}) {
+  return {
+    id: 'group-excel', course_id: 'excel-avance-inter', status: 'published',
+    enrolled_count: 0, capacity: 8, minimum_participants: 2,
+    sessions: [{ id: 'group-session', starts_at: '2026-10-12T08:00:00Z', ends_at: '2026-10-12T12:00:00Z' }],
+    ...overrides,
+  };
+}
+
+test('un groupe publié vide dans les trente jours alerte malgré ses dates planifiées', () => {
+  const data = { cohorts: [cohort()] };
+  const original = JSON.stringify(data);
+  const result = buildOperationalCockpit(data, { now: NOW });
+  const readiness = section(result, 'training-readiness');
+  assert.equal(readiness.count, 1);
+  assert.equal(readiness.tone, 'warning');
+  assert.equal(readiness.items[0].title, '0 participants concernés');
+  assert.match(readiness.items[0].detail, /groupe à confirmer/);
+  assert.match(readiness.items[0].detail, /seuil non atteint \(0\/2 participants\)/);
+  assert.match(readiness.items[0].href, /cohortId=group-excel/);
+  assert.match(section(result, 'upcoming-trainings').items[0].detail, /Groupe ouvert — confirmation attendue/);
+  assert.equal(JSON.stringify(data), original);
+});
+
+test('un participant sous le seuil est affiché sans son identité', () => {
+  const result = buildOperationalCockpit({
+    cohorts: [cohort({ enrolled_count: 1, learners: [{ name: 'Alice Durand' }] })],
+  }, { now: NOW });
+  const readiness = section(result, 'training-readiness');
+  assert.equal(readiness.items[0].title, '1 participant concerné');
+  assert.match(readiness.items[0].detail, /seuil non atteint \(1\/2 participants\)/);
+  assert.doesNotMatch(JSON.stringify(result), /Alice|Durand/);
+});
+
+test('atteindre le seuil ne confirme pas automatiquement un groupe publié', () => {
+  const result = buildOperationalCockpit({ cohorts: [cohort({ enrolled_count: 2 })] }, { now: NOW });
+  assert.equal(section(result, 'training-readiness').count, 1);
+  assert.match(section(result, 'training-readiness').items[0].detail, /groupe à confirmer/);
+  assert.doesNotMatch(section(result, 'training-readiness').items[0].detail, /seuil non atteint/);
+});
+
+test('un groupe confirmé au seuil est prêt et une baisse d’effectif alerte', () => {
+  const ready = buildOperationalCockpit({ cohorts: [cohort({ status: 'confirmed', enrolled_count: 2 })] }, { now: NOW });
+  assert.equal(section(ready, 'training-readiness').count, 0);
+  assert.match(section(ready, 'upcoming-trainings').items[0].detail, /Groupe confirmé/);
+  const underMinimum = buildOperationalCockpit({ cohorts: [cohort({ status: 'confirmed', enrolled_count: 1 })] }, { now: NOW });
+  assert.equal(section(underMinimum, 'training-readiness').count, 1);
+  assert.match(section(underMinimum, 'training-readiness').items[0].detail, /seuil non atteint/);
+  assert.doesNotMatch(section(underMinimum, 'training-readiness').items[0].detail, /groupe à confirmer/);
+});
+
+test('les dates passées ou en cours ne prouvent pas la réalisation d’un groupe publié', () => {
+  for (const endsAt of ['2026-09-26T12:00:00Z', '2026-09-20T12:00:00Z']) {
+    const result = buildOperationalCockpit({ cohorts: [cohort({ sessions: [{
+      starts_at: '2026-09-20T08:00:00Z', ends_at: endsAt,
+    }] })] }, { now: NOW });
+    const current = section(result, 'current-recent-trainings');
+    assert.equal(current.count, 1);
+    assert.match(current.items[0].detail, /Groupe ouvert/);
+    assert.doesNotMatch(current.items[0].detail, /En cours|Terminée/);
+    assert.match(current.summary, /Les dates seules ne prouvent pas la réalisation/);
+  }
+});
+
+test('un groupe confirmé passé reste à vérifier et completed indique une réalisation déclarée', () => {
+  for (const [status, label] of [
+    ['confirmed', /Groupe confirmé — réalisation à vérifier/],
+    ['completed', /Réalisation déclarée terminée/],
+  ]) {
+    const result = buildOperationalCockpit({ cohorts: [cohort({ status, enrolled_count: 2, sessions: [{
+      starts_at: '2026-09-20T08:00:00Z', ends_at: '2026-09-20T12:00:00Z',
+    }] })] }, { now: NOW });
+    assert.match(section(result, 'current-recent-trainings').items[0].detail, label);
+  }
+});
+
+test('un groupe annulé ne crée ni alerte de préparation ni formation à venir', () => {
+  const result = buildOperationalCockpit({ cohorts: [cohort({ status: 'cancelled' })] }, { now: NOW });
+  for (const id of ['training-readiness', 'upcoming-trainings', 'upcoming-sessions', 'unscheduled-hours']) {
+    assert.equal(section(result, id).count, 0);
+  }
+  assert.equal(result.searchIndex.length, 0);
+});
+
+test('la préparation reste limitée aux trente prochains jours et signale un seuil inconnu', () => {
+  const distant = buildOperationalCockpit({ cohorts: [cohort({ sessions: [{
+    starts_at: '2026-11-12T08:00:00Z', ends_at: '2026-11-12T12:00:00Z',
+  }] })] }, { now: NOW });
+  assert.equal(section(distant, 'training-readiness').count, 0);
+  const unknown = buildOperationalCockpit({ cohorts: [cohort({ minimum_participants: undefined })] }, { now: NOW });
+  assert.match(section(unknown, 'training-readiness').items[0].detail, /seuil minimum à renseigner/);
+});
+
 test('les questionnaires et évaluations mènent vers un contrôle directement exploitable', () => {
   const result = buildOperationalCockpit({
     bookings: [{

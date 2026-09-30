@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { formatMoney } from '../lib/cockpitAdministration';
 import { fetchFinanceAdministration, summarizeStripeFinance } from '../lib/financeAdministration';
+import { STRIPE_FINANCIAL_MODE_LABELS } from '../lib/stripeFinancialMode';
 import './AdminFinance.css';
 
 const COURSES = [
@@ -20,6 +21,7 @@ export default function AdminFinance() {
   const [result, setResult] = useState({ rows: [], openCases: [] });
   const [state, setState] = useState({ loading: true, error: '' });
   const [reloadKey, setReloadKey] = useState(0);
+  const [mode, setMode] = useState('live');
   useEffect(() => {
     if (role !== 'admin') return;
     let active = true;
@@ -27,7 +29,9 @@ export default function AdminFinance() {
       .catch((error) => { if (active) setState({ loading: false, error: error.message }); });
     return () => { active = false; };
   }, [filters, reloadKey, role]);
-  const summaries = useMemo(() => Object.values(summarizeStripeFinance(result.rows)), [result.rows]);
+  const summaries = useMemo(() => Object.values(summarizeStripeFinance(result.rows, mode)), [result.rows, mode]);
+  const testCount = result.rows.filter((row) => row.stripe_mode === 'test').length;
+  const unknownCount = result.rows.filter((row) => !row.stripe_mode || row.stripe_mode === 'unknown').length;
   if (role !== 'admin') return <main className="container admin-finance"><div className="finance-message is-error" role="alert"><h1>Accès réservé</h1><p>La synthèse financière est réservée aux administrateurs.</p></div></main>;
   return <main className="container admin-finance">
     <header className="finance-header"><div><p className="finance-eyebrow">Sprint 6 · Finance</p><h1>Synthèse financière</h1><p>Lecture locale des encaissements Stripe, remboursements, litiges et anomalies à examiner.</p></div><Link className="finance-detail-link" to="/admin/stripe-apres-paiement">Ouvrir le registre Stripe</Link></header>
@@ -35,13 +39,15 @@ export default function AdminFinance() {
       <label>Du<input type="date" value={draft.dateFrom} onChange={(e) => setDraft((x) => ({ ...x, dateFrom: e.target.value }))} /></label>
       <label>Au<input type="date" value={draft.dateTo} onChange={(e) => setDraft((x) => ({ ...x, dateTo: e.target.value }))} /></label>
       <label>Formation<select value={draft.courseId} onChange={(e) => setDraft((x) => ({ ...x, courseId: e.target.value }))}>{COURSES.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+      <label>Mode Stripe<select value={mode} onChange={(e) => setMode(e.target.value)}>{Object.entries(STRIPE_FINANCIAL_MODE_LABELS).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
       <button type="submit" onClick={() => setState({ loading: true, error: '' })}>Appliquer</button>
     </form>
     {state.loading && <p className="finance-message" role="status">Chargement de la synthèse financière…</p>}
     {state.error && <div className="finance-message is-error" role="alert"><p>{state.error}</p><button type="button" onClick={() => setReloadKey((key) => key + 1)}>Réessayer</button></div>}
-    {!state.loading && !state.error && summaries.length === 0 && <p className="finance-message is-success">Aucun encaissement Stripe sur cette période.</p>}
+    {!state.loading && !state.error && <p className="finance-message">{STRIPE_FINANCIAL_MODE_LABELS[mode]} · {testCount} transaction(s) de test et {unknownCount} de mode indéterminé exclues des totaux réels. Un mode indéterminé nécessite une vérification du registre.</p>}
+    {!state.loading && !state.error && summaries.length === 0 && <p className="finance-message is-success">Aucun encaissement Stripe pour ce mode sur cette période.</p>}
     {!state.loading && !state.error && summaries.map((summary) => <section key={summary.currency} className="finance-summary" aria-labelledby={`finance-${summary.currency}`}>
-      <div className="finance-section-heading"><div><h2 id={`finance-${summary.currency}`}>Flux en {summary.currency.toUpperCase()}</h2><p>{summary.transactionCount} transaction(s) locale(s) dans la période</p></div><span>Estimation</span></div>
+      <div className="finance-section-heading"><div><h2 id={`finance-${summary.currency}`}>{STRIPE_FINANCIAL_MODE_LABELS[mode]} — Flux en {summary.currency.toUpperCase()}</h2><p>{summary.transactionCount} transaction(s) locale(s) dans la période</p></div><span>Estimation</span></div>
       <div className="finance-kpis">
         <FinanceKpi label="Formation encaissée brute" value={formatMoney(summary.grossTrainingCents, summary.currency)} note="Paiements ayant atteint un état payé" />
         <FinanceKpi label="Remboursements confirmés" value={formatMoney(summary.successfulRefundCents, summary.currency)} note="Déduits de l’estimation" />
