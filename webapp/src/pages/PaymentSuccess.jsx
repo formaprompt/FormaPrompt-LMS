@@ -7,9 +7,11 @@ import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
 import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import BureautiquePurchaseConfirmation from '../components/BureautiquePurchaseConfirmation';
+import { useGoogleAdsPurchase } from '../hooks/useGoogleAdsPurchase';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
+  useGoogleAdsPurchase(searchParams.get('session_id'));
   const offerId = searchParams.get('course');
   if (Object.hasOwn(BUREAUTIQUE_PURCHASES, offerId)) {
     return <BureautiquePurchaseConfirmation key={offerId} offer={BUREAUTIQUE_PURCHASES[offerId]} />;

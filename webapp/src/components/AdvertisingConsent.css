@@ -1,0 +1,8 @@
+.advertising-consent { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; background: #17243b; color: white; box-shadow: 0 -2px 12px #0003; max-height: 85vh; overflow-y: auto; }
+.advertising-consent__content { flex: 1 1 25rem; }
+.advertising-consent__content p { margin: .5rem 0; font-size: .95rem; }
+.advertising-consent a { color: white; text-decoration: underline; }
+.advertising-consent__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.advertising-consent__button { background: white; color: #17243b; border: 2px solid white; border-radius: .3rem; padding: .7rem 1rem; font: inherit; cursor: pointer; min-height: 44px; }
+.advertising-consent__button:focus-visible, .advertising-consent a:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
+@media (max-width: 600px) { .advertising-consent { padding: 1rem; } .advertising-consent__actions { width: 100%; } .advertising-consent__button { flex: 1 1 10rem; } }

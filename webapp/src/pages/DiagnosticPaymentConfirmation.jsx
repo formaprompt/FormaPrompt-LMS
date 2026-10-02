@@ -5,6 +5,7 @@ import SEO from '../components/SEO'
 import { useAuth } from '../contexts/useAuth'
 import { supabase } from '../lib/supabaseClient'
 import { fetchDiagnosticOrder } from '../lib/diagnosticCheckout'
+import { useGoogleAdsPurchase } from '../hooks/useGoogleAdsPurchase'
 import './DiagnosticPaymentConfirmation.css'
 
 const PAID_STATUSES = new Set(['paid', 'disputed'])
@@ -14,6 +15,7 @@ export default function DiagnosticPaymentConfirmation() {
   const { user, loading } = useAuth()
   const [searchParams] = useSearchParams()
   const sessionId = searchParams.get('session_id')
+  useGoogleAdsPurchase(sessionId)
   const orderId = searchParams.get('order_id')
   const validSessionId = /^cs_(?:test|live)_[A-Za-z0-9]+$/.test(sessionId || '') ? sessionId : null
   const validOrderId = /^[0-9a-f-]{36}$/i.test(orderId || '') ? orderId : null
