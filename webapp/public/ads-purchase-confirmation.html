@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="formaprompt-ads-confirmation" content="formaprompt-ads-confirmation-v1">
+  <title>Confirmation – FormaPrompt</title>
+  <style>body{font-family:system-ui,sans-serif;margin:0;color:#172b24;background:#f6faf8}main{max-width:36rem;margin:10vh auto;padding:1.5rem}a{display:inline-block;color:#065f46;padding:.75rem 0}a:focus-visible{outline:3px solid #065f46;outline-offset:4px}</style>
+</head>
+<body>
+  <main><h1>Confirmation</h1><p>Vous pouvez retourner à votre espace.</p><a id="return" href="/dashboard" rel="noreferrer" referrerpolicy="no-referrer">Retour à mon espace</a></main>
+  <script>
+  (() => {
+    'use strict';
+    const pendingKey = 'formaprompt_ads_pending_v1';
+    const attemptKey = 'formaprompt_ads_attempt_v1';
+    const sentKey = 'formaprompt_ads_sent_v1';
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const retention = 150 * 86400000;
+    const tagId = 'AW-18489285500';
+    let pending;
+    let valid = false;
+    let returning = false;
+    function consented() {
+      return document.cookie.split(';').some((part) => part.trim() === 'formaprompt_advertising_v1=v1.granted');
+    }
+    function registry(key) {
+      const entries = JSON.parse(localStorage.getItem(key) || '[]');
+      if (!Array.isArray(entries) || entries.some((entry) => !uuid.test(entry?.id || '') || !Number.isFinite(entry?.at))) throw new Error('Invalid registry');
+      const now = Date.now();
+      return entries.filter((entry) => entry.at > now - retention && entry.at <= now).slice(-1000);
+    }
+    function returnToSpace() {
+      if (returning) return;
+      returning = true;
+      if (valid && history.length > 1) {
+        history.back();
+        setTimeout(() => location.replace('/dashboard'), 500);
+      } else location.replace('/dashboard');
+    }
+    function skip() { returnToSpace(); }
+    document.getElementById('return').addEventListener('click', (event) => { event.preventDefault(); returnToSpace(); });
+    try {
+      const raw = sessionStorage.getItem(pendingKey);
+      sessionStorage.removeItem(pendingKey); // Consume before any third-party script exists.
+      if (window.top !== window.self || location.origin !== 'https://formaprompt.com'
+        || location.pathname !== '/ads-purchase-confirmation.html' || location.hash || !consented() || !raw) { skip(); return; }
+      const query = [...new URL(location.href).searchParams.entries()];
+      if (query.length > 1 || query.some(([name, value]) => !['gclid', 'gbraid', 'wbraid'].includes(name) || !/^[A-Za-z0-9_-]{10,256}$/.test(value))) { skip(); return; }
+      pending = JSON.parse(raw);
+      const now = Date.now();
+      if (Object.keys(pending).sort().join(',') !== 'amount_total_cents,currency,expires,transaction_id,version'
+        || pending.version !== 1 || !uuid.test(pending.transaction_id || '')
+        || !Number.isSafeInteger(pending.amount_total_cents) || pending.amount_total_cents <= 0
+        || !/^[A-Z]{3}$/.test(pending.currency || '') || !Number.isFinite(pending.expires)
+        || pending.expires <= now || pending.expires > now + 60000) { skip(); return; }
+      if (!registry(attemptKey).some((entry) => entry.id === pending.transaction_id && entry.at === pending.expires - 60000)
+        || registry(sentKey).some((entry) => entry.id === pending.transaction_id)) { skip(); return; }
+      localStorage.setItem(sentKey, JSON.stringify(registry(sentKey))); // Check persistence before SDK.
+      valid = true;
+    } catch { skip(); return; }
+    const deadline = setTimeout(returnToSpace, 7500);
+    const denied = { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied' };
+    window.dataLayer = [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    const page = { page_title: 'Confirmation – FormaPrompt', page_location: location.href, page_referrer: '' };
+    window.gtag('consent', 'default', denied);
+    window.gtag('set', 'ads_data_redaction', true);
+    window.gtag('set', 'url_passthrough', false);
+    const script = document.createElement('script');
+    script.async = true;
+    script.referrerPolicy = 'no-referrer';
+    script.src = 'https://www.googletagmanager.com/gtag/js?id=' + tagId;
+    script.onerror = returnToSpace;
+    script.onload = () => {
+      try {
+        if (returning) return;
+        if (!consented() || pending.expires <= Date.now()) { returnToSpace(); return; }
+        if (registry(sentKey).some((entry) => entry.id === pending.transaction_id)) { returnToSpace(); return; }
+        window.gtag('consent', 'update', { ...denied, ad_storage: 'granted', ad_user_data: 'granted' });
+        window.gtag('js', new Date());
+        window.gtag('config', tagId, { ...page, send_page_view: false, allow_google_signals: false,
+          allow_ad_personalization_signals: false, allow_interest_groups: false });
+        window.gtag('event', 'conversion', { send_to: tagId + '/WOz2COeP5I0dEPy2sPBE',
+          value: pending.amount_total_cents / 100, currency: pending.currency, transaction_id: pending.transaction_id,
+          ...page, event_callback: returnToSpace, event_timeout: 7000 });
+        localStorage.setItem(sentKey, JSON.stringify([...registry(sentKey), { id: pending.transaction_id, at: Date.now() }].slice(-1000)));
+      } catch { returnToSpace(); }
+    };
+    document.head.appendChild(script);
+    window.addEventListener('pageshow', (event) => { if (event.persisted) location.replace('/dashboard'); });
+    window.addEventListener('pagehide', () => { clearTimeout(deadline); }, { once: true });
+  })();
+  </script>
+</body>
+</html>

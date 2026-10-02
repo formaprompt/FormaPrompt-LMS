@@ -29,7 +29,7 @@ export default function AdvertisingConsent() {
       <p>Avec votre accord, Google Ads mesure les achats réalisés après nos annonces. Aucune personnalisation
         publicitaire ni mesure d'audience n'est activée. Refuser permet de continuer à utiliser le site.
         Vous pouvez retirer votre accord via « Gérer mes cookies » en bas de page. Le choix est conservé 150 jours.</p>
-      <p>Si la mesure a déjà été chargée, le retrait recharge cette page pour l'arrêter, sans effacer votre connexion.</p>
+      <p>Le retrait empêche toute nouvelle mesure, sans effacer votre connexion.</p>
       <a href="/politique-confidentialite">En savoir plus sur les données utilisées</a>
     </CookieConsent>
   );

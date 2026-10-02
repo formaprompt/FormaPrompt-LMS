@@ -26,7 +26,7 @@ describe('conversion achat fondée exclusivement sur un reçu serveur', () => {
   beforeEach(() => {
     vi.useFakeTimers(); state.consent = 'granted'; state.user = { id: 'user-one' }; state.loading = false;
     state.enabled = true; state.invoke.mockReset(); state.send.mockReset();
-    state.invoke.mockResolvedValue({ data: { receipt }, error: null }); state.send.mockResolvedValue({ status: 'sent' });
+    state.invoke.mockResolvedValue({ data: { receipt }, error: null }); state.send.mockResolvedValue({ status: 'handoff' });
   });
   afterEach(() => { cleanup(); vi.useRealTimers(); });
 
@@ -65,6 +65,17 @@ describe('conversion achat fondée exclusivement sur un reçu serveur', () => {
     state.invoke.mockResolvedValue({ data: { receipt: null }, error: null });
     render(<Probe />); await tick(30000);
     expect(state.invoke).toHaveBeenCalledTimes(10); expect(state.send).not.toHaveBeenCalled();
+  });
+
+  it('ne transmet aucun reçu pour une session d’autrui refusée par le serveur', async () => {
+    state.invoke.mockResolvedValue({ data: { receipt: null }, error: null });
+    render(<Probe sessionId="cs_live_other_owner" />); await tick(30000);
+    expect(state.send).not.toHaveBeenCalled();
+  });
+
+  it.each(['handoff', 'unavailable', 'duplicate', 'cancelled'])('un résultat transport %s ne modifie pas la confirmation', async (status) => {
+    state.send.mockResolvedValue({ status }); const view = render(<Probe />); await tick(20000);
+    expect(view.getByText('Confirmation conservée')).toBeVisible(); expect(state.invoke).toHaveBeenCalledOnce();
   });
 
   it('poll uniquement pending puis transmet le montant du reçu sans prix fixe', async () => {
