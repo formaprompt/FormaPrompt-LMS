@@ -14,8 +14,8 @@ webapp/.env*
 webapp/logs/
 
 # Médias volumineux (GitHub limite à 100 Mo par fichier)
+# Les vidéos sont déployées séparément et ne sont jamais suivies dans Git.
 *.mp4
-!webapp/public/media/onboarding/bien-demarrer-espace-apprenant-v2.mp4
 *.avi
 *.mov
 *.zip
