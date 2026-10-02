@@ -73,10 +73,18 @@
 
 ErrorDocument 404 /404.html
 
-# Configuration d'accueil actualisable sans reconstruction des pages.
+# Les documents non versionnés doivent être revalidés, même sur les routes
+# réécrites vers app-shell.html. Les bundles Vite hashés restent disponibles.
 <IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header always set Cache-Control "no-cache"
+  </FilesMatch>
+  <Files "sw.js">
+    Header always set Cache-Control "no-cache"
+  </Files>
+  # Configuration d'accueil actualisable sans reconstruction des pages.
   <Files "learner-onboarding.json">
-    Header set Cache-Control "no-store"
+    Header always set Cache-Control "no-store"
   </Files>
 </IfModule>
 <IfModule mod_mime.c>

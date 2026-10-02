@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { checkApacheTargets, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
+import { checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
 
 const initialShell = '<html><head><title>FormaPrompt</title></head><body><div id="root"></div><script type="module" src="/assets/main.js"></script></body></html>';
 
@@ -65,4 +65,22 @@ test('toute cible HTML littérale Apache doit exister, y compris le document 404
   assert.deepEqual(checkApacheTargets(rules, files), [...files]);
   files.delete('contact.html');
   assert.throws(() => checkApacheTargets(rules, files), /Cible Apache absente/);
+});
+
+test('les HTML statiques et les shells doivent référencer la même entrée hashée', () => {
+  const shell = initialShell.replace('/assets/main.js', '/assets/index-new123.js');
+  const delayed = '<script>applicationScript.src = "/assets/index-new123.js";</script>';
+  const contents = new Map([['app-shell.html', shell], ['public-shell.html', shell], ['index.html', delayed], ['404.html', '<h1>404</h1>']]);
+  assert.equal(checkHtmlEntryVersions(contents), '/assets/index-new123.js');
+  contents.set('contact.html', shell.replace('new123', 'old456'));
+  assert.throws(() => checkHtmlEntryVersions(contents), /HTML d'une autre release : contact.html/);
+});
+
+test('le contrôle refuse le précache HTML et exige les politiques de livraison', () => {
+  const rules = readFileSync(new URL('../public/.htaccess', import.meta.url), 'utf8');
+  const worker = 'precacheAndRoute([{url:"assets/index-new123.js",revision:null}],{});';
+  assert.doesNotThrow(() => checkDeliveryPolicies(rules, worker));
+  assert.throws(() => checkDeliveryPolicies(rules, worker.replace('assets/index-new123.js', 'index.html')), /HTML interdit/);
+  assert.throws(() => checkDeliveryPolicies(rules, worker.replace('assets/index-new123.js', 'config/learner-onboarding.json')), /Configuration vidéo interdite/);
+  assert.throws(() => checkDeliveryPolicies(rules.replace('"no-cache"', '"max-age=3600"'), worker), /Revalidation HTML absente/);
 });
