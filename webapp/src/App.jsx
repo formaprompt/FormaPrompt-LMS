@@ -47,6 +47,7 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const LearnerGettingStarted = lazy(() => import("./pages/LearnerGettingStarted"));
 const AdminCockpit = lazy(() => import("./pages/AdminCockpit"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
@@ -138,7 +139,8 @@ function App() {
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="reset-password" element={<ResetPassword />} />
             <Route path="register" element={<Register />} />
-            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+            <Route path="aide/bien-demarrer" element={<RequireAuth><LearnerGettingStarted /></RequireAuth>} />
             <Route path="admin" element={<RequireAuth><AdminCockpit /></RequireAuth>} />
             <Route path="admin/pedagogique" element={<AdminShell><AdminDashboard /></AdminShell>} />
             <Route path="admin/emargements" element={<AdminShell><AttendanceSheets /></AdminShell>} />

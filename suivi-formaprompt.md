@@ -1,6 +1,43 @@
 # Suivi du projet FormaPrompt
 
-Dernière mise à jour : 16 juillet 2026
+Dernière mise à jour : 2 octobre 2026
+
+## Préparation de publication onboarding (2 octobre 2026)
+
+- Thierry a validé l'accueil et la V2 et autorisé commit, push, fusion et déploiement. À ce stade de préparation, aucune de ces opérations n'est annoncée comme exécutée ; le coordinateur déclenchera les étapes après contrôle du lot.
+- Fixtures, outils de démonstration, tournage, sorties de tests et temporaires conservés localement et exclus du commit produit par des règles ciblées. Le script npm temporaire est retiré, sans supprimer les fichiers locaux.
+- Rapport précommit et résultats de vérification : `docs/controle-onboarding-publication.md`.
+
+## Intégration locale de la vidéo onboarding V2 validée (2 octobre 2026)
+
+- État PASS local, contrôle RENFORCÉ. V2 explicitement validée par Thierry, intégrée sans réencodage dans `webapp/public/media/onboarding/bien-demarrer-espace-apprenant-v2.mp4` : 36 752 453 octets, SHA-256 `F789A022E206D565D1DAFB406ED240E8F1E2598FAF850CAD8DEC7216F6A81E4D`, durée navigateur 197,323 s.
+- Hébergement retenu : IONOS même origine, MP4 générique public par lien direct ; pages réservées aux comptes connectés. Un seul fichier pour le bouton « Découvrir mon espace » et Aide → Bien démarrer. JSON runtime version 2 ; remplacements futurs média/JSON sans reconstruire le front. Exception Git limitée à ce MP4 initial.
+- Lecture manuelle native, clavier/volume/plein écran/fin vérifiés. Guide écrit et LMS disponibles en cas de panne. Accueil discret après lecture commencée ou progression existante, marqueur local isolé par compte/version, aucune progression pédagogique modifiée.
+- Desktop et viewports 320/390 px/paysage contrôlés : aucun débordement. Sous-titres incrustés petits en mode intégré ; conseil plein écran paysage ajouté. Axe sur le guide : zéro violation, incrustation vérifiée visuellement. Audio décodé/signal présent, sans prétendre à une nouvelle écoute humaine ou à un essai sur téléphone physique.
+- Dette calendrier reproduite sur la base propre et le lot : deux tests attendaient septembre tandis que le composant utilisait octobre. Date fixée seulement dans ces tests, horloge restituée ; calendrier 13/13 et suite React finale 437/437, sans skip ou assertion retirée. Composant métier inchangé.
+- Contrôles exécutés : Node applicatifs 194/194, ciblés onboarding 8 Node/27 React, serveur 311 réussis + 1 ignoré préexistant, release 7/7, lint/typecheck, build complet (286 fichiers, 32 pré-rendus, 929 références), MP4/JSON construits identiques et hors précache PWA. Mode de démonstration original 8/8 conservé.
+- Aucune migration, service réel, règle d'accès, achat, remboursement, Stripe, webhook, contenu payant ou Training Lab modifié. Aucun commit, push, fusion, transfert ou déploiement ; production inchangée. Fusion recommandée maintenant : OUI après accord et contrôles de la future demande de fusion.
+- Rapport et preuves : `docs/controle-video-onboarding-v2.md`. Configuration : `docs/onboarding-video-configuration.md`. Outil local volontairement non versionné, hors release : lancer `node scripts/start-onboarding-demo.mjs --video-integration` depuis `C:\fp-onboarding-apprenant-20261001\webapp` pour vérification locale isolée. L'autorisation de publication est désormais consignée dans la préparation ci-dessus.
+
+## Environnement local isolé pour tournage onboarding (1 octobre 2026)
+
+- État PASS, contrôle RENFORCÉ : les huit séquences ont été exécutées dans le navigateur isolé du lanceur local `node scripts/start-onboarding-demo.mjs`, worktree `C:\fp-onboarding-apprenant-20261001`. Cet outil de tournage reste volontairement non versionné, hors release.
+- Origine exacte `http://127.0.0.1:4182`, entrée et configuration de développement dédiées, client fictif en mémoire, deux jeux de données et mention de démonstration. Aucun SDK Supabase réel ni service worker chargé dans ce contexte.
+- Compte `demo.apprenant@example.invalid`, cours et parcours accessibles fictifs, ressource texte locale, trois états d'exercices distincts, progression et convocation fictive. Réinitialisation du mot de passe simulée sans envoi.
+- Preuve finale du 1 octobre à 15:46:34 Paris : 8/8, 103 requêtes interceptées navigateur et 102 GET reçus serveur (journaux différents), téléchargement local vérifié, zéro réponse externe ; seulement deux sauvegardes d'exercice et trois mises à jour de progression en mémoire.
+- Tests exécutés : fixtures 7/7, logique 193/193, React ciblé 31/31, lint, typecheck, compilation normale `build:app`, gardes négatives et contrôle réseau réussis. Aucun marqueur démo dans la compilation normale. Pas de release/prerender ou de déploiement.
+- Aucun service réel, paiement, webhook, règle d'accès, compte réel ou document protégé modifié. Aucun commit, push ou fusion ; fusion recommandée maintenant : NON. Les changements du lot onboarding précédent sont conservés.
+- Passation : `docs/controle-demo-onboarding.md` et `docs/cahier-tournage-onboarding.md`. Utiliser exclusivement le navigateur ouvert par le lanceur ; ne pas filmer le site réel ou l'ancien aperçu. L'ancien serveur 4181 de ce chat a été arrêté.
+
+## Lot local — accueil vidéo et aide apprenant (1 octobre 2026)
+
+- Branche dédiée `codex/onboarding-apprenant-20261001`, worktree `C:\fp-onboarding-apprenant-20261001`, base `d7aa2e6` ; aucun commit, push, demande de fusion, fusion ou déploiement.
+- Accueil `/dashboard` et aide permanente `/aide/bien-demarrer` réalisés ; guide écrit utilisable immédiatement, aucune vidéo créée ni URL fictive.
+- Configuration JSON runtime sans rebuild, hors précache PWA ; préférence de consultation par compte/version uniquement dans le navigateur, sans nouveaux droits ni migration.
+- Tests ciblés onboarding réussis ; lint, typecheck, tests Node et build complet réussis. Suite React générale : 432/434, deux tests de calendrier dépendants de septembre échouent aussi sur la base. Aucun correctif hors périmètre.
+- Contrôle indépendant ordinateur/mobile 320 px, clavier, auth, repli vidéo et Axe sur le contenu de l'aide : aucune anomalie restante observée dans ce périmètre.
+- État : PASS AVEC RÉSERVES. Contrôle RENFORCÉ ; fusion recommandée maintenant : NON. Vidéo finale/sous-titres à produire et tester, template de confirmation Supabase à vérifier séparément.
+- Détails, fichiers et résultats : `docs/controle-onboarding.md`. Configuration : `docs/onboarding-video-configuration.md`. Cahier de tournage : `docs/cahier-tournage-onboarding.md`.
 
 ## Objectif général
 

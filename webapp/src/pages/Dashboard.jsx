@@ -6,6 +6,7 @@ import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'luci
 import CourseProgress from '../components/CourseProgress';
 import DiagnosticDashboardSection from '../components/DiagnosticDashboardSection';
 import LearningPathAccessCard from '../components/LearningPathAccessCard';
+import LearnerWelcome from '../components/LearnerWelcome';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
 import { BUREAUTIQUE_PURCHASES, EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
@@ -52,6 +53,11 @@ const administrativeDocumentLabels = {
 };
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  return <DashboardContent key={user?.id || 'guest'} />;
+}
+
+function DashboardContent() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [courseAccesses, setCourseAccesses] = useState([]);
@@ -71,6 +77,8 @@ export default function Dashboard() {
   const [administrativeDocumentsAvailable, setAdministrativeDocumentsAvailable] = useState(true);
   const [diagnostics, setDiagnostics] = useState([]);
   const [diagnosticsLoadError, setDiagnosticsLoadError] = useState(false);
+  const [completedLessons, setCompletedLessons] = useState([]);
+  const [lessonProgressAvailable, setLessonProgressAvailable] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -78,6 +86,7 @@ export default function Dashboard() {
       return;
     }
 
+    let active = true;
     async function fetchPurchases() {
       setLoadError('');
       setBookingLoadError(false);
@@ -86,6 +95,8 @@ export default function Dashboard() {
       setAttestationsAvailable(true);
       setAdministrativeDocumentsAvailable(true);
       setDiagnosticsLoadError(false);
+      setLoading(true);
+      setLessonProgressAvailable(true);
 
       const [
         accessesResult,
@@ -97,6 +108,7 @@ export default function Dashboard() {
         attestationsResult,
         administrativeDocumentsResult,
         diagnosticsResult,
+        lessonProgressResult,
       ] = await Promise.all([
         fetchCourseAccesses({ userId: user.id }),
         fetchCourseAccessEntitlement({
@@ -142,7 +154,18 @@ export default function Dashboard() {
         fetchClientDiagnostics(supabase, user.id)
           .then((data) => ({ data, error: null }))
           .catch((error) => ({ data: [], error })),
+        supabase
+          .from('course_lesson_progress')
+          .select('user_id, course_id, lesson_id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+          .then((result) => result)
+          .catch((error) => ({ data: [], error })),
       ]);
+
+      if (!active) return;
+      setCompletedLessons(lessonProgressResult.data ?? []);
+      setLessonProgressAvailable(!lessonProgressResult.error);
 
       if (accessesResult.error) {
         console.error('Erreur lors du chargement des formations :', accessesResult.error);
@@ -213,6 +236,7 @@ export default function Dashboard() {
     }
 
     fetchPurchases();
+    return () => { active = false; };
   }, [user, navigate]);
 
   if (!user) return null;
@@ -220,6 +244,18 @@ export default function Dashboard() {
   const activeCourseAccesses = courseAccesses.filter((access) => isCourseAccessOpen(access));
   const blockedCourseAccesses = courseAccesses.filter((access) => !isCourseAccessOpen(access));
   const bookableAccesses = activeCourseAccesses.filter((access) => BOOKING_COURSES[access.course_id]);
+  const hasExerciseProgress = Object.entries(courseCatalog).some(([courseId, course]) => (
+    calculateCourseProgress(course.exercises, exerciseResponses.filter((response) => response.course_id === courseId)).started > 0
+  ));
+  const hasLessonProgress = completedLessons.some((row) => (
+    row.user_id === user.id && row.status === 'completed'
+    && Object.values(learningPathCatalog).some((path) => (
+      path.id === row.course_id && path.lessons.some((lesson) => lesson.id === row.lesson_id)
+    ))
+  ));
+  const onboardingProgress = loading ? 'unknown'
+    : hasExerciseProgress || hasLessonProgress ? 'active'
+      : progressAvailable && lessonProgressAvailable && !loadError ? 'new' : 'unknown';
   const pendingSatisfactionBookings = surveyLoadError ? [] : bookings.filter((booking) => (
     BOOKING_COURSES[booking.course_id]
     && hasLearnerSignedLastSession(booking)
@@ -229,6 +265,9 @@ export default function Dashboard() {
   return (
     <div className="container learner-dashboard" style={{ padding: '4rem 1rem', minHeight: '60vh' }}>
       <h1 style={{ marginBottom: '2rem' }}>Mon espace apprenant</h1>
+
+      <LearnerWelcome userId={user.id} progressState={onboardingProgress} />
+      <p><Link to="/aide/bien-demarrer">Aide → Bien démarrer</Link></p>
 
       <DiagnosticDashboardSection
         diagnostics={diagnostics}

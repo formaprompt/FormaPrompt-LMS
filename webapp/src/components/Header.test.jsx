@@ -35,6 +35,7 @@ describe('Navigation publique', () => {
     expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
     expect(screen.queryByRole('link', { name: /Training Lab/i })).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Se connecter' })).toHaveAttribute('href', '/login');
+    expect(screen.queryByRole('link', { name: 'Aide' })).not.toBeInTheDocument();
   });
   it('restaure le défilement et le focus après fermeture du menu mobile', async () => {
     const user = userEvent.setup();
@@ -54,5 +55,11 @@ describe('Navigation publique', () => {
     mount();
     expect(screen.getAllByRole('link', { name: /Espace apprenant/ })[0]).toHaveAttribute('href', '/dashboard');
     expect(screen.queryAllByRole('link', { name: 'Admin' }).length).toBe(role === 'student' ? 0 : 1);
+    expect(screen.getByRole('link', { name: 'Aide' })).toHaveAttribute('href', '/aide/bien-demarrer');
+  });
+  it('expose Aide dans le raccourci mobile connecté', () => {
+    auth.user = { id: 'local-test' }; auth.role = 'student'; mount();
+    document.querySelector('.mobile-header-actions').style.display = 'flex';
+    expect(screen.getAllByRole('link', { name: 'Aide' })).toHaveLength(2);
   });
 });
