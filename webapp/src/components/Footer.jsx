@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { SITE_CONFIG } from '../config/site';
 import './Footer.css';
+import { requestAdvertisingPreferences } from '../lib/advertisingConsent';
 
 export default function Footer() {
   return (
@@ -35,6 +36,7 @@ export default function Footer() {
             <li><Link to="/cgv-particuliers">CGV particuliers</Link></li>
             <li><Link to="/cgv-professionnels">CGV professionnels</Link></li>
             <li><Link to="/politique-confidentialite">Confidentialité</Link></li>
+            <li><button type="button" className="footer-cookie-preferences" onClick={requestAdvertisingPreferences}>Gérer mes cookies</button></li>
             <li><Link to="/reglement-interieur">Règlement intérieur</Link></li>
             <li><Link to="/informations-precontractuelles">Informations précontractuelles</Link></li>
             <li><Link to="/retractation">Renoncer au contrat ici</Link></li>

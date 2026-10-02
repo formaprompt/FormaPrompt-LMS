@@ -2,6 +2,16 @@
 
 Dernière mise à jour : 2 octobre 2026
 
+## Préparation locale du suivi des achats Google Ads (2 octobre 2026)
+
+- Lot validé localement, contrôle RENFORCÉ, suivi désactivé et non déployé. Thierry autorise le 2 octobre le commit et le push uniquement sur `codex/google-ads-purchase-tracking-20261002`, après revue finale. Aucun accord de création de demande de fusion, fusion, publication ou activation. Résultat Git à relever dans le rapport local après exécution. Mesure réelle Google Ads non vérifiée. Fusion recommandée maintenant : NON.
+- Compte fourni `248-573-7298`, balise `AW-18489285500`, destination Achat `AW-18489285500/WOz2COeP5I0dEPy2sPBE`. Activation désactivée par défaut et pendant les contrôles ; aucune statistique Google Ads alimentée.
+- Reçu serveur authentifié en lecture seule : propriétaire, session exacte, paiement réussi et preuve du webhook réel vérifiés. Montant payé après réduction, devise et UUID stable ; refus, annulation, paiement test et rechargement ne créent pas de nouvel achat.
+- Consentement publicitaire explicite avec refus et retrait accessibles ; l'ancien cookie technique ne vaut pas accord. Aucun nom, e-mail, téléphone ou donnée pédagogique ajouté au suivi. Thierry confirme le 2 octobre la désactivation des données utilisateur, détection automatique, interactions de formulaire et suivi avancé des conversions sur AW-18489285500 : réserve Google levée sur sa confirmation, sans action du coordinateur sur le compte.
+- Contrôles du lot : React 469/469 ; Node applicatifs 221/221 ; release 9/9 ; lint, TypeScript et build réussis. Complément reçu isolé : 56 tests HTTP avec le vrai SDK 2.105.1, 211 requêtes locales dont 159 Auth/SELECT, zéro externe/mutation ; 44 unitaires et 30 React relancés. Suite serveur finale : 411 réussis + 1 ignoré préexistant. Cinq scénarios simulés, dont DIAGIA à 119 EUR ; bandeau desktop/mobile, clavier et axe sans violation sur le bandeau. Pas de Supabase/PostgreSQL/RLS/gateway JWT réels exécutés ; contrôle plateforme à prévoir au futur déploiement autorisé.
+- Aucune modification des fonctions de paiement existantes, Stripe, webhooks, achats, remboursements, droits, promotion ou Training Lab ; aucune migration. Configuration publique utilisée par le build pour lire les articles publics uniquement.
+- Reçu vérifié en HTTP isolé et réserve Google levée sur confirmation Thierry ; code applicatif inchangé dans ce complément, seul un test d'intégration ajouté. Procédure : `docs/google-ads-purchase-tracking.md`. Rapport local : `output/google-ads-achats-20261002/rapport-coordinateur.md`. Lot Git isolé depuis la branche principale distante `5fb225cc0fa32cd4385afa7e017b57669f4d4ccd`, arbre identique à la base onboarding locale `dca63c3...` ; dossier onboarding préservé. Publication et activation à autoriser séparément, avec contrôles de la plateforme cible.
+
 ## Préparation de publication onboarding (2 octobre 2026)
 
 - Thierry a validé l'accueil et la V2 et autorisé commit, push, fusion et déploiement. À ce stade de préparation, aucune de ces opérations n'est annoncée comme exécutée ; le coordinateur déclenchera les étapes après contrôle du lot.

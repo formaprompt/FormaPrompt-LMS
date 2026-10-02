@@ -13,7 +13,7 @@ export default function Privacy() {
       />
       <LegalDocument>
         <h1>Politique de confidentialité</h1>
-        <p className="legal-document__meta">Version 2026-08-12</p>
+        <p className="legal-document__meta">Version 2026-10-02</p>
 
         <h2>1. Responsable du traitement</h2>
         <p><strong>Thierry FREZARD EI — FormaPrompt</strong>, 6 rue Webster, 62100 Calais, France. Pour toute question ou demande relative à vos droits : <a href={`mailto:${SITE_CONFIG.contactEmail}`}>{SITE_CONFIG.contactEmail}</a>.</p>
@@ -48,7 +48,9 @@ export default function Privacy() {
 
         <h2>6. Stockages dans le navigateur et traceurs</h2>
         <p>La session Supabase utilise un stockage technique nécessaire à l’authentification. {STUDIO_PRIVACY_COPY.storage} {STUDIO_PRIVACY_COPY.safeSituation}</p>
-        <p>L’audit du 10 août 2026 n’a détecté aucun tag Google Analytics, Google Tag Manager ni mesure d’audience active dans le frontal. La préférence affichée par la bannière est conservée 150 jours. Avant toute activation d’un traceur non essentiel, FormaPrompt devra informer l’utilisateur, recueillir son choix et rendre le refus et le retrait aussi simples que l’acceptation.</p>
+        <p>Lorsqu'elle est activée, la mesure des ventes Google Ads nécessite votre accord explicite dans la bannière. Avant cet accord, aucun script ni signal publicitaire Google n'est chargé par ce dispositif. Le refus n'empêche pas la navigation, la connexion ou l'achat. La préférence est conservée 150 jours ; un ancien accord relatif aux stockages techniques ne vaut pas accord publicitaire.</p>
+        <p>Cette mesure sert à relier les achats confirmés aux annonces FormaPrompt. Google reçoit le montant, la devise et un identifiant de transaction opaque, ainsi que les informations techniques nécessaires à la mesure. Les adresses de pages transmises sont réduites au domaine, sans paramètres, fragments ni identifiants de session. Ce dispositif n'envoie ni nom, adresse électronique, téléphone, identifiant de compte ou données de carte ; il n'active ni conversions avancées, ni remarketing, ni personnalisation publicitaire, ni Google Analytics.</p>
+        <p>Vous pouvez changer votre choix ou retirer votre accord à tout moment via « Gérer mes cookies » dans le pied de page. Le retrait arrête les nouvelles conversions, supprime les cookies publicitaires Google Ads accessibles sur ce site et recharge la page si la mesure a été chargée, sans supprimer les informations nécessaires à votre connexion. Un registre local des transactions déjà transmises évite leur renvoi ; il est utilisé uniquement avec votre accord et limité à 1 000 transactions. Ses entrées expirent après 150 jours et sont nettoyées à la prochaine utilisation autorisée. Google utilise aussi l'identifiant de transaction pour limiter les doublons. Le retrait n'efface pas rétroactivement les données déjà reçues par Google.</p>
 
         <h2>7. Prestataires et transferts</h2>
         <ul>
@@ -56,6 +58,7 @@ export default function Privacy() {
           <li><strong>Stripe</strong> : paiement, facturation éventuelle, sécurité et prévention de la fraude.</li>
           <li><strong>IONOS</strong> : hébergement du site et journaux techniques.</li>
           <li><strong>Google Meet et Microsoft Teams</strong> : fourniture des classes virtuelles selon le compte utilisé.</li>
+          <li><strong>Google Ads</strong> : mesure des ventes après une annonce, uniquement sur consentement lorsque ce dispositif est activé. Consultez les <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">informations de confidentialité de Google</a> pour ses traitements et transferts.</li>
         </ul>
         <p>Les conditions et mécanismes de transfert applicables dépendent des services et comptes effectivement utilisés. La localisation européenne du projet Supabase ne suffit pas, à elle seule, à exclure tout transfert.</p>
 

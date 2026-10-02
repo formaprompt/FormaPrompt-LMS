@@ -53,7 +53,17 @@ describe('documents juridiques publiables', () => {
     expect(screen.getByText(/journal d’audit conserve les actions administratives sensibles/i)).toBeVisible();
     expect(screen.getAllByText(/Google Meet/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Microsoft Teams/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/aucun tag Google Analytics/i)).toBeVisible();
+    expect(screen.getByText(/nécessite votre accord explicite dans la bannière/i)).toBeVisible();
+    expect(screen.getByText(/aucun script ni signal publicitaire Google n'est chargé/i)).toBeVisible();
+    expect(screen.getByText(/Le refus n'empêche pas la navigation, la connexion ou l'achat/i)).toBeVisible();
+    expect(screen.getByText(/un ancien accord relatif aux stockages techniques ne vaut pas accord publicitaire/i)).toBeVisible();
+    expect(screen.getByText(/retirer votre accord à tout moment via « Gérer mes cookies »/i)).toBeVisible();
+    expect(screen.getByText(/recharge la page si la mesure a été chargée, sans supprimer les informations nécessaires à votre connexion/i)).toBeVisible();
+    expect(screen.getByText(/montant, la devise et un identifiant de transaction opaque/i)).toBeVisible();
+    expect(screen.getByText(/sans paramètres, fragments ni identifiants de session/i)).toBeVisible();
+    expect(screen.getByText(/ni nom, adresse électronique, téléphone, identifiant de compte ou données de carte/i)).toBeVisible();
+    expect(screen.getByText(/ni conversions avancées, ni remarketing, ni personnalisation publicitaire, ni Google Analytics/i)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'informations de confidentialité de Google' })).toHaveAttribute('href', 'https://policies.google.com/privacy');
   });
 
   it('présente CM2C dans les mentions légales', () => {
@@ -85,6 +95,7 @@ describe('documents juridiques publiables', () => {
     expect(screen.getByRole('link', { name: 'CGV particuliers' })).toHaveAttribute('href', '/cgv-particuliers');
     expect(screen.getByRole('link', { name: 'CGV professionnels' })).toHaveAttribute('href', '/cgv-professionnels');
     expect(screen.getByRole('link', { name: 'Confidentialité' })).toHaveAttribute('href', '/politique-confidentialite');
+    expect(screen.getByRole('button', { name: 'Gérer mes cookies' })).toBeVisible();
     expect(screen.getByRole('link', { name: 'Règlement intérieur' })).toHaveAttribute('href', '/reglement-interieur');
     expect(screen.getByRole('link', { name: 'Informations précontractuelles' })).toHaveAttribute('href', '/informations-precontractuelles');
     expect(screen.getByRole('link', { name: 'Renoncer au contrat ici' })).toHaveAttribute('href', '/retractation');

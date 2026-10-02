@@ -7,6 +7,9 @@ verify_jwt = true
 [functions.create-diagnostic-checkout]
 verify_jwt = true
 
+[functions.get-purchase-conversion-receipt]
+verify_jwt = true
+
 [functions.validate-diagnostic-promotion]
 verify_jwt = true
 

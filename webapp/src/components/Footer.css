@@ -57,3 +57,7 @@
   color: #cbd5e1;
   font-size: 0.9rem;
 }
+
+.footer-cookie-preferences { padding: .4rem 0; border: 0; background: transparent; color: #cbd5e1; font: inherit; text-align: left; text-decoration: underline; cursor: pointer; min-height: 44px; }
+.footer-cookie-preferences:hover { color: var(--color-primary-light); }
+.footer-cookie-preferences:focus-visible { outline: 3px solid white; outline-offset: 3px; }

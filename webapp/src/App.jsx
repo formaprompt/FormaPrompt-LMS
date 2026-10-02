@@ -8,7 +8,7 @@ import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
 // Lazy‑loaded pages
 const StudioPage = lazy(() => import("./studio/StudioPage"));
 const Home = lazy(() => import("./pages/Home"));
-const CookieConsent = lazy(() => import("react-cookie-consent"));
+const AdvertisingConsent = lazy(() => import("./components/AdvertisingConsent"));
 const FormationIA = lazy(() => import("./pages/FormationIA"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
@@ -177,38 +177,7 @@ function App() {
       </Suspense>
 
       <Suspense fallback={null}>
-      <CookieConsent
-        location="bottom"
-        buttonText="J'accepte"
-        declineButtonText="Je refuse"
-        enableDeclineButton
-        cookieName="formaprompt_cookie_consent"
-        style={{ background: "var(--color-secondary)", color: "white" }}
-        buttonStyle={{
-          background: "var(--color-primary)",
-          color: "white",
-          fontSize: "14px",
-          borderRadius: "4px",
-          padding: "8px 16px"
-        }}
-        declineButtonStyle={{
-          background: "transparent",
-          border: "1px solid white",
-          color: "white",
-          fontSize: "14px",
-          borderRadius: "4px",
-          padding: "8px 16px"
-        }}
-        expires={150}
-      >
-        FormaPrompt utilise uniquement les stockages techniques nécessaires au fonctionnement et à la connexion. Aucun outil de mesure d’audience actif n’a été détecté.{' '}
-        <a
-          href="/politique-confidentialite"
-          style={{ color: "var(--color-primary-light)", textDecoration: "underline", textUnderlineOffset: "0.2em" }}
-        >
-          En savoir plus
-        </a>
-      </CookieConsent>
+      <AdvertisingConsent />
       </Suspense>
     </>
   );
