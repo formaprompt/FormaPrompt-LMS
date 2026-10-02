@@ -69,6 +69,31 @@ export function checkApacheTargets(htaccess, files) {
   return [...new Set(targets)];
 }
 
+// La présence des anciens assets ne doit pas masquer un HTML d'une autre release.
+export function checkHtmlEntryVersions(contents) {
+  function entries(html) {
+    return new Set([...html.matchAll(/(?:src=["']|applicationScript\.src\s*=\s*["'])(\/assets\/index-[A-Za-z0-9_-]+\.js)["']/g)].map(match => match[1]));
+  }
+  const expected = entries(contents.get('app-shell.html') || '');
+  assert.equal(expected.size, 1, 'Entrée Vite unique absente du shell applicatif');
+  const [entry] = expected;
+  for (const [name, text] of contents) {
+    if (!name.endsWith('.html') || name === '404.html') continue;
+    assert.deepEqual([...entries(text)], [entry], `HTML d'une autre release : ${name}`);
+  }
+  return entry;
+}
+
+export function checkDeliveryPolicies(htaccess, worker) {
+  assert.match(htaccess, /<FilesMatch\s+"\\\.html\$">\s*Header always set Cache-Control "no-cache"\s*<\/FilesMatch>/, 'Revalidation HTML absente');
+  assert.match(htaccess, /<Files\s+"sw\.js">\s*Header always set Cache-Control "no-cache"\s*<\/Files>/, 'Revalidation worker absente');
+  assert.match(htaccess, /<Files\s+"learner-onboarding\.json">\s*Header always set Cache-Control "no-store"\s*<\/Files>/, 'Configuration vidéo mise en cache');
+  const precached = [...worker.matchAll(/\{url:["']([^"']+)["'],revision:/g)].map(match => match[1]);
+  assert.ok(precached.length > 0, 'Manifeste de précache absent');
+  assert.ok(!precached.some(url => /\.html(?:\?|$)/.test(url)), 'HTML interdit dans le précache');
+  assert.ok(!precached.includes('config/learner-onboarding.json'), 'Configuration vidéo interdite dans le précache');
+}
+
 export async function verifyRelease(root = path.resolve('dist')) {
   const files = [];
   async function walk(directory, prefix = '') {
@@ -92,6 +117,8 @@ export async function verifyRelease(root = path.resolve('dist')) {
   }
   const required = ['index.html', 'contact.html', 'blog.html', 'app-shell.html', 'public-shell.html', '404.html', '.htaccess', 'sitemap.xml'];
   for (const name of required) assert.ok(contents.has(name), `Cible absente : ${name}`);
+  const htmlEntry = checkHtmlEntryVersions(contents);
+  checkDeliveryPolicies(contents.get('.htaccess'), contents.get('sw.js') || '');
   const routes = publicRoutes(contents.get('sitemap.xml'));
   for (const route of routes) {
     const name = outputForRoute(route);
@@ -130,7 +157,7 @@ export async function verifyRelease(root = path.resolve('dist')) {
   for (const name of ['.htaccess', 'sitemap.xml', '404.html']) {
     assert.equal(contents.get(name).replaceAll('\r\n', '\n'), (await readFile(path.resolve('public', name), 'utf8')).replaceAll('\r\n', '\n'), `Copie public/dist différente : ${name}`);
   }
-  const report = { gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), routes, apacheTargets, assetReferences: references, files: inventory };
+  const report = { gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), htmlEntry, routes, apacheTargets, assetReferences: references, files: inventory };
   const reportDirectory = path.resolve('../output/release');
   await mkdir(reportDirectory, { recursive: true });
   await writeFile(path.join(reportDirectory, 'manifest.json'), JSON.stringify(report, null, 2) + '\n');

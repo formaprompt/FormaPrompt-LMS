@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { cwd } from 'node:process';
+import { fetchDocumentFromNetwork, matchesDocumentNavigation } from './src/pwa/navigationPolicy.js';
 
 const EXPECTED_PUBLIC_CONFIG = Object.freeze({
   supabaseUrl: 'https://crxodkbcukhjdejlcfpg.supabase.co',
@@ -38,12 +39,19 @@ export default defineConfig(({ command, mode }) => {
       registerType: 'autoUpdate',
       workbox: {
         cleanupOutdatedCaches: true,
-        // Ce JSON est remplacé indépendamment du build et chargé sans cache.
-        globIgnores: ['**/node_modules/**/*', '**/config/learner-onboarding.json'],
+        // Les HTML sont pré-rendus APRÈS Vite : ne pas précacher une révision
+        // du shell initial, ni garder une ancienne page d'entrée côté client.
+        globIgnores: ['**/node_modules/**/*', '**/*.html', '**/config/learner-onboarding.json'],
         // Les routes sont servies par l'hébergement. Ne jamais substituer
         // l'index mis en cache à une navigation : cela peut laisser l'URL et
         // le contenu en désaccord jusqu'au rechargement suivant.
         navigateFallback: null,
+        // Apache reste l'unique source des documents, y compris pour un ancien
+        // client ayant déjà une réponse HTML fraîche dans son cache HTTP.
+        runtimeCaching: [{
+          urlPattern: matchesDocumentNavigation,
+          handler: fetchDocumentFromNetwork,
+        }],
       },
       manifest: {
         name: 'FormaPrompt',
