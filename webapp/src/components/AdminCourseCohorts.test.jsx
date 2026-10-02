@@ -3,7 +3,15 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { StrictMode } from 'react';
 import AdminCourseCohorts from './AdminCourseCohorts';
 
-afterEach(() => cleanup());
+afterEach(() => {
+  try { cleanup(); } finally { vi.useRealTimers(); }
+});
+
+function useSeptemberFixtureDate() {
+  // Le mois initial doit correspondre aux fixtures, quelle que soit la date d'exécution.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-09-15T12:00:00.000Z'));
+}
 
 function halfDay(day, startHour, prefix, modes = ['remote', 'in_person']) {
   return Array.from({ length: 7 }, (_, index) => {
@@ -101,6 +109,7 @@ it('retire explicitement les deux plages d’un jour lorsque sa date est remplac
 });
 
 it('conserve quatre choix répartis sur plusieurs mois et les enregistre dans l’ordre chronologique', async () => {
+  useSeptemberFixtureDate();
   const onSaveDraft = vi.fn();
   const monthSlots = {
     '2026-09': halfDay('2026-09-21', 8, 'sep', ['remote']),
@@ -136,6 +145,7 @@ it('signale un échec de chargement mensuel sans créer de disponibilité', asyn
 });
 
 it('conserve le chargement mensuel le plus récent sous StrictMode', async () => {
+  useSeptemberFixtureDate();
   const resolvers = [];
   const onLoadAvailabilityMonth = vi.fn(() => new Promise((resolve) => { resolvers.push(resolve); }));
   render(<StrictMode><AdminCourseCohorts courseOptions={[{ id: 'word-initiation', label: 'Word Initiation' }]} availableSlots={[]} onLoadAvailabilityMonth={onLoadAvailabilityMonth} /></StrictMode>);

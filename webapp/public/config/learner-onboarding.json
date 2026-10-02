@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "version": "2",
+  "title": "Bien démarrer dans mon espace apprenant FormaPrompt",
+  "description": "Retrouvez vos formations, leurs ressources et les étapes pour commencer ou reprendre votre apprentissage.",
+  "durationLabel": "3 min 17 s",
+  "videoUrl": "/media/onboarding/bien-demarrer-espace-apprenant-v2.mp4",
+  "thumbnailUrl": null,
+  "captionsUrl": null,
+  "captionsEmbedded": true
+}

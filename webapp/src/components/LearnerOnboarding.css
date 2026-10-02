@@ -1,0 +1,33 @@
+.learner-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid #99b8cf;
+  border-radius: 12px;
+  background: #eef6fc;
+  color: #172033;
+}
+.learner-welcome h2 { color: #172033; margin: 0 0 .65rem; }
+.learner-welcome p { margin: .5rem 0 0; }
+.learner-welcome .btn { flex-shrink: 0; text-align: center; }
+.learner-welcome--compact { background: #f8fafc; padding: 1rem 1.25rem; }
+.learner-welcome--compact h2 { font-size: 1.15rem; }
+.learner-onboarding-note { font-size: .95rem; }
+.learner-getting-started { padding: 3rem 1rem; max-width: 960px; }
+.learner-getting-started h1 { margin: 1rem 0; }
+.learner-getting-started h2 { margin: 2rem 0 1rem; }
+.learner-getting-started p a:not(.btn) { text-decoration: underline; text-underline-offset: .15em; }
+.learner-getting-started video { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 540px; background: #172033; border-radius: 8px; }
+.learner-guide-steps { padding-left: 1.5rem; }
+.learner-guide-steps li { margin: 1.5rem 0; padding-left: .4rem; }
+.learner-guide-steps h3 { margin-bottom: .5rem; }
+.learner-welcome a:focus-visible, .learner-getting-started a:focus-visible { outline: 3px solid #2563eb; outline-offset: 4px; }
+.learner-getting-started video:focus-visible, #learner-intro-video-title:focus { outline: 3px solid #2563eb; outline-offset: 4px; }
+#learner-intro-video { scroll-margin-top: 6rem; }
+@media (max-width: 640px) {
+  .learner-welcome { flex-direction: column; align-items: stretch; }
+  .learner-getting-started { padding-top: 2rem; }
+}

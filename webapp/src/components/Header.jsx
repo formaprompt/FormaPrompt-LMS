@@ -85,6 +85,7 @@ export default function Header() {
               <span>Espace apprenant</span>
             </Link>
           )}
+          {user && <Link to="/aide/bien-demarrer" className="mobile-account-shortcut" onClick={() => setIsMenuOpen(false)}>Aide</Link>}
           <button
             ref={menuButton}
             type="button"
@@ -129,6 +130,7 @@ export default function Header() {
           
           {user ? (
             <div className="nav-account-actions">
+              <Link to="/aide/bien-demarrer" onClick={() => setIsMenuOpen(false)}>Aide</Link>
               {(role === 'admin' || role === 'employee') && (
                 <Link to="/admin" className="btn" onClick={() => setIsMenuOpen(false)} style={{ background: '#2a2a2a', border: '1px solid #444', color: '#fff' }}>
                   Admin

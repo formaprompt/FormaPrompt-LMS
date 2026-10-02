@@ -65,12 +65,25 @@
   # Les parcours applicatifs restent accessibles mais ne sont pas indexables.
   RewriteRule ^(?:login|forgot-password|reset-password|register|dashboard|feedback|paiement-reussi|reservation-formation|retractation)/?$ /app-shell.html [L]
   RewriteRule ^(?:admin|course|parcours|attestations|dossiers)(?:/.*)?$ /app-shell.html [L]
+  RewriteRule ^aide/bien-demarrer/?$ /app-shell.html [L]
 
   # Toute autre URL doit être une vraie 404, pas une copie de l'accueil.
   RewriteRule ^ - [R=404,L]
 </IfModule>
 
 ErrorDocument 404 /404.html
+
+# Configuration d'accueil actualisable sans reconstruction des pages.
+<IfModule mod_headers.c>
+  <Files "learner-onboarding.json">
+    Header set Cache-Control "no-store"
+  </Files>
+</IfModule>
+<IfModule mod_mime.c>
+  <Files "bien-demarrer-espace-apprenant-v2.mp4">
+    ForceType video/mp4
+  </Files>
+</IfModule>
 
 # La capsule payante reste physiquement sur IONOS mais n'est jamais servie
 # directement. paid-video.php la diffuse après validation d'une URL HMAC courte.

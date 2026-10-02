@@ -16,6 +16,7 @@ export default function Layout() {
     '/contact',
     '/disponibilites',
     '/faq',
+    '/aide/bien-demarrer',
     '/feedback',
     '/formation-',
     '/guide-gpt-',

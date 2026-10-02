@@ -38,6 +38,8 @@ export default defineConfig(({ command, mode }) => {
       registerType: 'autoUpdate',
       workbox: {
         cleanupOutdatedCaches: true,
+        // Ce JSON est remplacé indépendamment du build et chargé sans cache.
+        globIgnores: ['**/node_modules/**/*', '**/config/learner-onboarding.json'],
         // Les routes sont servies par l'hébergement. Ne jamais substituer
         // l'index mis en cache à une navigation : cela peut laisser l'URL et
         // le contenu en désaccord jusqu'au rechargement suivant.
