@@ -27,5 +27,5 @@ test('la configuration V2 conserve son activation et l’URL du média externe a
   const config = JSON.parse(readFileSync(new URL('../../public/config/learner-onboarding.json', import.meta.url), 'utf8'));
   assert.equal(config.enabled, true);
   assert.equal(config.version, '2');
-  assert.equal(config.videoUrl, '/media/onboarding/bien-demarrer-espace-apprenant-v2.mp4');
+  assert.equal(config.videoUrl, '/media/onboarding/bien-demarrer-espace-apprenant-v2-clean.mp4');
 });
