@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
+import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
 
 const initialShell = '<html><head><title>FormaPrompt</title></head><body><div id="root"></div><script type="module" src="/assets/main.js"></script></body></html>';
 
@@ -83,4 +83,22 @@ test('le contrôle refuse le précache HTML et exige les politiques de livraison
   assert.throws(() => checkDeliveryPolicies(rules, worker.replace('assets/index-new123.js', 'index.html')), /HTML interdit/);
   assert.throws(() => checkDeliveryPolicies(rules, worker.replace('assets/index-new123.js', 'config/learner-onboarding.json')), /Configuration vidéo interdite/);
   assert.throws(() => checkDeliveryPolicies(rules.replace('"no-cache"', '"max-age=3600"'), worker), /Revalidation HTML absente/);
+});
+
+test('seul le relais Ads strictement neutre peut omettre l’entrée Vite', () => {
+  const html = readFileSync(new URL('../public/ads-purchase-confirmation.html', import.meta.url), 'utf8');
+  assert.doesNotThrow(() => checkAdsConfirmationHtml(html));
+  const shell = initialShell.replace('/assets/main.js', '/assets/index-new123.js');
+  const contents = new Map([['app-shell.html', shell], ['ads-purchase-confirmation.html', html]]);
+  assert.equal(checkHtmlEntryVersions(contents), '/assets/index-new123.js');
+  for (const unsafe of [html.replace('no-referrer', 'origin'), html.replace('Confirmation – FormaPrompt', 'Mon cours'),
+    html.replace('<script>', '<script type="module">'), html.replace('</body>', '<iframe></iframe></body>'),
+    html.replace('/dashboard', '/login?session_id=private'), html.replace('formaprompt-ads-confirmation-v1', 'old-version'),
+    html.replace('</main>', '<p>Un nom privé</p></main>'), html.replace('<h1>', '<h1 onclick="window.gtag()">'),
+    html.replace('</head>', '<meta name="referrer" content="origin"></head>'),
+    html.replace('</body>', '<script src="/assets/extra.js"></script></body>')]) {
+    assert.throws(() => checkAdsConfirmationHtml(unsafe));
+  }
+  contents.set('another-relay.html', html);
+  assert.throws(() => checkHtmlEntryVersions(contents), /HTML d'une autre release : another-relay.html/);
 });

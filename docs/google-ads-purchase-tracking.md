@@ -1,192 +1,173 @@
-# Suivi des achats Google Ads — préparation pour revue
+# Suivi des achats Google Ads : confirmation autonome
 
-## État et limites
+## État
 
-Lot validé localement ; suivi désactivé et non déployé. La mesure dans Google Ads n'est pas vérifiée.
-Thierry autorise le 2 octobre 2026 le commit et le push sur la branche dédiée
-`codex/google-ads-purchase-tracking-20261002`, après revue finale et préservation des autres travaux.
-Cet accord ne couvre ni création d'une demande de fusion, ni fusion, ni déploiement, ni activation.
-Le résultat Git (SHA et référence distante) est consigné dans le rapport local, pas anticipé ici.
-Compte fourni : `248-573-7298`. Balise : `AW-18489285500`.
-Destination Achat : `AW-18489285500/WOz2COeP5I0dEPy2sPBE`.
+Correctif local à contrôler avant toute publication. La production conserve le suivi désactivé.
+Aucun commit, push, fusion, déploiement, changement du compte Google ou paiement artificiel
+n'est inclus dans ce lot. Le flag `VITE_GOOGLE_ADS_PURCHASE_ENABLED` reste `false` par défaut.
+L'activation exige une compilation production avec `true` et l'origine exacte
+`https://formaprompt.com` ; `www` doit rejoindre cette origine avant l'application.
 
-Réglages Google : Thierry confirme le 2 octobre 2026 la désactivation des données utilisateur,
-de leur détection automatique, des interactions de formulaire et du suivi avancé des conversions.
-La réserve correspondante est levée sur cette confirmation ; le coordinateur n'a pas modifié
-ni inspecté directement le compte. Cela n'autorise pas une activation ou un déploiement.
+Balise : `AW-18489285500`. Destination Achat : `AW-18489285500/WOz2COeP5I0dEPy2sPBE`.
+Les réglages sans conversions améliorées, détection automatique des données utilisateur
+ni interactions de formulaires doivent être conservés. Une nouvelle configuration Google
+imposant des conversions améliorées ne convient pas à ce contrat.
 
-Aucune modification de campagne, budget, dates, code DIAGIA, prix, paiement,
-remboursement, droits `course_access`, webhook ou Training Lab.
-Aucune migration. La nouvelle fonction est une lecture authentifiée, sans écriture métier.
+## Pourquoi changer le transport
 
-## Existant contrôlé et choix retenu
+Le vrai SDK avait émis la route courante malgré `page_location` réduite et `send_page_view:false`.
+Ces options seules ne protègent donc pas les routes privées. Le SDK n'est désormais jamais
+chargé dans la SPA, y compris après acceptation des cookies : `initGoogleAds` reste dormant.
 
-Le frontal examiné ne comporte pas de balise Google Ads, GA ou GTM active.
-L'ancien bandeau `react-cookie-consent` annonçait uniquement des stockages techniques.
-Son ancien cookie accepté ne constitue donc pas un consentement publicitaire.
-La même bibliothèque est réutilisée pour un choix publicitaire explicite, versionné,
-avec refus aussi accessible que l'acceptation et accès permanent « Gérer mes cookies ».
+Après un reçu admissible, le navigateur ouvre entièrement `/ads-purchase-confirmation.html`,
+sur la même origine canonique. Ce document classique autonome n'importe ni React, ni Auth,
+ni Supabase. Son titre et son DOM sont neutres. Aucun iframe, nouvelle infrastructure,
+import serveur ou modification de paiement n'est nécessaire.
 
-Le mode de consentement est **basique** : aucune balise Google chargée avant accord.
-Pas de personnalisation publicitaire ni de Google Analytics. Ce lot n'implémente aucune
-conversion améliorée ; les réglages automatiques désactivés ont été confirmés par Thierry.
-L'activation exige `VITE_GOOGLE_ADS_PURCHASE_ENABLED=true`, une compilation production
-et le domaine `formaprompt.com` ou `www.formaprompt.com`. Valeur par défaut : `false`.
-Un paiement test ou un mode de paiement inconnu ne produit pas de conversion.
+Cette approche protège les données préparées et les URL transmises ; ce n'est **pas une
+isolation du stockage**. Le SDK de même origine peut techniquement accéder au stockage
+Auth existant. Il faut donc contrôler les requêtes du vrai SDK avant publication ; aucun
+test mocké ni option de configuration ne garantit à lui seul l'absence de transmission.
+Le chargement Google utilise aussi des données techniques, dont l'adresse IP et les
+identifiants publicitaires. « Aucune donnée du compte apprenant dans les requêtes contrôlées »
+ne signifie pas « aucune donnée personnelle au sens du RGPD ».
 
-## Source de vérité
+## Consentement, clic et reçu
 
-Seules `/paiement-reussi` et `/diagnostic-ia/confirmation` raccordent le suivi.
-Le bouton Acheter, les pages d'annulation, un droit pédagogique existant ou une URL de succès
-ne prouvent pas un achat et ne déclenchent rien par eux-mêmes.
+Mode basique : aucun SDK sans consentement publicitaire explicite versionné.
+L'ancien cookie technique ne vaut pas consentement publicitaire. Analytics, personnalisation
+et audiences restent refusés. Le SDK n'est chargé que sur le document de confirmation valide.
 
-`get-purchase-conversion-receipt` exige une session connectée validée par Supabase Auth.
-Le serveur recherche la session de paiement exacte et vérifie son propriétaire,
-la transaction, la commande associée et le dernier événement Checkout enregistré
-par le webhook existant : paiement `paid`, mode réel confirmé, empreinte et état de traitement cohérents.
-Les états en attente, annulés, échoués, remboursés ou litigieux ne fournissent pas de reçu.
-Les événements historiques sans preuve de mode sont exclus.
+Un seul identifiant de clic `gclid`, `gbraid` ou `wbraid`, à caractères alphanumériques,
+tiret/underscore et longueur 10–256, peut être conservé après accord, au maximum 30 jours.
+Cette fenêtre correspond à la fenêtre Ads examinée pour ce lot ; la revérifier avant activation.
+Le même clic relu ne renouvelle pas sa date d'expiration. Les autres paramètres sont ignorés.
+Aucun cookie `_gcl_aw` n'est fabriqué : Google lit le clic dans la seule query du relais.
 
-Réponse minimale : `verified`, `livemode`, UUID opaque `transaction_id`,
-`amount_total_cents`, `currency`. Aucune identité, adresse, téléphone, détail pédagogique
-ou code promotionnel n'est transmis à Google. Les URLs et référents sont réduits à leur origine,
-le titre transmis est constant (« FormaPrompt ») et les groupes d'intérêt sont désactivés.
-Le chargement d'une balise Google implique néanmoins les données techniques propres à ce fournisseur,
-dont les identifiants publicitaires et l'adresse IP : le bandeau et la confidentialité l'expliquent.
+Un retrait efface le clic et le handoff ; le module de consentement existant efface les
+cookies `_gcl*`. Un marqueur de session empêche de ressusciter un clic depuis l'ancienne URL.
+Choix conservateur : après refus/retrait, ce même onglet ne recapture plus de clic, même
+si l'accord revient ensuite. Cela peut sous-mesurer un nouveau clic dans cet onglet.
 
-La valeur vaut le montant serveur réellement payé divisé par 100, et non le prix catalogue.
-Le scénario fictif DIAGIA utilise un reçu `11900` centimes → `119 EUR`.
-La validité actuelle de ce code en production n'a pas été interrogée ni modifiée.
+Seules les confirmations formation/diagnostic appellent le hook existant. Acheter,
+annuler, posséder un accès ou visiter une URL de succès ne prouve pas un achat.
+Le serveur `get-purchase-conversion-receipt`, inchangé, vérifie Auth, propriétaire, paiement,
+transaction et dernier événement webhook traité : payé, mode réel prouvé, état cohérent.
+Les paiements d'autrui, test, annulés, pending, échoués, remboursés ou litigieux ne sont pas éligibles.
+Le reçu minimal est `verified`, `livemode`, UUID `transaction_id`, `amount_total_cents`, `currency`.
+Les paramètres envoyés à Google proviennent exclusivement de ce reçu : 11900 → 119 EUR,
+49900 → 499 EUR, jamais un prix catalogue ou une valeur fixe.
 
-Le dédoublonnage local couvre les remontages et rechargements ; Google reçoit toujours
-le même identifiant de transaction pour son propre dédoublonnage. Un bloqueur, une erreur
-de stockage ou l'absence de consentement peuvent entraîner une sous-mesure ; le LMS reste utilisable.
-Le retour du transport « sent » signifie commande transmise au lecteur de balise,
-pas preuve d'attribution ou de réception dans Google Ads.
+## Handoff et retour
 
-## Contrôles locaux sans alimenter Google Ads
+Avant de quitter le LMS, un GET de préflight du HTML exige HTTP réussi, type HTML et marqueur
+de version exact. Il est `no-store`, `no-referrer`, sans cookies et sans redirection,
+avec délai total de cinq secondes, corps inclus. Document absent, réseau indisponible ou
+changement de route/consentement pendant cette attente : aucune navigation publicitaire.
 
-### Reçu : intégration HTTP isolée terminée le 2 octobre 2026
+Le seul payload `sessionStorage` contient `{version, transaction_id, amount_total_cents,
+currency, expires}` avec validité de 60 secondes. Aucune session Stripe, identité, JWT,
+formation ou URL de retour n'y figure. Le relais le consomme et l'efface avant de charger Google.
+Il exige aussi un marqueur local de tentative correspondant, un consentement encore accordé,
+une fenêtre valide, une URL strictement neutre et l'absence de commande déjà remise.
+Accès direct, rechargement, contenu périmé/invalide ou refus : zéro SDK, retour au dashboard.
 
-Test ajouté : `supabase/functions/_tests/purchaseConversionReceipt.integration.test.js`.
-Le vrai SDK Supabase 2.105.1 (même version que l'import Edge) appelle un serveur HTTP
-éphémère sur `127.0.0.1`. Auth et les réponses PostgREST sont fictifs, mais les requêtes
-du SDK et le handler applicatif ne sont pas remplacés par un faux client fluent.
-Tout `fetch` hors de cette origine est interdit, les redirections sont refusées,
-aucun fichier d'environnement ni secret réel n'est chargé, et le serveur est arrêté à la fin.
+La politique `no-referrer` est installée dans le parent avant une navigation `_self` via
+un lien `noreferrer`, puis dans le relais et sur sa balise SDK. L'URL du relais comporte
+au maximum le seul identifiant de clic validé ; aucun UUID de transaction en query.
 
-Résultats : 56 tests d'intégration réussis (55 sous-tests et leur parent),
-211 requêtes locales capturées, dont 159 Auth/SELECT ; zéro requête externe et zéro mutation métier.
-Les 44 tests unitaires du reçu et 30 tests React de raccordement ont également été relancés avec succès.
-La suite serveur complète compte désormais 411 réussites, un ignoré préexistant et zéro échec.
+Le lien visible « Retour à mon espace » est immédiatement utilisable. `history.back()`
+retrouve la confirmation sans mémoriser/transmettre son URL privée. Le retour automatique
+part après callback ou, au plus tard, 7,5 secondes ; un secours dashboard suit après
+0,5 seconde si l'historique ne quitte pas le document. Erreur SDK : retour immédiat.
+Une arrivée tardive du SDK après un retour déjà demandé ne produit pas de conversion.
+Le retour dans le LMS charge/restaure un document qui n'a jamais hébergé le SDK.
+Une restauration du relais depuis le cache de navigation repart au dashboard.
+Les tests historiques ne remplacent pas un contrôle distinct du BFCache réellement observé.
 
-Contrôlés : reçu payé formation/diagnostic à 119 EUR, filtres exacts propriétaire/session,
-session absente/refusée/expirée simulée, paiement d'autrui, montant fourni par le navigateur,
-annulation/attente/remboursement/litige/mode test, cohérence de l'événement et réponse minimale.
-Toutes les réponses du handler, erreurs et prévol inclus, sont `no-store`.
+## Dédoublonnage et limites de mesure
 
-Limite explicite : aucune instance Supabase, base PostgreSQL/RLS ou passerelle Edge réelle
-n'est démarrée. La signature cryptographique des JWT n'est pas testée ; le rejet Auth est simulé.
-`verify_jwt=true` est contrôlé statiquement et le handler exige toujours `auth.getUser`.
-Les contrôles de la plateforme cible seront à exécuter lors d'un déploiement séparément autorisé.
-Ce résultat valide le reçu en environnement HTTP isolé, pas un fonctionnement en production.
+Deux registres locaux distincts, chacun limité à 1000 UUID/150 jours :
 
-Pour reproduire depuis `C:\fp-onboarding-apprenant-20261001\webapp` :
+- `formaprompt_ads_attempt_v1` est écrit avant navigation : une seule tentative par UUID
+  empêche les boucles de retour si JavaScript, réseau ou SDK est bloqué.
+- `formaprompt_ads_sent_v1` est écrit après remise de la commande de conversion au SDK.
+  Ce registre conserve la compatibilité avec les anciens marqueurs.
 
-```powershell
-node --test supabase/functions/_tests/purchaseConversionReceipt.test.js supabase/functions/_tests/purchaseConversionReceipt.integration.test.js
-npm run test:studio -- src/pages/useGoogleAdsPurchase.test.jsx src/pages/PaymentSuccessConversion.test.jsx
-```
+Stockage indisponible ou corrompu : arrêt prudent, LMS utilisable. Un échec après le marqueur
+de tentative n'est pas rejoué automatiquement : sous-mesure possible, assumée pour empêcher
+les boucles. Google reçoit toujours le même UUID pour son propre dédoublonnage. Les écritures
+locales ne constituent pas un verrou transactionnel entre onglets concurrents.
+Le statut parent `handoff` signifie seulement navigation préparée/exécutée, jamais conversion
+reçue ou attribuée. Un callback Google et le marqueur `sent` ne prouvent pas non plus la réception.
 
-### Autres contrôles du lot
+Le HTML reste hors précache via la règle existante `**/*.html` ; `.htaccess` revalide déjà
+les HTML et n'est pas modifié. La garde de release autorise uniquement ce nom de relais,
+avec contrôle strict du titre, DOM, script classique, version et politique de référent.
+Tout autre HTML continue d'exiger l'entrée Vite correspondant à la release.
 
-Les tests utilisent des utilisateurs, transactions et reçus fictifs ainsi qu'un transport Google simulé.
-Aucun Checkout réel et aucune conversion test envoyée à Google. Les appels Supabase sont simulés.
-Les contrôles navigateur doivent bloquer tout trafic hors boucle locale avant la navigation.
+## Validation sans alimenter Google Ads
 
-Depuis `C:\fp-onboarding-apprenant-20261001\webapp` :
+Depuis `C:\fp-google-ads-purchase-tracking-20261002\webapp` :
 
 ```powershell
 npm run test:app
 npm run test:stripe
-npm run test:studio
+npm run test:studio -- --maxWorkers=1 --minWorkers=1
 npm run test:release
 npm run lint
 npm run typecheck
-npm run build
+npm run build:app
 ```
 
-Le build exige la configuration publique Supabase et l'URL du site prévues par les gardes
-existantes du dépôt. Pour ce contrôle, seules les variables publiques nécessaires de la
-configuration locale approuvée ont été chargées en mémoire, sans afficher les valeurs,
-avec `VITE_GOOGLE_ADS_PURCHASE_ENABLED=false`. Aucun secret serveur n'est utilisé par le front.
-Le pré-rendu normal du build lit les articles publics existants ; il ne modifie aucune donnée.
+Les tests Node exécutent le vrai script inline du relais dans un navigateur simulé, sans
+réseau Google. Les tests React préservent la lecture du reçu et les parcours de confirmation.
+La compilation de contrôle utilise exclusivement les variables publiques CI fictives et le flag
+`false`. Un pré-rendu isolé peut simuler le blog avec une liste vide et des articles fictifs puis
+vérifier l'artefact complet ; cela valide sa structure et ses gardes, pas le contenu du blog de production.
+Cet artefact de contrôle contient une clé publique fictive et des articles fictifs : il est
+**non publiable**. Avant une future publication autorisée, recompiler avec la configuration
+publique approuvée et pré-rendre les contenus réels, puis vérifier ce nouvel artefact exact.
 
-Attendus : reçu payé → montant/devise/UUID corrects ; annulation → zéro conversion ;
-rechargement → aucune nouvelle transaction ; refus et ancien cookie → zéro balise et conversion ;
-DIAGIA simulé → `119 EUR`, jamais `149` ou `1` ; session d'autrui et paiement test → aucun reçu.
-Vérifier également retrait du consentement, stockage indisponible, balise indisponible
-et maintien de l'accès au site. Les preuves et résultats exécutés sont dans
-`output/google-ads-achats-20261002/rapport-coordinateur.md` (rapport local non versionné).
+La recette indépendante du SDK réel doit autoriser uniquement son GET exact puis intercepter
+et **annuler avant émission toutes les autres requêtes tierces**, conversions incluses.
+Fixtures fictives uniquement ; aucune session Auth personnelle dans les tests.
+Contrôler valeur119/499, EUR, UUID, label, attribution du clic, référent, corps et query de tous
+les endpoints ; refus, annulation, retrait, stale/reload/retour, HTML absent et SDK bloqué.
+Les preuves et résultats exécutés appartiennent au rapport local de coordination.
 
-## Activation future — accord Thierry requis
+Publication/activation restent soumises à des accords distincts et un plan exact de release.
+L'attribution dans le compte Google ne pourra être confirmée que sur une vente légitime
+future, consentie, issue d'une publicité : aucune fausse conversion ni dépense artificielle.
 
-1. Enregistrer et pousser le lot sur sa branche dédiée, selon l'accord Git de Thierry.
-   Attendre les contrôles CI du nouveau SHA, puis obtenir les accords distincts pour
-   créer la demande de fusion, la fusionner et publier. Ne pas déduire une publication du push.
-   Conserver les réglages désactivés confirmés par Thierry : conversions améliorées,
-   détection automatique des données utilisateur et interactions de formulaires.
-   Aucun changement du compte Google n'est nécessaire dans ce lot ; obtenir un accord
-   distinct si une modification ultérieure devient nécessaire.
-2. Publier la fonction `get-purchase-conversion-receipt` avec JWT vérifié, après contrôle
-   du schéma réellement déployé et des autorisations. Réutiliser uniquement les variables
-   serveur sécurisées existantes ; ne jamais embarquer la clé service role dans le frontal.
-   Ne pas modifier les migrations ni redéployer les fonctions de paiement existantes.
-3. Préparer la compilation du frontal avec le flag désactivé pour les contrôles prépublication.
-   Le contrôle HTTP isolé du reçu est terminé. Avant activation, contrôler en plus
-   le gateway JWT et les réponses de la plateforme cible après autorisation de son déploiement.
-   Après accord explicite de publication et d'activation, compiler le frontal avec
-   `VITE_GOOGLE_ADS_PURCHASE_ENABLED=true` ; ce flag Vite nécessite une nouvelle compilation,
-   ce n'est pas un interrupteur runtime. Ne jamais changer les clés Stripe ni les promotions.
-   Préparer le plan SFTP différentiel exact, zéro suppression et aucun transfert de MP4,
-   avec sauvegarde des seuls fichiers remplacés, puis faire valider ce plan avant transfert.
-   Respecter son ordre : assets versionnés vérifiés d'abord, documents HTML/shell en dernier ;
-   contrôler les hashes et les headers HTTP réellement servis, sans se fier au seul build local.
-4. Contrôler les requêtes réellement servies, le consentement, la balise unique et le reçu.
-   Une publication du seul frontal sans fonction valide ne doit rien compter.
-5. Retour arrière : remettre le flag à `false` dans la release front validée ou restaurer
-   les fichiers précédents selon le plan de sauvegarde. Aucun changement de données métier à annuler.
+## Vérification dans le compte Google Ads
 
-## Vérification dans Google Ads — sans conversion fictive de production
+Lecture effectuée par le coordinateur le 2 octobre 2026, sans modification : compte
+`248-573-7298`, Objectifs → Conversions → Achat, action `7813531623`, source Site Web,
+action principale, valeurs variables (défaut 1 EUR), comptage de toutes les conversions,
+fenêtre après clic 30 jours. Le défaut 1 EUR ne doit jamais remplacer le montant du reçu.
 
-Cette procédure n'a pas été exécutée dans le compte Google Ads.
+1. Avant activation, recontrôler ces réglages et la destination exacte
+   `AW-18489285500/WOz2COeP5I0dEPy2sPBE`. Vérifier qu'aucune conversion fondée sur la seule
+   URL de confirmation et aucun import GA4 ne double ce même achat. Relever les réglages,
+   sans modifier action, campagne ou budget.
+2. Après publication et activation autorisées, contrôler avec Tag Assistant la balise
+   unique du relais, le consentement et les paramètres dynamiques. Refus : zéro balise.
+   Tag Assistant ne justifie aucun faux achat ni envoi de conversion fictive.
+3. Sur une vente légitime future issue d'une annonce, consentie et réellement payée,
+   comparer UUID stable, montant net et devise du reçu avec la conversion enregistrée
+   dans le compte Google. Contrôler également l'absence de doublon après retour/rechargement.
+   Le callback ou la commande remise au SDK ne prouvent ni réception ni attribution.
 
-1. Ouvrir le compte **248-573-7298**, puis Objectifs → Conversions et l'action **Achat**.
-   Vérifier la destination exacte ci-dessus, la source Site Web, les valeurs dynamiques,
-   la devise et le comptage adapté aux achats. Vérifier qu'une conversion basée seulement sur
-   l'URL de confirmation ou un import GA4 du même achat ne crée pas un second comptage.
-   Relever les réglages ; ne modifier ni action, ni campagne, ni budget sans accord.
-   Vérifier spécialement l'absence de collecte automatique des données de formulaires :
-   l'absence de `user_data` dans notre code ne garantit pas, à elle seule, les réglages du compte.
-2. Après publication autorisée, utiliser Tag Assistant pour contrôler la balise unique
-   et le consentement. Refus : aucune balise ni conversion ; accord : balise autorisée.
-   Les commandes de personnalisation et d'audience restent refusées.
-3. Pour contrôler les paramètres de conversion sans statistiques de production,
-   rester dans le dispositif local à transport simulé. **Ne pas** envoyer un faux reçu
-   « live » à la destination Achat et ne pas compter un paiement Stripe test.
-4. L'attribution réelle se vérifie sur une vente légitime future, consentie et réellement payée,
-   sans provoquer un achat artificiel : montant net, EUR, UUID stable, puis état de l'action
-   et valeur enregistrée. Vérifier le retour après rechargement et l'absence de doublon.
-   L'acceptation d'une commande `gtag` ou Tag Assistant seul ne prouve pas une vente attribuée.
-5. Distinguer les trois jalons : **préparé localement**, **déployé et contrôlé**,
-   **mesure réelle vérifiée dans Google Ads**. Un délai de traitement Google peut s'appliquer.
+Conserver séparés : correctif préparé localement, publication contrôlée et mesure réelle
+vérifiée. Le traitement Google peut être différé ; l'absence immédiate dans l'interface
+ne prouve pas, à elle seule, un échec.
 
-Sources officielles contrôlées le 2 octobre 2026 :
+Sources officielles examinées pour ce chantier :
 
 - [Balise et événement Google Ads](https://support.google.com/google-ads/answer/7548399?hl=fr).
-- [Dédoublonnage par ID de transaction](https://support.google.com/google-ads/answer/6386790?hl=fr).
-- [Modes de consentement](https://developers.google.com/tag-platform/security/concepts/consent-mode).
-- [Paramètres de la balise Google Ads](https://support.google.com/google-ads/answer/13438166?hl=fr).
+- [Identifiant de transaction](https://support.google.com/google-ads/answer/6386790?hl=fr).
+- [Mode de consentement](https://developers.google.com/tag-platform/security/concepts/consent-mode).
+- [Paramètres du tag Google Ads](https://support.google.com/google-ads/answer/13438166?hl=fr).
 - [Conversions améliorées et collecte automatique](https://support.google.com/google-ads/answer/13258081?hl=fr).
-- [Règles cookies CNIL](https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies).
-- [Authentification des Edge Functions](https://supabase.com/docs/guides/functions/auth-headers).
+- [Cookies et traceurs CNIL](https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies).

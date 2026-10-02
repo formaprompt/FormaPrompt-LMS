@@ -1,135 +1,174 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGoogleAdsPurchase, sanitizeAdvertisingUrl } from './googleAdsPurchase.js';
+import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import { createGoogleAdsPurchase, ADS_PENDING_KEY, ADS_ATTEMPT_KEY, ADS_SENT_KEY, ADS_CLICK_KEY } from './googleAdsPurchase.js';
+
 const receipt = { verified: true, livemode: true, transaction_id: '12345678-1234-1234-1234-123456789abc', amount_total_cents: 11900, currency: 'eur' };
+const clock = 1800000000000;
+const relayHtml = readFileSync(new URL('../../public/ads-purchase-confirmation.html', import.meta.url), 'utf8');
+const relayScript = relayHtml.match(/<script>([\s\S]*?)<\/script>/)[1];
+function store() {
+  const values = new Map();
+  return { getItem: (key) => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: (key) => values.delete(key) };
+}
 function fixture(overrides = {}) {
   let choice = 'granted';
   let subscriber;
-  let loads = 0;
-  let reloads = 0;
-  const commands = [];
-  const store = new Map();
-  const storage = { getItem: (key) => store.get(key), setItem: (key,value) => store.set(key,value) };
-  const options = { window: { location: { hostname: 'formaprompt.com', href: 'https://formaprompt.com/paiement-reussi?session_id=cs_secret#token', origin: 'https://formaprompt.com' }, gtag: (...args) => commands.push(args) },
-    document: { referrer: 'https://formaprompt.com/login?token=secret' }, env: { PROD: true, VITE_GOOGLE_ADS_PURCHASE_ENABLED: 'true' },
-    storage, getConsent: () => choice, subscribeConsent: (fn) => { subscriber = fn; }, loadScript: async () => { loads++; }, reload: () => { reloads++; }, ...overrides };
+  const navigation = [];
+  const fetches = [];
+  const elements = [];
+  const storage = store(); const sessionStorage = store();
+  const doc = { head: { appendChild: (element) => elements.push(element) }, createElement: (tag) => ({ tag }) };
+  const options = { window: { location: { origin: 'https://formaprompt.com', href: 'https://formaprompt.com/paiement-reussi?session_id=cs_private#token' } },
+    document: doc, env: { PROD: true, VITE_GOOGLE_ADS_PURCHASE_ENABLED: 'true' }, storage, sessionStorage,
+    getConsent: () => choice, subscribeConsent: (fn) => { subscriber = fn; }, navigate: (url) => navigation.push(url), now: () => clock,
+    fetch: async (...args) => { fetches.push(args); return { ok: true, headers: { get: () => 'text/html' }, text: async () => relayHtml }; }, ...overrides };
   const api = createGoogleAdsPurchase(options);
-  return { api, commands, options, get loads() { return loads; }, get reloads() { return reloads; }, withdraw() { choice = 'denied'; subscriber(choice); } };
+  return { api, options, navigation, fetches, elements, change: (value) => { choice = value; subscriber(choice); } };
 }
-test('119 euro verified purchase: minimal payload, singleton, concurrent dedup and reload', async () => {
+function relay({ payload = { version: 1, transaction_id: receipt.transaction_id, amount_total_cents: 11900, currency: 'EUR', expires: clock + 60000 },
+  query = '', cookie = 'formaprompt_advertising_v1=v1.granted', topLevel = true, attempt = true, sent = false, storageBlocked = false } = {}) {
+  const localStorage = store(); const sessionStorage = store();
+  if (payload !== null) sessionStorage.setItem(ADS_PENDING_KEY, typeof payload === 'string' ? payload : JSON.stringify(payload));
+  if (attempt) localStorage.setItem(ADS_ATTEMPT_KEY, JSON.stringify([{ id: receipt.transaction_id, at: clock }]));
+  if (sent) localStorage.setItem(ADS_SENT_KEY, JSON.stringify([{ id: receipt.transaction_id, at: clock }]));
+  const scripts = []; const timers = []; const events = {}; const redirects = []; let backs = 0; let click;
+  const location = { href: `https://formaprompt.com/ads-purchase-confirmation.html${query}`, origin: 'https://formaprompt.com', pathname: '/ads-purchase-confirmation.html', hash: '', replace: (url) => redirects.push(url) };
+  const document = { cookie, getElementById: () => ({ addEventListener: (_name, fn) => { click = fn; } }),
+    createElement: (tag) => ({ tag }), head: { appendChild: (script) => { assert.equal(sessionStorage.getItem(ADS_PENDING_KEY), null); scripts.push(script); } } };
+  const window = { addEventListener: (name, fn) => { events[name] = fn; } };
+  window.self = window; window.top = topLevel ? window : {};
+  const context = { window, document, location, history: { length: 2, back: () => { backs++; } },
+    localStorage: storageBlocked ? { getItem() { throw new Error('blocked'); } } : localStorage,
+    sessionStorage, URL, Date: class extends Date { static now() { return clock; } },
+    setTimeout: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimeout() {} };
+  vm.runInNewContext(relayScript, context);
+  return { window, document, scripts, timers, events, redirects, localStorage, sessionStorage, get backs() { return backs; }, click: () => click({ preventDefault() {} }) };
+}
+
+test('LMS init dormant ne charge aucun SDK ni requête, même après consentement', async () => {
   const f = fixture();
-  await Promise.all([f.api.sendGoogleAdsPurchase(receipt), f.api.sendGoogleAdsPurchase(receipt)]);
-  assert.equal(f.loads, 1);
-  const events = f.commands.filter((cmd) => cmd[0] === 'event');
-  assert.equal(events.length, 1);
-  assert.deepEqual(events[0][2], { send_to: 'AW-18489285500/WOz2COeP5I0dEPy2sPBE', value: 119, currency: 'EUR', transaction_id: receipt.transaction_id,
-    page_title: 'FormaPrompt', page_location: 'https://formaprompt.com/', page_referrer: 'https://formaprompt.com/' });
-  const config = f.commands.find((cmd) => cmd[0] === 'config')[2];
-  assert.equal(config.page_title, 'FormaPrompt');
-  assert.equal(config.allow_interest_groups, false);
-  assert.equal(config.allow_ad_personalization_signals, false);
-  assert.equal(config.allow_google_signals, false);
-  assert.equal('user_data' in config, false);
+  assert.deepEqual(await f.api.initGoogleAds(), { status: 'dormant' });
+  assert.equal(f.fetches.length, 0); assert.equal(f.elements.length, 0); assert.equal(f.options.window.gtag, undefined);
+  f.change('denied'); f.change('granted'); await f.api.initGoogleAds(); assert.equal(f.fetches.length, 0);
+});
+test('reçu119EUR : handoff minimal sans route/session/identité, préflight sûr et dédoublonnage concurrent/reload', async () => {
+  const f = fixture();
+  const [a, b] = await Promise.all([f.api.sendGoogleAdsPurchase({ ...receipt, email: 'fixture@example.invalid', session_id: 'private' }), f.api.sendGoogleAdsPurchase(receipt)]);
+  assert.equal(a.status, 'handoff'); assert.equal(b.status, 'handoff'); assert.equal(f.navigation.length, 1); assert.equal(f.fetches.length, 1);
+  assert.equal(f.navigation[0], 'https://formaprompt.com/ads-purchase-confirmation.html');
+  assert.deepEqual(JSON.parse(f.options.sessionStorage.getItem(ADS_PENDING_KEY)), { version: 1, transaction_id: receipt.transaction_id, amount_total_cents: 11900, currency: 'EUR', expires: clock + 60000 });
+  assert.equal(f.options.storage.getItem(ADS_SENT_KEY), null);
+  const request = f.fetches[0]; assert.equal(request[0], '/ads-purchase-confirmation.html');
+  for (const [name, value] of Object.entries({ method: 'GET', cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'error' })) assert.equal(request[1][name], value);
+  assert.deepEqual(f.elements, [{ tag: 'meta', name: 'referrer', content: 'no-referrer' }]);
   assert.equal((await createGoogleAdsPurchase(f.options).sendGoogleAdsPurchase(receipt)).status, 'duplicate');
 });
-test('formation price also uses receipt cents', async () => {
+test('499EUR provient aussi uniquement des centimes du reçu', async () => {
   const f = fixture(); await f.api.sendGoogleAdsPurchase({ ...receipt, amount_total_cents: 49900 });
-  assert.equal(f.commands.find((cmd) => cmd[0] === 'event')[2].value, 499);
+  assert.equal(JSON.parse(f.options.sessionStorage.getItem(ADS_PENDING_KEY)).amount_total_cents, 49900);
 });
-test('SPA conversion sanitizes the current location and referrer again', async () => {
-  const f = fixture(); await f.api.initGoogleAds();
-  f.options.window.location.href = 'https://formaprompt.com/course/private?email=person@example.com#access_token';
-  f.options.document.referrer = 'https://formaprompt.com/reset-password?token=new';
-  await f.api.sendGoogleAdsPurchase(receipt);
-  const payload = f.commands.find((cmd) => cmd[0] === 'event')[2];
-  assert.equal(payload.page_location, 'https://formaprompt.com/');
-  assert.equal(payload.page_referrer, 'https://formaprompt.com/');
-  assert.equal(JSON.stringify(payload).includes('private'), false);
-});
-test('unverified, test, zero, malformed receipt never loads script', async () => {
+test('reçus test/non vérifiés/annulés/invalides ne déclenchent ni préflight ni navigation', async () => {
   const f = fixture();
-  for (const patch of [{ verified: false }, { livemode: false }, { amount_total_cents: 0 }, { currency: 'EURO' }, { transaction_id: 'cs_live_secret' }]) {
-    assert.equal((await f.api.sendGoogleAdsPurchase({ ...receipt, ...patch })).status, 'ineligible');
-  }
-  assert.equal(f.loads, 0);
+  for (const patch of [{ verified: false }, { livemode: false }, { amount_total_cents: 0 }, { amount_total_cents: '11900' }, { currency: 'EURO' }, { transaction_id: 'cs_live_private' }]) assert.equal((await f.api.sendGoogleAdsPurchase({ ...receipt, ...patch })).status, 'ineligible');
+  assert.equal((await f.api.sendGoogleAdsPurchase(null)).status, 'ineligible'); assert.equal(f.fetches.length, 0);
 });
-test('no consent, refusal, local and disabled flag never load or send', async () => {
-  for (const overrides of [{ getConsent: () => 'unknown' }, { getConsent: () => 'denied' }, { env: { PROD: false, VITE_GOOGLE_ADS_PURCHASE_ENABLED: 'true' } }, { env: { PROD: true } }, { window: { location: { hostname: 'localhost' } } }]) {
-    const f = fixture(overrides); await f.api.sendGoogleAdsPurchase(receipt); assert.equal(f.loads, 0); assert.equal(f.commands.length, 0);
+test('refus/inconnu/flagfalse/local/www ne chargent jamais Google ni handoff', async () => {
+  for (const overrides of [{ getConsent: () => 'unknown' }, { getConsent: () => 'denied' }, { env: { PROD: false, VITE_GOOGLE_ADS_PURCHASE_ENABLED: 'true' } },
+    { env: { PROD: true, VITE_GOOGLE_ADS_PURCHASE_ENABLED: 'false' } }, { window: { location: { origin: 'http://localhost:5173' } } }, { window: { location: { origin: 'https://www.formaprompt.com' } } }]) {
+    const f = fixture(overrides); await f.api.initGoogleAds(); await f.api.sendGoogleAdsPurchase(receipt); assert.equal(f.fetches.length, 0); assert.equal(f.navigation.length, 0);
   }
 });
-test('withdrawal while loading or after send stops conversions', async () => {
+test('capture gclid/gbraid/wbraid consentie, un seul paramètre et fenêtre30j non renouvelée', async () => {
+  for (const name of ['gclid', 'gbraid', 'wbraid']) {
+    const f = fixture(); f.options.window.location.href += `&${name}=fixtureclick123456`; // Fragment is not query.
+    f.options.window.location.href = `https://formaprompt.com/?email=private&${name}=fixtureclick123456#token`;
+    await f.api.initGoogleAds(); await f.api.sendGoogleAdsPurchase(receipt);
+    assert.equal(f.navigation[0], `https://formaprompt.com/ads-purchase-confirmation.html?${name}=fixtureclick123456`);
+    assert.deepEqual(JSON.parse(f.options.storage.getItem(ADS_CLICK_KEY)), { version: 1, name, value: 'fixtureclick123456', expires: clock + 30 * 86400000 });
+    const later = createGoogleAdsPurchase({ ...f.options, now: () => clock + 1000 }); await later.initGoogleAds();
+    assert.equal(JSON.parse(f.options.storage.getItem(ADS_CLICK_KEY)).expires, clock + 30 * 86400000);
+  }
+});
+test('identifiants malformés/doubles/expirés ignorés, retrait efface puis empêche recapturepersistée', async () => {
+  for (const query of ['gclid=x@y.com', 'gclid=short', 'gclid=fixtureclick12345&gclid=fixtureclick67890']) {
+    const f = fixture(); f.options.window.location.href = `https://formaprompt.com/?${query}`; await f.api.initGoogleAds(); assert.equal(f.options.storage.getItem(ADS_CLICK_KEY), null);
+  }
+  const f = fixture(); f.options.window.location.href = 'https://formaprompt.com/?gclid=fixtureclick123456'; await f.api.initGoogleAds();
+  f.options.storage.setItem(ADS_CLICK_KEY, JSON.stringify({ version: 1, name: 'gclid', value: 'fixtureclick123456', expires: clock - 1 }));
+  await f.api.sendGoogleAdsPurchase(receipt); assert.equal(f.navigation[0].includes('?'), false);
+  f.change('denied'); assert.equal(f.options.storage.getItem(ADS_CLICK_KEY), null); assert.equal(f.options.sessionStorage.getItem(ADS_PENDING_KEY), null);
+  f.change('granted'); await f.api.initGoogleAds(); await createGoogleAdsPurchase(f.options).initGoogleAds(); assert.equal(f.options.storage.getItem(ADS_CLICK_KEY), null);
+});
+test('retrait durant le préflight empêche handoff même si l’accord revient', async () => {
+  let finish; const f = fixture({ fetch: () => new Promise((resolve) => { finish = resolve; }) });
+  const pending = f.api.sendGoogleAdsPurchase(receipt); f.change('denied'); f.change('granted');
+  finish({ ok: true, headers: { get: () => 'text/html' }, text: async () => relayHtml });
+  assert.equal((await pending).status, 'denied'); assert.equal(f.navigation.length, 0); assert.equal(f.options.storage.getItem(ADS_ATTEMPT_KEY), null);
+});
+test('HTML absent/version incorrecte/erreur/délai y compris corps bloqué : reste LMS et aucune tentative', async () => {
+  for (const fetch of [async () => ({ ok: false }), async () => ({ ok: true, headers: { get: () => 'application/json' } }),
+    async () => ({ ok: true, headers: { get: () => 'text/html' }, text: async () => '<html>SPA</html>' }), async () => { throw new Error('blocked'); },
+    () => new Promise(() => {}), async () => ({ ok: true, headers: { get: () => 'text/html' }, text: () => new Promise(() => {}) })]) {
+    const f = fixture({ fetch, timeoutMs: 5 }); assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
+    assert.equal(f.navigation.length, 0); assert.equal(f.options.storage.getItem(ADS_ATTEMPT_KEY), null);
+  }
+});
+test('changement de route pendantpréflight annule la navigation différée, sans stocker l’URLprivée', async () => {
   let finish;
-  const f = fixture({ loadScript: () => new Promise((resolve) => { finish = resolve; }) });
-  const pending = f.api.sendGoogleAdsPurchase(receipt); f.withdraw(); finish();
-  assert.equal((await pending).status, 'denied');
-  assert.equal(f.commands.filter((cmd) => cmd[0] === 'event' || cmd[0] === 'config').length, 0);
-  assert.equal(f.reloads, 1);
-  assert.equal(f.commands.some((cmd) => cmd[0] === 'consent' && cmd[1] === 'update'), false);
-  const other = fixture(); await other.api.sendGoogleAdsPurchase(receipt); other.withdraw();
-  assert.equal(other.reloads, 1);
-  assert.equal((await other.api.sendGoogleAdsPurchase({ ...receipt, transaction_id: '22345678-1234-1234-1234-123456789abc' })).status, 'denied');
+  const f = fixture({ fetch: () => new Promise((resolve) => { finish = resolve; }) });
+  const pending = f.api.sendGoogleAdsPurchase(receipt);
+  f.options.window.location.href = 'https://formaprompt.com/course/fixture-private';
+  finish({ ok: true, headers: { get: () => 'text/html' }, text: async () => relayHtml });
+  assert.equal((await pending).status, 'cancelled'); assert.equal(f.navigation.length, 0);
+  assert.equal(f.options.sessionStorage.getItem(ADS_PENDING_KEY), null);
 });
-test('refusal without tag attempt does not reload or command Google', () => {
-  const f = fixture(); f.withdraw(); assert.equal(f.reloads, 0); assert.equal(f.commands.length, 0);
+test('registre corrompu/stockage bloqué : failsoft, zéro navigation', async () => {
+  for (const value of ['{', '{}', '["invalid"]']) {
+    const f = fixture(); f.options.storage.setItem(ADS_SENT_KEY, value); assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable'); assert.equal(f.fetches.length, 0);
+  }
+  const f = fixture({ sessionStorage: { getItem: () => null, setItem() { throw new Error('blocked'); }, removeItem() {} } });
+  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable'); assert.equal(f.navigation.length, 0);
+  assert.equal((await createGoogleAdsPurchase(f.options).sendGoogleAdsPurchase(receipt)).status, 'duplicate');
 });
-test('blocked localStorage getter and corrupt ledger fail closed without import or UI failure', async () => {
-  const win = { location: { hostname: 'formaprompt.com' } };
-  Object.defineProperty(win, 'localStorage', { get() { throw new Error('SecurityError'); } });
-  const f = fixture({ window: win, storage: undefined });
-  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-  assert.equal(f.loads, 0);
-  for (const value of ['{', '{}', '["unexpected"]']) {
-    const corrupted = fixture({ storage: { getItem: () => value, setItem() {} } });
-    assert.equal((await corrupted.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-    assert.equal(corrupted.loads, 0);
+test('registres expirés purgés et maximum1000 tentatives', async () => {
+  const f = fixture(); f.options.storage.setItem(ADS_ATTEMPT_KEY, JSON.stringify([{ id: receipt.transaction_id, at: 1 }]));
+  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'handoff');
+  assert.equal(JSON.parse(f.options.storage.getItem(ADS_ATTEMPT_KEY)).length, 1);
+  const many = Array.from({ length: 1000 }, (_, n) => ({ id: `${String(n).padStart(8, '0')}-1234-1234-1234-123456789abc`, at: clock }));
+  f.options.storage.setItem(ADS_ATTEMPT_KEY, JSON.stringify(many));
+  await f.api.sendGoogleAdsPurchase({ ...receipt, transaction_id: '22345678-1234-1234-1234-123456789abc' });
+  assert.equal(JSON.parse(f.options.storage.getItem(ADS_ATTEMPT_KEY)).length, 1000);
+});
+test('script relais réel :119 et499EUR, pending effacé avantSDK, configuration minimale, marqueurcommande et retour', () => {
+  for (const cents of [11900, 49900]) {
+    const f = relay({ payload: { version: 1, transaction_id: receipt.transaction_id, amount_total_cents: cents, currency: 'EUR', expires: clock + 60000 }, query: '?gclid=fixtureclick12345' });
+    assert.equal(f.scripts.length, 1); assert.equal(f.scripts[0].referrerPolicy, 'no-referrer'); assert.equal(f.sessionStorage.getItem(ADS_PENDING_KEY), null);
+    f.scripts[0].onload();
+    const commands = f.window.dataLayer.map((args) => [...args]);
+    const event = commands.find(([name]) => name === 'event')[2];
+    assert.equal(event.value, cents / 100); assert.equal(event.currency, 'EUR'); assert.equal(event.transaction_id, receipt.transaction_id);
+    assert.equal(event.send_to, 'AW-18489285500/WOz2COeP5I0dEPy2sPBE'); assert.equal(event.page_referrer, ''); assert.equal(event.page_title, 'Confirmation – FormaPrompt');
+    assert.equal('user_data' in event, false);
+    const config = commands.find(([name]) => name === 'config')[2]; assert.equal(config.allow_google_signals, false); assert.equal(config.allow_interest_groups, false); assert.equal(config.allow_ad_personalization_signals, false);
+    assert.equal(JSON.parse(f.localStorage.getItem(ADS_SENT_KEY)).length, 1); event.event_callback(); assert.equal(f.backs, 1);
+    f.events.pagehide(); f.events.pageshow({ persisted: true }); assert.deepEqual(f.redirects, ['/dashboard']);
   }
 });
-test('gtag throws or document is unavailable never reject init or send', async () => {
-  const f = fixture(); f.options.window.gtag = () => { throw new Error('blocked'); };
-  assert.equal((await f.api.initGoogleAds()).status, 'unavailable');
-  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-  const missing = fixture({ document: undefined });
-  assert.equal((await missing.api.initGoogleAds()).status, 'unavailable');
-});
-test('preexisting loaded tag is reused and configuration occurs once', async () => {
-  const f = fixture({ loadScript: undefined, document: { referrer: '',
-    querySelector: () => ({ dataset: { formapromptLoaded: 'true' } }),
-    createElement() { throw new Error('Must not create second script'); } } });
-  await f.api.initGoogleAds(); await f.api.initGoogleAds();
-  await createGoogleAdsPurchase(f.options).initGoogleAds();
-  assert.equal(f.commands.filter((cmd) => cmd[0] === 'config').length, 1);
-});
-test('ledger prunes expiry, bounds volume, and skips sending when writes are blocked', async () => {
-  const f = fixture({ now: () => 200 * 86400 * 1000 });
-  f.options.storage.setItem('formaprompt_ads_sent_v1', JSON.stringify([{ id: receipt.transaction_id, at: 1 }]));
-  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'sent');
-  assert.equal(JSON.parse(f.options.storage.getItem('formaprompt_ads_sent_v1')).length, 1);
-  const many = Array.from({ length: 1000 }, (_, n) => ({ id: `${String(n).padStart(8, '0')}-1234-1234-1234-123456789abc`, at: 200 * 86400 * 1000 }));
-  f.options.storage.setItem('formaprompt_ads_sent_v1', JSON.stringify(many));
-  assert.equal((await f.api.sendGoogleAdsPurchase({ ...receipt, transaction_id: '22345678-1234-1234-1234-123456789abc' })).status, 'sent');
-  assert.equal(JSON.parse(f.options.storage.getItem('formaprompt_ads_sent_v1')).length, 1000);
-  const blocked = fixture({ storage: { getItem: () => null, setItem() { throw new Error('Quota'); } } });
-  assert.equal((await blocked.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-  assert.equal(blocked.commands.filter((cmd) => cmd[0] === 'event').length, 0);
-});
-test('conversion failure rolls back persistent marker and permits retry', async () => {
-  const f = fixture();
-  const original = f.options.window.gtag;
-  f.options.window.gtag = (...args) => { if (args[0] === 'event') throw new Error('blocked'); original(...args); };
-  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-  assert.deepEqual(JSON.parse(f.options.storage.getItem('formaprompt_ads_sent_v1')), []);
-  f.options.window.gtag = original;
-  assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'sent');
-});
-test('script failure or timeout never marks sent', async () => {
-  for (const loadScript of [async () => { throw new Error('blocked'); }, () => new Promise(() => {})]) {
-    const f = fixture({ loadScript, timeoutMs: 5 });
-    assert.equal((await f.api.sendGoogleAdsPurchase(receipt)).status, 'unavailable');
-    assert.equal(f.options.storage.getItem('formaprompt_ads_sent_v1'), undefined);
+test('relai direct/reload/refus/iframe/queryprivée/reçuexpire : zéroSDK, payloadconsommé et dashboard', () => {
+  for (const options of [{ payload: null }, { payload: '{' }, { cookie: '' }, { cookie: 'formaprompt_advertising_v1=v1.denied' }, { topLevel: false }, { attempt: false }, { sent: true }, { storageBlocked: true },
+    { query: '?session_id=cs_private' }, { query: '?gclid=fixtureclick12345&email=private' },
+    { payload: { version: 1, transaction_id: receipt.transaction_id, amount_total_cents: 11900, currency: 'EUR', expires: clock - 1 } },
+    { payload: { version: 1, transaction_id: receipt.transaction_id, amount_total_cents: 11900, currency: 'EUR', expires: clock + 60000, email: 'private' } }]) {
+    const f = relay(options); assert.equal(f.scripts.length, 0); assert.equal(f.sessionStorage.getItem(ADS_PENDING_KEY), null); assert.deepEqual(f.redirects, ['/dashboard']);
   }
 });
-test('URL sanitization excludes sensitive identifiers and unsafe schemes', () => {
-  assert.equal(sanitizeAdvertisingUrl('https://formaprompt.com/course/private?token=secret#password'), 'https://formaprompt.com/');
-  assert.equal(sanitizeAdvertisingUrl('javascript:alert(1)'), '');
+test('SDK bloqué/refus pendantchargement/absencecallback : retourborné8s sans marqueurfinal', () => {
+  const blocked = relay(); blocked.scripts[0].onerror(); assert.equal(blocked.backs, 1); assert.equal(blocked.localStorage.getItem(ADS_SENT_KEY), '[]');
+  const withdrawn = relay(); withdrawn.document.cookie = 'formaprompt_advertising_v1=v1.denied'; withdrawn.scripts[0].onload();
+  assert.equal(withdrawn.window.dataLayer.some((args) => args[0] === 'event'), false); assert.equal(withdrawn.backs, 1);
+  const slow = relay(); slow.timers.find(({ ms }) => ms === 7500).fn(); assert.equal(slow.backs, 1); slow.click(); assert.equal(slow.backs, 1);
+  slow.scripts[0].onload(); assert.equal(slow.window.dataLayer.some((args) => args[0] === 'event'), false);
+  assert.equal(slow.timers.some(({ ms }) => ms === 500), true);
 });

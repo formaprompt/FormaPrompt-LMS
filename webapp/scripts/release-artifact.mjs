@@ -70,6 +70,43 @@ export function checkApacheTargets(htaccess, files) {
 }
 
 // La présence des anciens assets ne doit pas masquer un HTML d'une autre release.
+export function checkAdsConfirmationHtml(html) {
+  const document = new JSDOM(html).window.document;
+  assert.equal(document.documentElement.lang, 'fr', 'Langue du relais incorrecte');
+  assert.equal(document.title, 'Confirmation – FormaPrompt', 'Titre du relais non neutre');
+  assert.equal(document.querySelectorAll('meta[name="referrer"]').length, 1, 'Politique de référent unique requise');
+  assert.equal(document.querySelector('meta[name="referrer"]')?.content, 'no-referrer', 'Référent du relais interdit');
+  assert.equal(document.querySelector('meta[name="formaprompt-ads-confirmation"]')?.content,
+    'formaprompt-ads-confirmation-v1', 'Version du relais incorrecte');
+  assert.match(document.querySelector('meta[name="robots"]')?.content || '', /noindex/);
+  assert.equal(document.querySelector('h1')?.textContent, 'Confirmation', 'DOM du relais non neutre');
+  assert.equal(document.querySelectorAll('main').length, 1, 'Contenu neutre unique requis');
+  assert.equal(document.querySelector('main').textContent.replace(/\s+/g, ' ').trim(),
+    'ConfirmationVous pouvez retourner à votre espace.Retour à mon espace', 'Texte du relais non neutre');
+  for (const element of document.querySelectorAll('*')) {
+    assert.ok(![...element.attributes].some((attribute) => /^on/i.test(attribute.name)), 'Gestionnaire HTML inline interdit');
+  }
+  assert.equal(document.querySelectorAll('script').length, 1, 'Script autonome unique requis');
+  const script = document.querySelector('script');
+  assert.equal(script.hasAttribute('src'), false, 'Aucun script externe statique dans le relais');
+  assert.equal(script.hasAttribute('type'), false, 'Script classique requis');
+  assert.equal(document.querySelectorAll('iframe, form, input, #root, link, img').length, 0, 'DOM du relais contaminé');
+  assert.equal(document.querySelectorAll('a').length, 1, 'Lien de retour unique requis');
+  const link = document.querySelector('a');
+  assert.equal(link.getAttribute('href'), '/dashboard');
+  assert.equal(link.textContent, 'Retour à mon espace');
+  assert.equal(link.getAttribute('rel'), 'noreferrer');
+  assert.equal(link.getAttribute('referrerpolicy'), 'no-referrer');
+  assert.ok(!/\b(?:import|Supabase|supabase|React|session_id|access_token|user_data|user_id|course_id)\b|\/assets\//.test(html), 'Code LMS interdit dans le relais');
+  assert.match(script.textContent, /window\.top !== window\.self/);
+  assert.match(script.textContent, /location\.origin !== 'https:\/\/formaprompt\.com'/);
+  assert.match(script.textContent, /sessionStorage\.removeItem\(pendingKey\)/);
+  assert.match(script.textContent, /script\.referrerPolicy = 'no-referrer'/);
+  assert.match(script.textContent, /script\.src = 'https:\/\/www\.googletagmanager\.com\/gtag\/js\?id='/);
+  assert.match(script.textContent, /'AW-18489285500'/);
+  assert.match(script.textContent, /'\/WOz2COeP5I0dEPy2sPBE'/);
+}
+
 export function checkHtmlEntryVersions(contents) {
   function entries(html) {
     return new Set([...html.matchAll(/(?:src=["']|applicationScript\.src\s*=\s*["'])(\/assets\/index-[A-Za-z0-9_-]+\.js)["']/g)].map(match => match[1]));
@@ -79,6 +116,7 @@ export function checkHtmlEntryVersions(contents) {
   const [entry] = expected;
   for (const [name, text] of contents) {
     if (!name.endsWith('.html') || name === '404.html') continue;
+    if (name === 'ads-purchase-confirmation.html') { checkAdsConfirmationHtml(text); continue; }
     assert.deepEqual([...entries(text)], [entry], `HTML d'une autre release : ${name}`);
   }
   return entry;
@@ -115,7 +153,7 @@ export async function verifyRelease(root = path.resolve('dist')) {
     contents.set(name, text);
     inventory.push({ path: name, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
   }
-  const required = ['index.html', 'contact.html', 'blog.html', 'app-shell.html', 'public-shell.html', '404.html', '.htaccess', 'sitemap.xml'];
+  const required = ['index.html', 'contact.html', 'blog.html', 'app-shell.html', 'public-shell.html', '404.html', 'ads-purchase-confirmation.html', '.htaccess', 'sitemap.xml'];
   for (const name of required) assert.ok(contents.has(name), `Cible absente : ${name}`);
   const htmlEntry = checkHtmlEntryVersions(contents);
   checkDeliveryPolicies(contents.get('.htaccess'), contents.get('sw.js') || '');
@@ -154,7 +192,7 @@ export async function verifyRelease(root = path.resolve('dist')) {
     if (name.endsWith('.css')) for (const match of text.matchAll(/url\(["']?([^)'"\s]+)["']?\)/g)) checkReference(match[1], name);
     if (name.endsWith('.js')) for (const match of text.matchAll(/(?:from\s*|import\s*\()["'](\.\.?\/[^"']+)["']/g)) checkReference(match[1], name);
   }
-  for (const name of ['.htaccess', 'sitemap.xml', '404.html']) {
+  for (const name of ['.htaccess', 'sitemap.xml', '404.html', 'ads-purchase-confirmation.html']) {
     assert.equal(contents.get(name).replaceAll('\r\n', '\n'), (await readFile(path.resolve('public', name), 'utf8')).replaceAll('\r\n', '\n'), `Copie public/dist différente : ${name}`);
   }
   const report = { gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), htmlEntry, routes, apacheTargets, assetReferences: references, files: inventory };
