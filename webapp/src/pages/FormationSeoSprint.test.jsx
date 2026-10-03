@@ -23,7 +23,7 @@ const pages = [
   {
     Page: FormationOF,
     title: 'Formation IA pour formateurs et équipes pédagogiques | FormaPrompt',
-    description: 'Formation IA générative de 21 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA.',
+    description: 'Formation IA générative de 14 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA.',
     link: 'formation Prompt Engineering – Niveau 1',
     href: '/formation-prompt-engineering',
   },
@@ -57,4 +57,15 @@ it.each(pages)('présente la meta SEO et le lien interne attendu pour $title', (
   expect(seo).toHaveAttribute('data-title', title)
   expect(seo).toHaveAttribute('data-description', description)
   expect(screen.getByRole('link', { name: link })).toHaveAttribute('href', href)
+})
+
+it('présente le parcours RS6891 de 14 heures avec ses deux formats', () => {
+  const { container } = render(<MemoryRouter><FormationOF /></MemoryRouter>)
+
+  expect(screen.getByText('⏱ Durée : 14 heures')).toBeVisible()
+  expect(screen.getByText('14 heures réparties sur 2 journées de 7 h ou 4 demi-journées de 3 h 30.')).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Séquence 1 – Analyse des besoins & Prompt Engineering' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Séquence 2 – Production multimédia & Révision des contenus' })).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Séquence 3 – Éthique, risques & préparation certification' })).toBeVisible()
+  expect(container).not.toHaveTextContent(/21\s*(h|heures)|3 jours|Jour [123]/)
 })

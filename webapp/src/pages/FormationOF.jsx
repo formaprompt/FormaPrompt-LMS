@@ -7,7 +7,7 @@ export default function FormationOF() {
     <>
       <SEO
         title="Formation IA pour formateurs et équipes pédagogiques | FormaPrompt"
-        description="Formation IA générative de 21 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA."
+        description="Formation IA générative de 14 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA."
         url={`${SITE_CONFIG.baseUrl}/formation-organismes`}
         image="https://www.formaprompt.com/assets/ia-formateur.jpg"
       />
@@ -19,7 +19,7 @@ export default function FormationOF() {
             Produire et Réviser des Contenus Pédagogiques de Qualité
           </p>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>⏱ Durée : 21 heures (3 jours)</span>
+            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>⏱ Durée : 14 heures</span>
             <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>🎓 Formation Certifiante</span>
             <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>📌 Réf : F07-AIFORM-C03</span>
           </div>
@@ -88,9 +88,10 @@ export default function FormationOF() {
         </div>
 
         <h3 className="mb-2 mt-4 text-left">Programme de la formation</h3>
+        <p className="mb-3 text-left">14 heures réparties sur 2 journées de 7 h ou 4 demi-journées de 3 h 30.</p>
         <div className="mb-4" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
           <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #3b82f6', border: '1px solid #e5e7eb' }}>
-            <h4 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Jour 1 – Analyse des besoins & Prompt Engineering</h4>
+            <h4 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Séquence 1 – Analyse des besoins & Prompt Engineering</h4>
             <ul style={{ listStyleType: 'circle', paddingLeft: '1.5rem', fontSize: '0.95rem', margin: 0 }}>
               <li>Analyse d’un besoin de commanditaire.</li>
               <li>Rédaction de la synthèse formelle (attendue au RS6891).</li>
@@ -100,7 +101,7 @@ export default function FormationOF() {
             </ul>
           </div>
           <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981', border: '1px solid #e5e7eb' }}>
-            <h4 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Jour 2 – Production multimédia & Révision des contenus</h4>
+            <h4 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Séquence 2 – Production multimédia & Révision des contenus</h4>
             <ul style={{ listStyleType: 'circle', paddingLeft: '1.5rem', fontSize: '0.95rem', margin: 0 }}>
               <li>Production via IA : supports Word/PPT, schémas, quiz, vidéos.</li>
               <li>Création d’un module complet conforme au cahier des charges.</li>
@@ -109,7 +110,7 @@ export default function FormationOF() {
             </ul>
           </div>
           <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b', border: '1px solid #e5e7eb' }}>
-            <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>Jour 3 – Éthique, risques & préparation certification</h4>
+            <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem' }}>Séquence 3 – Éthique, risques & préparation certification</h4>
             <ul style={{ listStyleType: 'circle', paddingLeft: '1.5rem', fontSize: '0.95rem', margin: 0 }}>
               <li>Identification des risques : biais, RGPD, sécurité, CGU.</li>
               <li>Rédaction de la partie 'Analyse des risques' du rapport.</li>
