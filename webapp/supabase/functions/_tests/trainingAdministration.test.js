@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   accessSourceForEnrollment,
+  canLinkExistingCreativityAccess,
   buildAdministrativeDocument,
   documentRowsForValidatedEnrollment,
   shouldCreateEnrollmentCourseAccess,
+  isCreativityCourse,
   validateAmendment,
   validateAdministrativeEnrollment,
   validateEnrollmentException,
@@ -77,6 +79,58 @@ test('les données administratives utiles sont normalisées sans ajouter de donn
   assert.equal(normalized.durationMinutes, 240);
   assert.equal(normalized.funderName, 'OPCO Exemple');
   assert.equal(normalized.learnerPhone, null);
+});
+
+test('les trois formules créativité ont leurs tarifs et durées catalogue', () => {
+  const expected = [
+    ['ia-creativite-groupe', 69000],
+    ['ia-creativite-individuel', 90000],
+    ['ia-creativite-ecole-association', 160000],
+  ];
+  for (const [courseId, priceAmountCents] of expected) {
+    const form = validateAdministrativeEnrollment({
+      ...validInput, courseId, durationMinutes: undefined, priceAmountCents: undefined,
+    });
+    assert.equal(form.durationMinutes, 840);
+    assert.equal(form.priceAmountCents, priceAmountCents);
+    assert.equal(isCreativityCourse(courseId), true);
+  }
+  assert.equal(isCreativityCourse('ia-creativite-unknown'), false);
+  assert.throws(() => validateAdministrativeEnrollment({ ...validInput, courseId: 'ia-creativite-groupe', durationMinutes: 600 }), /catalogue/i);
+  assert.throws(() => validateAdministrativeEnrollment({ ...validInput, courseId: 'ia-creativite-groupe', priceAmountCents: 60000 }), /catalogue/i);
+});
+
+test('les documents créativité reprennent le bon nom, les 14 heures et les objectifs partagés', () => {
+  for (const courseId of ['ia-creativite-groupe', 'ia-creativite-individuel', 'ia-creativite-ecole-association']) {
+    const normalized = validateAdministrativeEnrollment({ ...validInput, courseId, durationMinutes: undefined, priceAmountCents: undefined });
+    const snap = buildAdministrativeDocument('training_agreement', {
+      ...enrollment, course_id: courseId, duration_minutes: 840,
+      price_amount_cents: normalized.priceAmountCents,
+    }, validInput.learnerEmail);
+    assert.match(snap.course.title, /Explorer l’IA au service de la créativité/);
+    assert.equal(snap.course.durationMinutes, 840);
+    assert.match(snap.course.objectives[1], /CROP/);
+    assert.match(snap.clauses[1], /planification de la séance/);
+    assert.doesNotMatch(snap.clauses[1], /espace apprenant/i);
+  }
+});
+
+test('les droits créativité existants doivent être actifs et prouvables', () => {
+  const gift = { status: 'active', access_source: 'gift', purchase_id: null };
+  assert.equal(canLinkExistingCreativityAccess(gift), true);
+  assert.equal(canLinkExistingCreativityAccess({ ...gift, status: 'suspended' }), false);
+  assert.equal(canLinkExistingCreativityAccess({ ...gift, expires_at: '2000-01-01T00:00:00Z' }), false);
+  assert.equal(canLinkExistingCreativityAccess({ ...gift, purchase_id: 'purchase-id' }), false);
+  const paid = {
+    status: 'active', access_source: 'stripe', purchase_id: 'purchase-id',
+    user_id: 'user-id', course_id: 'ia-creativite-groupe',
+  };
+  assert.equal(canLinkExistingCreativityAccess(paid, {
+    id: 'purchase-id', user_id: 'user-id', course_id: 'ia-creativite-groupe', payment_status: 'paid',
+  }), true);
+  assert.equal(canLinkExistingCreativityAccess(paid, {
+    id: 'purchase-id', user_id: 'user-id', course_id: 'ia-creativite-groupe', payment_status: 'refunded',
+  }), false);
 });
 
 test('une période incohérente est refusée', () => {

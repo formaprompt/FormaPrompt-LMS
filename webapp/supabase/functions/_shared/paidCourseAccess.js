@@ -3,6 +3,9 @@ export const PAID_COURSE_IDS = Object.freeze([
   'formation-ia',
   'formation-ia-act',
   'formation-prompt-level-1',
+  'ia-creativite-individuel',
+  'ia-creativite-groupe',
+  'ia-creativite-ecole-association',
 ]);
 
 export const PAID_RESOURCE_URL_SECONDS = 120;
@@ -44,6 +47,7 @@ export function trainerGuideObjectPath(courseId) {
     'formation-ia-act': 'guide-formateur-ia-act-formaprompt.pdf',
     'formation-prompt-level-1': 'guide-formateur-prompt-engineering-niveau-1-formaprompt.pdf',
   };
+  if (!Object.hasOwn(fileNames, validatedCourseId)) throw new Error('Guide formateur indisponible.');
   return `${validatedCourseId}/trainer/${fileNames[validatedCourseId]}`;
 }
 

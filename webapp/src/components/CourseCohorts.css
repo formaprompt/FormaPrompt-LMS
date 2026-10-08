@@ -54,3 +54,20 @@
 .admin-course-cohorts__cancel, .admin-course-cohorts__meeting { display: grid; gap: .65rem; border-top: 1px solid #e2e8f0; padding-top: .75rem; }
 .admin-course-cohorts__draft-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
 @media (max-width: 650px) { .admin-course-cohorts__form, .admin-course-cohorts__range-grid, .admin-course-cohorts__day-grid, .admin-course-cohorts__meeting, .admin-course-cohorts__session-line { grid-template-columns: 1fr; } .course-cohorts__card-heading, .admin-course-cohorts__list article > header { align-items: stretch; flex-direction: column; } }
+
+.admin-course-cohorts__minimum { display: grid; grid-template-columns: minmax(6rem, 10rem) minmax(0, 1fr); gap: .65rem; align-items: center; padding: .85rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; }
+.admin-course-cohorts__minimum label, .admin-course-cohorts__minimum p { grid-column: 1 / -1; }
+.admin-course-cohorts__minimum label { display: block; font-weight: 700; }
+.admin-course-cohorts__minimum input { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; padding: .65rem; border: 1px solid #94a3b8; border-radius: 7px; font: inherit; font-size: 1rem; color: #172033; background: #fff; }
+.admin-course-cohorts__minimum input:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+.admin-course-cohorts__minimum .btn { justify-self: start; min-height: 44px; white-space: normal; }
+.admin-course-cohorts__minimum p { line-height: 1.5; }
+@media (max-width: 650px) { .admin-course-cohorts__minimum { grid-template-columns: minmax(0, 1fr); } .admin-course-cohorts__minimum .btn { justify-self: stretch; width: 100%; } }
+
+.admin-course-cohorts__enrollment { display: grid; grid-template-columns: minmax(0, 1fr); gap: .65rem; padding: .85rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; min-width: 0; }
+.admin-course-cohorts__enrollment h4 { margin: 0; font-size: 1rem; }
+.admin-course-cohorts__enrollment label { display: block; font-weight: 700; }
+.admin-course-cohorts__enrollment select { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; padding: .65rem; border: 1px solid #94a3b8; border-radius: 7px; font: inherit; font-size: 1rem; color: #172033; background: #fff; }
+.admin-course-cohorts__enrollment .btn { min-height: 44px; width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.admin-course-cohorts__enrollment p { line-height: 1.5; overflow-wrap: anywhere; }
+.admin-course-cohorts__enrollment p[role="alert"] { color: #991b1b; }

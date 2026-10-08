@@ -13,6 +13,7 @@ const FormationIA = lazy(() => import("./pages/FormationIA"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationAgentsIA = lazy(() => import("./pages/FormationAgentsIA"));
+const FormationCreativite = lazy(() => import("./pages/FormationCreativite"));
 const FormationBureautique = lazy(() => import("./pages/FormationBureautique"));
 const FormationExcel = lazy(() => import("./pages/FormationExcel"));
 const FormationWord = lazy(() => import("./pages/FormationWord"));
@@ -104,6 +105,7 @@ function App() {
             <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-agents-ia-workflows" element={<FormationAgentsIA />} />
+            <Route path="formation-ia-creativite" element={<FormationCreativite />} />
             <Route path="formation-bureautique" element={<FormationBureautique />} />
             <Route path="formation-excel" element={<FormationExcel />} />
             <Route path="formation-word" element={<FormationWord />} />

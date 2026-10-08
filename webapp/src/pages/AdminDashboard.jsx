@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { courseCatalog } from '../data/courseCatalog';
 import { BOOKING_COURSES } from '../data/bookingCatalog';
+import { CREATIVITY_GROUP_BOOKING } from '../../supabase/functions/_shared/bureautiqueBooking.js';
 import { adminBookingAnchor, adminCorrectionAnchor, adminWorkTarget, exactTargetRows } from '../lib/adminLearnerRecord';
 import { ADMIN_GIFT_COURSES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import { createAvailabilitySlots, createInitialAvailabilityForm, formatDateInput } from '../lib/availabilitySlots';
@@ -16,9 +17,13 @@ import {
   confirmAdminCourseCohort,
   fetchAdminAvailabilitySlotsForMonth,
   fetchAdminCourseCohorts,
+  fetchAdminCreativityCohortParticipants,
+  fetchAdminCreativityCohortCandidates,
+  enrollAdminCreativityCohort,
   generateAdminCourseCohortMeetingLinks,
   publishAdminCourseCohort,
   saveAdminCourseCohort,
+  setAdminCreativityCohortMinimum,
   setAdminCourseCohortMeetingUrl,
 } from '../lib/courseCohorts';
 import {
@@ -49,7 +54,7 @@ const COURSE_LABELS = {
   'formation-ia-act': 'IA Act – acculturation et conformité',
   'formation-prompt-level-1': 'Prompt Engineering – Niveau 1',
   ...Object.fromEntries(Object.values(ADMIN_GIFT_COURSES)
-    .filter(({ courseId }) => courseId.includes('-inter') || courseId.includes('-individuel'))
+    .filter(({ courseId }) => courseId.includes('-inter') || courseId.includes('-individuel') || courseId.startsWith('ia-creativite-'))
     .map(({ courseId, label }) => [courseId, label])),
 };
 
@@ -57,6 +62,7 @@ const COURSE_OPTIONS = Object.entries(COURSE_LABELS).map(([id, label]) => ({ id,
 const COHORT_COURSE_OPTIONS = Object.values(BOOKING_COURSES)
   .filter(({ bookingKind }) => bookingKind === 'cohort')
   .map(({ id, title }) => ({ id, label: `${title} — Inter` }));
+COHORT_COURSE_OPTIONS.push({ id: CREATIVITY_GROUP_BOOKING.id, label: CREATIVITY_GROUP_BOOKING.title });
 const ADMIN_DASHBOARD_TABS = ['overview', 'users', 'contacts', 'blog', 'purchases', 'bookings', 'positioning', 'corrections', 'trainer-guides', 'feedback'];
 const BOOKING_WORKSPACE_TABS = ['sessions', 'availability', 'cohorts'];
 
@@ -1265,6 +1271,14 @@ export default function AdminDashboard() {
     'La cohorte est publiée et visible par les apprenants autorisés.',
     () => publishAdminCourseCohort(supabase, cohortId),
   );
+  const handleEnrollCreativityCohort = (cohortId, userId) => runCohortMutation(
+    'L’apprenant est inscrit au groupe. Les dates et droits commerciaux sont conservés.',
+    () => enrollAdminCreativityCohort(supabase, cohortId, userId),
+  );
+  const handleSetCreativityCohortMinimum = (cohortId, minimum) => runCohortMutation(
+    'Le seuil du groupe est enregistré. Les dates et inscriptions sont conservées.',
+    () => setAdminCreativityCohortMinimum(supabase, cohortId, minimum),
+  );
   const handleConfirmCourseCohort = (cohortId) => runCohortMutation(
     'La cohorte est confirmée.',
     () => confirmAdminCourseCohort(supabase, cohortId),
@@ -2344,6 +2358,10 @@ export default function AdminDashboard() {
                     availableSlots={availabilitySlots.filter((slot) => (
                       slot.is_active && !slot.is_reserved && new Date(slot.starts_at) > new Date()
                     ))}
+                    onLoadCreativityCandidates={(cohortId) => fetchAdminCreativityCohortCandidates(supabase, cohortId)}
+                    onEnrollCreativity={handleEnrollCreativityCohort}
+                    onSetMinimumParticipants={handleSetCreativityCohortMinimum}
+                    onLoadParticipants={(cohortId) => fetchAdminCreativityCohortParticipants(supabase, cohortId)}
                     onLoadAvailabilityMonth={loadCourseCohortAvailabilityMonth}
                     error={bookingError}
                     onSaveDraft={handleSaveCourseCohort}

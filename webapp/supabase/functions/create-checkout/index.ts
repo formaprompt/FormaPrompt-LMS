@@ -3,12 +3,14 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
   BUREAUTIQUE_PURCHASES,
+  CREATIVITY_PURCHASES,
   CONSENT_TYPES,
   getCommercialRoute,
   getConsentDocumentVersion,
   getPurchaseConfig,
   getRequiredConsentTypes,
   validateCommercialCheckoutRequest,
+  validateCreativityStripeCatalog,
 } from '../_shared/purchaseConfig.js';
 import {
   COURSE_PROMOTION,
@@ -98,7 +100,7 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const purchase = getPurchaseConfig(body.course_id);
     if (!purchase || !purchase.checkoutEnabled) {
-      return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
+      return jsonResponse({ error: purchase?.checkoutUnavailableMessage || 'Formation non disponible au paiement.', checkout_unavailable: Boolean(purchase) }, 400);
     }
     const checkoutRequestId = normalizeCheckoutRequestId(body.checkout_request_id);
     if (!checkoutRequestId) {
@@ -106,6 +108,9 @@ Deno.serve(async (request) => {
     }
     const hasPromotionCode = hasCoursePromotionInput(body.promo_code);
     const requestedPromotionCode = normalizeCoursePromotionCode(body.promo_code);
+    if (purchase.promotionEnabled === false && hasPromotionCode) {
+      return jsonResponse({ error: 'Cette formation est à prix fixe, sans code promotionnel.' }, 400);
+    }
     if (hasPromotionCode && !requestedPromotionCode) {
       return jsonResponse({ error: COURSE_PROMOTION.genericInvalidMessage }, 400);
     }
@@ -187,6 +192,12 @@ Deno.serve(async (request) => {
     const bureautiqueOffer = Object.hasOwn(BUREAUTIQUE_PURCHASES, purchase.courseId)
       ? BUREAUTIQUE_PURCHASES[purchase.courseId]
       : null;
+    const creativityOffer = CREATIVITY_PURCHASES[purchase.courseId];
+    if (creativityOffer) {
+      const product = await stripe.products.retrieve(catalogProductId);
+      const catalogError = validateCreativityStripeCatalog(purchase, price, product, stripeMode === 'live');
+      if (catalogError) throw new Error(catalogError);
+    }
     if (bureautiqueOffer) {
       const product = await stripe.products.retrieve(catalogProductId);
       if ('deleted' in product && product.deleted) throw new Error('Le produit Stripe bureautique a été supprimé.');
@@ -333,6 +344,7 @@ Deno.serve(async (request) => {
       sales_context: commercialRoute.salesContext,
       access_activation_policy: commercialRoute.accessActivationPolicy,
       payment_type: 'course',
+      ...(creativityOffer ? { modality: creativityOffer.modality, duration_hours: '14', delivery_kind: 'instructor_led_service' } : {}),
       ...(bureautiqueOffer ? {
         pedagogical_level: bureautiqueOffer.pedagogicalLevel,
         modality: bureautiqueOffer.modality,
@@ -354,12 +366,12 @@ Deno.serve(async (request) => {
     });
     const session = await stripe.checkout.sessions.create({
         mode: 'payment',
-        payment_method_types: ['card'],
+        ...(!creativityOffer ? { payment_method_types: ['card'] } : {}),
         line_items: [lineItem],
         client_reference_id: user.id,
         customer_email: user.email,
         customer_creation: 'always',
-        phone_number_collection: { enabled: true },
+        ...(!creativityOffer ? { phone_number_collection: { enabled: true } } : {}),
         allow_promotion_codes: false,
         automatic_tax: { enabled: false },
         invoice_creation: {

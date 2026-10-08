@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
-import { BUREAUTIQUE_INTER_COURSE_IDS } from '../_shared/bureautiqueBooking.js';
+import { COHORT_COURSE_IDS } from '../_shared/bureautiqueBooking.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -35,8 +35,10 @@ Deno.serve(async (request) => {
 
     if (action === 'list' || action === 'my_enrollment') {
       const courseId = typeof body.course_id === 'string' ? body.course_id : '';
-      if (!BUREAUTIQUE_INTER_COURSE_IDS.includes(courseId)) return jsonResponse({ error: 'Formation non réservable.' }, 400);
-      const rpcName = action === 'list' ? 'list_available_course_cohorts' : 'get_my_course_cohort_enrollment';
+      if (!COHORT_COURSE_IDS.includes(courseId)) return jsonResponse({ error: 'Formation non réservable.' }, 400);
+      const rpcName = action === 'list'
+        ? (courseId === 'ia-creativite-groupe' ? 'list_available_creativity_group_cohorts' : 'list_available_course_cohorts')
+        : 'get_my_course_cohort_enrollment';
       const { data, error } = await client.rpc(rpcName, { p_course_id: courseId });
       if (error) {
         if (error.code === '42501') return jsonResponse({ error: 'Accès actif requis.' }, 403);

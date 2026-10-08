@@ -17,7 +17,7 @@ export default function Footer() {
         </div>
         
         <div className="footer-col">
-          <h4>Formations</h4>
+          <h2>Formations</h2>
           <ul>
             <li><Link to="/formation-ia-generative">IA Générative</Link></li>
             <li><Link to="/formation-prompt-engineering">Prompt Engineering</Link></li>
@@ -27,7 +27,7 @@ export default function Footer() {
         </div>
         
         <div className="footer-col">
-          <h4>Liens utiles</h4>
+          <h2>Liens utiles</h2>
           <ul>
             <li><Link to="/a-propos">À propos</Link></li>
             <li><Link to="/faq">FAQ</Link></li>
@@ -44,7 +44,7 @@ export default function Footer() {
         </div>
         
         <div className="footer-col">
-          <h4>Contact</h4>
+          <h2>Contact</h2>
           <p className="footer-text">Hauts-de-France (Calais)</p>
           <p className="footer-text"><a href={`mailto:${SITE_CONFIG.contactEmail}`}>{SITE_CONFIG.contactEmail}</a></p>
           <Link to="/contact" className="btn btn-primary" style={{marginTop: '1rem'}}>Me contacter</Link>

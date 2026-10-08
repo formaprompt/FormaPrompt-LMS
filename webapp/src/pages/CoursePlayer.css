@@ -2366,3 +2366,20 @@
     text-transform: uppercase;
   }
 }
+
+/* Les supports textuels privés gardent une largeur lisible sur mobile. */
+.text-resource {
+  grid-column: 1 / -1;
+  min-width: 0;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+}
+.text-resource summary { cursor: pointer; color: #16324f; }
+.text-resource summary .file-title { display: inline; }
+.text-resource-content { margin-top: 1rem; color: #334155; line-height: 1.7; overflow-wrap: anywhere; }
+.text-resource-content table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.text-resource-content th, .text-resource-content td { padding: 0.5rem; border: 1px solid #cbd5e1; text-align: left; }
+.text-resource-content ul, .text-resource-content ol { padding-left: 1.5rem; }
+.exercise-instructions { white-space: pre-line; }

@@ -2,8 +2,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
   accessSourceForEnrollment,
+  canLinkExistingCreativityAccess,
   buildAdministrativeDocument,
   documentRowsForValidatedEnrollment,
+  isCreativityCourse,
   shouldCreateEnrollmentCourseAccess,
   validateAdministrativeEnrollment,
   validateAmendment,
@@ -184,6 +186,21 @@ Deno.serve(async (request) => {
         .eq('course_id', input.courseId)
         .maybeSingle();
       if (existingAccessError) throw existingAccessError;
+
+      if (isCreativityCourse(input.courseId) && existingAccess) {
+        let purchase = null;
+        if (existingAccess.purchase_id) {
+          const { data, error } = await supabaseAdmin.from('purchases')
+            .select('id, user_id, course_id, payment_status')
+            .eq('id', existingAccess.purchase_id)
+            .maybeSingle();
+          if (error) throw error;
+          purchase = data;
+        }
+        if (!canLinkExistingCreativityAccess({ ...existingAccess, user_id: learnerId, course_id: input.courseId }, purchase)) {
+          return jsonResponse({ error: 'Le droit existant est inactif, expiré ou ne correspond pas à une offre admissible.' }, 409);
+        }
+      }
 
       const now = new Date().toISOString();
       let courseAccess = existingAccess;

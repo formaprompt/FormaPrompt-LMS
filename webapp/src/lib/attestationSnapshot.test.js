@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { COURSE_ATTESTATION_CONFIG } from '../data/attestationConfig.js';
-import { createAttestationSnapshot, formatAttestationDeliveryMode } from './attestationSnapshot.js';
+import { createAttestationSnapshot, formatAttestationDeliveryMode, hasValidAttestationObjectives } from './attestationSnapshot.js';
+
+test('refuse une configuration absente ou des objectifs non textuels, vides ou blancs Unicode', () => {
+  const configs = [undefined, null, {}, { objectives: undefined }, { objectives: null },
+    { objectives: [] }, { objectives: 'texte' }, { objectives: [null] }, { objectives: [1] },
+    { objectives: ['Valide', ''] }, { objectives: [' \t\n'] }, { objectives: Array(1) },
+    { objectives: ['\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff'] }];
+  for (const attestationConfig of configs) {
+    assert.equal(hasValidAttestationObjectives(attestationConfig), false);
+    assert.equal(createAttestationSnapshot({ documentType: 'realisation', record: {}, documentData: { attestationConfig } }), null);
+  }
+  assert.equal(hasValidAttestationObjectives({ objectives: ['  Un objectif.  '] }), true);
+});
 
 test('formate les trois rythmes de la formation IA générative', () => {
   assert.equal(
@@ -12,6 +24,29 @@ test('formate les trois rythmes de la formation IA générative', () => {
     formatAttestationDeliveryMode({ delivery_mode: 'in_person', schedule_format: 'two_5h' }),
     'Présentiel · 2 séances de 5 h',
   );
+});
+
+test('les trois formations conservent leurs six objectifs pour les deux types de document', () => {
+  for (const courseId of ['formation-prompt-level-1', 'formation-ia', 'formation-ia-act']) {
+    const config = COURSE_ATTESTATION_CONFIG[courseId];
+    assert.ok(config, `Configuration ${courseId}`);
+    assert.equal(config.objectives.length, 6);
+    for (const documentType of ['realisation', 'competences']) {
+      const snapshot = createAttestationSnapshot({
+        documentType,
+        record: { learnerName: 'Camille Fictif', submission: { id: 1, course_id: courseId }, review: { id: 1, review_status: 'validated' } },
+        documentData: { course: { title: `Titre fictif ${courseId}` }, booking: null,
+          dossier: { attendedMinutes: 390, plannedMinutes: 420, sessionCount: 1, sessionProofs: [] },
+          criteria: [], attestationConfig: config },
+      });
+      assert.deepEqual(snapshot.objectives, config.objectives);
+      assert.notEqual(snapshot.objectives, config.objectives);
+      assert.equal(snapshot.nature, 'Action de formation professionnelle');
+      assert.equal(snapshot.courseTitle, `Titre fictif ${courseId}`);
+      assert.equal(snapshot.attendedMinutes, 390);
+      assert.equal(snapshot.plannedMinutes, 420);
+    }
+  }
 });
 
 test('formate les trois rythmes de la formation IA Act', () => {

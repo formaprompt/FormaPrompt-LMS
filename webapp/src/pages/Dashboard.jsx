@@ -5,11 +5,13 @@ import { supabase } from '../lib/supabaseClient';
 import { CalendarClock, CheckCircle2, FileCheck2, MessageSquareText } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
 import DiagnosticDashboardSection from '../components/DiagnosticDashboardSection';
+import CreativityDashboardSection from '../components/CreativityDashboardSection';
+import CreativityGroupCohorts from '../components/CreativityGroupCohorts';
 import LearningPathAccessCard from '../components/LearningPathAccessCard';
 import LearnerWelcome from '../components/LearnerWelcome';
 import { BOOKING_COURSES, getBookingUrl } from '../data/bookingCatalog';
 import { courseCatalog } from '../data/courseCatalog';
-import { BUREAUTIQUE_PURCHASES, EXCEL_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { BUREAUTIQUE_PURCHASES, EXCEL_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import { OFFICE_SUPPORTS, bureautiqueResourceRoute } from '../lib/officeAccessRoutes';
 import { DEMO_LEARNING_PATH_SLUG, learningPathCatalog } from '../data/learningPathCatalog';
 import { hasLearnerSignedLastSession } from '../lib/courseBookingSlots';
@@ -23,6 +25,7 @@ import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
 const courseNames = {
+  ...Object.fromEntries(Object.values(CREATIVITY_PURCHASES).map(offer => [offer.courseId, offer.label])),
   'formation-ia': 'Formation IA Générative',
   'formation-ia-act': 'IA : acculturation et préparation à la conformité AI Act',
   'formation-prompt-level-1': 'Formation Prompt Engineering – Niveau 1',
@@ -274,6 +277,8 @@ function DashboardContent() {
         loading={loading}
         error={diagnosticsLoadError}
       />
+      {!loading && activeCourseAccesses.some(access => access.course_id === 'ia-creativite-groupe') && <CreativityGroupCohorts userId={user.id} />}
+      {!loading && <CreativityDashboardSection userId={user.id} activeCourseIds={activeCourseAccesses.map(access => access.course_id)} />}
 
       <div style={{ background: '#1e1e1e', color: '#fff', padding: '2rem', borderRadius: '12px', border: '1px solid #333' }}>
         <h2 style={{ color: '#fff' }}>Bienvenue, {user.email} !</h2>
@@ -474,6 +479,7 @@ function DashboardContent() {
                 const bureautiqueOffer = BUREAUTIQUE_PURCHASES[access.course_id];
                 const officeSupport = OFFICE_SUPPORTS[access.course_id];
                 const purchasedCourse = courseCatalog[access.course_id];
+                const creativityOffer = CREATIVITY_PURCHASES[access.course_id];
                 const progress = calculateCourseProgress(
                   purchasedCourse?.exercises,
                   exerciseResponses.filter((response) => response.course_id === access.course_id),
@@ -488,6 +494,7 @@ function DashboardContent() {
                     )}
                     {excelOffer && <p>Vos supports protégés sont disponibles. La réservation se gère dans l’étape affichée plus haut.</p>}
                     {officeSupport && <p>Vos exercices et fichiers de travail sont disponibles dans un pack protégé.</p>}
+                    {creativityOffer && <p>Retrouvez les quatre modules, les activités et les supports de votre formation accompagnée de 14 heures.</p>}
                     <Link
                       to={learnerCoursePath(access.course_id)}
                       className="btn btn-primary learner-course-card__action"

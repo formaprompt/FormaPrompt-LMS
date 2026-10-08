@@ -10,6 +10,17 @@ export const FORMATION_ORGANIZATION = {
 };
 
 export const COURSE_ATTESTATION_CONFIG = {
+  'formation-prompt-level-1': {
+    nature: 'Action de formation professionnelle',
+    objectives: [
+      'Transformer une demande vague en consigne avec résultat, public, informations, format et critères.',
+      "Produire une synthèse fidèle et signaler ce qui n'est pas présent dans la source.",
+      'Adapter vocabulaire, exemples et niveau de détail sans perdre le message invariant.',
+      'Concevoir une ressource pédagogique reliant objectif, consigne, production, corrigé et critères.',
+      'Préparer puis contrôler une page HTML simple, accessible et responsive.',
+      'Décomposer une tâche en étapes avec entrées, résultats, critères, validations et arrêts.',
+    ],
+  },
   'formation-ia': {
     nature: 'Action de formation professionnelle',
     objectives: [

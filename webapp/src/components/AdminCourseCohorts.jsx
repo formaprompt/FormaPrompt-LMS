@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './CourseCohorts.css';
+import { CREATIVITY_GROUP_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js';
 import { createHalfDayChoices, findChoiceForSlotIds, formatRange, parisDate } from './courseCohortRangeChoices';
 
 const FORMATS = [{ id: 'four_half_days_3h30', label: '4 demi-journées de 3 h 30' }, { id: 'two_days_2x3h30', label: '2 jours de 7 h (2 × 3 h 30 par jour)' }];
@@ -12,9 +13,25 @@ const currentParisMonth = () => parisMonth(new Date().toISOString());
 const monthLabel = (month) => new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }).format(new Date(`${month}-15T12:00:00Z`));
 const uniqueSlots = (slots) => [...new Map(slots.map((slot) => [slot.id, slot])).values()];
 
-export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], availableSlots = [], saving = false, error = '', targetCohortId = '', onLoadAvailabilityMonth, onSaveDraft, onPublish, onConfirm, onCancel, onSetMeetingUrl, onGenerateMeetingLinks, onCleanupMeetingEvents }) {
+export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], availableSlots = [], saving = false, error = '', targetCohortId = '', onLoadParticipants, onLoadCreativityCandidates, onEnrollCreativity, onSetMinimumParticipants, onLoadAvailabilityMonth, onSaveDraft, onPublish, onConfirm, onCancel, onSetMeetingUrl, onGenerateMeetingLinks, onCleanupMeetingEvents }) {
   const [draft, setDraft] = useState(emptyDraft);
   const [feedback, setFeedback] = useState('');
+  const [participants, setParticipants] = useState({});
+  const [minimumEdits, setMinimumEdits] = useState({});
+  const [candidates, setCandidates] = useState({});
+  const [candidateSelections, setCandidateSelections] = useState({});
+  const [enrollmentMessages, setEnrollmentMessages] = useState({});
+  const isCreativity = draft.course_id === CREATIVITY_GROUP_COURSE_ID;
+  const selectCourse = (value) => {
+    setEditableSessions([]); setDayDates(['', '']);
+    setDraft((current) => ({ ...current, course_id: value, sessions: emptyDraft().sessions, ...(value === CREATIVITY_GROUP_COURSE_ID ? { schedule_format: 'four_half_days_3h30', capacity: '6', minimum_participants: '4' } : {}) }));
+  };
+  const loadParticipants = async (cohortId) => {
+    setFeedback(''); setRunningAction(`participants:${cohortId}`);
+    try { const rows = await onLoadParticipants?.(cohortId) || []; setParticipants((current) => ({ ...current, [cohortId]: rows })); }
+    catch (loadError) { setFeedback(loadError?.message || 'Les participants ne peuvent pas être chargés.'); }
+    finally { setRunningAction(''); }
+  };
   const [cancellationReasons, setCancellationReasons] = useState({});
   const [meetingUrls, setMeetingUrls] = useState({});
   const [meetingGeneration, setMeetingGeneration] = useState({});
@@ -108,6 +125,7 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     const capacity = Number(draft.capacity); const minimum = Number(draft.minimum_participants);
     if (!draft.course_id || !draft.delivery_mode || !draft.schedule_format) return 'Choisissez la formation, le mode de réalisation et le format de 14 heures.';
     if (!Number.isInteger(capacity) || capacity <= 0 || !Number.isInteger(minimum) || minimum <= 0 || minimum > capacity) return 'Saisissez une capacité et un seuil minimum valides.';
+    if (isCreativity && (draft.schedule_format !== 'four_half_days_3h30' || minimum < 2 || minimum > capacity || capacity < 4 || capacity > 6)) return 'Le groupe créativité exige quatre demi-journées, un seuil entier de 2 à la capacité et une capacité de 4 à 6.';
     if (selectedChoices.some((choice) => !choice)) return 'Choisissez une plage complète de 3 h 30 pour chacune des quatre demi-journées.';
     if (selectedSlotIds.size !== 28) return 'Une plage ne peut pas chevaucher une autre demi-journée.';
     if (selectedChoices.some((choice, index) => selectedChoices.some((other, otherIndex) => index !== otherIndex && rangesOverlap(choice, other)))) return 'Deux demi-journées ne peuvent pas se chevaucher.';
@@ -122,6 +140,71 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     return '';
   };
   const saveDraft = async (event) => { event.preventDefault(); const validationError = validateDraft(); setFeedback(validationError); if (validationError) return; const sessions = [...draft.sessions].sort((first, second) => new Date(first.starts_at) - new Date(second.starts_at)).map((session, index) => ({ position: index + 1, slot_ids: session.slot_ids })); setRunningAction('save'); try { await onSaveDraft?.({ ...draft, sessions, capacity: Number(draft.capacity), minimum_participants: Number(draft.minimum_participants) }); } catch (saveError) { setFeedback(saveError?.message || 'Le brouillon ne peut pas être enregistré pour le moment.'); } finally { setRunningAction(''); } };
+  const saveMinimum = async (event, cohort) => {
+    event.preventDefault();
+    const minimum = Number(minimumEdits[cohort.id] ?? cohort.minimum_participants ?? 4);
+    const capacity = Number(cohort.capacity || 6);
+    if (cohort.course_id !== CREATIVITY_GROUP_COURSE_ID || !['draft', 'published'].includes(cohort.status)
+      || !Number.isInteger(minimum) || minimum < 2 || minimum > capacity) {
+      setFeedback('Le seuil doit être un entier de 2 à la capacité du groupe, uniquement pour un brouillon ou un groupe publié.');
+      return;
+    }
+    if (!onSetMinimumParticipants) { setFeedback('La modification du seuil est indisponible.'); return; }
+    setFeedback(''); setRunningAction(`minimum:${cohort.id}`);
+    try { await onSetMinimumParticipants(cohort.id, minimum); }
+    catch (saveError) { setFeedback(saveError?.message || 'Le seuil ne peut pas être enregistré.'); }
+    finally { setRunningAction(''); }
+  };
+  const enrollmentMessage = (cohortId, message, isError = false) => setEnrollmentMessages((current) => ({ ...current, [cohortId]: { message, isError } }));
+  const loadCandidates = async (cohortId) => {
+    if (runningAction) return;
+    enrollmentMessage(cohortId, ''); setRunningAction(`candidates:${cohortId}`);
+    try {
+      if (!onLoadCreativityCandidates) throw new Error('Le chargement des apprenants éligibles est indisponible.');
+      const rows = await onLoadCreativityCandidates(cohortId);
+      setCandidates((current) => ({ ...current, [cohortId]: rows || [] }));
+      setCandidateSelections((current) => ({ ...current, [cohortId]: '' }));
+    } catch (loadError) { enrollmentMessage(cohortId, loadError?.message || 'Les apprenants éligibles ne peuvent pas être chargés.', true); }
+    finally { setRunningAction(''); }
+  };
+  const enrollCandidate = async (event, cohort) => {
+    event.preventDefault();
+    if (runningAction) return;
+    const userId = candidateSelections[cohort.id];
+    const candidate = candidates[cohort.id]?.find(item => item.user_id === userId);
+    if (!candidate || candidate.already_enrolled || Number(cohort.enrolled_count) >= Number(cohort.capacity)) {
+      enrollmentMessage(cohort.id, 'Choisissez un apprenant éligible non inscrit et une session avec une place disponible.', true); return;
+    }
+    let enrolled = false;
+    enrollmentMessage(cohort.id, ''); setRunningAction(`enroll:${cohort.id}`);
+    try {
+      if (!onEnrollCreativity) throw new Error('L’inscription administrative est indisponible.');
+      await onEnrollCreativity(cohort.id, userId); enrolled = true;
+      setCandidateSelections((current) => ({ ...current, [cohort.id]: '' }));
+      const [roster, eligible] = await Promise.all([onLoadParticipants?.(cohort.id), onLoadCreativityCandidates?.(cohort.id)]);
+      setParticipants((current) => ({ ...current, [cohort.id]: roster || [] }));
+      setCandidates((current) => ({ ...current, [cohort.id]: eligible || [] }));
+      enrollmentMessage(cohort.id, 'L’apprenant est inscrit à cette session. Le compteur et les listes sont actualisés.');
+    } catch (enrollError) {
+      enrollmentMessage(cohort.id, enrolled ? 'L’inscription est enregistrée, mais les listes n’ont pas pu être actualisées. Rechargez les apprenants éligibles pour vérifier.' : enrollError?.message || 'L’apprenant ne peut pas être inscrit à cette session.', true);
+    } finally { setRunningAction(''); }
+  };
+  const creativityEnrollmentForm = (cohort) => {
+    if (cohort.course_id !== CREATIVITY_GROUP_COURSE_ID || !['published', 'confirmed'].includes(cohort.status)
+      || cohort.sessions?.length !== 4 || !cohort.sessions.every(session => new Date(session.starts_at) > new Date())) return null;
+    const full = Number(cohort.enrolled_count) >= Number(cohort.capacity);
+    const rows = candidates[cohort.id];
+    const selected = rows?.find(item => item.user_id === candidateSelections[cohort.id]);
+    const message = enrollmentMessages[cohort.id];
+    return <form className="admin-course-cohorts__enrollment" onSubmit={(event) => enrollCandidate(event, cohort)}>
+      <h4>Inscrire un apprenant au groupe</h4>
+      <p>Seuls les comptes disposant déjà d’un droit actif à la formule groupe ouvert sont proposés. Cette action n’attribue aucun cadeau et ne crée aucun achat.</p>
+      <button type="button" className="btn" disabled={Boolean(runningAction)} onClick={() => loadCandidates(cohort.id)}>{runningAction === `candidates:${cohort.id}` ? 'Chargement des apprenants…' : 'Charger les apprenants éligibles'}</button>
+      {rows && <><label htmlFor={`creativity-candidate-${cohort.id}`}>Apprenant éligible au groupe ouvert</label><select id={`creativity-candidate-${cohort.id}`} value={candidateSelections[cohort.id] || ''} disabled={full || Boolean(runningAction)} onChange={(event) => setCandidateSelections((current) => ({ ...current, [cohort.id]: event.target.value }))}><option value="">Choisir un apprenant</option>{rows.map(candidate => <option key={candidate.user_id} value={candidate.user_id} disabled={candidate.already_enrolled}>{candidate.name || candidate.email || 'Apprenant'}{candidate.email && candidate.name ? ` — ${candidate.email}` : ''} · {candidate.access_source === 'gift' ? 'Formation offerte' : candidate.is_administrative || ['manual', 'opco'].includes(candidate.access_source) ? 'Dossier administratif' : 'Inscription payée'}{candidate.already_enrolled ? ' · Déjà inscrit à un groupe' : ''}</option>)}</select>{rows.length === 0 && <p>Aucun compte éligible à la formule groupe ouvert n’est disponible. Un droit à la formule individuelle ne permet pas de rejoindre ce groupe. Si vous souhaitez offrir cette formule, attribuez explicitement « Groupe ouvert » dans Apprenants, puis rechargez cette liste.</p>}<button type="submit" className="btn btn-primary" disabled={full || !selected || selected.already_enrolled || Boolean(runningAction)}>{runningAction === `enroll:${cohort.id}` ? 'Inscription en cours…' : 'Inscrire à cette session'}</button></>}
+      {full && <p role="status">Ce groupe est complet.</p>}
+      {message?.message && <p role={message.isError ? 'alert' : 'status'}>{message.message}</p>}
+    </form>;
+  };
   const runAction = async (action, cohortId, callback, ...args) => { setFeedback(''); setRunningAction(`${action}:${cohortId}`); try { await callback?.(cohortId, ...args); } catch (actionError) { setFeedback(actionError?.message || 'Cette action ne peut pas être enregistrée pour le moment.'); } finally { setRunningAction(''); } };
   const saveMeetingUrl = async (cohortId, sessionId) => { const key = `${cohortId}:${sessionId}`; const session = cohorts.find((item) => item.id === cohortId)?.sessions?.find((item) => item.id === sessionId); const meetingUrl = meetingUrls[key] ?? session?.meeting_url ?? ''; try { if (new URL(meetingUrl).protocol !== 'https:') throw new Error(); } catch { setFeedback('Saisissez une adresse HTTPS valide pour la visioconférence.'); return; } await runAction('meeting', cohortId, onSetMeetingUrl, sessionId, meetingUrl); };
   const generateMeetingLinks = async (cohortId) => {
@@ -174,13 +257,13 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     <header><p className="course-cohorts__eyebrow">Formation inter-entreprises</p><h2 id="admin-course-cohorts-title">Cohortes inter</h2><p>Choisissez uniquement parmi les plages complètes déjà disponibles. Les dates, les seuils et les disponibilités ne sont pas créés automatiquement.</p></header>
     {(error || feedback) && <p className="course-cohorts__message course-cohorts__message--error" role="alert">{feedback || error}</p>}
     <form className="admin-course-cohorts__form" onSubmit={saveDraft}>
-      <label>Formation<select value={draft.course_id} onChange={(event) => updateDraft('course_id', event.target.value)} required><option value="">Choisir une formation</option>{courseOptions.map((course) => <option key={course.id} value={course.id}>{course.label}</option>)}</select></label>
-      <fieldset className="admin-course-cohorts__delivery"><legend>Mode de réalisation</legend><label><input type="radio" name="delivery-mode" value="remote" checked={draft.delivery_mode === 'remote'} onChange={(event) => resetSchedule('delivery_mode', event.target.value)} required /> À distance</label><label><input type="radio" name="delivery-mode" value="in_person" checked={draft.delivery_mode === 'in_person'} onChange={(event) => resetSchedule('delivery_mode', event.target.value)} /> En présentiel</label></fieldset>
-      <label>Format<select value={draft.schedule_format} onChange={(event) => resetSchedule('schedule_format', event.target.value)} required><option value="">Choisir le format</option>{FORMATS.map((format) => <option key={format.id} value={format.id}>{format.label}</option>)}</select></label>
-      <label>Capacité maximale<input type="number" min="1" step="1" value={draft.capacity} onChange={(event) => updateDraft('capacity', event.target.value)} required /></label><label>Seuil minimum de participants<input type="number" min="1" step="1" value={draft.minimum_participants} onChange={(event) => updateDraft('minimum_participants', event.target.value)} required /></label>
+      <label>Formation<select value={draft.course_id} onChange={(event) => selectCourse(event.target.value)} required><option value="">Choisir une formation</option>{courseOptions.map((course) => <option key={course.id} value={course.id}>{course.label}</option>)}</select></label>
+      <fieldset className="admin-course-cohorts__delivery"><legend>Mode de réalisation</legend><label><input type="radio" name="delivery-mode" value="remote" checked={draft.delivery_mode === 'remote'} onChange={(event) => resetSchedule('delivery_mode', event.target.value)} required /> À distance</label><label><input type="radio" name="delivery-mode" value="in_person" checked={draft.delivery_mode === 'in_person'} onChange={(event) => resetSchedule('delivery_mode', event.target.value)} /> {isCreativity ? 'En présentiel à Calais' : 'En présentiel'}</label></fieldset>
+      <label>Format<select value={draft.schedule_format} onChange={(event) => resetSchedule('schedule_format', event.target.value)} required><option value="">Choisir le format</option>{FORMATS.filter((format) => !isCreativity || format.id === 'four_half_days_3h30').map((format) => <option key={format.id} value={format.id}>{format.label}</option>)}</select></label>
+      <label>Capacité maximale<input type="number" min={isCreativity ? 4 : 1} max={isCreativity ? 6 : undefined} step="1" value={draft.capacity} onChange={(event) => updateDraft('capacity', event.target.value)} required /></label><label>Seuil minimum de participants<input type="number" min={isCreativity ? 2 : 1} max={isCreativity ? Number(draft.capacity) || 6 : undefined} step="1" value={draft.minimum_participants} onChange={(event) => updateDraft('minimum_participants', event.target.value)} required /></label>
       <div className="admin-course-cohorts__sessions"><h3>{draft.schedule_format === 'two_days_2x3h30' ? 'Composer les 2 jours · 14 h' : 'Composer les 4 demi-journées · 14 h'}</h3>{!draft.delivery_mode ? <p>Choisissez d’abord le mode de réalisation.</p> : draft.schedule_format === 'two_days_2x3h30' ? <div className="admin-course-cohorts__day-grid"><fieldset><legend>Jour 1</legend>{dayDatePicker(0)}{rangePicker(0, dayDates[0])}{rangePicker(1, dayDates[0])}</fieldset><fieldset><legend>Jour 2</legend>{dayDatePicker(1)}{rangePicker(2, dayDates[1])}{rangePicker(3, dayDates[1])}</fieldset></div> : <div className="admin-course-cohorts__range-grid">{[0, 1, 2, 3].map((index) => rangePicker(index))}</div>}<p className="admin-course-cohorts__availability-note">Aucune disponibilité n’est créée ici. Si le mois est vide, ajoutez d’abord des plages dans Mes disponibilités.</p><p className="admin-course-cohorts__total">4 plages de 3 h 30 · total 14 h</p></div>
       <div className="admin-course-cohorts__draft-actions"><button className="btn btn-primary" type="submit" disabled={saving || runningAction === 'save'}>{saving || runningAction === 'save' ? 'Enregistrement…' : draft.id ? 'Mettre à jour le brouillon' : 'Enregistrer le brouillon'}</button>{draft.id && <button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => { setEditableSessions([]); setDayDates(['', '']); setDraft(emptyDraft()); setFeedback('Modification du brouillon annulée.'); }}>Annuler la modification</button>}</div>
     </form>
-    <div className="admin-course-cohorts__list"><h3>Cohortes existantes</h3>{cohorts.length === 0 ? <p>Aucune cohorte n’est encore créée.</p> : cohorts.map((cohort) => { const terminal = ['cancelled', 'completed'].includes(cohort.status); return <article id={`course-cohort-${cohort.id}`} tabIndex={-1} key={cohort.id}><header><strong>{courseOptions.find((course) => course.id === cohort.course_id)?.label || cohort.course_id}</strong><span>{STATUS_LABELS[cohort.status] || cohort.status}</span></header><p>{cohortDates(cohort)}</p><p>{cohort.delivery_mode === 'remote' ? 'À distance' : cohort.delivery_mode === 'in_person' ? 'En présentiel' : 'Mode non renseigné'}</p><p>{cohort.enrolled_count || 0}/{cohort.capacity} inscrit{Number(cohort.enrolled_count) > 1 ? 's' : ''} · seuil {cohort.minimum_participants}</p>{cohort.delivery_mode === 'remote' && !terminal && (cohort.sessions || []).filter((session) => session.id).map((session) => { const key = `${cohort.id}:${session.id}`; return <div className="admin-course-cohorts__meeting" key={key}><label>Visioconférence — séance {session.position}<input type="url" inputMode="url" placeholder="https://…" value={meetingUrls[key] ?? session.meeting_url ?? ''} onChange={(event) => setMeetingUrls((current) => ({ ...current, [key]: event.target.value }))} /></label><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => saveMeetingUrl(cohort.id, session.id)}>{runningAction === `meeting:${cohort.id}` ? 'Enregistrement…' : 'Enregistrer le lien'}</button></div>; })}{cohort.status === 'draft' && <div className="admin-course-cohorts__draft-actions"><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => editDraft(cohort)}>Modifier</button><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => runAction('publish', cohort.id, onPublish)}>{runningAction === `publish:${cohort.id}` ? 'Publication…' : 'Publier'}</button></div>}{cohort.status === 'published' && <button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => runAction('confirm', cohort.id, onConfirm)}>{runningAction === `confirm:${cohort.id}` ? 'Confirmation…' : 'Confirmer'}</button>}{!terminal && <div className="admin-course-cohorts__cancel"><label>Motif d’annulation<input value={cancellationReasons[cohort.id] || ''} onChange={(event) => setCancellationReasons((current) => ({ ...current, [cohort.id]: event.target.value }))} /></label><button className="btn" type="button" disabled={!cancellationReasons[cohort.id]?.trim() || Boolean(runningAction)} onClick={() => runAction('cancel', cohort.id, onCancel, cancellationReasons[cohort.id].trim())}>{runningAction === `cancel:${cohort.id}` ? 'Annulation…' : 'Annuler la cohorte'}</button></div>}</article>; })}</div>
+    <div className="admin-course-cohorts__list"><h3>Cohortes existantes</h3>{cohorts.length === 0 ? <p>Aucune cohorte n’est encore créée.</p> : cohorts.map((cohort) => { const terminal = ['cancelled', 'completed'].includes(cohort.status); return <article id={`course-cohort-${cohort.id}`} tabIndex={-1} key={cohort.id}><header><strong>{courseOptions.find((course) => course.id === cohort.course_id)?.label || cohort.course_id}</strong><span>{STATUS_LABELS[cohort.status] || cohort.status}</span></header><p>{cohortDates(cohort)}</p><p>{cohort.delivery_mode === 'remote' ? 'À distance' : cohort.delivery_mode === 'in_person' ? 'En présentiel' : 'Mode non renseigné'}</p><p>{cohort.enrolled_count || 0}/{cohort.capacity} inscrit{Number(cohort.enrolled_count) > 1 ? 's' : ''} · seuil {cohort.minimum_participants}</p>{cohort.course_id === CREATIVITY_GROUP_COURSE_ID && <><p>Ouverture confirmée manuellement à partir de {cohort.minimum_participants || 4} participants éligibles, au maximum {cohort.capacity || 6}. Si le groupe n’ouvre pas, les paiements sont remboursés intégralement depuis Stripe ; aucune opération de remboursement n’est automatique ici.</p>{['draft', 'published'].includes(cohort.status) && <form className="admin-course-cohorts__minimum" onSubmit={(event) => saveMinimum(event, cohort)}><label htmlFor={`creativity-minimum-${cohort.id}`}>Seuil minimum du groupe</label><input id={`creativity-minimum-${cohort.id}`} type="number" min="2" max={cohort.capacity || 6} step="1" required value={minimumEdits[cohort.id] ?? cohort.minimum_participants ?? 4} onChange={(event) => setMinimumEdits((current) => ({ ...current, [cohort.id]: event.target.value }))} /><button type="submit" className="btn" disabled={Boolean(runningAction)}>{runningAction === `minimum:${cohort.id}` ? 'Enregistrement du seuil…' : 'Enregistrer le seuil'}</button><p>Cette modification conserve les dates et les inscriptions. Elle ne confirme pas automatiquement l’ouverture du groupe.</p></form>}{creativityEnrollmentForm(cohort)}<button type="button" className="btn" disabled={Boolean(runningAction)} onClick={() => loadParticipants(cohort.id)}>Voir les participants</button>{participants[cohort.id] && <ul aria-label="Participants du groupe créativité">{participants[cohort.id].map((participant) => <li key={participant.id}><a href={`/admin/apprenants/${participant.user_id}`}>{participant.name || 'Apprenant'}</a> · {participant.is_gift || participant.access_source === 'gift' ? 'Formation offerte' : participant.is_administrative || ['manual', 'opco'].includes(participant.access_source) ? 'Dossier administratif' : participant.payment_status === 'refunded' ? 'Paiement remboursé' : (participant.has_purchase ?? Boolean(participant.payment_status)) ? 'Inscription payée' : 'Inscription enregistrée'} · {participant.eligible ? 'Éligible' : 'Accès non éligible'}{participant.status === 'cohort_cancelled_refund_review' && !participant.is_gift && (participant.has_purchase ?? Boolean(participant.payment_status)) && participant.payment_status !== 'refunded' ? ' · Remboursement à vérifier dans Stripe' : ''}</li>)}</ul>}</>}{cohort.delivery_mode === 'remote' && !terminal && (cohort.sessions || []).filter((session) => session.id).map((session) => { const key = `${cohort.id}:${session.id}`; return <div className="admin-course-cohorts__meeting" key={key}><label>Visioconférence — séance {session.position}<input type="url" inputMode="url" placeholder="https://…" value={meetingUrls[key] ?? session.meeting_url ?? ''} onChange={(event) => setMeetingUrls((current) => ({ ...current, [key]: event.target.value }))} /></label><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => saveMeetingUrl(cohort.id, session.id)}>{runningAction === `meeting:${cohort.id}` ? 'Enregistrement…' : 'Enregistrer le lien'}</button></div>; })}{cohort.status === 'draft' && <div className="admin-course-cohorts__draft-actions"><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => editDraft(cohort)}>Modifier</button><button className="btn" type="button" disabled={Boolean(runningAction)} onClick={() => runAction('publish', cohort.id, onPublish)}>{runningAction === `publish:${cohort.id}` ? 'Publication…' : 'Publier'}</button></div>}{cohort.status === 'published' && <button className="btn" type="button" disabled={Boolean(runningAction) || (cohort.course_id === CREATIVITY_GROUP_COURSE_ID && Number(cohort.enrolled_count) < Number(cohort.minimum_participants || 4))} onClick={() => runAction('confirm', cohort.id, onConfirm)}>{runningAction === `confirm:${cohort.id}` ? 'Confirmation…' : 'Confirmer'}</button>}{!terminal && <div className="admin-course-cohorts__cancel"><label>Motif d’annulation<input value={cancellationReasons[cohort.id] || ''} onChange={(event) => setCancellationReasons((current) => ({ ...current, [cohort.id]: event.target.value }))} /></label><button className="btn" type="button" disabled={!cancellationReasons[cohort.id]?.trim() || Boolean(runningAction)} onClick={() => runAction('cancel', cohort.id, onCancel, cancellationReasons[cohort.id].trim())}>{runningAction === `cancel:${cohort.id}` ? 'Annulation…' : 'Annuler la cohorte'}</button></div>}</article>; })}</div>
   </section>;
 }

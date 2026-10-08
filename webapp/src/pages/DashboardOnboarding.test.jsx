@@ -6,6 +6,7 @@ const { auth, client, accesses, fixtures, queryCalls } = vi.hoisted(() => ({
   auth: { user: { id: 'account-a', email: 'a@example.test' }, signOut: vi.fn() },
   client: { from: vi.fn() }, accesses: vi.fn(), fixtures: {}, queryCalls: [],
 }));
+vi.mock('../components/CreativityGroupCohorts', () => ({ default: () => <section><h2>Mes dates — groupe créativité</h2></section> }));
 vi.mock('../contexts/useAuth', () => ({ useAuth: () => auth }));
 vi.mock('../lib/supabaseClient', () => ({ supabase: client }));
 vi.mock('../lib/courseAccess', () => ({ fetchCourseAccesses: accesses, fetchCourseAccessEntitlement: async () => ({ data: null, error: null }) }));
@@ -15,7 +16,7 @@ vi.mock('../lib/learnerOnboarding', () => ({
   loadLearnerOnboardingConfig: async () => ({ enabled: true, version: '1', title: 'Bienvenue dans votre espace FormaPrompt', description: 'Découvrir votre formation', videoUrl: null }),
   hasSeenOnboardingVideo: () => false,
 }));
-vi.mock('../data/courseCatalog', () => ({ courseCatalog: { 'formation-ia': { exercises: [{ id: 'known-exercise' }] } } }));
+vi.mock('../data/courseCatalog', () => ({ courseCatalog: { 'formation-ia': { exercises: [{ id: 'known-exercise' }] }, 'ia-creativite-individuel':{exercises:[{id:1}]}, 'ia-creativite-groupe':{exercises:[{id:1}]}, 'ia-creativite-ecole-association':{exercises:[{id:1}]} } }));
 vi.mock('../data/learningPathCatalog', () => ({ DEMO_LEARNING_PATH_SLUG: 'known-path', learningPathCatalog: { 'known-path': { id: 'known-path', requiredCourseAccessId: 'formation-ia', lessons: [{ id: 'known-lesson' }] } } }));
 beforeEach(() => {
   vi.clearAllMocks(); queryCalls.length = 0;
@@ -73,3 +74,41 @@ describe('Accueil selon progression réelle', () => {
     expect(screen.queryByText('Bienvenue, a@example.test !')).toBeNull();
   });
 });
+
+it('le cadeau individuel ouvre sa formation et conserve la planification séparée', async () => {
+  accesses.mockResolvedValue({ data: [{ id: 'individual-gift', course_id: 'ia-creativite-individuel', status: 'active', access_source: 'gift', purchase_id: null }], error: null });
+  mount();
+  expect(await screen.findByText('Retrouvez les quatre modules, les activités et les supports de votre formation accompagnée de 14 heures.')).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Mes dates — groupe créativité' })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '▶ Voir la formation' })).toHaveAttribute('href', '/course/ia-creativite-individuel');
+});
+it('le cadeau groupe ouvre sa formation et conserve le groupe ouvert', async () => {
+  accesses.mockResolvedValue({ data: [{ id: 'group-gift', course_id: 'ia-creativite-groupe', status: 'active', access_source: 'gift', purchase_id: null }], error: null });
+  mount();
+  expect(await screen.findByRole('heading', { name: 'Mes dates — groupe créativité' })).toBeVisible();
+  expect(screen.getByText(/Retrouvez les quatre modules/)).toBeVisible();
+  expect(screen.getByRole('link', { name: '▶ Voir la formation' })).toHaveAttribute('href', '/course/ia-creativite-groupe');
+  expect(screen.queryByText(/Formation individuelle offerte/)).not.toBeInTheDocument();
+});
+
+for (const courseId of ['ia-creativite-individuel','ia-creativite-groupe','ia-creativite-ecole-association']) {
+  for (const source of ['gift','purchase']) it(`accès ${source} ${courseId} ouvre le contenu avant réservation`, async () => {
+    accesses.mockResolvedValue({data:[{id:'access',course_id:courseId,status:'active',access_source:source,purchase_id:source==='purchase'?'purchase':null}],error:null})
+    mount()
+    expect(await screen.findByRole('link',{name:'▶ Voir la formation'})).toHaveAttribute('href',`/course/${courseId}`)
+    expect(screen.getAllByText('0 %')[0]).toBeVisible()
+  })
+}
+it('réservation confirmée : le contenu individuel reste accessible',async()=>{
+  accesses.mockResolvedValue({data:[{id:'access',course_id:'ia-creativite-individuel',status:'active'}],error:null})
+  fixtures.course_booking_requests={data:[{id:'booking',course_id:'ia-creativite-individuel',status:'confirmed',delivery_mode:'remote',schedule_format:'four_half_days_3h30',course_session_bookings:[],course_session_attendance:[]}],error:null}
+  mount()
+  expect(await screen.findByRole('link',{name:'▶ Voir la formation'})).toHaveAttribute('href','/course/ia-creativite-individuel')
+})
+it('progression créativité provient des réponses enregistrées',async()=>{
+  accesses.mockResolvedValue({data:[{id:'access',course_id:'ia-creativite-individuel',status:'active'}],error:null})
+  fixtures.course_exercise_latest_responses={data:[{course_id:'ia-creativite-individuel',exercise_id:1,status:'submitted'}],error:null}
+  mount()
+  expect(await screen.findByRole('link',{name:'▶ Voir la formation'})).toHaveAttribute('href','/course/ia-creativite-individuel')
+  expect(screen.getAllByText('100 %')[0]).toBeVisible()
+})

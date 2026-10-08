@@ -357,5 +357,374 @@ export const courseCatalog = {
         }
       ]
     }
+  },
+  "ia-creativite-individuel": {
+    "title": "Explorer l’IA au service de la créativité — Individuel",
+    "landingPath": "/formation-ia-creativite#inscription",
+    "durationLabel": "14 heures accompagnées · 2 journées ou 4 demi-journées (pauses en supplément)",
+    "exercises": [
+      {
+        "id": 1,
+        "title": "Comparer une aide avec son point de départ"
+      },
+      {
+        "id": 2,
+        "title": "Faire varier puis relever une contrainte"
+      },
+      {
+        "id": 3,
+        "title": "Repérer les clichés et sélectionner"
+      },
+      {
+        "id": 4,
+        "title": "Comparer deux modes d'assistance"
+      },
+      {
+        "id": 5,
+        "title": "Réaliser puis corriger un écart"
+      },
+      {
+        "id": 6,
+        "title": "Expliquer sa démarche et décider de la suite"
+      }
+    ],
+    "finalProject": {
+      "rubric": [
+        {
+          "id": "need_and_audience",
+          "criterion": "Intention et cadrage",
+          "descriptors": {
+            "not_acquired": "Le projet, le besoin ou les critères ne sont pas identifiables.",
+            "developing": "Le projet est défini, mais le fragment ou les critères restent à préciser.",
+            "acquired": "Le fragment, l’intention, les limites et les critères sont cohérents.",
+            "mastered": "Le cadrage est autonome et permet de transférer la méthode à un autre projet."
+          }
+        },
+        {
+          "id": "prompt_and_success_criteria",
+          "criterion": "Demande et exploration",
+          "descriptors": {
+            "not_acquired": "La demande et les essais ne permettent pas de comprendre ce qui a été exploré.",
+            "developing": "La demande est compréhensible, mais les variations ou comparaisons restent incomplètes.",
+            "acquired": "La demande, les pistes et leur comparaison sont explicites.",
+            "mastered": "Les essais sont ciblés et les choix de variation sont justifiés."
+          }
+        },
+        {
+          "id": "checks_and_risks",
+          "criterion": "Maîtrise et contrôles",
+          "descriptors": {
+            "not_acquired": "Les contributions ou les contraintes importantes ne sont pas examinées.",
+            "developing": "Des contrôles existent, mais des contributions ou inconnues restent à distinguer.",
+            "acquired": "Les contributions, contraintes et contrôles nécessaires sont expliqués.",
+            "mastered": "Les contrôles sont proportionnés et les limites résiduelles clairement formulées."
+          }
+        },
+        {
+          "id": "choices_and_limits",
+          "criterion": "Analyse et reprise",
+          "descriptors": {
+            "not_acquired": "Les décisions et les transformations ne sont pas expliquées.",
+            "developing": "Une décision est décrite, mais ses raisons ou la reprise restent peu claires.",
+            "acquired": "Les choix, rejets et transformations humaines sont justifiés par des observations.",
+            "mastered": "La démarche montre un recul critique et une suite réaliste, y compris le non-usage."
+          }
+        }
+      ],
+      "rubricLevels": [
+        {
+          "id": "not_acquired",
+          "label": "Non acquis",
+          "help": "Un élément essentiel de la démarche n’est pas encore démontré."
+        },
+        {
+          "id": "developing",
+          "label": "En cours d’acquisition",
+          "help": "La démarche est engagée ; un point doit être précisé ou repris."
+        },
+        {
+          "id": "acquired",
+          "label": "Acquis",
+          "help": "La démarche attendue est expliquée et étayée par des traces."
+        },
+        {
+          "id": "mastered",
+          "label": "Maîtrisé",
+          "help": "La démarche est autonome, argumentée et transférable."
+        }
+      ],
+      "submissionFields": [
+        {
+          "id": "prompt_and_iterations",
+          "label": "Intention, demandes et essais",
+          "help": "Décrivez votre intention, les demandes utilisées ou les questions explorées, les variantes et les corrections.",
+          "placeholder": "Intention, demande ou questions, essais et changements…"
+        },
+        {
+          "id": "final_output",
+          "label": "Étude, fragment ou prototype",
+          "help": "Présentez le résultat à l’échelle travaillée et expliquez ce qui relève de vos décisions et de votre réalisation.",
+          "placeholder": "Description du fragment, de l’étude ou du prototype et de votre reprise…"
+        },
+        {
+          "id": "verification_grid_reference",
+          "label": "Analyse, contrôles et limites",
+          "help": "Présentez vos critères, observations, contributions, inconnues et contrôles nécessaires avant tout usage ou diffusion.",
+          "placeholder": "Critères, observations, contributions distinguées, contrôles et inconnues…"
+        },
+        {
+          "id": "action_plan",
+          "label": "Décision et suite",
+          "help": "Expliquez ce que vous retenez, corrigez ou refusez et, si utile, la suite que vous envisagez.",
+          "placeholder": "Décision argumentée et prochaine étape éventuelle…"
+        }
+      ]
+    }
+  },
+  "ia-creativite-groupe": {
+    "title": "Explorer l’IA au service de la créativité — Groupe ouvert",
+    "landingPath": "/formation-ia-creativite#inscription",
+    "durationLabel": "14 heures accompagnées · 2 journées ou 4 demi-journées (pauses en supplément)",
+    "exercises": [
+      {
+        "id": 1,
+        "title": "Comparer une aide avec son point de départ"
+      },
+      {
+        "id": 2,
+        "title": "Faire varier puis relever une contrainte"
+      },
+      {
+        "id": 3,
+        "title": "Repérer les clichés et sélectionner"
+      },
+      {
+        "id": 4,
+        "title": "Comparer deux modes d'assistance"
+      },
+      {
+        "id": 5,
+        "title": "Réaliser puis corriger un écart"
+      },
+      {
+        "id": 6,
+        "title": "Expliquer sa démarche et décider de la suite"
+      }
+    ],
+    "finalProject": {
+      "rubric": [
+        {
+          "id": "need_and_audience",
+          "criterion": "Intention et cadrage",
+          "descriptors": {
+            "not_acquired": "Le projet, le besoin ou les critères ne sont pas identifiables.",
+            "developing": "Le projet est défini, mais le fragment ou les critères restent à préciser.",
+            "acquired": "Le fragment, l’intention, les limites et les critères sont cohérents.",
+            "mastered": "Le cadrage est autonome et permet de transférer la méthode à un autre projet."
+          }
+        },
+        {
+          "id": "prompt_and_success_criteria",
+          "criterion": "Demande et exploration",
+          "descriptors": {
+            "not_acquired": "La demande et les essais ne permettent pas de comprendre ce qui a été exploré.",
+            "developing": "La demande est compréhensible, mais les variations ou comparaisons restent incomplètes.",
+            "acquired": "La demande, les pistes et leur comparaison sont explicites.",
+            "mastered": "Les essais sont ciblés et les choix de variation sont justifiés."
+          }
+        },
+        {
+          "id": "checks_and_risks",
+          "criterion": "Maîtrise et contrôles",
+          "descriptors": {
+            "not_acquired": "Les contributions ou les contraintes importantes ne sont pas examinées.",
+            "developing": "Des contrôles existent, mais des contributions ou inconnues restent à distinguer.",
+            "acquired": "Les contributions, contraintes et contrôles nécessaires sont expliqués.",
+            "mastered": "Les contrôles sont proportionnés et les limites résiduelles clairement formulées."
+          }
+        },
+        {
+          "id": "choices_and_limits",
+          "criterion": "Analyse et reprise",
+          "descriptors": {
+            "not_acquired": "Les décisions et les transformations ne sont pas expliquées.",
+            "developing": "Une décision est décrite, mais ses raisons ou la reprise restent peu claires.",
+            "acquired": "Les choix, rejets et transformations humaines sont justifiés par des observations.",
+            "mastered": "La démarche montre un recul critique et une suite réaliste, y compris le non-usage."
+          }
+        }
+      ],
+      "rubricLevels": [
+        {
+          "id": "not_acquired",
+          "label": "Non acquis",
+          "help": "Un élément essentiel de la démarche n’est pas encore démontré."
+        },
+        {
+          "id": "developing",
+          "label": "En cours d’acquisition",
+          "help": "La démarche est engagée ; un point doit être précisé ou repris."
+        },
+        {
+          "id": "acquired",
+          "label": "Acquis",
+          "help": "La démarche attendue est expliquée et étayée par des traces."
+        },
+        {
+          "id": "mastered",
+          "label": "Maîtrisé",
+          "help": "La démarche est autonome, argumentée et transférable."
+        }
+      ],
+      "submissionFields": [
+        {
+          "id": "prompt_and_iterations",
+          "label": "Intention, demandes et essais",
+          "help": "Décrivez votre intention, les demandes utilisées ou les questions explorées, les variantes et les corrections.",
+          "placeholder": "Intention, demande ou questions, essais et changements…"
+        },
+        {
+          "id": "final_output",
+          "label": "Étude, fragment ou prototype",
+          "help": "Présentez le résultat à l’échelle travaillée et expliquez ce qui relève de vos décisions et de votre réalisation.",
+          "placeholder": "Description du fragment, de l’étude ou du prototype et de votre reprise…"
+        },
+        {
+          "id": "verification_grid_reference",
+          "label": "Analyse, contrôles et limites",
+          "help": "Présentez vos critères, observations, contributions, inconnues et contrôles nécessaires avant tout usage ou diffusion.",
+          "placeholder": "Critères, observations, contributions distinguées, contrôles et inconnues…"
+        },
+        {
+          "id": "action_plan",
+          "label": "Décision et suite",
+          "help": "Expliquez ce que vous retenez, corrigez ou refusez et, si utile, la suite que vous envisagez.",
+          "placeholder": "Décision argumentée et prochaine étape éventuelle…"
+        }
+      ]
+    }
+  },
+  "ia-creativite-ecole-association": {
+    "title": "Explorer l’IA au service de la créativité — École ou association",
+    "landingPath": "/formation-ia-creativite#inscription",
+    "durationLabel": "14 heures accompagnées · 2 journées ou 4 demi-journées (pauses en supplément)",
+    "exercises": [
+      {
+        "id": 1,
+        "title": "Comparer une aide avec son point de départ"
+      },
+      {
+        "id": 2,
+        "title": "Faire varier puis relever une contrainte"
+      },
+      {
+        "id": 3,
+        "title": "Repérer les clichés et sélectionner"
+      },
+      {
+        "id": 4,
+        "title": "Comparer deux modes d'assistance"
+      },
+      {
+        "id": 5,
+        "title": "Réaliser puis corriger un écart"
+      },
+      {
+        "id": 6,
+        "title": "Expliquer sa démarche et décider de la suite"
+      }
+    ],
+    "finalProject": {
+      "rubric": [
+        {
+          "id": "need_and_audience",
+          "criterion": "Intention et cadrage",
+          "descriptors": {
+            "not_acquired": "Le projet, le besoin ou les critères ne sont pas identifiables.",
+            "developing": "Le projet est défini, mais le fragment ou les critères restent à préciser.",
+            "acquired": "Le fragment, l’intention, les limites et les critères sont cohérents.",
+            "mastered": "Le cadrage est autonome et permet de transférer la méthode à un autre projet."
+          }
+        },
+        {
+          "id": "prompt_and_success_criteria",
+          "criterion": "Demande et exploration",
+          "descriptors": {
+            "not_acquired": "La demande et les essais ne permettent pas de comprendre ce qui a été exploré.",
+            "developing": "La demande est compréhensible, mais les variations ou comparaisons restent incomplètes.",
+            "acquired": "La demande, les pistes et leur comparaison sont explicites.",
+            "mastered": "Les essais sont ciblés et les choix de variation sont justifiés."
+          }
+        },
+        {
+          "id": "checks_and_risks",
+          "criterion": "Maîtrise et contrôles",
+          "descriptors": {
+            "not_acquired": "Les contributions ou les contraintes importantes ne sont pas examinées.",
+            "developing": "Des contrôles existent, mais des contributions ou inconnues restent à distinguer.",
+            "acquired": "Les contributions, contraintes et contrôles nécessaires sont expliqués.",
+            "mastered": "Les contrôles sont proportionnés et les limites résiduelles clairement formulées."
+          }
+        },
+        {
+          "id": "choices_and_limits",
+          "criterion": "Analyse et reprise",
+          "descriptors": {
+            "not_acquired": "Les décisions et les transformations ne sont pas expliquées.",
+            "developing": "Une décision est décrite, mais ses raisons ou la reprise restent peu claires.",
+            "acquired": "Les choix, rejets et transformations humaines sont justifiés par des observations.",
+            "mastered": "La démarche montre un recul critique et une suite réaliste, y compris le non-usage."
+          }
+        }
+      ],
+      "rubricLevels": [
+        {
+          "id": "not_acquired",
+          "label": "Non acquis",
+          "help": "Un élément essentiel de la démarche n’est pas encore démontré."
+        },
+        {
+          "id": "developing",
+          "label": "En cours d’acquisition",
+          "help": "La démarche est engagée ; un point doit être précisé ou repris."
+        },
+        {
+          "id": "acquired",
+          "label": "Acquis",
+          "help": "La démarche attendue est expliquée et étayée par des traces."
+        },
+        {
+          "id": "mastered",
+          "label": "Maîtrisé",
+          "help": "La démarche est autonome, argumentée et transférable."
+        }
+      ],
+      "submissionFields": [
+        {
+          "id": "prompt_and_iterations",
+          "label": "Intention, demandes et essais",
+          "help": "Décrivez votre intention, les demandes utilisées ou les questions explorées, les variantes et les corrections.",
+          "placeholder": "Intention, demande ou questions, essais et changements…"
+        },
+        {
+          "id": "final_output",
+          "label": "Étude, fragment ou prototype",
+          "help": "Présentez le résultat à l’échelle travaillée et expliquez ce qui relève de vos décisions et de votre réalisation.",
+          "placeholder": "Description du fragment, de l’étude ou du prototype et de votre reprise…"
+        },
+        {
+          "id": "verification_grid_reference",
+          "label": "Analyse, contrôles et limites",
+          "help": "Présentez vos critères, observations, contributions, inconnues et contrôles nécessaires avant tout usage ou diffusion.",
+          "placeholder": "Critères, observations, contributions distinguées, contrôles et inconnues…"
+        },
+        {
+          "id": "action_plan",
+          "label": "Décision et suite",
+          "help": "Expliquez ce que vous retenez, corrigez ou refusez et, si utile, la suite que vous envisagez.",
+          "placeholder": "Décision argumentée et prochaine étape éventuelle…"
+        }
+      ]
+    }
   }
 };

@@ -1,6 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1'
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
-import { BUREAUTIQUE_INTER_COURSE_IDS, BUREAUTIQUE_SCHEDULE_FORMATS, getBureautiqueBookingCourse } from '../_shared/bureautiqueBooking.js'
+import { COHORT_COURSE_IDS, getCohortBookingCourse } from '../_shared/bureautiqueBooking.js'
 import { deterministicCourseCohortEventId, ensureCourseCohortGoogleEvent, removeCourseCohortGoogleEvent } from '../_shared/courseCohortMeet.js'
 import { refreshGoogleCalendarAccessToken } from '../_shared/googleCalendar.js'
 
@@ -115,7 +115,7 @@ async function generateMeetLinks(client: ReturnType<typeof createClient>, cohort
     p_claim_token: claimToken,
     p_session_events: events,
   }) as { course_id?: string, sessions?: Array<Record<string, unknown>> }
-  const course = getBureautiqueBookingCourse(String(claim.course_id))
+  const course = getCohortBookingCourse(String(claim.course_id))
   if (!course) throw Object.assign(new Error('Formation de cohorte inconnue.'), { code: '22023' })
 
   const results = []
@@ -203,10 +203,22 @@ Deno.serve(async (request) => {
     let name = ''
     let args: Record<string, unknown> = {}
     if (action === 'list') name = 'admin_list_course_cohorts'
-    else if (action === 'save_draft') {
+    else if (action === 'creativity_candidates') {
+      if (!isUuid(body.cohort_id)) return jsonResponse({ error: 'Cohorte invalide.' }, 400)
+      name = 'admin_list_creativity_cohort_candidates'
+      args = { p_cohort_id: body.cohort_id }
+    } else if (action === 'enroll_creativity') {
+      if (!isUuid(body.cohort_id) || !isUuid(body.user_id)) return jsonResponse({ error: 'Cohorte ou apprenant invalide.' }, 400)
+      name = 'admin_enroll_creativity_cohort'
+      args = { p_cohort_id: body.cohort_id, p_user_id: body.user_id }
+    } else if (action === 'participants') {
+      if (!isUuid(body.cohort_id)) return jsonResponse({ error: 'Cohorte invalide.' }, 400)
+      name = 'admin_get_creativity_cohort_participants'
+      args = { p_cohort_id: body.cohort_id }
+    } else if (action === 'save_draft') {
       const draft = body.draft as Record<string, unknown> | undefined
-      if (!draft || !BUREAUTIQUE_INTER_COURSE_IDS.includes(String(draft.course_id))
-        || !Object.hasOwn(BUREAUTIQUE_SCHEDULE_FORMATS, String(draft.schedule_format))
+      if (!draft || !COHORT_COURSE_IDS.includes(String(draft.course_id))
+        || !Object.hasOwn(getCohortBookingCourse(String(draft.course_id))?.formats || {}, String(draft.schedule_format))
         || !['remote', 'in_person'].includes(String(draft.delivery_mode))) {
         return jsonResponse({ error: 'Brouillon de cohorte invalide.' }, 400)
       }
@@ -220,6 +232,13 @@ Deno.serve(async (request) => {
         p_minimum_participants: draft.minimum_participants,
         p_sessions: draft.sessions,
       }
+    } else if (action === 'set_minimum_participants') {
+      if (!isUuid(body.cohort_id) || typeof body.minimum_participants !== 'number'
+        || !Number.isInteger(body.minimum_participants) || body.minimum_participants < 2) {
+        return jsonResponse({ error: 'Seuil minimum invalide.' }, 400)
+      }
+      name = 'admin_set_creativity_cohort_minimum'
+      args = { p_cohort_id: body.cohort_id, p_minimum_participants: body.minimum_participants }
     } else if (['publish', 'confirm', 'cancel'].includes(action)) {
       if (!isUuid(body.cohort_id)) return jsonResponse({ error: 'Cohorte invalide.' }, 400)
       name = `admin_${action}_course_cohort`
@@ -237,7 +256,7 @@ Deno.serve(async (request) => {
       const cleanup = await cleanupMeetEvents(client, String(body.cohort_id)).catch(() => ({ cohort_id: body.cohort_id, complete: false, sessions: [] }))
       return jsonResponse({ result: data, cleanup })
     }
-    return jsonResponse(action === 'list' ? { cohorts: data || [] } : { result: data })
+    return jsonResponse(action === 'list' ? { cohorts: data || [] } : action === 'creativity_candidates' ? { candidates: data || [] } : action === 'enroll_creativity' ? { enrollment: data } : action === 'participants' ? { participants: data || [] } : { result: data })
   } catch (error) {
     const record = error && typeof error === 'object' ? error as { code?: string, message?: string } : {}
     if (record.code === '42501') return jsonResponse({ error: 'Action réservée à l’administrateur.' }, 403)

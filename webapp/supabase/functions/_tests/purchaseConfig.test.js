@@ -76,7 +76,7 @@ test('les trois offres publiques conservent le paiement direct et une configurat
 });
 
 test('les douze offres bureautiques suivent le modèle en ligne et accompagnement sans désactiver les offres IA', () => {
-  assert.equal(Object.keys(COURSE_PURCHASES).length, 15);
+  assert.equal(Object.keys(COURSE_PURCHASES).length, 18);
   assert.equal(Object.keys(EXCEL_PURCHASES).length, 6);
   assert.equal(Object.keys(OFFICE_PURCHASES).length, 6);
   for (const purchase of [...Object.values(EXCEL_PURCHASES), ...Object.values(OFFICE_PURCHASES)]) {
@@ -89,13 +89,17 @@ test('les douze offres bureautiques suivent le modèle en ligne et accompagnemen
   }
 });
 
-test('le registre cadeau reprend les trois formations IA et les douze offres bureautiques exactes', () => {
-  assert.equal(Object.keys(ADMIN_GIFT_COURSES).length, 15);
+test('le registre cadeau reprend les trois formations IA, les douze offres bureautiques et les trois offres créativité exactes', () => {
+  assert.equal(Object.keys(ADMIN_GIFT_COURSES).length, 18);
   assert.deepEqual(
     Object.keys(ADMIN_GIFT_COURSES).filter((courseId) => (
       Object.hasOwn(EXCEL_PURCHASES, courseId) || Object.hasOwn(OFFICE_PURCHASES, courseId)
     )),
     [...Object.keys(EXCEL_PURCHASES), ...Object.keys(OFFICE_PURCHASES)],
+  );
+  assert.deepEqual(
+    Object.keys(ADMIN_GIFT_COURSES).filter((courseId) => courseId.startsWith('ia-creativite-')),
+    ['ia-creativite-groupe', 'ia-creativite-individuel', 'ia-creativite-ecole-association'],
   );
   for (const forbiddenId of ['word-initiation', 'excel-initiation-intra', 'powerpoint-initiation-intra']) {
     assert.equal(Object.hasOwn(ADMIN_GIFT_COURSES, forbiddenId), false);

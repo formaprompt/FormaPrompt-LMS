@@ -36,3 +36,9 @@ it('présente une cohorte confirmée avec places comme réservable et bloque un 
   expect(screen.getByRole('button', { name: 'Inscription en cours…' })).toBeDisabled();
   resolveJoin();
 });
+
+it('affiche le seuil et la capacité exacts d’un groupe créativité publié', () => {
+  render(<CourseCohortPicker courseId="ia-creativite-groupe" cohorts={[{ ...cohort, course_id: 'ia-creativite-groupe', minimum_participants: 2, capacity: 4, available_places: 2 }]} />);
+  expect(screen.getByText('2 participants minimum, 4 maximum.')).toBeInTheDocument();
+  expect(screen.queryByText('4 participants minimum, 6 maximum.')).not.toBeInTheDocument();
+});
