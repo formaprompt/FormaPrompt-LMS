@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ACCESS_START_CHOICES,
   BUREAUTIQUE_PURCHASES,
+  CREATIVITY_PURCHASES,
   CONSENT_TYPES,
   getCommercialRoute,
   getPurchaseConfig,
@@ -53,7 +54,7 @@ export default function CommercialCheckout({
   purchaseConfig,
 }) {
   const purchase = purchaseConfig || getPurchaseConfig(courseId)
-  const [salesContext, setSalesContext] = useState(SALES_CONTEXTS.PERSONAL)
+  const [salesContext, setSalesContext] = useState(purchase?.organizationRequired ? SALES_CONTEXTS.PROFESSIONAL_SELF : SALES_CONTEXTS.PERSONAL)
   const [accessStartChoice, setAccessStartChoice] = useState(ACCESS_START_CHOICES.IMMEDIATE)
   const [beneficiaryEmail, setBeneficiaryEmail] = useState('')
   const [organizationName, setOrganizationName] = useState('')
@@ -71,8 +72,8 @@ export default function CommercialCheckout({
     sales_context: salesContext,
     access_start_choice: salesContext === SALES_CONTEXTS.PERSONAL ? accessStartChoice : null,
     beneficiary_email: salesContext === SALES_CONTEXTS.BENEFICIARY ? beneficiaryEmail.trim() : null,
-    buyer_organization_name: salesContext === SALES_CONTEXTS.BENEFICIARY ? organizationName.trim() : null,
-  }), [accessStartChoice, beneficiaryEmail, organizationName, salesContext])
+    buyer_organization_name: purchase?.organizationRequired || salesContext === SALES_CONTEXTS.BENEFICIARY ? organizationName.trim() : null,
+  }), [accessStartChoice, beneficiaryEmail, organizationName, salesContext, purchase?.organizationRequired])
   const route = getCommercialRoute(purchase, checkoutContext)
   const displayedAmount = promoStatus === 'valid' ? promoAmounts?.final_amount_cents : purchase?.amountTotal
 
@@ -182,7 +183,7 @@ export default function CommercialCheckout({
         return
       }
       if (data?.alreadyPurchased) {
-        window.location.assign(Object.hasOwn(BUREAUTIQUE_PURCHASES, courseId)
+        window.location.assign(Object.hasOwn(BUREAUTIQUE_PURCHASES, courseId) || Object.hasOwn(CREATIVITY_PURCHASES, courseId)
           ? `/paiement-reussi?course=${encodeURIComponent(courseId)}`
           : `/course/${encodeURIComponent(courseId)}`)
         return
@@ -231,7 +232,7 @@ export default function CommercialCheckout({
       )}
       <fieldset className="commercial-checkout__group">
         <legend>Vous achetez cette formation :</legend>
-        {SALES_CONTEXT_OPTIONS.map(([value, label]) => (
+        {SALES_CONTEXT_OPTIONS.filter(([value]) => !purchase.allowedSalesContexts || purchase.allowedSalesContexts.includes(value)).map(([value, label]) => (
           <label className="commercial-checkout__choice" key={value}>
             <input
               type="radio"
@@ -241,7 +242,7 @@ export default function CommercialCheckout({
               disabled={checkoutConfigurationLocked}
               onChange={() => changeSalesContext(value)}
             />
-            <span>{label}</span>
+            <span>{purchase.organizationRequired ? 'Pour votre école ou association — un paiement pour le groupe' : label}</span>
           </label>
         ))}
       </fieldset>
@@ -252,7 +253,7 @@ export default function CommercialCheckout({
           <Link to="/contact" className="btn btn-primary">Demander un devis ou un financement</Link>
         </div>
       ) : !user ? (
-        <Link to="/login" className="btn btn-primary">Se connecter pour acheter – {priceLabel}</Link>
+        <Link to={Object.hasOwn(CREATIVITY_PURCHASES, courseId) ? `/login?redirect=${encodeURIComponent(purchase.landingPath)}` : '/login'} className="btn btn-primary">Se connecter pour acheter – {priceLabel}</Link>
       ) : (
         <>
           {salesContext === SALES_CONTEXTS.PERSONAL && (
@@ -266,7 +267,7 @@ export default function CommercialCheckout({
                   disabled={checkoutConfigurationLocked}
                   onChange={() => changeStartChoice(ACCESS_START_CHOICES.IMMEDIATE)}
                 />
-                <span>Accéder à la formation dès le paiement</span>
+                <span>{purchase.requiresLmsAccess === false ? 'Permettre un début de prestation avant la fin du délai de rétractation' : 'Accéder à la formation dès le paiement'}</span>
               </label>
               <label className="commercial-checkout__choice">
                 <input
@@ -276,12 +277,12 @@ export default function CommercialCheckout({
                   disabled={checkoutConfigurationLocked}
                   onChange={() => changeStartChoice(ACCESS_START_CHOICES.DEFERRED)}
                 />
-                <span>Payer maintenant et différer l’accès pédagogique</span>
+                <span>{purchase.requiresLmsAccess === false ? 'Payer maintenant et organiser un début après le délai de rétractation' : 'Payer maintenant et différer l’accès pédagogique'}</span>
               </label>
             </fieldset>
           )}
 
-          {salesContext === SALES_CONTEXTS.BENEFICIARY && (
+          {(purchase.organizationRequired || salesContext === SALES_CONTEXTS.BENEFICIARY) && (
             <div className="commercial-checkout__beneficiary">
               <label>
                 Organisation acheteuse
@@ -294,7 +295,7 @@ export default function CommercialCheckout({
                   onChange={(event) => setOrganizationName(event.target.value)}
                 />
               </label>
-              <label>
+              {!purchase.organizationRequired && <label>
                 Adresse e-mail du bénéficiaire
                 <input
                   type="email"
@@ -304,13 +305,13 @@ export default function CommercialCheckout({
                   disabled={checkoutConfigurationLocked}
                   onChange={(event) => setBeneficiaryEmail(event.target.value)}
                 />
-              </label>
-              <p>L’accès sera attribué au bénéficiaire après vérification de son compte FormaPrompt.</p>
+              </label>}
+              <p>{purchase.organizationRequired ? 'Un seul paiement couvre le groupe, jusqu’à six personnes. Les participants, les dates et l’organisation sont convenus ensuite avec Thierry FREZARD.' : 'L’accès sera attribué au bénéficiaire après vérification de son compte FormaPrompt.'}</p>
             </div>
           )}
 
 
-          <div className="commercial-checkout__promotion">
+          {purchase.promotionEnabled !== false && <div className="commercial-checkout__promotion">
             <label htmlFor={`promotion-code-${courseId}`}>Code promotionnel</label>
             <div className="commercial-checkout__promotion-row">
               <input
@@ -346,7 +347,7 @@ export default function CommercialCheckout({
               )}
               <div><dt>Total</dt><dd>{formatEuros(displayedAmount)}</dd></div>
             </dl>
-          </div>
+          </div>}
 
           <label className="commercial-checkout__consent">
             <input

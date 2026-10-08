@@ -15,6 +15,14 @@ const REVIEW_STATUS_LABELS = {
   validated: 'Compétences évaluées et validées',
 };
 
+// White_Space also covers Unicode separators not handled by ordinary spaces.
+export function hasValidAttestationObjectives(config) {
+  return Array.isArray(config?.objectives)
+    && config.objectives.length > 0
+    && Array.from(config.objectives).every((objective) => typeof objective === 'string'
+      && /[^\p{White_Space}\uFEFF]/u.test(objective));
+}
+
 export function formatAttestationDeliveryMode(booking) {
   if (!booking) return 'Modalité non disponible';
   const mode = booking.delivery_mode === 'remote' ? 'Distanciel synchrone' : 'Présentiel';
@@ -24,7 +32,8 @@ export function formatAttestationDeliveryMode(booking) {
 
 export function createAttestationSnapshot({ documentType, record, documentData }) {
   const typeConfig = ATTESTATION_TYPES[documentType];
-  if (!typeConfig || !record || !documentData) return null;
+  if (!typeConfig || !record || !documentData
+    || !hasValidAttestationObjectives(documentData.attestationConfig)) return null;
 
   const review = record.review || null;
   const traceability = {
@@ -46,7 +55,7 @@ export function createAttestationSnapshot({ documentType, record, documentData }
     deliveryMode: formatAttestationDeliveryMode(documentData.booking),
     attendedMinutes: documentData.dossier.attendedMinutes,
     plannedMinutes: documentData.dossier.plannedMinutes,
-    objectives: [...(documentData.attestationConfig?.objectives || [])],
+    objectives: [...documentData.attestationConfig.objectives],
     sessionCount: documentData.dossier.sessionCount,
     organization: { ...FORMATION_ORGANIZATION },
     evaluation: documentType === 'competences' ? {

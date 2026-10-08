@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import {
-  BUREAUTIQUE_INDIVIDUAL_COURSE_IDS,
+  INDIVIDUAL_14H_COURSE_IDS,
   BUREAUTIQUE_SCHEDULE_FORMATS,
 } from '../_shared/bureautiqueBooking.js';
 
@@ -34,7 +34,7 @@ Deno.serve(async (request) => {
       'formation-ia': 20,
       'formation-ia-act': 8,
       'formation-prompt-level-1': 14,
-      ...Object.fromEntries(BUREAUTIQUE_INDIVIDUAL_COURSE_IDS.map((courseId) => [courseId, 28])),
+      ...Object.fromEntries(INDIVIDUAL_14H_COURSE_IDS.map((courseId) => [courseId, 28])),
     };
     const expectedSlotCount = allowedSlotCounts[body.course_id];
     if (!expectedSlotCount
@@ -44,8 +44,8 @@ Deno.serve(async (request) => {
       || !body.slot_ids.every((slotId: unknown) => typeof slotId === 'string' && uuidPattern.test(slotId))) {
       return jsonResponse({ error: 'Les horaires choisis sont invalides.' }, 400);
     }
-    const isBureautique = BUREAUTIQUE_INDIVIDUAL_COURSE_IDS.includes(body.course_id);
-    if (isBureautique && !Object.hasOwn(BUREAUTIQUE_SCHEDULE_FORMATS, body.schedule_format)) {
+    const isIndividual14h = INDIVIDUAL_14H_COURSE_IDS.includes(body.course_id);
+    if (isIndividual14h && !Object.hasOwn(BUREAUTIQUE_SCHEDULE_FORMATS, body.schedule_format)) {
       return jsonResponse({ error: 'Le format de 14 heures est invalide.' }, 400);
     }
 
@@ -54,7 +54,7 @@ Deno.serve(async (request) => {
       global: { headers: { Authorization: authorization } },
     });
     const { data, error } = await supabaseUser.rpc(
-      isBureautique ? 'create_bureautique_booking_request' : 'create_course_booking_request', {
+      isIndividual14h ? 'create_bureautique_booking_request' : 'create_course_booking_request', {
       p_course_id: body.course_id,
       p_delivery_mode: body.delivery_mode,
       p_schedule_format: body.schedule_format,

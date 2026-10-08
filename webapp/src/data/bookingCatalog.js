@@ -1,4 +1,4 @@
-import { BUREAUTIQUE_BOOKING_COURSES } from '../../supabase/functions/_shared/bureautiqueBooking.js'
+import { BUREAUTIQUE_BOOKING_COURSES, CREATIVITY_INDIVIDUAL_BOOKING } from '../../supabase/functions/_shared/bureautiqueBooking.js'
 
 export const BOOKING_COURSES = {
   'formation-ia': {
@@ -87,6 +87,7 @@ export const BOOKING_COURSES = {
     },
   },
   ...BUREAUTIQUE_BOOKING_COURSES,
+  [CREATIVITY_INDIVIDUAL_BOOKING.id]: CREATIVITY_INDIVIDUAL_BOOKING,
 }
 
 export const DEFAULT_BOOKING_COURSE_ID = 'formation-ia-act'

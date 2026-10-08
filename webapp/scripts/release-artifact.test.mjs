@@ -16,6 +16,7 @@ test('les shells conservent le script Vite, sans contenu accueil ni canonical', 
 test('les chemins de sortie préservent les six pages et les cibles Apache', () => {
   assert.equal(outputForRoute('/'), 'index.html');
   assert.equal(outputForRoute('/studio/'), 'studio/index.html');
+  assert.equal(outputForRoute('/formation-ia-creativite'), 'formation-ia-creativite.html');
   for (const route of ['/formation-ia-generative', '/formation-prompt-engineering', '/formation-ia-act-conformite']) {
     assert.equal(outputForRoute(route), `${route.slice(1)}/index.html`);
   }

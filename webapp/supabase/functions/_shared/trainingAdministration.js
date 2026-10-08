@@ -31,7 +31,59 @@ export const ADMINISTRATIVE_COURSES = {
       'Vérifier les résultats et transformer un prompt en modèle réutilisable.',
     ],
   },
+  'ia-creativite-groupe': {
+    title: 'Explorer l’IA au service de la créativité – groupe ouvert',
+    durationMinutes: 840,
+    priceAmountCents: 69000,
+    objectives: [
+      'Cadrer une intention artistique, le rôle de l’IA et les limites de son usage.',
+      'Structurer une demande avec CROP : Contexte, Rôle, Objectif, Précisions.',
+      'Explorer plusieurs pistes et comparer ce que les aides de l’IA apportent au projet.',
+      'Sélectionner et retravailler des propositions en exerçant son jugement artistique.',
+      'Expliquer ses choix et vérifier les points sensibles avant de partager une production.',
+    ],
+  },
+  'ia-creativite-individuel': {
+    title: 'Explorer l’IA au service de la créativité – accompagnement individuel',
+    durationMinutes: 840,
+    priceAmountCents: 90000,
+    objectives: [
+      'Cadrer une intention artistique, le rôle de l’IA et les limites de son usage.',
+      'Structurer une demande avec CROP : Contexte, Rôle, Objectif, Précisions.',
+      'Explorer plusieurs pistes et comparer ce que les aides de l’IA apportent au projet.',
+      'Sélectionner et retravailler des propositions en exerçant son jugement artistique.',
+      'Expliquer ses choix et vérifier les points sensibles avant de partager une production.',
+    ],
+  },
+  'ia-creativite-ecole-association': {
+    title: 'Explorer l’IA au service de la créativité – école ou association',
+    durationMinutes: 840,
+    priceAmountCents: 160000,
+    objectives: [
+      'Cadrer une intention artistique, le rôle de l’IA et les limites de son usage.',
+      'Structurer une demande avec CROP : Contexte, Rôle, Objectif, Précisions.',
+      'Explorer plusieurs pistes et comparer ce que les aides de l’IA apportent au projet.',
+      'Sélectionner et retravailler des propositions en exerçant son jugement artistique.',
+      'Expliquer ses choix et vérifier les points sensibles avant de partager une production.',
+    ],
+  },
 };
+
+export function isCreativityCourse(courseId) {
+  return courseId?.startsWith('ia-creativite-') && Boolean(ADMINISTRATIVE_COURSES[courseId]);
+}
+
+export function canLinkExistingCreativityAccess(access, purchase = null) {
+  if (!access || access.status !== 'active') return false;
+  if (access.expires_at && new Date(access.expires_at).getTime() <= Date.now()) return false;
+  if (access.access_source === 'gift') return access.purchase_id == null;
+  if (['manual', 'opco'].includes(access.access_source)) return access.purchase_id == null;
+  return Boolean(access.purchase_id && purchase
+    && purchase.id === access.purchase_id
+    && purchase.user_id === access.user_id
+    && purchase.course_id === access.course_id
+    && ['paid', 'partially_refunded'].includes(purchase.payment_status));
+}
 
 export const ENROLLMENT_SOURCES = new Set(['manual', 'company', 'opco', 'free']);
 export const FUNDING_MODES = new Set(['self_funded', 'company', 'opco', 'free', 'other']);
@@ -113,6 +165,10 @@ export function validateAdministrativeEnrollment(input = {}) {
     ? course.priceAmountCents
     : Number(input.priceAmountCents);
   if (!Number.isInteger(priceAmountCents) || priceAmountCents < 0) throw new Error('Tarif invalide.');
+  if (isCreativityCourse(input.courseId)
+    && (durationMinutes !== 840 || priceAmountCents !== course.priceAmountCents)) {
+    throw new Error('La durée ou le tarif de cette formule créativité ne correspond pas au catalogue.');
+  }
 
   const learnerEmail = requiredText(input.learnerEmail, "Adresse e-mail de l'apprenant", 320).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(learnerEmail)) throw new Error('Adresse e-mail invalide.');
@@ -265,13 +321,16 @@ export function buildAdministrativeDocument(documentType, enrollment, learnerEma
   const base = sharedSnapshot(enrollment, learnerEmail, generatedAt);
 
   if (documentType === 'training_agreement') {
+    const creativityService = isCreativityCourse(enrollment.course_id);
     return {
       ...base,
       documentType,
       title: enrollment.organization_name ? 'Convention de formation professionnelle' : 'Contrat de formation professionnelle',
       clauses: [
         'Le présent document précise la nature, les objectifs, la durée et les modalités de la formation.',
-        "L'accès à l'espace apprenant est personnel et réservé au participant inscrit.",
+        creativityService
+          ? 'Le droit de participer à la formation est associé à ce dossier. La planification de la séance est organisée séparément selon la formule choisie.'
+          : "L'accès à l'espace apprenant est personnel et réservé au participant inscrit.",
         "Les conditions d'annulation, de règlement et de propriété intellectuelle relèvent des CGV FormaPrompt applicables.",
       ],
     };

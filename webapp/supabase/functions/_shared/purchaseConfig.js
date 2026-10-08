@@ -151,11 +151,54 @@ export const BUREAUTIQUE_PURCHASES = Object.freeze({
   ...OFFICE_PURCHASES,
 });
 
+function creativityPurchase(courseId, modality, amountTotal, priceEnvName, options = {}) {
+  return Object.freeze({
+    ...MIXED_DIRECT_PURCHASE,
+    courseId, modality, amountTotal, priceEnvName, currency: 'eur',
+    label: `Explorer l’IA au service de la créativité — ${modality === 'groupe' ? 'Groupe ouvert' : modality === 'individuel' ? 'Individuel' : 'École ou association'}`,
+    landingPath: '/formation-ia-creativite#inscription',
+    durationHours: 14, deliveryKind: 'instructor_led_service', requiresLmsAccess: false,
+    components: Object.freeze({ service: true, digitalContent: false }),
+    promotionEnabled: true,
+    allowedSalesContexts: Object.freeze(options.organizationRequired
+      ? [SALES_CONTEXTS.PROFESSIONAL_SELF]
+      : [SALES_CONTEXTS.PERSONAL, SALES_CONTEXTS.PROFESSIONAL_SELF, SALES_CONTEXTS.BENEFICIARY]),
+    organizationRequired: Boolean(options.organizationRequired),
+    maximumParticipants: modality === 'ecole-association' || modality === 'groupe' ? 6 : 1,
+    accessActionLabel: 'Organiser ma formation',
+    ...options,
+  });
+}
+
+export const CREATIVITY_PURCHASES = Object.freeze({
+  'ia-creativite-groupe': creativityPurchase('ia-creativite-groupe', 'groupe', 69_000, 'STRIPE_CREATIVITY_GROUP_PRICE_ID', {
+    checkoutEnabled: true, minimumParticipants: 4,
+    openingPolicy: 'conditional_minimum_participants', paymentTiming: 'at_enrollment', nonOpeningRefund: 'full',
+    groupOpeningMessage: 'Seuil prévu de quatre participants. Thierry peut décider de confirmer un groupe à partir de deux participants ; six maximum. Le paiement est encaissé dès l’inscription. Remboursement intégral si le groupe n’ouvre pas. L’ouverture de la session reste conditionnelle.',
+  }),
+  'ia-creativite-individuel': creativityPurchase('ia-creativite-individuel', 'individuel', 90_000, 'STRIPE_CREATIVITY_INDIVIDUAL_PRICE_ID'),
+  'ia-creativite-ecole-association': creativityPurchase('ia-creativite-ecole-association', 'ecole-association', 160_000, 'STRIPE_CREATIVITY_SCHOOL_ASSOCIATION_PRICE_ID', { organizationRequired: true }),
+});
+
+export function validateCreativityStripeCatalog(purchase, price, product, liveMode) {
+  if (!Object.hasOwn(CREATIVITY_PURCHASES, purchase?.courseId)) return null;
+  if (!price?.active || price.livemode !== liveMode || price.unit_amount !== purchase.amountTotal
+    || price.currency !== purchase.currency || price.recurring !== null
+    || !product?.active || product.deleted || product.livemode !== liveMode
+    || price.metadata?.course_id !== purchase.courseId || price.metadata?.modality !== purchase.modality
+    || product.metadata?.course_id !== purchase.courseId || product.metadata?.duration_hours !== '14'
+    || product.metadata?.delivery_kind !== 'instructor_led_service') {
+    return 'Le produit ou le tarif Stripe ne correspond pas à la formule IA et créativité.';
+  }
+  return null;
+}
+
 export const COURSE_PURCHASES = Object.freeze({
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
   [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
   ...BUREAUTIQUE_PURCHASES,
+  ...CREATIVITY_PURCHASES,
 });
 
 export const ADMIN_GIFT_COURSES = Object.freeze({
@@ -163,6 +206,7 @@ export const ADMIN_GIFT_COURSES = Object.freeze({
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
   ...BUREAUTIQUE_PURCHASES,
+  ...CREATIVITY_PURCHASES,
 });
 
 export function getPurchaseConfig(courseId) {
@@ -175,6 +219,7 @@ export function getCommercialRoute(purchase, checkoutContext) {
   if (!purchase || !checkoutContext || !Object.values(SALES_CONTEXTS).includes(checkoutContext.sales_context)) {
     return null;
   }
+  if (purchase.allowedSalesContexts && !purchase.allowedSalesContexts.includes(checkoutContext.sales_context)) return null;
 
   if (checkoutContext.sales_context === SALES_CONTEXTS.OF_OPCO) {
     return {
@@ -262,6 +307,13 @@ export function validateCommercialCheckoutRequest(purchase, checkoutContext, con
   if (!route) return 'Le contexte commercial est absent ou invalide.';
   if (!route.directCheckoutEnabled) return 'Ce parcours nécessite une demande de financement ou un devis.';
 
+  if (purchase.organizationRequired) {
+    if (typeof checkoutContext.buyer_organization_name !== 'string'
+      || checkoutContext.buyer_organization_name.trim().length < 2
+      || checkoutContext.buyer_organization_name.trim().length > 200) {
+      return 'Le nom de l’organisation acheteuse est requis.';
+    }
+  }
   if (route.salesContext === SALES_CONTEXTS.BENEFICIARY) {
     if (!isValidEmail(checkoutContext.beneficiary_email)) {
       return 'L’adresse e-mail du bénéficiaire est requise.';

@@ -199,6 +199,12 @@ export default function Home() {
                 <p className="mb-3">28 heures en distanciel synchrone pour choisir, construire et tester une automatisation encadrée avec CADRES. Formation sur devis.</p>
                 <Link to="/formation-agents-ia-workflows" className="link-arrow">Découvrir le parcours Agents IA &rarr;</Link>
               </div>
+              <div className="card home-creativity-card">
+                <img src="/assets/formation-ia-creativite-640.webp" alt="Illustration générée avec l’IA : atelier de recherche artistique et outils numériques" width="640" height="427" loading="lazy" />
+                <h3 className="card-title">IA et créativité</h3>
+                <p className="mb-3">14 heures pour explorer des usages de l’IA à partir de votre pratique artistique et de votre projet, en gardant la maîtrise de vos choix.</p>
+                <Link to="/formation-ia-creativite" className="link-arrow">Découvrir le parcours IA et créativité &rarr;</Link>
+              </div>
               {/* Bureautique */}
               <div className="card">
                 <Monitor size={40} color="var(--color-primary)" className="mb-2" />

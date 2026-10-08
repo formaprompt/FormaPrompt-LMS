@@ -148,7 +148,7 @@ describe('CoursePlayer fondé exclusivement sur course_access', () => {
     renderPlayer();
     expect(await screen.findByRole('heading', { name: 'Présentation de la formation' })).toBeVisible();
     expect(playerState.contentRequests).toEqual(['formation-prompt-level-1']);
-    expect(playerState.queriedTables).toContain('course_positioning_assessments');
+    expect(playerState.queriedTables).not.toContain('course_positioning_assessments');
     expect(playerState.queriedTables).not.toContain('course_access');
     expect(playerState.queriedTables).not.toContain('purchases');
   });

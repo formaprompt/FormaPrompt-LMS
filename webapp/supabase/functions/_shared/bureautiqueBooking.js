@@ -64,3 +64,38 @@ export function validateBureautiqueScheduleFormat(format) {
   }
   return format;
 }
+
+// Service accompagné : seul le groupe ouvert utilise les cohortes.
+export const CREATIVITY_GROUP_COURSE_ID = 'ia-creativite-groupe';
+export const CREATIVITY_GROUP_BOOKING = Object.freeze({
+  id: CREATIVITY_GROUP_COURSE_ID,
+  title: 'Explorer l’IA au service de la créativité — Groupe ouvert',
+  bookingKind: 'cohort',
+  defaultFormat: 'four_half_days_3h30',
+  minimumParticipants: 4,
+  maximumParticipants: 6,
+  formats: Object.freeze({ four_half_days_3h30: BUREAUTIQUE_SCHEDULE_FORMATS.four_half_days_3h30 }),
+});
+export const COHORT_COURSE_IDS = Object.freeze([...BUREAUTIQUE_INTER_COURSE_IDS, CREATIVITY_GROUP_COURSE_ID]);
+export function getCohortBookingCourse(courseId) {
+  return courseId === CREATIVITY_GROUP_COURSE_ID ? CREATIVITY_GROUP_BOOKING : getBureautiqueBookingCourse(courseId);
+}
+
+// Le service créativité individuel partage seulement le moteur de réservation 14 h.
+export const CREATIVITY_INDIVIDUAL_COURSE_ID = 'ia-creativite-individuel';
+export const CREATIVITY_INDIVIDUAL_BOOKING = Object.freeze({
+  id: CREATIVITY_INDIVIDUAL_COURSE_ID,
+  title: 'Explorer l’IA au service de la créativité — Individuel',
+  shortTitle: 'IA et créativité — Individuel',
+  guidedHoursLabel: '14 heures',
+  landingPath: '/formation-ia-creativite#inscription',
+  coursePath: '/reservation-formation?course=ia-creativite-individuel',
+  modality: 'individuel', bookingKind: 'individual', inPersonLocation: 'Calais',
+  defaultFormat: 'four_half_days_3h30', formats: BUREAUTIQUE_SCHEDULE_FORMATS,
+});
+export const INDIVIDUAL_14H_COURSE_IDS = Object.freeze([...BUREAUTIQUE_INDIVIDUAL_COURSE_IDS, CREATIVITY_INDIVIDUAL_COURSE_ID]);
+export function getIndividualBookingCourse(courseId) {
+  if (courseId === CREATIVITY_INDIVIDUAL_COURSE_ID) return CREATIVITY_INDIVIDUAL_BOOKING;
+  const course = getBureautiqueBookingCourse(courseId);
+  return course?.bookingKind === 'individual' ? course : null;
+}

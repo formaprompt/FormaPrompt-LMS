@@ -9,6 +9,9 @@ import { calculateCourseProgress } from '../lib/courseProgress';
 import { FINAL_PROJECT_REVIEW_FIELDS } from '../lib/finalProjectEvaluation';
 import { fetchPaidCourseContent } from '../lib/paidCourseContent';
 import { supabase } from '../lib/supabaseClient';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeSanitize from 'rehype-sanitize';
 import './CoursePlayer.css';
 
 const exerciseSaveDateFormatter = new Intl.DateTimeFormat('fr-FR', {
@@ -69,19 +72,9 @@ export default function CoursePlayer() {
       setAccessGranted(false);
       setCourse(null);
       setLoading(true);
-      const [contentResult, positioningResult] = await Promise.all([
-        fetchPaidCourseContent(supabase, id)
-          .then((data) => ({ data, error: null }))
-          .catch((error) => ({ data: null, error })),
-        supabase
-          .from('course_positioning_assessments')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('course_id', id)
-          .eq('is_initial', true)
-          .order('submitted_at', { ascending: true })
-          .limit(1),
-      ]);
+      const contentResult = await fetchPaidCourseContent(supabase, id)
+        .then((data) => ({ data, error: null }))
+        .catch((error) => ({ data: null, error }));
 
       if (contentResult.error) {
         if (contentResult.error.status === 403) {
@@ -89,15 +82,24 @@ export default function CoursePlayer() {
         } else {
           setAccessError(contentResult.error.message);
         }
-      } else if (positioningResult.error) {
-        console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);
-        setAccessError(
-          "Le suivi des positionnements n'est pas encore disponible. Contactez FormaPrompt si le problème persiste.",
-        );
       } else {
-        setCourse(contentResult.data);
-        setQuizCompleted(Boolean(positioningResult.data?.length));
-        setAccessGranted(true);
+        const positioningRequired = contentResult.data.initialPositioningRequired !== false;
+        const positioningResult = positioningRequired ? await supabase
+          .from('course_positioning_assessments')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('course_id', id)
+          .eq('is_initial', true)
+          .order('submitted_at', { ascending: true })
+          .limit(1) : { data: [], error: null };
+        if (positioningResult.error) {
+          console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);
+          setAccessError("Le suivi des positionnements n'est pas encore disponible. Contactez FormaPrompt si le problème persiste.");
+        } else {
+          setCourse(contentResult.data);
+          setQuizCompleted(!positioningRequired || Boolean(positioningResult.data?.length));
+          setAccessGranted(true);
+        }
       }
 
       setLoading(false);
@@ -1066,6 +1068,16 @@ export default function CoursePlayer() {
         <div className="tab-content">
           {activeTab === 'resources' && (
             <div className="download-grid">
+              {(course.textResources || []).map((resource) => (
+                <details key={resource.id} className="text-resource">
+                  <summary><h3 className="file-title">{resource.title}</h3></summary>
+                    <div className="text-resource-content">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} skipHtml components={{ a: ({ children }) => <span>{children}</span>, img: () => null }}>
+                        {resource.markdown}
+                      </ReactMarkdown>
+                    </div>
+                </details>
+              ))}
               {course.resources.map((resource) => (
                 <article key={resource.href} className="download-card">
                   <div className="file-icon-wrapper">

@@ -7,7 +7,7 @@ import { COURSE_ATTESTATION_CONFIG } from '../data/attestationConfig';
 import { courseCatalog } from '../data/courseCatalog';
 import { buildAttestationDossier } from '../lib/attestationDossier';
 import { ATTESTATION_TYPES, createAttestationReference } from '../lib/attestationDocument';
-import { createAttestationSnapshot } from '../lib/attestationSnapshot';
+import { createAttestationSnapshot, hasValidAttestationObjectives } from '../lib/attestationSnapshot';
 import { groupBookedSessions } from '../lib/courseBookingSlots';
 import { FINAL_PROJECT_REVIEW_FIELDS } from '../lib/finalProjectEvaluation';
 import { supabase } from '../lib/supabaseClient';
@@ -133,7 +133,10 @@ export default function AttestationDocument() {
       attendanceRecords: booking?.course_session_attendance || [],
       finalReview: record.review,
     });
-    const isReady = documentType === 'realisation' ? dossier.realizationReady : dossier.competencyReady;
+    const attestationConfig = COURSE_ATTESTATION_CONFIG[record.submission.course_id];
+    const objectivesReady = hasValidAttestationObjectives(attestationConfig);
+    const isReady = objectivesReady
+      && (documentType === 'realisation' ? dossier.realizationReady : dossier.competencyReady);
     const rubric = course?.finalProject?.rubric || [];
     const levels = course?.finalProject?.rubricLevels || [];
     const criteria = rubric.map((criterion) => {
@@ -152,10 +155,11 @@ export default function AttestationDocument() {
       dossier,
       criteria,
       isReady,
-      missingRequirements: documentType === 'realisation'
+      missingRequirements: [...(documentType === 'realisation'
         ? dossier.realizationMissingRequirements
-        : dossier.competencyMissingRequirements,
-      attestationConfig: COURSE_ATTESTATION_CONFIG[record.submission.course_id],
+        : dossier.competencyMissingRequirements),
+      ...(!objectivesReady ? ['objectifs pédagogiques absents ou invalides dans la configuration de la formation'] : [])],
+      attestationConfig,
     };
   }, [documentType, record, typeConfig]);
 

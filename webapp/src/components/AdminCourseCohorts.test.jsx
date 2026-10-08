@@ -206,3 +206,163 @@ it('réessaie une seule fois le nettoyage Meet d’une cohorte annulée et signa
   await waitFor(() => expect(screen.getByText('Nettoyage partiel : vous pouvez réessayer.')).toBeVisible());
   expect(screen.getByRole('button', { name: 'Réessayer le nettoyage Google Meet' })).toBeEnabled();
 });
+
+it('limite le groupe créativité à quatre demi-journées et six places avec seuil quatre', () => {
+  renderAdmin({ courseOptions: [{ id: 'ia-creativite-groupe', label: 'Créativité' }] });
+  fireEvent.change(screen.getByLabelText('Formation'), { target: { value: 'ia-creativite-groupe' } });
+  expect(screen.getByLabelText('Format')).toHaveValue('four_half_days_3h30');
+  expect(screen.queryByRole('option', { name: '2 jours de 7 h (2 × 3 h 30 par jour)' })).not.toBeInTheDocument();
+  expect(screen.getByLabelText('Capacité maximale')).toHaveValue(6);
+  expect(screen.getByLabelText('Capacité maximale')).toHaveAttribute('max', '6');
+  expect(screen.getByLabelText('Seuil minimum de participants')).toHaveValue(4);
+  expect(screen.getByLabelText('Seuil minimum de participants')).not.toHaveAttribute('readonly');
+  expect(screen.getByLabelText('Seuil minimum de participants')).toHaveAttribute('min', '2');
+  expect(screen.getByLabelText('Seuil minimum de participants')).toHaveAttribute('max', '6');
+  expect(screen.getByLabelText('En présentiel à Calais')).toBeInTheDocument();
+});
+it('ne permet pas la confirmation créativité avant quatre inscrits éligibles', () => {
+  renderAdmin({ cohorts: [{ id: 'creativity-one', course_id: 'ia-creativite-groupe', status: 'published', enrolled_count: 3, capacity: 6, minimum_participants: 4, sessions: [] }] });
+  expect(screen.getByRole('button', { name: 'Confirmer' })).toBeDisabled();
+});
+
+it('charge les participants via le parent et distingue cadeau, remboursement en attente et remboursement terminé', async () => {
+  const onLoadParticipants = vi.fn().mockResolvedValue([
+    { id: 'gift', user_id: 'gift-user', name: 'Cadeau test', is_gift: true, eligible: true, status: 'active' },
+    { id: 'pending', user_id: 'pending-user', name: 'Paiement test', is_gift: false, eligible: false, status: 'cohort_cancelled_refund_review', payment_status: 'paid' },
+    { id: 'refunded', user_id: 'refunded-user', name: 'Remboursé test', is_gift: false, eligible: false, status: 'cohort_cancelled_refund_review', payment_status: 'refunded' },
+  ]);
+  renderAdmin({ onLoadParticipants, cohorts: [{ id: 'group-roster', course_id: 'ia-creativite-groupe', status: 'cancelled', capacity: 6, minimum_participants: 4, enrolled_count: 0, sessions: [] }] });
+  fireEvent.click(screen.getByRole('button', { name: 'Voir les participants' }));
+  await waitFor(() => expect(onLoadParticipants).toHaveBeenCalledWith('group-roster'));
+  expect((await screen.findByRole('link', { name: 'Cadeau test' })).closest('li')).toHaveTextContent('Formation offerte · Éligible');
+  expect(screen.getByRole('link', { name: 'Paiement test' }).closest('li')).toHaveTextContent('Remboursement à vérifier dans Stripe');
+  const refunded = screen.getByRole('link', { name: 'Remboursé test' }).closest('li');
+  expect(refunded).toHaveTextContent('Paiement remboursé');
+  expect(refunded).not.toHaveTextContent('Remboursement à vérifier dans Stripe');
+});
+
+it('enregistre un brouillon créativité avec seuil deux et les quatre séances prévues', () => {
+  const onSaveDraft = vi.fn();
+  renderAdmin({ onSaveDraft, courseOptions: [{ id: 'ia-creativite-groupe', label: 'Créativité' }] });
+  fireEvent.change(screen.getByLabelText('Formation'), { target: { value: 'ia-creativite-groupe' } });
+  fireEvent.click(screen.getByLabelText('À distance'));
+  fireEvent.change(screen.getByLabelText('Seuil minimum de participants'), { target: { value: '2' } });
+  [0, 1, 2, 3].forEach(index => selectRange(`Demi-journée ${index + 1}`, fourDays.slice(index * 7, index * 7 + 7).map(slot => slot.id)));
+  fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer le brouillon' }).closest('form'));
+  expect(onSaveDraft).toHaveBeenCalledWith(expect.objectContaining({ minimum_participants: 2, capacity: 6 }));
+  expect(onSaveDraft.mock.calls[0][0].sessions.flatMap(session => session.slot_ids)).toEqual(fourDays.map(slot => slot.id));
+});
+it.each(['1', '7', '2.5'])('refuse un seuil créativité hors bornes ou non entier (%s)', value => {
+  const onSaveDraft = vi.fn();
+  renderAdmin({ onSaveDraft, courseOptions: [{ id: 'ia-creativite-groupe', label: 'Créativité' }] });
+  fireEvent.change(screen.getByLabelText('Formation'), { target: { value: 'ia-creativite-groupe' } });
+  fireEvent.click(screen.getByLabelText('À distance'));
+  fireEvent.change(screen.getByLabelText('Seuil minimum de participants'), { target: { value } });
+  fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer le brouillon' }).closest('form'));
+  expect(onSaveDraft).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert')).toBeInTheDocument();
+});
+it('refuse un seuil supérieur à la capacité réduite du brouillon', () => {
+  const onSaveDraft = vi.fn();
+  renderAdmin({ onSaveDraft, courseOptions: [{ id: 'ia-creativite-groupe', label: 'Créativité' }] });
+  fireEvent.change(screen.getByLabelText('Formation'), { target: { value: 'ia-creativite-groupe' } });
+  fireEvent.click(screen.getByLabelText('À distance'));
+  fireEvent.change(screen.getByLabelText('Capacité maximale'), { target: { value: '4' } });
+  fireEvent.change(screen.getByLabelText('Seuil minimum de participants'), { target: { value: '5' } });
+  fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer le brouillon' }).closest('form'));
+  expect(onSaveDraft).not.toHaveBeenCalled();
+});
+it('modifie seulement le seuil d’un groupe publié et confirme selon le seuil reçu', async () => {
+  const onSetMinimumParticipants = vi.fn().mockResolvedValue({});
+  const onConfirm = vi.fn().mockResolvedValue({});
+  const cohort = { id: 'published-two', course_id: 'ia-creativite-groupe', status: 'published', enrolled_count: 2, capacity: 6, minimum_participants: 4, sessions: [] };
+  const view = renderAdmin({ onSetMinimumParticipants, onConfirm, cohorts: [cohort] });
+  expect(screen.getByRole('button', { name: 'Confirmer' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Seuil minimum du groupe'), { target: { value: '2' } });
+  fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer le seuil' }).closest('form'));
+  await waitFor(() => expect(onSetMinimumParticipants).toHaveBeenCalledWith('published-two', 2));
+  expect(onSetMinimumParticipants.mock.calls[0]).toHaveLength(2);
+  view.rerender(<AdminCourseCohorts onSetMinimumParticipants={onSetMinimumParticipants} onConfirm={onConfirm} cohorts={[{ ...cohort, minimum_participants: 2 }]} />);
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Confirmer' })).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
+  await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('published-two'));
+  expect(screen.getByText(/Ouverture confirmée manuellement à partir de 2/)).toBeInTheDocument();
+});
+it.each(['draft', 'published'])('borne aussi le changement de seuil sur un groupe %s', status => {
+  const onSetMinimumParticipants = vi.fn();
+  renderAdmin({ onSetMinimumParticipants, cohorts: [{ id: 'bounded', course_id: 'ia-creativite-groupe', status, capacity: 4, minimum_participants: 4, enrolled_count: 2, sessions: [] }] });
+  for (const value of ['1', '5', '7', '2.5']) {
+    fireEvent.change(screen.getByLabelText('Seuil minimum du groupe'), { target: { value } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Enregistrer le seuil' }).closest('form'));
+  }
+  expect(onSetMinimumParticipants).not.toHaveBeenCalled();
+});
+it('ne propose pas de changement de seuil après confirmation du groupe', () => {
+  renderAdmin({ cohorts: [{ id: 'confirmed-two', course_id: 'ia-creativite-groupe', status: 'confirmed', minimum_participants: 2, capacity: 6, enrolled_count: 2, sessions: [] }] });
+  expect(screen.queryByLabelText('Seuil minimum du groupe')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Enregistrer le seuil' })).not.toBeInTheDocument();
+});
+
+function futureCreativityCohort(overrides = {}) {
+  const sessions = Array.from({ length: 4 }, (_, position) => ({ id: `future-${position}`, position: position + 1, starts_at: new Date(Date.now() + (position + 1) * 86400000).toISOString(), ends_at: new Date(Date.now() + (position + 1) * 86400000 + 210 * 60000).toISOString() }));
+  return { id: 'future-group', course_id: 'ia-creativite-groupe', status: 'published', capacity: 6, minimum_participants: 2, enrolled_count: 1, sessions, ...overrides };
+}
+it('inscrit un cadeau groupe existant puis recharge candidats et participants', async () => {
+  const candidate = { user_id: 'gift-group', name: 'Cadeau groupe', email: 'group@example.test', access_source: 'gift', already_enrolled: false };
+  const onLoadCreativityCandidates = vi.fn().mockResolvedValueOnce([candidate]).mockResolvedValueOnce([{ ...candidate, already_enrolled: true }]);
+  const onLoadParticipants = vi.fn().mockResolvedValue([{ id: 'enrolled', user_id: candidate.user_id, name: candidate.name, is_gift: true, eligible: true, status: 'active' }]);
+  const onEnrollCreativity = vi.fn().mockResolvedValue({ id: 'enrolled' });
+  renderAdmin({ cohorts: [futureCreativityCohort()], onLoadCreativityCandidates, onLoadParticipants, onEnrollCreativity });
+  fireEvent.click(screen.getByRole('button', { name: 'Charger les apprenants éligibles' }));
+  expect(await screen.findByRole('option', { name: /Cadeau groupe.*group@example.test.*Formation offerte/ })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Apprenant éligible au groupe ouvert'), { target: { value: candidate.user_id } });
+  fireEvent.click(screen.getByRole('button', { name: 'Inscrire à cette session' }));
+  await waitFor(() => expect(onEnrollCreativity).toHaveBeenCalledWith('future-group', 'gift-group'));
+  expect(onEnrollCreativity.mock.calls[0]).toHaveLength(2);
+  expect(await screen.findByText(/L’apprenant est inscrit à cette session/)).toBeInTheDocument();
+  expect(onLoadParticipants).toHaveBeenCalledWith('future-group');
+  expect(onLoadCreativityCandidates).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole('option', { name: /Déjà inscrit à un groupe/ })).toBeDisabled();
+});
+it('ne propose pas de cadeau individuel quand le serveur ne renvoie aucun droit groupe', async () => {
+  const onLoadCreativityCandidates = vi.fn().mockResolvedValue([]);
+  renderAdmin({ cohorts: [futureCreativityCohort()], onLoadCreativityCandidates });
+  fireEvent.click(screen.getByRole('button', { name: 'Charger les apprenants éligibles' }));
+  expect(await screen.findByText(/Un droit à la formule individuelle ne permet pas/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Inscrire à cette session' })).toBeDisabled();
+});
+it('désactive les doublons déjà inscrits et les groupes complets', async () => {
+  const candidate = { user_id: 'already', name: 'Déjà inscrit', access_source: 'gift', already_enrolled: true };
+  const onEnrollCreativity = vi.fn();
+  renderAdmin({ cohorts: [futureCreativityCohort({ enrolled_count: 6 })], onLoadCreativityCandidates: vi.fn().mockResolvedValue([candidate]), onEnrollCreativity });
+  fireEvent.click(screen.getByRole('button', { name: 'Charger les apprenants éligibles' }));
+  expect(await screen.findByRole('option', { name: /Déjà inscrit.*Formation offerte/ })).toBeDisabled();
+  expect(screen.getByLabelText('Apprenant éligible au groupe ouvert')).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Inscrire à cette session' })).toBeDisabled();
+  expect(screen.getByText('Ce groupe est complet.')).toBeInTheDocument();
+  expect(onEnrollCreativity).not.toHaveBeenCalled();
+});
+it('présente une erreur lisible si le chargement des candidats échoue', async () => {
+  renderAdmin({ cohorts: [futureCreativityCohort()], onLoadCreativityCandidates: vi.fn().mockRejectedValue(new Error('Liste momentanément indisponible.')) });
+  fireEvent.click(screen.getByRole('button', { name: 'Charger les apprenants éligibles' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Liste momentanément indisponible.');
+  expect(screen.getByRole('button', { name: 'Charger les apprenants éligibles' })).toBeEnabled();
+});
+it('ne présente pas d’inscription admin pour brouillon, annulé ou séances déjà commencées', () => {
+  renderAdmin({ cohorts: [futureCreativityCohort({ status: 'draft' }), futureCreativityCohort({ id: 'cancelled-group', status: 'cancelled' }), futureCreativityCohort({ id: 'started-group', sessions: Array.from({ length: 4 }, (_, position) => ({ position, starts_at: '2020-01-01T08:00:00Z', ends_at: '2020-01-01T11:30:00Z' })) })] });
+  expect(screen.queryByRole('button', { name: 'Charger les apprenants éligibles' })).not.toBeInTheDocument();
+});
+
+it.each(['manual', 'opco'])('nomme le candidat %s dossier administratif et son inscription annulée sans remboursement Stripe', async access_source => {
+  const onLoadCreativityCandidates = vi.fn().mockResolvedValue([{ user_id: 'admin-learner', name: 'Dossier test', email: 'dossier@example.test', access_source, already_enrolled: false }]);
+  const onLoadParticipants = vi.fn().mockResolvedValue([{ id: 'administrative-enrollment', user_id: 'admin-learner', name: 'Dossier test', access_source, is_administrative: true, is_gift: false, has_purchase: false, payment_status: null, eligible: true, status: 'cohort_cancelled_refund_review' }]);
+  renderAdmin({ cohorts: [futureCreativityCohort()], onLoadCreativityCandidates, onLoadParticipants });
+  fireEvent.click(screen.getByRole('button', { name: 'Charger les apprenants éligibles' }));
+  expect(await screen.findByRole('option', { name: /Dossier test.*Dossier administratif/ })).toBeInTheDocument();
+  expect(screen.queryByRole('option', { name: /Dossier test.*Inscription payée/ })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Voir les participants' }));
+  const row = (await screen.findByRole('link', { name: 'Dossier test' })).closest('li');
+  expect(row).toHaveTextContent('Dossier administratif');
+  expect(row).not.toHaveTextContent('Remboursement à vérifier dans Stripe');
+  expect(row).not.toHaveTextContent('Formation offerte');
+});

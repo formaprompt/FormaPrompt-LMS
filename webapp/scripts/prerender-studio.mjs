@@ -67,6 +67,13 @@ const pages = [
     ],
   },
   {
+    name: 'Formation IA et créativité',
+    url: `http://${host}:${port}/formation-ia-creativite`,
+    outputPath: path.resolve('dist', 'formation-ia-creativite.html'),
+    heading: /explorer l’ia au service de la créativité/i,
+    markers: ['14 heures', '690 €', 'https://formaprompt.com/formation-ia-creativite'],
+  },
+  {
     name: 'Accueil',
     url: `http://${host}:${port}/`,
     outputPath: path.resolve('dist', 'index.html'),

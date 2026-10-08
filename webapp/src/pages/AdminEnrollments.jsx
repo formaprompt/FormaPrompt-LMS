@@ -5,13 +5,8 @@ import { supabase } from '../lib/supabaseClient';
 import EnrollmentLifecyclePanel from '../components/EnrollmentLifecyclePanel';
 import { filterAdministrativeEnrollments } from '../lib/enrollmentLifecycle';
 import { learnerRecordPath } from '../lib/adminLearnerRecord';
+import { COURSE_OPTIONS } from '../lib/adminEnrollmentCourses';
 import './AdminEnrollments.css';
-
-const COURSE_OPTIONS = {
-  'formation-ia': { title: 'IA générative', durationMinutes: 600, priceAmountCents: 49700 },
-  'formation-ia-act': { title: 'IA Act', durationMinutes: 240, priceAmountCents: 18700 },
-  'formation-prompt-level-1': { title: 'Prompt Engineering – Niveau 1', durationMinutes: 420, priceAmountCents: 34300 },
-};
 
 const DOCUMENT_LABELS = {
   training_agreement: 'Convention ou contrat',
@@ -227,6 +222,8 @@ export default function AdminEnrollments() {
       type: 'success',
       message: editingEnrollmentId
         ? 'Dossier actualisé ; les documents disponibles ont été régénérés.'
+        : COURSE_OPTIONS[form.courseId]?.service
+        ? `Dossier validé et droit à la formation associé${data.invited ? ' ; invitation envoyée à l’apprenant' : ''}. Ce dossier ne réserve pas de place : ${COURSE_OPTIONS[form.courseId].reservation}.`
         : data.invited
         ? "Dossier créé, accès attribué et invitation envoyée à l'apprenant."
         : 'Dossier créé, accès attribué et documents essentiels préremplis.',
@@ -293,7 +290,7 @@ export default function AdminEnrollments() {
         <div>
           <p className="admin-enrollments__eyebrow">Administration FormaPrompt</p>
           <h1>Dossiers OF, entreprise et OPCO</h1>
-          <p>Une inscription validée attribue le droit LMS existant puis prépare les documents essentiels.</p>
+          <p>Une inscription validée associe un droit de formation et prépare les documents essentiels.</p>
         </div>
         <Link className="btn admin-enrollments__secondary" to="/admin">Retour à l’administration</Link>
       </header>
@@ -309,6 +306,11 @@ export default function AdminEnrollments() {
         <p className="admin-enrollments__notice">
           Renseignez uniquement les données nécessaires à l’accès, au financement et aux documents de formation.
         </p>
+        {COURSE_OPTIONS[form.courseId]?.service && (
+          <p className="admin-enrollments__notice" role="note">
+            Cette formule créativité comprend un accompagnement avec le formateur. La validation du dossier ne réserve pas une séance : {COURSE_OPTIONS[form.courseId].reservation}.
+          </p>
+        )}
         <form className="admin-enrollments__form" onSubmit={submitEnrollment}>
           <fieldset>
             <legend>Apprenant</legend>
@@ -472,7 +474,7 @@ export default function AdminEnrollments() {
                   <div><dt>Origine</dt><dd>{SOURCE_LABELS[enrollment.enrollment_source] || enrollment.enrollment_source}</dd></div>
                   <div><dt>Financement</dt><dd>{enrollment.funder_name || enrollment.funding_mode}</dd></div>
                   <div><dt>Dates</dt><dd>{formatDate(enrollment.starts_at)} → {formatDate(enrollment.ends_at)}</dd></div>
-                  <div><dt>Accès LMS</dt><dd>{enrollment.course_access_id ? 'Attribué' : 'À vérifier'}</dd></div>
+                  <div><dt>{COURSE_OPTIONS[enrollment.course_id]?.service ? 'Accès à la formation' : 'Accès LMS'}</dt><dd>{enrollment.course_access_id ? 'Attribué' : 'À vérifier'}</dd></div>
                 </dl>
                 {!['archived', 'cancelled', 'abandoned'].includes(enrollment.status) && (
                   <button

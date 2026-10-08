@@ -1,3 +1,5 @@
+import { creativityCourseCatalog } from './creativityCourseCatalog.js';
+
 // La vidéo reste sur IONOS et n'entre jamais dans le catalogue public ni dans
 // Supabase Storage. L'Edge Function injecte une URL HMAC courte vers la
 // passerelle IONOS uniquement après contrôle de course_access.
@@ -3988,4 +3990,5 @@ export const courseCatalog = {
       },
     ],
   },
+  ...creativityCourseCatalog,
 };

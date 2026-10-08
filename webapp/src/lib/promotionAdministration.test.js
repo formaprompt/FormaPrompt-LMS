@@ -5,7 +5,7 @@ import {
   parseEurosToCents, PROMOTION_TARGET_OPTIONS, promotionDraftToRpc, promotionStatus, setPromotionActive,
   updatePromotion, validatePromotionDraft,
 } from './promotionAdministration.js';
-import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { BUREAUTIQUE_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 
 function validDraft(overrides = {}) {
   return {
@@ -64,6 +64,9 @@ test('propose les douze offres bureautiques avec niveau et modalité explicites'
     assert.match(target.label, /Inter-entreprises|Individuel/);
   }
   assert.equal(PROMOTION_TARGET_OPTIONS.some(({ target_key: targetKey }) => targetKey.endsWith('-intra')), false);
+  const creativityTargets = PROMOTION_TARGET_OPTIONS.filter(({ target_key: targetKey }) => Object.hasOwn(CREATIVITY_PURCHASES, targetKey));
+  assert.deepEqual(creativityTargets.map(({ target_key: targetKey }) => targetKey), Object.keys(CREATIVITY_PURCHASES));
+  assert.ok(creativityTargets.every(({ target_type }) => target_type === 'course'));
 });
 
 test('prépare les paramètres autoritatifs du RPC et convertit les montants en cents', () => {

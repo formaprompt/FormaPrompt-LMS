@@ -23,6 +23,7 @@ import {
   fetchMyCourseCohortEnrollment,
   joinCourseCohort,
 } from '../lib/courseCohorts'
+import { CREATIVITY_INDIVIDUAL_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js'
 import './CourseBooking.css'
 
 const STATUS_LABELS = {
@@ -99,6 +100,13 @@ export default function CourseBooking() {
     setFeedback('')
 
     const accessResult = await fetchActiveCourseAccess(user.id, courseId)
+    if (courseId === CREATIVITY_INDIVIDUAL_COURSE_ID && accessResult.data) {
+      const eligibility = await supabase.rpc('has_creativity_booking_access', { p_course_id: courseId })
+      if (eligibility.error || eligibility.data !== true) {
+        accessResult.data = null
+        accessResult.error = eligibility.error
+      }
+    }
     setHasAccess(Boolean(accessResult.data))
     if (accessResult.error || !accessResult.data) {
       if (accessResult.error) {
@@ -226,7 +234,7 @@ export default function CourseBooking() {
     ? 'Enregistrement…'
     : deliveryMode === 'remote'
       ? 'Confirmer mes séances'
-      : 'Envoyer ma demande de présentiel'
+      : course.inPersonLocation ? 'Confirmer mes séances à Calais' : 'Envoyer ma demande de présentiel'
 
   const availableFormats = Object.entries(course.formats).filter(([, format]) => (
     deliveryMode === 'remote' ? !format.inPersonOnly : !format.remoteOnly
@@ -452,7 +460,7 @@ export default function CourseBooking() {
             <div>
               <p className="booking-kicker">{STATUS_LABELS[booking.status] || booking.status}</p>
               <h2>{booking.delivery_mode === 'remote' ? 'Classe virtuelle' : 'Présentiel'} – {course.formats[booking.schedule_format]?.label}</h2>
-              {booking.delivery_mode === 'in_person' && <p><MapPin size={17} aria-hidden="true" /> {booking.postal_code} {booking.city} — validation dans un rayon de 100 km autour de Calais.</p>}
+              {booking.delivery_mode === 'in_person' && <p><MapPin size={17} aria-hidden="true" /> {course.inPersonLocation || `${booking.postal_code} ${booking.city} — validation dans un rayon de 100 km autour de Calais.`}</p>}
               <div className="booking-session-list">
                 {groupBookedSessions(booking.course_session_bookings || [], booking.schedule_format).map((session) => {
                   const attendance = findAttendanceForSession(booking.course_session_attendance, session)
@@ -519,7 +527,7 @@ export default function CourseBooking() {
               <legend>1. Choisissez la modalité</legend>
               <div className="booking-choice-grid">
                 <button type="button" className={deliveryMode === 'remote' ? 'selected' : ''} onClick={() => chooseMode('remote')}><Monitor size={25} aria-hidden="true" /><strong>Classe virtuelle</strong><span>Sans supplément</span></button>
-                <button type="button" className={deliveryMode === 'in_person' ? 'selected' : ''} onClick={() => chooseMode('in_person')}><MapPin size={25} aria-hidden="true" /><strong>Présentiel</strong><span>À moins de 100 km de Calais, après validation</span></button>
+                <button type="button" className={deliveryMode === 'in_person' ? 'selected' : ''} onClick={() => chooseMode('in_person')}><MapPin size={25} aria-hidden="true" /><strong>Présentiel</strong><span>{course.inPersonLocation ? `À ${course.inPersonLocation}` : 'À moins de 100 km de Calais, après validation'}</span></button>
               </div>
             </fieldset>
 
@@ -535,7 +543,7 @@ export default function CourseBooking() {
               </div>
             </fieldset>
 
-            {deliveryMode === 'in_person' && (
+            {deliveryMode === 'in_person' && !course.inPersonLocation && (
               <fieldset>
                 <legend>3. Indiquez la commune du lieu de formation</legend>
                 <div className="booking-location-grid">
@@ -547,7 +555,7 @@ export default function CourseBooking() {
             )}
 
             <fieldset>
-              <legend>{deliveryMode === 'in_person' ? '4' : '3'}. Choisissez {selectedFormat.sessionCount} proposition{selectedFormat.sessionCount > 1 ? 's' : ''}</legend>
+              <legend>{deliveryMode === 'in_person' && !course.inPersonLocation ? '4' : '3'}. Choisissez {selectedFormat.sessionCount} proposition{selectedFormat.sessionCount > 1 ? 's' : ''}</legend>
               <p>{selectedCandidateIds.length} sur {selectedFormat.sessionCount} sélectionnée{selectedCandidateIds.length > 1 ? 's' : ''}. {selectedFormat.selectionHint || (selectedFormat.type === 'split_day' ? 'Le site assemble automatiquement les créneaux de 30 minutes et conserve une heure pour déjeuner.' : 'Le site assemble automatiquement les créneaux de 30 minutes.')}</p>
               <div className="booking-slots">
                 {compatibleCandidates.length === 0 ? (

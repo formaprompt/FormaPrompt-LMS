@@ -7,6 +7,8 @@ import {
   BUREAUTIQUE_INTER_COURSE_IDS,
   BUREAUTIQUE_SCHEDULE_FORMATS,
   getBureautiqueBookingCourse,
+  COHORT_COURSE_IDS,
+  getCohortBookingCourse,
 } from '../_shared/bureautiqueBooking.js';
 
 const migration = readFileSync(new URL('../../migrations/20260913121500_add_bureautique_booking_cohorts.sql', import.meta.url), 'utf8');
@@ -31,7 +33,7 @@ test('le catalogue ferme douze droits commerciaux et deux formats totalisant 840
 });
 
 test('l individuel exige 28 identifiants uniques et délègue à la RPC bureautique', () => {
-  assert.match(individualEdge, /BUREAUTIQUE_INDIVIDUAL_COURSE_IDS\.map\(\(courseId\) => \[courseId, 28\]\)/);
+  assert.match(individualEdge, /INDIVIDUAL_14H_COURSE_IDS\.map\(\(courseId\) => \[courseId, 28\]\)/);
   assert.match(individualEdge, /new Set\(body\.slot_ids\)\.size !== expectedSlotCount/);
   assert.match(individualEdge, /create_bureautique_booking_request/);
   assert.match(migration, /cardinality\(p_slot_ids\) <> 28/);
@@ -83,7 +85,7 @@ test('les Edge cohortes authentifient puis n acceptent que des identifiants born
   assert.doesNotMatch(adminEdge, /attendees|sendUpdates=all/);
   assert.match(learnerEdge, /body\.cohort_id/);
   assert.doesNotMatch(learnerEdge, /capacity.*body|slot_ids.*body/);
-  assert.match(adminEdge, /BUREAUTIQUE_INTER_COURSE_IDS/);
+  assert.match(adminEdge, /COHORT_COURSE_IDS/);
   assert.match(adminEdge, /record\.code === '23P01'.*Un autre créneau chevauchant est déjà réservé\./s);
   assert.match(individualEdge, /error\.code === '23P01'.*Un autre créneau chevauchant est déjà réservé\./s);
 });
@@ -137,4 +139,16 @@ test('la liste admin restitue les créneaux techniques nécessaires pour modifie
   );
   assert.match(adminList, /'slot_ids',[\s\S]*course_cohort_session_slots AS links/);
   assert.match(adminList, /links\.cohort_session_id = s\.id/);
+});
+
+test('seul le groupe créativité rejoint les cohortes, sans changer les douze offres bureautiques', () => {
+  assert.equal(Object.keys(BUREAUTIQUE_BOOKING_COURSES).length, 12);
+  assert.equal(COHORT_COURSE_IDS.length, 7);
+  const group = getCohortBookingCourse('ia-creativite-groupe');
+  assert.equal(group.minimumParticipants, 4);
+  assert.equal(group.maximumParticipants, 6);
+  assert.deepEqual(Object.keys(group.formats), ['four_half_days_3h30']);
+  assert.equal(group.formats.four_half_days_3h30.totalMinutes, 840);
+  assert.equal(getCohortBookingCourse('ia-creativite-individuel'), null);
+  assert.equal(getCohortBookingCourse('ia-creativite-ecole-association'), null);
 });

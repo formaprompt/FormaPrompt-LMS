@@ -1,4 +1,4 @@
-import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { BUREAUTIQUE_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 
 export const PROMOTION_TARGET_OPTIONS = [
   { target_type: 'diagnostic', target_key: 'diagnostic-ia-express', label: 'Diagnostic IA Express' },
@@ -7,6 +7,9 @@ export const PROMOTION_TARGET_OPTIONS = [
   { target_type: 'course', target_key: 'formation-ia-act', label: 'Formation IA Act' },
   { target_type: 'course', target_key: 'formation-prompt-level-1', label: 'Formation Prompt Engineering – Niveau 1' },
   ...Object.values(BUREAUTIQUE_PURCHASES).map((offer) => ({
+    target_type: 'course', target_key: offer.courseId, label: offer.label,
+  })),
+  ...Object.values(CREATIVITY_PURCHASES).map((offer) => ({
     target_type: 'course', target_key: offer.courseId, label: offer.label,
   })),
 ];

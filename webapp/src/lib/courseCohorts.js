@@ -172,3 +172,35 @@ export async function cleanupAdminCourseCohortMeetingEvents(client, cohortId) {
     cohort_id: cohortId,
   }, 'Le nettoyage des événements Google Meet ne peut pas être terminé pour le moment.')
 }
+
+export async function fetchAdminCreativityCohortParticipants(client, cohortId) {
+  const data = await invoke(client, 'manage-course-cohorts', { action: 'participants', cohort_id: cohortId }, 'Les participants ne peuvent pas être chargés.')
+  return Array.isArray(data?.participants) ? data.participants : []
+}
+
+export function creativityAccessAction(access) {
+  if (!['ia-creativite-groupe', 'ia-creativite-individuel', 'ia-creativite-ecole-association'].includes(access?.course_id)) return null;
+  if (access.course_id === 'ia-creativite-individuel') return { path: '/reservation-formation?course=ia-creativite-individuel', label: 'Choisir mes horaires' };
+  const gift = access.access_source === 'gift' && !access.purchase_id;
+  if (gift) return access.course_id === 'ia-creativite-groupe'
+    ? { path: '#creativity-group-sessions', label: 'Choisir mes dates' }
+    : { path: '/contact', label: 'Organiser ma formation offerte' };
+  return { path: `/paiement-reussi?course=${encodeURIComponent(access.course_id)}`, label: 'Retrouver mon inscription' };
+}
+
+export async function setAdminCreativityCohortMinimum(client, cohortId, minimumParticipants) {
+  return invoke(client, 'manage-course-cohorts', {
+    action: 'set_minimum_participants',
+    cohort_id: cohortId,
+    minimum_participants: minimumParticipants,
+  }, 'Le seuil minimum du groupe ne peut pas être enregistré.')
+}
+
+export async function fetchAdminCreativityCohortCandidates(client, cohortId) {
+  const data = await invoke(client, 'manage-course-cohorts', { action: 'creativity_candidates', cohort_id: cohortId }, 'Les apprenants éligibles au groupe ne peuvent pas être chargés.')
+  return Array.isArray(data?.candidates) ? data.candidates : []
+}
+export async function enrollAdminCreativityCohort(client, cohortId, userId) {
+  const data = await invoke(client, 'manage-course-cohorts', { action: 'enroll_creativity', cohort_id: cohortId, user_id: userId }, 'L’apprenant ne peut pas être inscrit à cette session.')
+  return data?.enrollment || null
+}

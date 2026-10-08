@@ -19,6 +19,7 @@ describe('Navigation publique', () => {
     await user.keyboard('{Enter}');
     expect(button).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('link', { name: 'Agents IA & Workflows' })).toHaveAttribute('href', '/formation-agents-ia-workflows');
+    expect(screen.getByRole('link', { name: 'IA et créativité' })).toHaveAttribute('href', '/formation-ia-creativite');
     await user.tab();
     expect(screen.getByRole('link', { name: 'IA Générative' })).toHaveFocus();
     await user.keyboard('{Escape}');

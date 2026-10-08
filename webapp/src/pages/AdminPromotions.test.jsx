@@ -69,6 +69,9 @@ describe('AdminPromotions', () => {
     expect(screen.getByLabelText(/Word Initiation.*Inter-entreprises/)).not.toBeChecked();
     expect(screen.getByLabelText(/Word Perfectionnement.*Individuel/)).not.toBeChecked();
     expect(screen.getByLabelText(/PowerPoint Initiation.*Inter-entreprises/)).not.toBeChecked();
+    expect(screen.getByLabelText(/Explorer l’IA au service de la créativité.*Groupe ouvert/)).not.toBeChecked();
+    expect(screen.getByLabelText(/Explorer l’IA au service de la créativité.*Individuel/)).not.toBeChecked();
+    expect(screen.getByLabelText(/Explorer l’IA au service de la créativité.*École ou association/)).not.toBeChecked();
     await userEvent.type(screen.getByLabelText('Code'), ' fixe20 ');
     await userEvent.selectOptions(screen.getByLabelText('Type de remise'), 'fixed_amount');
     await userEvent.type(screen.getByLabelText('Montant fixe (€)'), '20,00');

@@ -5,7 +5,8 @@ import SEO from '../components/SEO';
 import { useAuth } from '../contexts/useAuth';
 import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
-import { BUREAUTIQUE_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import { BUREAUTIQUE_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
+import CreativityPurchaseConfirmation from '../components/CreativityPurchaseConfirmation';
 import BureautiquePurchaseConfirmation from '../components/BureautiquePurchaseConfirmation';
 import { useGoogleAdsPurchase } from '../hooks/useGoogleAdsPurchase';
 
@@ -13,6 +14,7 @@ export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   useGoogleAdsPurchase(searchParams.get('session_id'));
   const offerId = searchParams.get('course');
+  if (Object.hasOwn(CREATIVITY_PURCHASES, offerId)) return <CreativityPurchaseConfirmation key={offerId} offer={CREATIVITY_PURCHASES[offerId]} />;
   if (Object.hasOwn(BUREAUTIQUE_PURCHASES, offerId)) {
     return <BureautiquePurchaseConfirmation key={offerId} offer={BUREAUTIQUE_PURCHASES[offerId]} />;
   }

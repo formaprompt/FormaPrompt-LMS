@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import './CourseCohorts.css';
+import { CREATIVITY_GROUP_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js';
 
 const FORMAT_LABELS = {
   four_half_days_3h30: '4 demi-journées de 3 h 30',
@@ -25,6 +26,7 @@ export default function CourseCohortPicker({
   joiningCohortId = '',
   onJoin,
 }) {
+  const creativity = courseId === CREATIVITY_GROUP_COURSE_ID;
   const [localJoiningId, setLocalJoiningId] = useState('');
   const [localError, setLocalError] = useState('');
   const displayedCohorts = useMemo(() => cohorts.filter((cohort) => cohort.course_id === courseId), [cohorts, courseId]);
@@ -34,11 +36,12 @@ export default function CourseCohortPicker({
   return (
     <section className="course-cohorts" aria-labelledby="course-cohorts-title">
       <header>
-        <p className="course-cohorts__eyebrow">Formation inter-entreprises</p>
+        <p className="course-cohorts__eyebrow">{creativity ? 'Groupe ouvert créativité' : 'Formation inter-entreprises'}</p>
         <h2 id="course-cohorts-title">Choisir une session publiée</h2>
         <p>Les dates et le nombre de places sont mis à jour par FormaPrompt. La formation reste accompagnée par le formateur.</p>
       </header>
 
+      {creativity && <p>Le seuil d’ouverture et la capacité sont indiqués pour chaque session. Rejoindre une session enregistre votre choix de dates ; son ouverture reste conditionnelle jusqu’à la confirmation de Thierry. Si le groupe n’ouvre pas, les inscriptions payées sont remboursées intégralement.</p>}
       {(error || localError) && <p className="course-cohorts__message course-cohorts__message--error" role="alert">{localError || error}</p>}
 
       {displayedCohorts.length === 0 ? (
@@ -55,6 +58,7 @@ export default function CourseCohortPicker({
                   <h3>{FORMAT_LABELS[cohort.schedule_format] || 'Format de 14 heures'}</h3>
                   <span className={`course-cohorts__status course-cohorts__status--${cohort.status}`}>{cohort.status === 'cancelled' ? 'Annulée' : cohort.status === 'confirmed' ? 'Confirmée' : joinable ? 'Places disponibles' : 'Complète'}</span>
                 </div>
+                {creativity && <p>{cohort.minimum_participants ?? 4} participants minimum, {cohort.capacity ?? 6} maximum.</p>}{creativity && <p>{cohort.delivery_mode === 'in_person' ? 'En présentiel à Calais' : 'À distance'}{cohort.status === 'published' ? ' · Ouverture à confirmer' : ''}</p>}
                 <ul className="course-cohorts__sessions" aria-label="Dates de la session">
                   {sessions.map((session) => <li key={session.id || `${session.position}-${session.starts_at}`}>{formatSession(session)}</li>)}
                 </ul>

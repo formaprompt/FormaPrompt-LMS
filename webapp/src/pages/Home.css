@@ -211,3 +211,12 @@
   .home .hero-image-container { margin-right: 1rem; }
   .home .card { overflow-wrap: anywhere; }
 }
+.home-creativity-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
