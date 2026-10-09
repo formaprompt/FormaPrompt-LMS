@@ -40,10 +40,11 @@ describe('AI ACT CHALLENGE apprenant', () => {
     let resolveSave;
     const api = vi.fn((action) => action === 'save' ? new Promise((resolve) => {resolveSave=resolve;}) : Promise.resolve(open()));
     await resume(api); fireEvent.click(screen.getByLabelText(/Choix alpha/));
-    expect(screen.getByRole('status')).toHaveTextContent('Enregistrement en cours');
+    const saveStatus = screen.getByText('Enregistrement en cours…', { selector: '[role="status"]' });
+    expect(saveStatus).toHaveTextContent('Enregistrement en cours');
     expect(screen.getByRole('button',{name:'Question suivante →'})).toBeDisabled();
     resolveSave(open({Q01:'A'}));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('confirmée par le serveur'));
+    await waitFor(() => expect(saveStatus).toHaveTextContent('confirmée par le serveur'));
     expect(screen.getByLabelText(/Choix alpha/)).toBeChecked();
   });
   it('réessaie le même enregistrement réseau sans inventer une sauvegarde', async () => {

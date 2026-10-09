@@ -3,7 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(36);
+SELECT plan(42);
 
 SELECT has_table('public', 'privacy_requests', 'Le registre des demandes RGPD existe');
 SELECT has_table('public', 'privacy_dependency_assessments', 'Les dépendances RGPD sont séparées');
@@ -51,7 +51,7 @@ SELECT ok(NOT private.is_privacy_resolution_allowed('auth_identity', 'delete'), 
 
 SELECT throws_ok(
   $$SELECT public.admin_execute_privacy_request(gen_random_uuid(), 'EFFACER invalide', 'motif administratif suffisamment long')$$,
-  '42501', 'Action réservée au rôle admin.',
+  'P0001', 'ACCESS_DENIED',
   'Une session non authentifiée ne peut rien exécuter'
 );
 
@@ -85,21 +85,85 @@ SELECT throws_like(
 );
 
 SELECT ok(
-  position('admin_change_course_access' IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) > 0
-  AND position('DELETE FROM public.course_access' IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) = 0,
+  position('admin_change_course_access' IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) > 0
+  AND position('DELETE FROM public.course_access' IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) = 0,
   'Les droits passent par le système course_access existant et ne sont pas supprimés'
 );
 SELECT ok(
-  position('DELETE FROM public.purchases' IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) = 0
-  AND position('DELETE FROM public.commercial_consents' IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) = 0
-  AND position('DELETE FROM public.withdrawal_requests' IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) = 0,
+  position('DELETE FROM public.purchases' IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) = 0
+  AND position('DELETE FROM public.commercial_consents' IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) = 0
+  AND position('DELETE FROM public.withdrawal_requests' IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) = 0,
   'Les achats, consentements et rétractations ne sont jamais supprimés par le workflow'
 );
 SELECT ok(
-  position($needle$status IN ('active', 'suspended')$needle$ IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) > 0
-  AND position($needle$status = 'active'$needle$ IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) = 0,
+  position($needle$status IN ('active', 'suspended')$needle$ IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) > 0
+  AND position($needle$status = 'active'$needle$ IN pg_get_functiondef('private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure)) = 0,
   'L exécution révoque sans réactiver un droit suspendu ou révoqué'
 );
+
+-- Les migrations Challenge déplacent le corps historique sans le réécrire.
+-- Empreinte du corps AS $$...$$ de 20260814130000_complete_privacy_erasure_workflow.sql,
+-- avec uniquement les fins de ligne CRLF normalisées en LF pour Windows/Linux.
+SELECT is(
+  (SELECT md5(replace(prosrc, E'\r\n', E'\n')) FROM pg_proc
+   WHERE oid = 'private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure),
+  '2432359e33ae0516ff02d2519d48a6cf',
+  'Le corps historique délégué est identique à la migration initiale'
+);
+SELECT ok(
+  position('RETURN public.challenge_privacy_execution_v1(p_request_id,p_confirmation,p_reason);'
+    IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) > 0,
+  'Le wrapper public délègue effectivement au wrapper Challenge précédent'
+);
+SELECT ok(
+  position('RETURN private.challenge_privacy_original_execution(p_request_id,p_confirmation,p_reason);'
+    IN pg_get_functiondef('public.challenge_privacy_execution_v1(uuid,text,text)'::regprocedure)) > 0,
+  'Le wrapper précédent délègue effectivement au corps historique vérifié'
+);
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1 FROM pg_proc p,
+      LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl
+    WHERE p.oid = 'private.challenge_privacy_original_execution(uuid,text,text)'::regprocedure
+      AND acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+  )
+  AND NOT has_function_privilege('anon', 'private.challenge_privacy_original_execution(uuid,text,text)', 'EXECUTE')
+  AND NOT has_function_privilege('authenticated', 'private.challenge_privacy_original_execution(uuid,text,text)', 'EXECUTE')
+  AND NOT has_function_privilege('service_role', 'private.challenge_privacy_original_execution(uuid,text,text)', 'EXECUTE'),
+  'Le corps historique ne peut pas être appelé directement pour contourner le wrapper'
+);
+SELECT ok(
+  NOT EXISTS (
+    SELECT 1 FROM pg_proc p,
+      LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) acl
+    WHERE p.oid = 'public.challenge_privacy_execution_v1(uuid,text,text)'::regprocedure
+      AND acl.grantee = 0 AND acl.privilege_type = 'EXECUTE'
+  )
+  AND NOT has_function_privilege('anon', 'public.challenge_privacy_execution_v1(uuid,text,text)', 'EXECUTE')
+  AND NOT has_function_privilege('authenticated', 'public.challenge_privacy_execution_v1(uuid,text,text)', 'EXECUTE')
+  AND NOT has_function_privilege('service_role', 'public.challenge_privacy_execution_v1(uuid,text,text)', 'EXECUTE'),
+  'Le wrapper intermédiaire ne peut pas être appelé directement'
+);
+
+-- Appel de la RPC publique sous un rôle authentifié, avec administrateur fictif.
+-- L erreur P0002 est levée uniquement dans le corps historique ; aucune suppression.
+INSERT INTO auth.users (id, aud, role, email, encrypted_password, raw_app_meta_data,
+  raw_user_meta_data, is_super_admin, created_at, updated_at)
+VALUES ('89000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
+  'privacy.wrapper@example.test', '', '{"provider":"email","providers":["email"]}',
+  '{}', false, now(), now());
+INSERT INTO public.profiles(id, email, role)
+VALUES ('89000000-0000-4000-8000-000000000001', 'privacy.wrapper@example.test', 'admin')
+ON CONFLICT(id) DO UPDATE SET role = EXCLUDED.role;
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub', '89000000-0000-4000-8000-000000000001', true);
+SELECT throws_ok(
+  $$SELECT public.admin_execute_privacy_request(gen_random_uuid(), 'EFFACER invalide', 'motif administratif suffisamment long')$$,
+  'P0002', 'Demande RGPD ou personne concernée introuvable.',
+  'La RPC publique atteint réellement le corps historique après les contrôles Challenge'
+);
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub', '', true);
 
 SELECT * FROM finish();
 ROLLBACK;
