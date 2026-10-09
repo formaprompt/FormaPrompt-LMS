@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, Check, Clock3, Code, Copy, Download, ExternalLink, FileText, Play, Save, Search, Send, Sparkles } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
@@ -13,6 +13,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import './CoursePlayer.css';
+
+const AiActChallenge = lazy(() => import('../components/AiActChallenge'));
 
 const exerciseSaveDateFormatter = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'short',
@@ -1063,9 +1065,30 @@ export default function CoursePlayer() {
             <BookOpen size={20} aria-hidden="true" />
             Lexique
           </button>
+          {id === 'formation-ia-act' && (
+            <button
+              type="button"
+              role="tab"
+              id="ai-act-challenge-tab"
+              aria-controls="ai-act-challenge-panel"
+              aria-selected={activeTab === 'challenge'}
+              className={`tab-btn ${activeTab === 'challenge' ? 'active' : ''}`}
+              onClick={() => setActiveTab('challenge')}
+            >
+              <Sparkles size={20} aria-hidden="true" />
+              AI ACT CHALLENGE
+            </button>
+          )}
         </div>
 
         <div className="tab-content">
+          {activeTab === 'challenge' && id === 'formation-ia-act' && (
+            <div id="ai-act-challenge-panel" role="tabpanel" aria-labelledby="ai-act-challenge-tab">
+              <Suspense fallback={<p role="status">Chargement du jeu pédagogique…</p>}>
+                <AiActChallenge key={user.id} />
+              </Suspense>
+            </div>
+          )}
           {activeTab === 'resources' && (
             <div className="download-grid">
               {(course.textResources || []).map((resource) => (

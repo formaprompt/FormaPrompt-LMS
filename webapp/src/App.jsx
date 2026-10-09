@@ -4,6 +4,7 @@ import Layout from "./components/Layout";
 import ScrollToTop from "./components/ScrollToTop";
 import RequireAuth from "./components/RequireAuth";
 import AdminShell from "./components/AdminShell";
+import AnalyticsBoundary from "./components/AnalyticsBoundary";
 import { StudioErrorBoundary } from "./studio/components/StudioErrorBoundary";
 // Lazy‑loaded pages
 const StudioPage = lazy(() => import("./studio/StudioPage"));
@@ -52,6 +53,7 @@ const LearnerGettingStarted = lazy(() => import("./pages/LearnerGettingStarted")
 const AdminCockpit = lazy(() => import("./pages/AdminCockpit"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const CoursePlayer = lazy(() => import("./pages/CoursePlayer"));
+const AiActChallengeTrainer = lazy(() => import("./pages/AiActChallengeTrainer"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const AttendanceSheets = lazy(() => import("./pages/AttendanceSheets"));
 const GuideGPT56 = lazy(() => import("./pages/GuideGPT56"));
@@ -80,7 +82,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   return (
-    <>
+    <AnalyticsBoundary>
       <ScrollToTop />
       <Suspense
         fallback={
@@ -161,6 +163,7 @@ function App() {
             <Route path="admin/commercial/devis/:quoteId" element={<RequireAuth><AdminCommercialQuoteDocument /></RequireAuth>} />
             <Route path="admin/dossiers/avenants/:amendmentId" element={<RequireAuth><AdminAmendmentDocument /></RequireAuth>} />
             <Route path="course/:id" element={<CoursePlayer />} />
+            <Route path="formateur/ai-act-challenge" element={<RequireAuth><AiActChallengeTrainer /></RequireAuth>} />
             <Route
               path="parcours/:slug/:lessonId?"
               element={<RequireAuth><LearningPath /></RequireAuth>}
@@ -181,7 +184,7 @@ function App() {
       <Suspense fallback={null}>
       <AdvertisingConsent />
       </Suspense>
-    </>
+    </AnalyticsBoundary>
   );
 }
 
