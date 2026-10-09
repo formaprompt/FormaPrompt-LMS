@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import { JSDOM } from 'jsdom';
 
 export const canonicalOrigin = 'https://formaprompt.com';
+export const privateShellFiles = ['formateur/ai-act-challenge.html'];
 const directoryRoutes = ['/studio/', '/formation-ia-generative', '/formation-prompt-engineering', '/formation-ia-act-conformite'];
 
 export function publicRoutes(sitemap) {
@@ -37,6 +38,17 @@ export function createShells(initialHtml) {
     appShell: initialHtml.replace('<title>FormaPrompt</title>', '<title>Espace sécurisé – FormaPrompt</title>')
       .replace('</head>', '<meta name="robots" content="noindex, nofollow">\n</head>'),
   };
+}
+
+// Apache résout cette route via le fichier route.html, sans modifier .htaccess.
+export function checkPrivateShells(contents) {
+  const appShell = contents.get('app-shell.html');
+  assert.ok(appShell, 'Shell applicatif absent');
+  assert.match(new JSDOM(appShell).window.document.querySelector('meta[name="robots"]')?.content || '', /noindex/, 'Shell privé indexable');
+  for (const name of privateShellFiles) {
+    assert.ok(contents.has(name), `Entrée privée absente : ${name}`);
+    assert.equal(contents.get(name), appShell, `Entrée privée différente du shell applicatif : ${name}`);
+  }
 }
 
 export function checkPublicHtml(html, route) {
@@ -153,9 +165,10 @@ export async function verifyRelease(root = path.resolve('dist')) {
     contents.set(name, text);
     inventory.push({ path: name, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
   }
-  const required = ['index.html', 'contact.html', 'blog.html', 'app-shell.html', 'public-shell.html', '404.html', 'ads-purchase-confirmation.html', '.htaccess', 'sitemap.xml'];
+  const required = ['index.html', 'contact.html', 'blog.html', 'app-shell.html', 'public-shell.html', ...privateShellFiles, '404.html', 'ads-purchase-confirmation.html', '.htaccess', 'sitemap.xml'];
   for (const name of required) assert.ok(contents.has(name), `Cible absente : ${name}`);
   const htmlEntry = checkHtmlEntryVersions(contents);
+  checkPrivateShells(contents);
   checkDeliveryPolicies(contents.get('.htaccess'), contents.get('sw.js') || '');
   const routes = publicRoutes(contents.get('sitemap.xml'));
   for (const route of routes) {

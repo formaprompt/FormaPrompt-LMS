@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { AuthContext } from './auth-context';
+import { isAnalyticsDocumentLoaded, stopAudienceMeasurement } from '../lib/googleAnalytics';
+import { replaceAnalyticsDocument } from '../lib/analyticsNavigationBoundary';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -61,6 +63,12 @@ export const AuthProvider = ({ children }) => {
 
     // Écouter les changements d'état (connexion, déconnexion)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Stop synchronously before the deferred profile lookup can render account data.
+      if (session?.user && isAnalyticsDocumentLoaded()) {
+        stopAudienceMeasurement();
+        replaceAnalyticsDocument();
+        return;
+      }
       if (event === 'INITIAL_SESSION') return;
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') setSessionExpired(false);
       const task = window.setTimeout(() => {

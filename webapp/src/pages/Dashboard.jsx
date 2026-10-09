@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/useAuth';
+import AiActChallengeTrainerLink from '../components/AiActChallengeTrainerLink';
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
@@ -271,6 +272,7 @@ function DashboardContent() {
 
       <LearnerWelcome userId={user.id} progressState={onboardingProgress} />
       <p><Link to="/aide/bien-demarrer">Aide → Bien démarrer</Link></p>
+      <AiActChallengeTrainerLink userId={user.id} />
 
       <DiagnosticDashboardSection
         diagnostics={diagnostics}

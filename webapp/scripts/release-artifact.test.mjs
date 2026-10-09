@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPublicHtml, checkSafeFile, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
+import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPrivateShells, checkPublicHtml, checkSafeFile, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
 
 const initialShell = '<html><head><title>FormaPrompt</title></head><body><div id="root"></div><script type="module" src="/assets/main.js"></script></body></html>';
 
@@ -11,6 +11,21 @@ test('les shells conservent le script Vite, sans contenu accueil ni canonical', 
   assert.match(appShell, /noindex, nofollow/);
   assert.match(appShell, /\/assets\/main.js/);
   assert.throws(() => createShells(initialShell.replace('<div id="root"></div>', '<div id="root"><h1>Accueil</h1></div>')));
+});
+
+test('l’entrée formateur privée exige la copie exacte du shell noindex, sans dossier apprenant pré-rendu', () => {
+  const { appShell, publicShell } = createShells(initialShell);
+  const file = 'formateur/ai-act-challenge.html';
+  assert.ok(privateShellFiles.includes(file));
+  const contents = new Map([['app-shell.html', appShell], [file, appShell]]);
+  assert.doesNotThrow(() => checkPrivateShells(contents));
+  contents.delete(file);
+  assert.throws(() => checkPrivateShells(contents), /Entrée privée absente/);
+  contents.set(file, appShell.replace('<div id="root"></div>', '<div id="root">Dossier fictif</div>'));
+  assert.throws(() => checkPrivateShells(contents), /Entrée privée différente/);
+  contents.set('app-shell.html', publicShell);
+  contents.set(file, publicShell);
+  assert.throws(() => checkPrivateShells(contents), /Shell privé indexable/);
 });
 
 test('les chemins de sortie préservent les six pages et les cibles Apache', () => {

@@ -1,0 +1,132 @@
+.aac-trainer {
+  max-width:1280px;
+
+}
+.aac-trainer h1 {
+  color:inherit;
+  margin:0;
+  font-size:clamp(1.4rem,4vw,2rem);
+
+}
+.aac-statistics {
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+}
+.aac-filters {
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+
+}
+.aac-trainer label {
+  display:grid;
+  gap:.4rem;
+  flex:1 1 200px;
+  font-weight:600;
+
+}
+.aac-trainer input:not([type=checkbox]), .aac-trainer select {
+  min-height:46px;
+  border:1px solid var(--aac-muted);
+  border-radius:8px;
+  padding:.65rem;
+  font:inherit;
+  color:var(--aac-ink);
+  background:var(--aac-white);
+  width:100%;
+
+}
+.aac-trainer .aac-check {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  min-height:44px;
+
+}
+.aac-check input {
+  accent-color:var(--aac-primary);
+  width:22px;
+  height:22px;
+
+}
+.aac-table-scroll {
+  /* Keep absolutely positioned accessible labels inside the scroll container. */
+  position:relative;
+  overflow-x:auto;
+
+}
+.aac-trainer table {
+  border-collapse:collapse;
+  width:100%;
+  background:var(--aac-white);
+  font-size:.92rem;
+
+}
+.aac-trainer caption {
+  text-align:left;
+  padding:.8rem;
+  font-weight:700;
+
+}
+.aac-trainer th, .aac-trainer td {
+  padding:.8rem;
+  border-bottom:1px solid var(--aac-muted);
+  text-align:left;
+
+}
+.aac-trainer thead {
+  background:var(--aac-surface);
+
+}
+.aac-trainer small {
+  color:var(--aac-muted);
+  display:block;
+  margin-top:.35rem;
+
+}
+.aac-detail {
+  margin:1.5rem 0;
+  border-top:2px solid var(--aac-info);
+
+}
+.aac-detail > article {
+  margin-bottom:1rem;
+
+}
+.aac-trainer form {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:end;
+  gap:1rem;
+  margin:1.25rem 0;
+
+}
+.aac-trainer li {
+  line-height:1.7;
+  margin:.6rem 0;
+  overflow-wrap:anywhere;
+
+}
+.aac-trainer li > button {
+  margin-left:1rem;
+
+}
+.aac-sr-only {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0;
+
+}
+@media(max-width:650px) {
+  .aac-trainer li > button {
+  margin:.5rem 0;
+  display:block;
+
+}
+}

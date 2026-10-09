@@ -1,8 +1,13 @@
 .advertising-consent { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000; display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1.25rem; background: #17243b; color: white; box-shadow: 0 -2px 12px #0003; max-height: 85vh; overflow-y: auto; }
 .advertising-consent__content { flex: 1 1 25rem; }
 .advertising-consent__content p { margin: .5rem 0; font-size: .95rem; }
+.advertising-consent__content h2 { margin: 0 0 .5rem; font-size: 1.15rem; color: #fff; }
+.advertising-consent__choices { border: 1px solid #ffffff80; border-radius: .3rem; padding: .75rem; margin: .75rem 0; }
+.advertising-consent__choices legend { padding: 0 .25rem; font-weight: 600; }
+.advertising-consent__choice { display: flex; align-items: center; gap: .65rem; min-height: 44px; cursor: pointer; }
+.advertising-consent__choice input { width: 1.25rem; height: 1.25rem; flex-shrink: 0; accent-color: #17243b; }
 .advertising-consent a { color: white; text-decoration: underline; }
 .advertising-consent__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
 .advertising-consent__button { background: white; color: #17243b; border: 2px solid white; border-radius: .3rem; padding: .7rem 1rem; font: inherit; cursor: pointer; min-height: 44px; }
-.advertising-consent__button:focus-visible, .advertising-consent a:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
+.advertising-consent__button:focus-visible, .advertising-consent a:focus-visible, .advertising-consent input:focus-visible, .advertising-consent h2:focus { outline: 3px solid #facc15; outline-offset: 3px; }
 @media (max-width: 600px) { .advertising-consent { padding: 1rem; } .advertising-consent__actions { width: 100%; } .advertising-consent__button { flex: 1 1 10rem; } }

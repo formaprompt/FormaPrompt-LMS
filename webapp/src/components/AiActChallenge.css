@@ -1,0 +1,341 @@
+.aac {
+  --aac-primary:#0E602B;
+  --aac-info:#056C95;
+  --aac-ink:#222222;
+  --aac-muted:#58585A;
+  --aac-white:#FFFFFF;
+  --aac-surface:#F3F5F4;
+  --aac-error:#A12622;
+  max-width:1050px;
+  margin:1.5rem auto;
+  padding:1.25rem;
+  background:var(--aac-surface);
+  border:1px solid var(--aac-muted);
+  border-radius:20px;
+  color:var(--aac-ink);
+  box-shadow:0 8px 30px #2222220d;
+  font-family:Aptos,"Segoe UI",sans-serif;
+
+}
+.aac * {
+  box-sizing:border-box;
+
+}
+.aac .aac-banner {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  background:linear-gradient(110deg,var(--aac-primary),var(--aac-primary));
+  color:var(--aac-white);
+  border-radius:14px;
+  padding:1.5rem;
+
+}
+.aac-banner > span {
+  font-size:2.5rem;
+  color:var(--aac-white);
+
+}
+.aac h2 {
+  margin:0;
+  font-size:clamp(1.4rem,4vw,2rem);
+  color:inherit;
+
+}
+.aac h3 {
+  line-height:1.4;
+  color:inherit;
+
+}
+.aac p {
+  line-height:1.6;
+
+}
+.aac-banner p {
+  margin:.35rem 0 0;
+
+}
+.aac-status {
+  color:var(--aac-primary);
+  min-height:1.75rem;
+  margin:.5rem 0;
+  font-weight:600;
+
+}
+.aac-error {
+  color:var(--aac-error);
+  border:2px solid var(--aac-error);
+  background:var(--aac-surface);
+  padding:1rem;
+  margin:1rem 0;
+  border-radius:12px;
+
+}
+.aac button {
+  background:var(--aac-primary);
+  color:var(--aac-white);
+  border:2px solid var(--aac-primary);
+  min-height:46px;
+  border-radius:10px;
+  padding:.65rem 1rem;
+  cursor:pointer;
+  font:inherit;
+  font-weight:600;
+
+}
+.aac button.aac-secondary {
+  background:var(--aac-white);
+  color:var(--aac-primary);
+
+}
+.aac button:disabled {
+  opacity:1;
+  background:var(--aac-muted);
+  color:var(--aac-white);
+  border-color:var(--aac-muted);
+  cursor:not-allowed;
+
+}
+.aac :focus-visible {
+  outline:3px solid var(--aac-info);
+  outline-offset:4px;
+
+}
+.aac button.aac-secondary:disabled {
+  background:var(--aac-white);
+  color:var(--aac-muted);
+}
+.aac .aac-hero button {
+  background:var(--aac-white);
+  color:var(--aac-primary);
+  border-color:var(--aac-white);
+}
+.aac .aac-hero button:disabled {
+  color:var(--aac-muted);
+}
+.aac .aac-hero :focus-visible, .aac .aac-banner :focus-visible {
+  outline-color:var(--aac-white);
+}
+.aac h2:focus {
+  outline:none;
+
+}
+.aac-hero {
+  background:linear-gradient(115deg,var(--aac-primary),var(--aac-primary));
+  color:var(--aac-white);
+  border-radius:14px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(190px,260px);
+  overflow:hidden;
+
+}
+.aac-hero > div {
+  padding:2rem;
+
+}
+.aac-hero h3 {
+  font-size:clamp(1.6rem,4vw,2.4rem);
+
+}
+/* Source PNG vérifiée : 1672 × 941. Fenêtre x305..470 / y145..480.
+   Le masque écarte les phrases du haut tout en conservant le bouclier en bas. */
+.aac-professional {
+  aspect-ratio:165/335;
+  align-self:center;
+  margin-right:1rem;
+  background-image:url('../assets/ai-act-challenge-triptyque.png');
+  background-repeat:no-repeat;
+  background-size:1013.3333% 280.8955%;
+  background-position:20.2389% 23.9274%;
+  clip-path:polygon(0 0,66.6667% 0,66.6667% 49.2537%,100% 49.2537%,100% 100%,0 100%);
+}
+.aac-eyebrow {
+  font-weight:700;
+  font-size:.85rem;
+  letter-spacing:.03em;
+
+}
+.aac-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:1rem;
+  margin:1rem 0;
+
+}
+.aac-card {
+  padding:1.25rem;
+  background:var(--aac-white);
+  border:1px solid var(--aac-muted);
+  border-radius:12px;
+  overflow-wrap:anywhere;
+
+}
+.aac-card h3,.aac-card h4 {
+  color:var(--aac-info);
+  margin-top:0;
+
+}
+.aac-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.8rem;
+  margin:1.25rem 0;
+
+}
+.aac-progress {
+  display:flex;
+  gap:1rem;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  margin:1rem 0;
+
+}
+.aac progress {
+  width:100%;
+  height:12px;
+  accent-color:var(--aac-primary);
+  color:var(--aac-primary);
+  background:var(--aac-white);
+
+}
+.aac progress::-webkit-progress-bar {
+  background:var(--aac-white);
+}
+.aac progress::-webkit-progress-value {
+  background:var(--aac-primary);
+}
+.aac progress::-moz-progress-bar {
+  background:var(--aac-primary);
+}
+.aac-scenario {
+  margin:1.5rem 0;
+  background:var(--aac-surface);
+
+}
+.aac fieldset {
+  border:0;
+  padding:0;
+  margin:0;
+
+}
+.aac legend {
+  margin-bottom:.75rem;
+  font-weight:700;
+
+}
+.aac-option {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  padding:1rem;
+  min-height:64px;
+  background:var(--aac-white);
+  border:2px solid var(--aac-muted);
+  border-radius:10px;
+  margin-bottom:.7rem;
+  cursor:pointer;
+
+}
+.aac-option input {
+  width:20px;
+  height:20px;
+  flex-shrink:0;
+  accent-color:var(--aac-primary);
+
+}
+.aac-selected {
+  border-color:var(--aac-primary);
+  background:var(--aac-surface);
+
+}
+.aac-result {
+  padding:1.5rem;
+  text-align:center;
+  background:var(--aac-white);
+  border-radius:14px;
+  border:1px solid var(--aac-muted);
+
+}
+.aac-result h3 {
+  font-size:2rem;
+  margin:.5rem 0;
+
+}
+.aac-result-row {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:2rem;
+  flex-wrap:wrap;
+
+}
+.aac-donut {
+  width:150px;
+  height:150px;
+  flex-shrink:0;
+  border-radius:50%;
+  background:conic-gradient(var(--aac-primary) var(--aac-result-percent),var(--aac-surface) 0);
+  display:grid;
+  place-items:center;
+}
+.aac-donut span {
+  display:grid;
+  place-items:center;
+  width:116px;
+  height:116px;
+  background:var(--aac-white);
+  border-radius:50%;
+  font-size:1.75rem;
+  font-weight:700;
+}
+.aac-corrections {
+  display:grid;
+  gap:1rem;
+  margin-top:1.5rem;
+
+}
+.aac-exact {
+  white-space:normal;
+
+}
+.aac-exact a, .aac-exact a:hover {
+  color:var(--aac-info);
+  text-decoration:underline;
+
+}
+.aac details summary {
+  min-height:44px;
+  padding:.6rem;
+  cursor:pointer;
+  color:var(--aac-primary);
+  font-weight:600;
+
+}
+@media(max-width:650px) {
+  .aac {
+  padding:.75rem;
+  margin:.75rem 0;
+
+} .aac-hero {
+  grid-template-columns:1fr;
+
+} .aac-hero .aac-professional {
+  width:190px;
+  padding:0;
+  margin:0 auto 1rem;
+
+} .aac-hero > div {
+  padding:1.25rem;
+
+} .aac-grid {
+  grid-template-columns:1fr;
+
+} .aac-actions button {
+  flex:1 1 100%;
+
+} .aac-option {
+  gap:.65rem;
+  padding:.8rem;
+
+}
+}

@@ -9,6 +9,7 @@ const navigation = [
   { label: 'Promotions', to: '/admin/promotions' },
   { label: 'Diagnostics IA', to: '/admin/diagnostics' },
   { label: 'Pédagogique', to: '/admin/pedagogique' },
+  { label: 'AI ACT CHALLENGE', to: '/formateur/ai-act-challenge', adminOnly: true },
   { label: 'Qualité', to: '/admin/qualite' },
   { label: 'Finance', to: '/admin/finance' },
   { label: 'BPF', to: '/admin/bpf' },

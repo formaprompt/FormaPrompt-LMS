@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 import { preview } from 'vite';
-import { checkPublicHtml, createShells, outputForRoute, publicRoutes } from './release-artifact.mjs';
+import { checkPublicHtml, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
 
 const host = '127.0.0.1';
 const port = 4175;
@@ -107,6 +107,11 @@ try {
   const shells = createShells(await readFile(path.resolve('dist', 'index.html'), 'utf8'));
   await writeFile(path.resolve('dist', 'public-shell.html'), shells.publicShell, 'utf8');
   await writeFile(path.resolve('dist', 'app-shell.html'), shells.appShell, 'utf8');
+  for (const name of privateShellFiles) {
+    const outputPath = path.resolve('dist', name);
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, shells.appShell, 'utf8');
+  }
   browser = await chromium.launch({ channel: 'chrome', headless: true });
   for (const pageConfig of pages) {
     const page = await browser.newPage();
