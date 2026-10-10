@@ -197,9 +197,10 @@ export async function verifyRelease(root = path.resolve('dist')) {
   for (const [name, text] of contents) {
     if (name.endsWith('.html')) {
       const document = new JSDOM(text).window.document;
-      for (const element of document.querySelectorAll('script[src], img[src], link[rel="stylesheet"][href], link[rel="modulepreload"][href], link[rel="icon"][href]')) {
+      for (const element of document.querySelectorAll('script[src], img[src], video[src], video source[src], link[rel="stylesheet"][href], link[rel="modulepreload"][href], link[rel="icon"][href]')) {
         checkReference(element.getAttribute('src') || element.getAttribute('href'), name);
       }
+      for (const video of document.querySelectorAll('video[poster]')) checkReference(video.getAttribute('poster'), name);
       for (const match of text.matchAll(/applicationScript\.src = '([^']+)'/g)) checkReference(match[1], name);
     }
     if (name.endsWith('.css')) for (const match of text.matchAll(/url\(["']?([^)'"\s]+)["']?\)/g)) checkReference(match[1], name);

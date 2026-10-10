@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Check, CircleAlert, ExternalLink, Lightbulb } from 'lucide-react';
 import SEO from '../components/SEO';
 import NotFound from './NotFound';
+import GuideClaude from './GuideClaude';
 import { getPracticalGuide, practicalGuides } from '../data/practicalGuides';
 import './Guides.css';
 
@@ -52,7 +53,7 @@ function AiActGuide() {
   </>;
 }
 
-function contentFor(slug) { if (slug === 'ia-generative-debutants') return <BeginnerGuide />; if (slug === 'prompt-engineering-professionnel-methode') return <PromptGuide />; return <AiActGuide />; }
+function contentFor(slug) { if (slug === 'claude-preparer-activite-bureautique') return <GuideClaude />; if (slug === 'ia-generative-debutants') return <BeginnerGuide />; if (slug === 'prompt-engineering-professionnel-methode') return <PromptGuide />; return <AiActGuide />; }
 
 export default function GuidePage() {
   const { slug } = useParams();
