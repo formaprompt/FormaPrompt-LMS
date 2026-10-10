@@ -1,0 +1,13 @@
+.admin-user-role { display: grid; gap: .55rem; margin-top: .8rem; min-width: 0; max-width: 100%; color: #e2e8f0; }
+.admin-user-role form { display: grid; gap: .35rem; }
+.admin-user-role label { font-size: .85rem; font-weight: 700; overflow-wrap: anywhere; }
+.admin-user-role__fields { display: flex; flex-wrap: wrap; gap: .5rem; }
+.admin-user-role select { flex: 1 1 180px; min-width: 0; max-width: 100%; padding: .65rem; border: 1px solid #64748b; border-radius: 6px; background: #111827; color: #fff; }
+.admin-user-role button { white-space: normal; }
+.admin-user-role select:focus-visible, .admin-user-role button:focus-visible { outline: 2px solid #67e8f9; outline-offset: 3px; }
+.admin-user-role select:disabled { opacity: .65; }
+.admin-user-role p { margin: 0; overflow-wrap: anywhere; }
+.admin-user-role .admin-user-role__help { font-size: .78rem; color: #cbd5e1; }
+.admin-user-role .admin-user-role__protected { font-size: .8rem; color: #fcd34d; font-weight: 700; }
+.admin-user-role__confirmation { display: grid; gap: .6rem; padding: .75rem; border: 1px solid #67e8f9; border-radius: 8px; }
+@media (max-width: 700px) { .admin-user-role__fields > * { width: 100%; } }
