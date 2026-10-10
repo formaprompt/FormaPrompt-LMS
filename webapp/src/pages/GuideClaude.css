@@ -1,0 +1,12 @@
+.claude-guide { min-width: 0; overflow-wrap: anywhere; }
+.claude-observation { padding: 1rem; border-left: 3px solid #047857; background: #eafaf3; border-radius: .4rem; }
+.claude-figure { margin: 1.5rem 0; background: #fff; border: 1px solid #dbe4ee; border-radius: .8rem; overflow: hidden; }
+.claude-figure img { display: block; width: 100%; height: auto; }
+.claude-figure figcaption { padding: .9rem 1rem; font-size: .95rem; }
+.claude-figure figcaption a { display: inline-block; margin-top: .5rem; padding: .5rem 0; font-weight: 700; text-decoration: underline; }
+.claude-guide a:focus-visible { outline: 3px solid #047857; outline-offset: 3px; }
+.claude-prompt { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 1rem; line-height: 1.7; padding: 1.1rem; background: #fff; border: 1px solid #dbe4ee; border-left: 4px solid #047857; border-radius: .6rem; }
+.claude-checks { padding-left: 1.3rem; margin: 1rem 0; }
+.claude-checks li + li { margin-top: .6rem; }
+.claude-video { display: block; width: 100%; height: auto; background: #0f172a; border-radius: .6rem; margin: 1rem 0; }
+@media (max-width: 600px) { .claude-prompt { padding: .8rem; } .claude-figure figcaption { padding: .8rem; } }

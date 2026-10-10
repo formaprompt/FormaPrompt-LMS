@@ -1,5 +1,20 @@
 export const practicalGuides = [
   {
+    slug: 'claude-preparer-activite-bureautique',
+    title: 'Claude : préparer et vérifier une activité de bureautique',
+    description: 'Un exemple pas à pas avec Claude : cadrer une activité fictive avec CROP, relire la proposition et adapter l’aide sans réduire les objectifs.',
+    label: 'Pratique avec Claude',
+    readingTime: '10 min',
+    sections: [
+      { id: 'decouvrir-claude', label: 'Découvrir Claude' },
+      { id: 'consigne-crop', label: 'La consigne CROP' },
+      { id: 'premiere-reponse', label: 'La première proposition' },
+      { id: 'verifier-adapter', label: 'Vérifier et adapter' },
+      { id: 'version-relue', label: 'La version relue' },
+      { id: 'demonstration-video', label: 'La démonstration vidéo' },
+    ],
+  },
+  {
     slug: 'ia-generative-debutants',
     title: 'IA générative pour débutants : comprendre, essayer, vérifier',
     description: 'Comprendre ce que fait une IA générative, choisir un premier essai sans risque et garder les vérifications utiles.',

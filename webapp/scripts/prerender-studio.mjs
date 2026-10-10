@@ -8,6 +8,19 @@ const host = '127.0.0.1';
 const port = 4175;
 const pages = [
   {
+    name: 'Guide pratique Claude',
+    url: `http://${host}:${port}/guides/claude-preparer-activite-bureautique`,
+    outputPath: path.resolve('dist', 'guides', 'claude-preparer-activite-bureautique.html'),
+    heading: /claude : préparer et vérifier une activité de bureautique/i,
+    markers: [
+      'https://formaprompt.com/guides/claude-preparer-activite-bureautique',
+      'application/ld+json',
+      'breadcrumb',
+      'cette activité a été relue',
+      'claude-activite-bureautique-v3.mp4',
+    ],
+  },
+  {
     name: 'Studio',
     url: `http://${host}:${port}/studio`,
     outputPath: path.resolve('dist', 'studio', 'index.html'),

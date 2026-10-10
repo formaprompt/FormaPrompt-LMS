@@ -59,6 +59,15 @@ test('les deux guides GPT ont une route publique pré-rendue', () => {
   }
 });
 
+test('le guide Claude rejoint les routes publiques sans perdre le billet publié le même jour', () => {
+  const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  const routes = publicRoutes(sitemap);
+  const claudeRoute = '/guides/claude-preparer-activite-bureautique';
+  assert.equal(routes.filter(route => route === claudeRoute).length, 1);
+  assert.equal(outputForRoute(claudeRoute), 'guides/claude-preparer-activite-bureautique.html');
+  assert.ok(routes.includes('/blog/faut-il-changer-ia'));
+});
+
 test('une page publique doit avoir un H1 et la canonical exacte, sans noindex', () => {
   const html = '<html><head><title>Contact</title><meta name="description" content="Contact"><link rel="canonical" href="https://formaprompt.com/contact"></head><body><h1>Contact</h1></body></html>';
   assert.doesNotThrow(() => checkPublicHtml(html, '/contact'));
