@@ -37,7 +37,7 @@ SELECT set_config('request.jwt.claim.sub','72000000-0000-4000-8000-000000000001'
 SELECT is(public.admin_set_user_role('72000000-0000-4000-8000-000000000003','employee','user'),'{"userId":"72000000-0000-4000-8000-000000000003","role":"employee","protected":false,"changed":true}'::jsonb,'user promoted to existing employee role');
 SELECT is(public.admin_set_user_role('72000000-0000-4000-8000-000000000003','admin','employee')->>'role','admin','employee promoted to admin');
 SELECT is(public.admin_set_user_role('72000000-0000-4000-8000-000000000003','admin','admin')->>'changed','false','same role is idempotent');
-SELECT throws_ok($$SELECT public.admin_set_user_role('72000000-0000-4000-8000-000000000003','user','employee')$$,'40001','Le role a change. Actualisez la liste.','stale expected role rejected');
+SELECT throws_ok($$SELECT public.admin_set_user_role('72000000-0000-4000-8000-000000000003','user','employee')$$,'PT409','Le role a change. Actualisez la liste.','stale expected role rejected');
 SELECT is(public.admin_set_user_role('72000000-0000-4000-8000-000000000003','user','admin')->>'role','user','another admin can be demoted');
 SELECT throws_ok($$SELECT public.admin_set_user_role('72000000-0000-4000-8000-000000000003','trainer','user')$$,'22023','Parametres de role invalides.','invented role rejected');
 SELECT throws_ok($$SELECT public.admin_set_user_role(NULL,'admin','user')$$,'22023','Parametres de role invalides.','null UUID rejected');
@@ -86,6 +86,3 @@ SELECT throws_ok($$SELECT public.admin_set_user_role('72000000-0000-4000-8000-00
 RESET ROLE;
 SELECT * FROM finish();
 ROLLBACK;
-
-
-

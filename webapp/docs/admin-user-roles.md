@@ -8,7 +8,7 @@ Ce lot ajoute une gestion des rôles existants `user` (inscrit), `employee` (for
 
 - `42501` : accès refusé ou compte propriétaire protégé (messages distincts).
 - `22023` : UUID/rôle attendu/rôle demandé invalide ou absent.
-- `40001` : rôle attendu devenu obsolète ; actualiser la liste.
+- `PT409` (HTTP 409) : rôle attendu devenu obsolète ; actualiser la liste.
 - `P0002` : profil cible absent.
 
 Le wrapper public est `SECURITY INVOKER`. L'opération privilégiée est dans `private`, avec chemin de recherche vide, noms qualifiés, révocation PUBLIC/anon/service_role et accès `authenticated` uniquement avec garde interne. Le schéma `private` doit rester absent des schémas exposés dans la Data API.
@@ -45,3 +45,9 @@ L'identifiant profiles.id est immuable. Toute suppression de profil avec une ses
 QA indépendant : 40/40 contrôles SQL réussis sur PostgreSQL 17, dans une base fictive neuve. Les contrôles avec deux sessions ont vérifié la révocation de l'acteur pendant l'attente, le conflit sur le rôle attendu, les changements entre administrateurs et l'absence de verrou global sur les mises à jour Auth ordinaires. Migration contrôlée : SHA-256 `486C98E03D5813E91269BD3F58F72F1BF3D076888FA729873AF9656A92BCE915`.
 
 Le fichier pgTAP `supabase/tests/admin_user_roles.sql` n'a pas été exécuté : l'extension pgTAP est absente de l'installation PostgreSQL native utilisée. Les 40 contrôles exécutés sont ceux du banc SQL indépendant ; ils ne prouvent pas une exécution du fichier pgTAP ni de toutes les migrations historiques. Le cluster de test a été arrêté. Aucun service distant n'a été contacté pour ces contrôles.
+
+## Correction après recette Auth/API réelle
+
+Le conflit métier du rôle attendu utilise SQLSTATE `PT409`, qui devient HTTP 409. Une exception personnalisée `40001` peut provoquer des répétitions infinies sous PostgREST 14 ; la recette API réelle l'a constaté avant toute installation sur FormaPrompt. Source officielle : https://supabase.com/docs/guides/troubleshooting/high-cpu-and-infinite-transaction-retries-when-using-custom-error-codes-in-rpc-functions-77326b . Le code `40001` reste réservé aux véritables échecs de sérialisation gérés par PostgreSQL.
+
+Le hash 486C98E03D5813E91269BD3F58F72F1BF3D076888FA729873AF9656A92BCE915 documenté plus haut correspond à la version locale antérieure. Il ne représente pas la correction `PT409` ; les contrôles API et CI doivent couvrir le nouveau contenu avant publication.

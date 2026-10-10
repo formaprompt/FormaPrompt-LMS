@@ -149,7 +149,7 @@ BEGIN
   SELECT role INTO v_old_role FROM public.profiles WHERE id = p_user_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'Compte introuvable.' USING ERRCODE = 'P0002'; END IF;
   IF v_old_role IS DISTINCT FROM p_expected_role THEN
-    RAISE EXCEPTION 'Le role a change. Actualisez la liste.' USING ERRCODE = '40001';
+    RAISE EXCEPTION 'Le role a change. Actualisez la liste.' USING ERRCODE = 'PT409';
   END IF;
   v_protected := private.is_admin_role_owner(p_user_id);
   IF v_protected AND p_role <> 'admin' THEN
@@ -265,5 +265,3 @@ END;
 $$;
 
 COMMIT;
-
-

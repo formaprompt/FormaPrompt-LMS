@@ -23,6 +23,7 @@ test('les refus serveur ne deviennent jamais des succès', async () => {
   await assert.rejects(setAdminUserRole({ rpc: async () => ({ error }) }, { userId: 'fake-id', role: 'admin', expectedRole: 'user' }), (received) => received === error);
   assert.equal(isRolePermissionError(error), true);
   assert.equal(isRoleConflictError({ code: '40001' }), true);
+  assert.equal(isRoleConflictError({ code: 'PT409' }), true);
 });
 
 test('protection serveur faisant autorité ; adresse en secours sans indicateur', () => {

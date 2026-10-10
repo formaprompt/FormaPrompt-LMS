@@ -34,5 +34,5 @@ export function isRoleProtectedError(error) {
 }
 
 export function isRoleConflictError(error) {
-  return error?.code === '40001' || error?.code === 'P0002' || error?.status === 409;
+  return error?.code === 'PT409' || error?.code === '40001' || error?.code === 'P0002' || error?.status === 409;
 }

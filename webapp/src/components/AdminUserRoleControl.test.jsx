@@ -46,6 +46,7 @@ describe('contrôle de rôle', () => {
   });
 
   it.each([
+    [{ code: 'PT409' }, 'Le rôle a changé'],
     [{ code: '40001' }, 'Le rôle a changé'],
     [{ code: '42501' }, 'Le serveur refuse'],
     [new Error('offline'), 'Le changement de rôle n’a pas pu être confirmé'],
@@ -71,7 +72,7 @@ describe('contrôle de rôle', () => {
   });
 
   it('un conflit bloque la nouvelle écriture jusqu’à actualisation', async () => {
-    const updateRole = vi.fn().mockRejectedValue({ code: '40001' });
+    const updateRole = vi.fn().mockRejectedValue({ code: 'PT409' });
     const onRefresh = vi.fn();
     render(<AdminUserRoleControl learner={learner} updateRole={updateRole} onRefresh={onRefresh} />);
     selectAndConfirm('admin');

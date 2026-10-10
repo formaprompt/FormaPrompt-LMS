@@ -109,7 +109,7 @@ describe('annuaire administrateur des apprenants', () => {
     api.fetch.mockResolvedValueOnce({ items: [learner], total: 1 })
       .mockResolvedValueOnce({ items: [learner], total: 1 })
       .mockResolvedValueOnce({ items: [{ ...learner, role: 'employee' }], total: 1 });
-    const updateRole = vi.fn().mockRejectedValueOnce({ code: '40001' })
+    const updateRole = vi.fn().mockRejectedValueOnce({ code: 'PT409' })
       .mockResolvedValueOnce({ userId: 'fake-id', role: 'employee', protected: false, changed: true });
     render(<MemoryRouter><AdminLearnerDirectory role="admin" updateRole={updateRole} /></MemoryRouter>);
     fireEvent.change(await screen.findByRole('combobox'), { target: { value: 'admin' } });
