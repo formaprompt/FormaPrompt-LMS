@@ -2,9 +2,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { fetchAdminLearnerDirectory, LEARNER_DIRECTORY_PAGE_SIZE } from '../lib/adminLearnerDirectoryApi';
 import { learnerRecordPath } from '../lib/adminLearnerRecord';
+import { useAuth } from '../contexts/useAuth';
+import { USER_ROLE_LABELS } from '../lib/adminUserRolesApi';
+import AdminUserRoleControl from './AdminUserRoleControl';
 import './AdminLearnerDirectory.css';
 
-export default function AdminLearnerDirectory({ role, renderActions, loadDirectory = fetchAdminLearnerDirectory }) {
+export default function AdminLearnerDirectory({ role, renderActions, loadDirectory = fetchAdminLearnerDirectory, updateRole, reloadDocument = () => window.location.reload() }) {
+  const { user } = useAuth() || {};
+  const [roleManagementDenied, setRoleManagementDenied] = useState(false);
+  const [roleNotice, setRoleNotice] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const search = (searchParams.get('recherche') || '').trim();
   const [draftSearch, setDraftSearch] = useState(search);
@@ -21,7 +27,7 @@ export default function AdminLearnerDirectory({ role, renderActions, loadDirecto
     try {
       const result = await loadDirectory({ search, page });
       if (requestIdRef.current !== requestId) return;
-      setState({ status: 'ready', items: result.items, total: result.total, message: '' });
+      setState({ status: 'ready', items: result.items, total: result.total, message: '', revision: requestId });
     } catch (error) {
       if (requestIdRef.current !== requestId) return;
       console.error('Chargement de l’annuaire apprenants impossible :', error);
@@ -91,6 +97,8 @@ export default function AdminLearnerDirectory({ role, renderActions, loadDirecto
       </form>
 
       {state.status === 'loading' && <p role="status">Chargement des apprenants…</p>}
+      {roleNotice && <p role="status">{roleNotice}</p>}
+      {roleManagementDenied && <div role="alert"><p>La gestion des rôles est désactivée : vos droits administrateur doivent être vérifiés.</p><button className="btn" type="button" onClick={reloadDocument}>Vérifier mes droits</button></div>}
       {state.status === 'error' && <div className="learner-directory__message" role="alert"><p>{state.message}</p><button type="button" className="btn" onClick={load}>Réessayer</button></div>}
       {state.status === 'ready' && (
         <>
@@ -109,7 +117,17 @@ export default function AdminLearnerDirectory({ role, renderActions, loadDirecto
                       <h3><Link to={learnerRecordPath(learner.userId, search, page)}>{displayName}</Link></h3>
                       {learner.fullName && <p>{learner.email}</p>}
                       <p>{learner.organizationName || 'Entreprise non renseignée'}</p>
-                      <span className="learner-directory__role">{learner.role === 'user' ? 'Apprenant' : learner.role === 'admin' ? 'Administrateur' : 'Employé'}</span>
+                      <span className="learner-directory__role">{USER_ROLE_LABELS[learner.role] || 'Rôle inconnu'}</span>
+                      <AdminUserRoleControl key={`${learner.userId}:${state.revision}`} learner={learner} disabled={roleManagementDenied} updateRole={updateRole} onRefresh={load} onPermissionDenied={() => setRoleManagementDenied(true)} onSaved={async (result) => {
+                        setRoleNotice('Rôle confirmé par le serveur. Actualisation de l’annuaire…');
+                        if (user?.id === result.userId && result.role !== 'admin') {
+                          setRoleManagementDenied(true);
+                          reloadDocument();
+                          return;
+                        }
+                        await load();
+                        setRoleNotice('Rôle confirmé par le serveur.');
+                      }} />
                     </div>
                     {renderActions?.(learner)}
                   </li>
