@@ -183,8 +183,8 @@ a:focus, button:focus {
     flex-direction: column;
     align-items: stretch;
     gap: 0.35rem;
-    height: calc(100dvh - 72px);
-    max-height: calc(100dvh - 72px);
+    height: calc(100dvh - 100%);
+    max-height: calc(100dvh - 100%);
     padding: 0.75rem 1.5rem max(14rem, calc(1.5rem + env(safe-area-inset-bottom)));
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -247,21 +247,35 @@ a:focus, button:focus {
   }
 }
 
-@media (max-width: 360px) {
-  .mobile-account-shortcut {
-    width: 42px;
-    padding: 0;
+@media (max-width: 600px) {
+  .header-container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 0.4rem 0.75rem;
+    padding-inline: 0.5rem;
   }
 
-  .mobile-account-shortcut span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+  .header-container > .logo {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .mobile-menu-btn {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mobile-header-actions {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .mobile-account-shortcut {
     white-space: nowrap;
-    border: 0;
   }
 }

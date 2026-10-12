@@ -72,7 +72,7 @@ export default function Header() {
           />
         </Link>
 
-        <div className="mobile-header-actions">
+        {user && <div className="mobile-header-actions">
           {user && (role === 'admin' || role === 'employee') && (
             <Link to="/admin" className="mobile-account-shortcut" onClick={() => setIsMenuOpen(false)}>
               <ShieldCheck size={18} aria-hidden="true" />
@@ -86,7 +86,8 @@ export default function Header() {
             </Link>
           )}
           {user && <Link to="/aide/bien-demarrer" className="mobile-account-shortcut" onClick={() => setIsMenuOpen(false)}>Aide</Link>}
-          <button
+        </div>}
+        <button
             ref={menuButton}
             type="button"
             className="mobile-menu-btn"
@@ -96,8 +97,7 @@ export default function Header() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
+        </button>
 
         {/* Navigation */}
         <nav aria-label="Navigation principale" id="primary-navigation" className={`nav ${isMenuOpen ? 'nav-open' : ''}`} onBlur={(event) => {

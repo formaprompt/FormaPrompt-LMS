@@ -2,6 +2,7 @@ import { FORMATION_ORGANIZATION } from '../data/attestationConfig.js';
 import { ATTESTATION_TYPES, formatAttestationPeriod } from './attestationDocument.js';
 
 const BOOKING_FORMAT_LABELS = {
+  two_3h30: '2 séances de 3 h30',
   two_5h: '2 séances de 5 h',
   four_2h30: '4 séances de 2 h 30',
   three_4h_4h_2h: '3 séances : 4 h + 4 h + 2 h',
