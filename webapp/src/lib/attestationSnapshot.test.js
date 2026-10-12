@@ -26,6 +26,31 @@ test('formate les trois rythmes de la formation IA générative', () => {
   );
 });
 
+test('le rythme two_3h30 reste lisible dans les deux documents et modalités, sans changer les durées', () => {
+  const config = COURSE_ATTESTATION_CONFIG['formation-prompt-level-1'];
+  for (const [deliveryMode, label] of [['remote', 'Distanciel synchrone'], ['in_person', 'Présentiel']]) {
+    for (const [documentType, title] of [['realisation', 'Attestation de réalisation'], ['competences', 'Attestation de compétences']]) {
+      const snapshot = createAttestationSnapshot({
+        documentType,
+        record: { learnerName: 'Camille Fictif', submission: { id: 1, course_id: 'formation-prompt-level-1' }, review: { id: 1, review_status: 'validated' } },
+        documentData: {
+          course: { title: 'Formation fictive' },
+          booking: { id: 'reservation-fictive', delivery_mode: deliveryMode, schedule_format: 'two_3h30' },
+          dossier: { attendedMinutes: 390, plannedMinutes: 420, sessionCount: 2, sessionProofs: [] },
+          criteria: [], attestationConfig: config,
+        },
+      });
+      assert.equal(snapshot.title, title);
+      assert.equal(snapshot.deliveryMode, `${label} · 2 séances de 3 h30`);
+      assert.equal(snapshot.attendedMinutes, 390);
+      assert.equal(snapshot.plannedMinutes, 420);
+      assert.equal(snapshot.sessionCount, 2);
+      assert.deepEqual(snapshot.objectives, config.objectives);
+      assert.equal(snapshot.objectives.length, 6);
+    }
+  }
+});
+
 test('les trois formations conservent leurs six objectifs pour les deux types de document', () => {
   for (const courseId of ['formation-prompt-level-1', 'formation-ia', 'formation-ia-act']) {
     const config = COURSE_ATTESTATION_CONFIG[courseId];

@@ -1,13 +1,23 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import Header from './Header';
 
 const auth = vi.hoisted(() => ({ user: null, role: null }));
 vi.mock('../contexts/useAuth', () => ({ useAuth: () => auth }));
-afterEach(() => { cleanup(); auth.user = null; auth.role = null; });
+afterEach(() => { cleanup(); auth.user = null; auth.role = null; document.body.style.overflow = ''; });
 const mount = () => render(<MemoryRouter><Header /></MemoryRouter>);
+function LocationProbe() {
+  const location = useLocation();
+  return <output data-testid="header-location">{location.pathname}</output>;
+}
+
+function showMobileControls() {
+  const actions = document.querySelector('.mobile-header-actions');
+  if (actions) actions.style.display = 'flex';
+  document.querySelector('.mobile-menu-btn').style.display = 'block';
+}
 
 describe('Navigation publique', () => {
   it('ouvre au clavier puis ferme un groupe avec Échap et restitue le focus', async () => {
@@ -42,8 +52,7 @@ describe('Navigation publique', () => {
     const user = userEvent.setup();
     mount();
     // jsdom n'applique pas les media queries : rendre le contrôle mobile visible.
-    document.querySelector('.mobile-header-actions').style.display = 'flex';
-    document.querySelector('.mobile-menu-btn').style.display = 'block';
+    showMobileControls();
     const button = screen.getByRole('button', { name: 'Ouvrir le menu' });
     await user.click(button);
     expect(document.body.style.overflow).toBe('hidden');
@@ -51,16 +60,56 @@ describe('Navigation publique', () => {
     expect(document.body.style.overflow).toBe('');
     expect(button).toHaveFocus();
   });
-  it.each(['student', 'admin', 'employee'])('préserve les raccourcis du rôle %s', (role) => {
+  it.each(['user', 'admin', 'employee'])('préserve les raccourcis du rôle %s', (role) => {
     auth.user = { id: 'local-test' }; auth.role = role;
     mount();
     expect(screen.getAllByRole('link', { name: /Espace apprenant/ })[0]).toHaveAttribute('href', '/dashboard');
-    expect(screen.queryAllByRole('link', { name: 'Admin' }).length).toBe(role === 'student' ? 0 : 1);
+    expect(screen.queryAllByRole('link', { name: 'Admin' }).length).toBe(role === 'user' ? 0 : 1);
     expect(screen.getByRole('link', { name: 'Aide' })).toHaveAttribute('href', '/aide/bien-demarrer');
   });
   it('expose Aide dans le raccourci mobile connecté', () => {
-    auth.user = { id: 'local-test' }; auth.role = 'student'; mount();
+    auth.user = { id: 'local-test' }; auth.role = 'user'; mount();
     document.querySelector('.mobile-header-actions').style.display = 'flex';
     expect(screen.getAllByRole('link', { name: 'Aide' })).toHaveLength(2);
+  });
+
+  it.each(['admin', 'employee', 'user', null])('garde le menu indépendant des raccourcis et navigable au clavier pour %s', async (role) => {
+    auth.user = role ? { id: 'local-header-test' } : null;
+    auth.role = role;
+    const user = userEvent.setup();
+    render(<MemoryRouter><Header /><LocationProbe /></MemoryRouter>);
+    showMobileControls();
+    const button = screen.getByRole('button', { name: 'Ouvrir le menu' });
+    expect(button.closest('.mobile-header-actions')).toBeNull();
+    if (role) {
+      const actions = document.querySelector('.mobile-header-actions');
+      expect(actions).toHaveTextContent('Espace apprenant');
+      expect(actions).toHaveTextContent('Aide');
+      const adminShortcut = actions.querySelector('a[href="/admin"]');
+      if (role === 'user') expect(adminShortcut).toBeNull();
+      else expect(adminShortcut).toHaveAttribute('href', '/admin');
+    } else {
+      expect(document.querySelector('.mobile-header-actions')).toBeNull();
+    }
+    document.body.style.overflow = 'auto';
+    button.focus();
+    await user.keyboard('{Enter}');
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    expect(document.body.style.overflow).toBe('hidden');
+    await user.click(screen.getByRole('button', { name: 'Formations' }));
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('button', { name: 'Formations' })).toHaveFocus();
+    expect(button).toHaveAttribute('aria-expanded', 'true');
+    await user.keyboard('{Escape}');
+    expect(button).toHaveFocus();
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(document.body.style.overflow).toBe('auto');
+    await user.keyboard('{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Formations' }));
+    await user.click(screen.getByRole('link', { name: 'IA et créativité' }));
+    expect(screen.getByTestId('header-location')).toHaveTextContent('/formation-ia-creativite');
+    expect(button).toHaveAttribute('aria-expanded', 'false');
+    expect(document.body.style.overflow).toBe('auto');
+    document.body.style.overflow = '';
   });
 });
