@@ -6,8 +6,8 @@ export default function FormationOF() {
   return (
     <>
       <SEO
-        title="Formation IA pour formateurs et équipes pédagogiques | FormaPrompt"
-        description="Formation IA générative de 14 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA."
+        title="Formation IA générative pour formateurs : 14 h | FormaPrompt"
+        description="Formateurs et équipes pédagogiques : 14 h pour créer et réviser des supports avec l’IA générative, avec exercices et vérification des contenus."
         url={`${SITE_CONFIG.baseUrl}/formation-organismes`}
         image="https://www.formaprompt.com/assets/ia-formateur.jpg"
       />

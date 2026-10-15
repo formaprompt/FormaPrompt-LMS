@@ -67,8 +67,8 @@ export default function FormationPrompt() {
   return (
     <>
       <SEO
-        title="Formation Prompt Engineering 7 h à Calais ou à distance | FormaPrompt"
-        description="Formation Prompt Engineering de 7 h pour concevoir, tester et améliorer des prompts professionnels, en présentiel à Calais ou à distance."
+        title="Formation prompt engineering : 7 h avec ateliers | FormaPrompt"
+        description="Concevez, testez et améliorez vos prompts professionnels : formation de 7 h avec ateliers, en présentiel à Calais ou à distance."
         url={`${SITE_CONFIG.baseUrl}/formation-prompt-engineering`}
         image="https://www.formaprompt.com/assets/Formation%20prompt%20engineering.png"
       />

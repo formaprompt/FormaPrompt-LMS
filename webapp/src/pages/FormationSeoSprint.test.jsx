@@ -22,8 +22,8 @@ afterEach(cleanup)
 const pages = [
   {
     Page: FormationOF,
-    title: 'Formation IA pour formateurs et équipes pédagogiques | FormaPrompt',
-    description: 'Formation IA générative de 14 h pour formateurs et équipes pédagogiques : concevoir, réviser et sécuriser des contenus avec l’IA.',
+    title: 'Formation IA générative pour formateurs : 14 h | FormaPrompt',
+    description: 'Formateurs et équipes pédagogiques : 14 h pour créer et réviser des supports avec l’IA générative, avec exercices et vérification des contenus.',
     link: 'formation Prompt Engineering – Niveau 1',
     href: '/formation-prompt-engineering',
   },
@@ -36,8 +36,8 @@ const pages = [
   },
   {
     Page: FormationPrompt,
-    title: 'Formation Prompt Engineering 7 h à Calais ou à distance | FormaPrompt',
-    description: 'Formation Prompt Engineering de 7 h pour concevoir, tester et améliorer des prompts professionnels, en présentiel à Calais ou à distance.',
+    title: 'Formation prompt engineering : 7 h avec ateliers | FormaPrompt',
+    description: 'Concevez, testez et améliorez vos prompts professionnels : formation de 7 h avec ateliers, en présentiel à Calais ou à distance.',
     link: 'formation IA générative',
     href: '/formation-ia-generative',
   },
