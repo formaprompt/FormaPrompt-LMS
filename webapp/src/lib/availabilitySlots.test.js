@@ -4,6 +4,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAvailabilitySlots } from './availabilitySlots.js';
 
+const parisClock = (value) => new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+}).format(new Date(value));
+const parisWeekday = (value) => new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Europe/Paris', weekday: 'short',
+}).format(new Date(value));
+
 const baseForm = {
   fromDate: '2026-07-20',
   toDate: '2026-07-26',
@@ -24,7 +31,7 @@ test('génère les créneaux du lundi au vendredi et exclut le dimanche', () => 
 
   assert.equal(result.includedDays, 5);
   assert.equal(result.slots.length, 70);
-  assert.ok(result.slots.every((slot) => ![0, 6].includes(new Date(slot.starts_at).getDay())));
+  assert.ok(result.slots.every((slot) => !['Sun', 'Sat'].includes(parisWeekday(slot.starts_at))));
 });
 
 test('inclut le samedi sur demande mais jamais le dimanche', () => {
@@ -35,8 +42,8 @@ test('inclut le samedi sur demande mais jamais le dimanche', () => {
 
   assert.equal(result.includedDays, 6);
   assert.equal(result.slots.length, 84);
-  assert.ok(result.slots.some((slot) => new Date(slot.starts_at).getDay() === 6));
-  assert.ok(result.slots.every((slot) => new Date(slot.starts_at).getDay() !== 0));
+  assert.ok(result.slots.some((slot) => parisWeekday(slot.starts_at) === 'Sat'));
+  assert.ok(result.slots.every((slot) => parisWeekday(slot.starts_at) !== 'Sun'));
 });
 
 test('conserve toujours une heure de pause pour déjeuner', () => {
@@ -52,9 +59,7 @@ test('conserve toujours une heure de pause pour déjeuner', () => {
   assert.equal(result.slots.length, 14);
   assert.ok(result.slots.every((slot) => new Date(slot.ends_at) - new Date(slot.starts_at) === 30 * 60_000));
   assert.ok(result.slots.every((slot) => {
-    const start = new Date(slot.starts_at);
-    const end = new Date(slot.ends_at);
-    return end.getHours() <= 12 || start.getHours() >= 13;
+    return parisClock(slot.ends_at) <= '12:00' || parisClock(slot.starts_at) >= '13:00';
   }));
 });
 
@@ -70,14 +75,12 @@ test('permet de déplacer la pause déjeuner tout en conservant une heure', () =
   });
 
   assert.ok(result.slots.every((slot) => {
-    const start = new Date(slot.starts_at);
-    const end = new Date(slot.ends_at);
-    return end.getHours() <= 13 || start.getHours() >= 14;
+    return parisClock(slot.ends_at) <= '13:00' || parisClock(slot.starts_at) >= '14:00';
   }));
 });
 
 
-test('les horaires Paris, les dates initiales et les pauses restent identiques sous Paris et New York aux deux changements d’heure', () => {
+test('les horaires Paris, les dates initiales et les pauses restent identiques sous Paris, UTC et New York aux deux changements d’heure', () => {
   const moduleUrl = new URL('./availabilitySlots.js', import.meta.url).href;
   const script = `
     import { createAvailabilitySlots, createInitialAvailabilityForm, formatDateInput } from ${JSON.stringify(moduleUrl)};
@@ -100,7 +103,9 @@ test('les horaires Paris, les dates initiales et les pauses restent identiques s
     return JSON.parse(child.stdout);
   };
   const paris = run('Europe/Paris');
+  const utc = run('UTC');
   const newYork = run('America/New_York');
+  assert.deepEqual(utc,paris);
   assert.deepEqual(newYork,paris);
   assert.equal(paris.today,'2026-03-29');
   assert.equal(paris.initial.fromDate,'2026-03-30');
