@@ -42,3 +42,10 @@ it('affiche le seuil et la capacité exacts d’un groupe créativité publié',
   expect(screen.getByText('2 participants minimum, 4 maximum.')).toBeInTheDocument();
   expect(screen.queryByText('4 participants minimum, 6 maximum.')).not.toBeInTheDocument();
 });
+
+it('en cas d’erreur masque les anciennes cohortes et ne prétend pas qu’aucune session existe', () => {
+  render(<CourseCohortPicker courseId="word-initiation" cohorts={[cohort]} error="Agenda inaccessible" />);
+  expect(screen.getByRole('alert')).toHaveTextContent('temporairement indisponibles');
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.queryByText(/Aucune session inter/)).toBeNull();
+});

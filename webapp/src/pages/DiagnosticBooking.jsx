@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarClock, CheckCircle2, RefreshCw, TriangleAlert } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import SEO from '../components/SEO'
@@ -9,6 +9,7 @@ import {
   formatDiagnosticCandidate,
 } from '../lib/diagnosticBooking'
 import { supabase } from '../lib/supabaseClient'
+import { AVAILABILITY_REFRESH_MS } from '../lib/unifiedAvailability'
 import './DiagnosticBooking.css'
 
 const EARLY_START_STATEMENT = 'Je demande expressément que l’exécution de mon Diagnostic IA Express commence avant la fin de mon délai légal de rétractation.'
@@ -37,17 +38,24 @@ export default function DiagnosticBooking() {
   const [earlyStartRequested, setEarlyStartRequested] = useState(false)
   const [fullPerformanceAcknowledged, setFullPerformanceAcknowledged] = useState(false)
   const [confirmedBooking, setConfirmedBooking] = useState(null)
+  const [availabilityExpiry, setAvailabilityExpiry] = useState(0)
+  const loadVersion = useRef(0)
 
   const loadAvailability = useCallback(async () => {
     if (!user || !validOrderId) return
+    const requestVersion = ++loadVersion.current
     setStatus('loading')
     setFeedback('')
     try {
       const available = await fetchDiagnosticAvailability(supabase, validOrderId)
+      if (requestVersion !== loadVersion.current) return
+      setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
       setCandidates(available)
       setSelectedId((current) => available.some((candidate) => candidate.id === current) ? current : '')
       setStatus(available.length ? 'ready' : 'empty')
     } catch (error) {
+      if (requestVersion !== loadVersion.current) return
+      setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
       setCandidates([])
       setStatus('error')
       setFeedback(error.message)
@@ -58,6 +66,12 @@ export default function DiagnosticBooking() {
     const timer = window.setTimeout(loadAvailability, 0)
     return () => window.clearTimeout(timer)
   }, [loadAvailability])
+
+  useEffect(() => {
+    if (!availabilityExpiry || ['confirmed', 'confirming', 'loading'].includes(status)) return undefined
+    const timer = window.setTimeout(loadAvailability, Math.max(0, availabilityExpiry - Date.now()))
+    return () => window.clearTimeout(timer)
+  }, [availabilityExpiry, status, loadAvailability])
 
   const groups = useMemo(() => groupCandidates(candidates), [candidates])
   const selectedCandidate = candidates.find((candidate) => candidate.id === selectedId) || null
@@ -88,11 +102,20 @@ export default function DiagnosticBooking() {
       setFeedback('Votre rendez-vous est confirmé et enregistré dans Google Calendar.')
     } catch (error) {
       if (/créneau.*indisponible/i.test(error.message)) {
-        const refreshed = await fetchDiagnosticAvailability(supabase, validOrderId).catch(() => [])
-        setCandidates(refreshed)
-        setSelectedId('')
-        setStatus('conflict')
-        setFeedback('Ce créneau vient de devenir indisponible. Choisissez une autre proposition.')
+        try {
+          const refreshed = await fetchDiagnosticAvailability(supabase, validOrderId)
+          setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
+          setCandidates(refreshed)
+          setSelectedId('')
+          setStatus('conflict')
+          setFeedback('Ce créneau vient de devenir indisponible. Choisissez une autre proposition.')
+        } catch (refreshError) {
+          setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
+          setCandidates([])
+          setSelectedId('')
+          setStatus('error')
+          setFeedback(refreshError.message)
+        }
       } else {
         setStatus('booking-error')
         setFeedback(error.message)

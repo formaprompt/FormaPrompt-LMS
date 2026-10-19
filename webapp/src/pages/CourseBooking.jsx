@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { CalendarClock, CheckCircle, MapPin, Monitor, RefreshCw } from 'lucide-react'
 import SEO from '../components/SEO'
@@ -24,6 +24,7 @@ import {
   joinCourseCohort,
 } from '../lib/courseCohorts'
 import { CREATIVITY_INDIVIDUAL_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js'
+import { AVAILABILITY_REFRESH_MS, fetchCourseAvailability } from '../lib/unifiedAvailability'
 import './CourseBooking.css'
 
 const STATUS_LABELS = {
@@ -38,7 +39,7 @@ const STATUS_LABELS = {
 function formatSlot(slot) {
   const start = new Date(slot.starts_at)
   const end = new Date(slot.ends_at)
-  return `${start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} de ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+  return `${start.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} de ${start.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })} à ${end.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })}`
 }
 
 function formatCandidate(candidate) {
@@ -47,7 +48,7 @@ function formatCandidate(candidate) {
     : ''
   if (!candidate.segments) return `${sessionPrefix}${formatSlot(candidate)}`
   const [morning, afternoon] = candidate.segments
-  return `${formatSlot(morning)}, puis de ${new Date(afternoon.starts_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${new Date(afternoon.ends_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+  return `${formatSlot(morning)}, puis de ${new Date(afternoon.starts_at).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })} à ${new Date(afternoon.ends_at).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })}`
 }
 
 function findAttendanceForSession(records, session) {
@@ -87,21 +88,28 @@ export default function CourseBooking() {
   const [scheduleFormat, setScheduleFormat] = useState(course.defaultFormat)
   const [city, setCity] = useState('')
   const [postalCode, setPostalCode] = useState('')
-  const [selectedCandidateIds, setSelectedCandidateIds] = useState([])
+  const [requestedCandidateIds, setSelectedCandidateIds] = useState([])
   const [feedback, setFeedback] = useState('')
+  const [availabilityError, setAvailabilityError] = useState(false)
+  const [availabilityExpiry, setAvailabilityExpiry] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [attendanceAction, setAttendanceAction] = useState('')
   const [attendanceSignatures, setAttendanceSignatures] = useState({})
+  const loadVersion = useRef(0)
 
   const loadData = useCallback(async () => {
     if (!user) return
+    const requestVersion = ++loadVersion.current
     setLoading(true)
+    setAvailabilityError(false)
     setFeedback('')
 
     const accessResult = await fetchActiveCourseAccess(user.id, courseId)
+    if (requestVersion !== loadVersion.current) return
     if (courseId === CREATIVITY_INDIVIDUAL_COURSE_ID && accessResult.data) {
       const eligibility = await supabase.rpc('has_creativity_booking_access', { p_course_id: courseId })
+      if (requestVersion !== loadVersion.current) return
       if (eligibility.error || eligibility.data !== true) {
         accessResult.data = null
         accessResult.error = eligibility.error
@@ -127,13 +135,17 @@ export default function CourseBooking() {
           fetchAvailableCourseCohorts(supabase, courseId),
           fetchMyCourseCohortEnrollment(supabase, courseId),
         ])
+        if (requestVersion !== loadVersion.current) return
         setCohorts(loadedCohorts)
+        setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
         setCohortEnrollment(loadedEnrollment)
         setBooking(null)
         setSlots([])
       } catch (error) {
+        if (requestVersion !== loadVersion.current) return
         console.error('Chargement des cohortes impossible :', error)
         setFeedback(error?.message || 'Impossible de charger les sessions inter pour le moment.')
+        setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS)
       }
       setLoading(false)
       return
@@ -155,27 +167,26 @@ export default function CourseBooking() {
         .eq('user_id', user.id)
         .eq('course_id', courseId)
         .maybeSingle(),
-      supabase
-        .from('training_availability_slots')
-        .select('id, starts_at, ends_at, delivery_modes')
-        .eq('is_active', true)
-        .eq('is_reserved', false)
-        .gt('starts_at', new Date().toISOString())
-        .order('starts_at'),
+      fetchCourseAvailability(supabase, courseId)
+        .then(data => ({ data: data.slots, checkedAt: data.checked_at, error: null }))
+        .catch(error => ({ data: [], error })),
     ])
 
+    if (requestVersion !== loadVersion.current) return
     if (bookingResult.error || slotsResult.error) {
       console.error('Chargement des réservations impossible :', {
         booking: bookingResult.error,
         slots: slotsResult.error,
       })
-      setFeedback('Impossible de charger les disponibilités pour le moment.')
+      setAvailabilityError(true)
+      setFeedback('Disponibilités temporairement indisponibles. Réessayez plus tard.')
     }
 
     setBooking(bookingResult.data || null)
     setCohorts([])
     setCohortEnrollment(null)
-    setSlots(slotsResult.data || [])
+    setSlots(slotsResult.error ? [] : slotsResult.data || [])
+    setAvailabilityExpiry(slotsResult.checkedAt ? Date.parse(slotsResult.checkedAt) + AVAILABILITY_REFRESH_MS : Date.now() + AVAILABILITY_REFRESH_MS)
     setLoading(false)
   }, [user, courseId, course.bookingKind])
 
@@ -186,8 +197,14 @@ export default function CourseBooking() {
       return undefined
     }
     const timer = window.setTimeout(loadData, 0)
-    return () => window.clearTimeout(timer)
+    return () => { loadVersion.current += 1; window.clearTimeout(timer) }
   }, [user, sessionExpired, navigate, loadData, redirectPath])
+
+  useEffect(() => {
+    if (!availabilityExpiry || submitting) return undefined
+    const timer = window.setTimeout(loadData, Math.max(0, availabilityExpiry - Date.now()))
+    return () => window.clearTimeout(timer)
+  }, [availabilityExpiry, loadData, submitting])
 
   useEffect(() => {
     if (searchParams.get('paiement') !== 'succes' || booking?.travel_fee_status === 'paid') return undefined
@@ -221,6 +238,11 @@ export default function CourseBooking() {
         })
       : createBookingCandidates(slots, { duration: selectedFormat.durationMinutes, deliveryMode })
   ), [slots, selectedFormat, deliveryMode])
+
+  const selectedCandidateIds = useMemo(() => {
+    const validIds = new Set(compatibleCandidates.map(candidate => candidate.id))
+    return requestedCandidateIds.filter(id => validIds.has(id))
+  }, [compatibleCandidates, requestedCandidateIds])
 
   const selectedCandidates = useMemo(() => {
     const selectedIds = new Set(selectedCandidateIds)
@@ -280,6 +302,7 @@ export default function CourseBooking() {
 
   const submitBooking = async (event) => {
     event.preventDefault()
+    if (availabilityError) return
     if (!hasCompleteSelection) {
       setFeedback(`Sélectionnez ${selectedFormat.sessionCount} proposition${selectedFormat.sessionCount > 1 ? 's' : ''}.`)
       return
@@ -558,7 +581,7 @@ export default function CourseBooking() {
               <legend>{deliveryMode === 'in_person' && !course.inPersonLocation ? '4' : '3'}. Choisissez {selectedFormat.sessionCount} proposition{selectedFormat.sessionCount > 1 ? 's' : ''}</legend>
               <p>{selectedCandidateIds.length} sur {selectedFormat.sessionCount} sélectionnée{selectedCandidateIds.length > 1 ? 's' : ''}. {selectedFormat.selectionHint || (selectedFormat.type === 'split_day' ? 'Le site assemble automatiquement les créneaux de 30 minutes et conserve une heure pour déjeuner.' : 'Le site assemble automatiquement les créneaux de 30 minutes.')}</p>
               <div className="booking-slots">
-                {compatibleCandidates.length === 0 ? (
+                {availabilityError ? <p role="alert">Disponibilités temporairement indisponibles. Réessayez plus tard.</p> : compatibleCandidates.length === 0 ? (
                   <div className="booking-notice">
                     <strong>Aucun horaire compatible n’est encore publié.</strong>
                     <p>Les horaires apparaîtront ici dès que FormaPrompt aura renseigné ses disponibilités.</p>
@@ -587,7 +610,7 @@ export default function CourseBooking() {
             </fieldset>
 
             {feedback && <p role="alert" className="booking-error">{feedback}</p>}
-            <button type="submit" className="btn btn-primary" disabled={submitting || !hasCompleteSelection}>{bookingActionLabel}</button>
+            <button type="submit" className="btn btn-primary" disabled={submitting || availabilityError || !hasCompleteSelection}>{bookingActionLabel}</button>
 
             {hasCompleteSelection && (
               <div className="booking-floating-confirm" role="region" aria-label="Confirmation des séances sélectionnées">
@@ -595,7 +618,7 @@ export default function CourseBooking() {
                   <CheckCircle size={22} aria-hidden="true" />
                   <span>Votre sélection est complète.</span>
                 </p>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>{bookingActionLabel}</button>
+                <button type="submit" className="btn btn-primary" disabled={submitting || availabilityError}>{bookingActionLabel}</button>
               </div>
             )}
           </form>

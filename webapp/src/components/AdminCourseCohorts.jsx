@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './CourseCohorts.css';
 import { CREATIVITY_GROUP_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js';
+import { AVAILABILITY_REFRESH_MS } from '../lib/unifiedAvailability';
 import { createHalfDayChoices, findChoiceForSlotIds, formatRange, parisDate } from './courseCohortRangeChoices';
 
 const FORMATS = [{ id: 'four_half_days_3h30', label: '4 demi-journées de 3 h 30' }, { id: 'two_days_2x3h30', label: '2 jours de 7 h (2 × 3 h 30 par jour)' }];
@@ -42,16 +43,13 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
   const [slotsByMonth, setSlotsByMonth] = useState({});
   const [loadingMonths, setLoadingMonths] = useState({});
   const [monthErrors, setMonthErrors] = useState({});
-  const loadedMonths = useRef(new Set());
+  const loadedMonths = useRef(new Map());
+  const visibleMonths = useRef(calendarMonths);
+  visibleMonths.current = calendarMonths;
   const requestVersions = useRef({});
   const mounted = useRef(true);
-  const suppliedSlotsByMonth = useMemo(() => availableSlots.reduce((result, slot) => {
-    const month = parisMonth(slot.starts_at);
-    result[month] = [...(result[month] || []), slot];
-    return result;
-  }, {}), [availableSlots]);
   const loadMonth = useCallback(async (month) => {
-    if (!onLoadAvailabilityMonth || loadedMonths.current.has(month)) return;
+    if (!onLoadAvailabilityMonth || Date.now() - (loadedMonths.current.get(month) || 0) < AVAILABILITY_REFRESH_MS) return;
     const version = (requestVersions.current[month] || 0) + 1;
     requestVersions.current[month] = version;
     setLoadingMonths((current) => ({ ...current, [month]: true }));
@@ -59,10 +57,12 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     try {
       const slots = await onLoadAvailabilityMonth(month);
       if (!mounted.current || requestVersions.current[month] !== version) return;
-      loadedMonths.current.add(month);
+      if (!Array.isArray(slots)) throw new Error('Disponibilités temporairement indisponibles.');
+      loadedMonths.current.set(month, slots.checkedAt ? Date.parse(slots.checkedAt) : Date.now());
       setSlotsByMonth((current) => ({ ...current, [month]: uniqueSlots(Array.isArray(slots) ? slots : []) }));
     } catch (loadError) {
       if (!mounted.current || requestVersions.current[month] !== version) return;
+      setSlotsByMonth((current) => ({ ...current, [month]: [] }));
       setMonthErrors((current) => ({ ...current, [month]: loadError?.message || 'Les disponibilités de ce mois ne peuvent pas être chargées.' }));
     } finally {
       if (mounted.current && requestVersions.current[month] === version) setLoadingMonths((current) => ({ ...current, [month]: false }));
@@ -77,12 +77,15 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     [...new Set(calendarMonths)].forEach((month) => { loadMonth(month); });
   }, [calendarMonths, loadMonth, onLoadAvailabilityMonth]);
   useEffect(() => {
-    if (!onLoadAvailabilityMonth) return;
-    setSlotsByMonth((current) => Object.fromEntries(Object.entries(current).map(([month, slots]) => [
-      month,
-      suppliedSlotsByMonth[month] ? uniqueSlots([...slots, ...suppliedSlotsByMonth[month]]) : slots,
-    ])));
-  }, [onLoadAvailabilityMonth, suppliedSlotsByMonth]);
+    if (!onLoadAvailabilityMonth) return undefined;
+    const remaining = Math.max(0, Math.min(AVAILABILITY_REFRESH_MS, ...[...loadedMonths.current.values()].map(checkedAt => checkedAt + AVAILABILITY_REFRESH_MS - Date.now())));
+    const timer = window.setTimeout(() => {
+      loadedMonths.current.clear();
+      setSlotsByMonth({});
+      [...new Set(visibleMonths.current)].forEach(month => loadMonth(month));
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, [loadMonth, onLoadAvailabilityMonth, slotsByMonth]);
   useEffect(() => {
     if (!targetCohortId || !cohorts.some((cohort) => String(cohort.id) === String(targetCohortId))) return;
     const target = document.getElementById(`course-cohort-${targetCohortId}`);
@@ -122,6 +125,7 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     if (indexes.length === 2) setDayDates((current) => current.map((date, index) => indexes.includes(index * 2) ? '' : date));
   };
   const validateDraft = () => {
+    if (onLoadAvailabilityMonth && calendarMonths.some(month => loadingMonths[month] || monthErrors[month] || Date.now() - (loadedMonths.current.get(month) || 0) >= AVAILABILITY_REFRESH_MS)) return 'Disponibilités temporairement indisponibles. Rechargez les plages avant de poursuivre.';
     const capacity = Number(draft.capacity); const minimum = Number(draft.minimum_participants);
     if (!draft.course_id || !draft.delivery_mode || !draft.schedule_format) return 'Choisissez la formation, le mode de réalisation et le format de 14 heures.';
     if (!Number.isInteger(capacity) || capacity <= 0 || !Number.isInteger(minimum) || minimum <= 0 || minimum > capacity) return 'Saisissez une capacité et un seuil minimum valides.';
@@ -243,7 +247,7 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     const currentChoices = choices.filter((choice) => parisMonth(choice.starts_at) === month && (!date || parisDate(choice.starts_at) === date));
     const visibleChoices = selected && !currentChoices.some((choice) => choice.id === selected.id) ? [selected, ...currentChoices] : currentChoices;
     const selectionMonthChanged = selected && parisMonth(selected.starts_at) !== month;
-    return <div className="admin-course-cohorts__range" key={index}><label htmlFor={`cohort-range-${index}`}>{name} · 3 h 30</label>{monthPicker([index], `Mois à consulter — ${name}`)}<select id={`cohort-range-${index}`} aria-label={`${name} · plage de 3 h 30`} value={selected?.id || ''} onChange={(event) => selectRange(index, event.target.value)} disabled={!draft.delivery_mode || (draft.schedule_format === 'two_days_2x3h30' && !date)}><option value="">Choisir une plage disponible</option>{visibleChoices.map((choice) => { const conflicts = choice.slotIds.some((id) => selectedSlotIds.has(id) && !selected?.slotIds.includes(id)) || selectedChoices.some((other, otherIndex) => other && otherIndex !== index && rangesOverlap(choice, other)); return <option key={choice.id} value={choice.id} disabled={conflicts}>{formatRange(choice)}{choice.existing ? ' (plage du brouillon)' : selectionMonthChanged && choice.id === selected?.id ? ' (sélection conservée)' : ''}</option>; })}</select>{selected && <span className="admin-course-cohorts__range-summary">{selectionMonthChanged ? `Sélection conservée : ${formatRange(selected)}` : `${formatRange(selected)} · 3 h 30`}</span>}</div>;
+    return <div className="admin-course-cohorts__range" key={index}><label htmlFor={`cohort-range-${index}`}>{name} · 3 h 30</label>{monthPicker([index], `Mois à consulter — ${name}`)}<select id={`cohort-range-${index}`} aria-label={`${name} · plage de 3 h 30`} value={selected?.id || ''} onChange={(event) => selectRange(index, event.target.value)} disabled={Boolean(loadingMonths[month] || monthErrors[month]) || !draft.delivery_mode || (draft.schedule_format === 'two_days_2x3h30' && !date)}><option value="">Choisir une plage disponible</option>{visibleChoices.map((choice) => { const conflicts = choice.slotIds.some((id) => selectedSlotIds.has(id) && !selected?.slotIds.includes(id)) || selectedChoices.some((other, otherIndex) => other && otherIndex !== index && rangesOverlap(choice, other)); return <option key={choice.id} value={choice.id} disabled={conflicts}>{formatRange(choice)}{choice.existing ? ' (plage du brouillon)' : selectionMonthChanged && choice.id === selected?.id ? ' (sélection conservée)' : ''}</option>; })}</select>{selected && <span className="admin-course-cohorts__range-summary">{selectionMonthChanged ? `Sélection conservée : ${formatRange(selected)}` : `${formatRange(selected)} · 3 h 30`}</span>}</div>;
   };
   const dayDatePicker = (dayIndex) => {
     const unavailable = dayDates[1 - dayIndex];
@@ -251,7 +255,7 @@ export default function AdminCourseCohorts({ courseOptions = [], cohorts = [], a
     const dates = choices.filter((choice) => parisMonth(choice.starts_at) === month).reduce((items, choice) => items.some((item) => item.date === parisDate(choice.starts_at)) ? items : [...items, { date: parisDate(choice.starts_at), label: new Date(choice.starts_at).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) }], []).filter(({ date }) => (!unavailable || (dayIndex === 0 ? date < unavailable : date > unavailable)));
     const currentDate = dayDates[dayIndex];
     const visibleDates = currentDate && !dates.some(({ date }) => date === currentDate) ? [{ date: currentDate, label: `${new Date(`${currentDate}T12:00:00Z`).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' })} (sélection conservée)` }, ...dates] : dates;
-    return <><div className="admin-course-cohorts__day-month">{monthPicker([dayIndex * 2, dayIndex * 2 + 1], `Mois à consulter — Jour ${dayIndex + 1}`)}</div><label className="admin-course-cohorts__day-date">Date<select aria-label={`Date Jour ${dayIndex + 1}`} value={currentDate} onChange={(event) => selectDayDate(dayIndex, event.target.value)}><option value="">Choisir une date disponible</option>{visibleDates.map(({ date, label }) => <option key={date} value={date}>{label}</option>)}</select></label></>;
+    return <><div className="admin-course-cohorts__day-month">{monthPicker([dayIndex * 2, dayIndex * 2 + 1], `Mois à consulter — Jour ${dayIndex + 1}`)}</div><label className="admin-course-cohorts__day-date">Date<select aria-label={`Date Jour ${dayIndex + 1}`} value={currentDate} disabled={Boolean(loadingMonths[month] || monthErrors[month])} onChange={(event) => selectDayDate(dayIndex, event.target.value)}><option value="">Choisir une date disponible</option>{visibleDates.map(({ date, label }) => <option key={date} value={date}>{label}</option>)}</select></label></>;
   };
   return <section className="admin-course-cohorts" aria-labelledby="admin-course-cohorts-title">
     <header><p className="course-cohorts__eyebrow">Formation inter-entreprises</p><h2 id="admin-course-cohorts-title">Cohortes inter</h2><p>Choisissez uniquement parmi les plages complètes déjà disponibles. Les dates, les seuils et les disponibilités ne sont pas créés automatiquement.</p></header>

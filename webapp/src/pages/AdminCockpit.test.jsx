@@ -167,7 +167,7 @@ describe('AdminCockpit', () => {
       'Heures non planifiées',
       'Formations pas prêtes',
       'Prochaines séances',
-      'Disponibilités libres',
+      'Créneaux publiés',
       'Prochaines formations',
       'Formations en cours et terminées',
       'Formations à clôturer',

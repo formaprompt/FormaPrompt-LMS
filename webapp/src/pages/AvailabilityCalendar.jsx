@@ -3,8 +3,10 @@ import './AvailabilityCalendar.css';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Info, Trash2, Check, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
 import { isJourFerie } from '../lib/dates';
+import { formatDateInput } from '../lib/availabilitySlots';
 import { supabase } from '../lib/supabaseClient';
 import SEO from '../components/SEO';
+import { AVAILABILITY_REFRESH_MS, fetchUnifiedAvailability, manageCalendarBooking } from '../lib/unifiedAvailability';
 
 function formatDatabaseDate(date) {
   const year = date.getFullYear();
@@ -18,6 +20,11 @@ function parseDatabaseDate(value) {
   return new Date(year, month - 1, day);
 }
 
+// Keep calendar days abstract/local, but derive today's day from Paris.
+function currentParisDay() {
+  return parseDatabaseDate(formatDateInput(new Date()));
+}
+
 function bookingStatusLabel(booking) {
   if (booking.source === 'learner') return 'Indisponible';
   return booking.type === 'option' ? 'Option en attente' : 'Réservé';
@@ -27,7 +34,7 @@ export default function AvailabilityCalendar() {
   const { role } = useAuth();
   const isAdmin = role === 'admin' || role === 'employee';
 
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(currentParisDay);
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [bookingsError, setBookingsError] = useState(false);
@@ -38,6 +45,10 @@ export default function AvailabilityCalendar() {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const bookingTriggerRef = useRef(null);
   const bookingNameRef = useRef(null);
+  const requestIntent = useRef(null);
+  const [saving, setSaving] = useState(false);
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  const [availabilityExpiry, setAvailabilityExpiry] = useState(0);
   
   const [bookingForm, setBookingForm] = useState({ slot: 'Matin', type: 'option', ofName: '', comments: '' });
 
@@ -59,48 +70,28 @@ export default function AvailabilityCalendar() {
       const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       const monthKey = formatDatabaseDate(monthStart);
       try {
-        const [ofResult, learnerResult] = await Promise.all([
-          supabase
-            .from('calendar_bookings')
-            .select('*')
-            .gte('date', formatDatabaseDate(monthStart))
-            .lte('date', formatDatabaseDate(monthEnd)),
-          supabase
-            .from('learner_calendar_blocks')
-            .select('booking_date, slot')
-            .gte('booking_date', formatDatabaseDate(monthStart))
-            .lte('booking_date', formatDatabaseDate(monthEnd)),
+        const [availability, ofResult] = await Promise.all([
+          fetchUnifiedAvailability(supabase, { purpose: 'public_calendar', month: monthKey.slice(0, 7) }),
+          isAdmin ? supabase.from('calendar_bookings').select('*')
+            .gte('date', formatDatabaseDate(monthStart)).lte('date', formatDatabaseDate(monthEnd))
+            : Promise.resolve({ data: [], error: null }),
         ]);
-
-        if (ofResult.error || learnerResult.error) {
-          console.error('Erreur lors du chargement des réservations:', {
-            organismes: ofResult.error,
-            apprenants: learnerResult.error,
-          });
-          if (isActive) setBookingsError(true);
-          return;
-        }
+        if (ofResult.error) throw ofResult.error;
         if (!isActive) return;
         const ofBookings = (ofResult.data || []).map((booking) => ({
-          ...booking,
-          date: parseDatabaseDate(booking.date),
-          of: booking.of_name,
-          source: 'of',
+          ...booking, date: parseDatabaseDate(booking.date), of: booking.of_name, source: 'of',
         }));
-        const learnerBlocks = (learnerResult.data || []).map((block) => ({
-          id: `learner-${block.booking_date}-${block.slot}`,
-          date: parseDatabaseDate(block.booking_date),
-          slot: block.slot,
-          type: 'formation',
-          of: 'Formation apprenant',
-          comments: null,
-          source: 'learner',
+        const externalBlocks = availability.blocks.map((block, index) => ({
+          id: `unified-${block.booking_date}-${block.slot}-${index}`,
+          date: parseDatabaseDate(block.booking_date), slot: block.slot,
+          type: 'formation', source: 'learner',
         }));
-        setBookings([...ofBookings, ...learnerBlocks]);
+        setBookings([...ofBookings, ...externalBlocks]);
         setLoadedMonthKey(monthKey);
+        setAvailabilityExpiry(Date.parse(availability.checked_at) + AVAILABILITY_REFRESH_MS);
       } catch (error) {
         console.error('Erreur lors du chargement des réservations:', error);
-        if (isActive) setBookingsError(true);
+        if (isActive) { setBookingsError(true); setAvailabilityExpiry(Date.now() + AVAILABILITY_REFRESH_MS); }
       } finally {
         if (isActive) setBookingsLoading(false);
       }
@@ -111,7 +102,16 @@ export default function AvailabilityCalendar() {
     return () => {
       isActive = false;
     };
-  }, [currentDate]);
+  }, [currentDate, isAdmin, refreshVersion]);
+
+  useEffect(() => {
+    if (!availabilityExpiry) return undefined;
+    const timer = window.setTimeout(() => {
+      setBookingsLoading(true);
+      setRefreshVersion(value => value + 1);
+    }, Math.max(0, availabilityExpiry - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [availabilityExpiry]);
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const currentMonthKey = formatDatabaseDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), 1));
@@ -138,9 +138,6 @@ export default function AvailabilityCalendar() {
   const handleDateClick = (day, isDisabled, preferredSlot = null, triggerElement = null) => {
     if (!hasCurrentBookings) return;
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
     // Only admins can click past days, holidays, or Sundays
     if (!isDisabled || isAdmin) {
       const dayBookings = getBookingsForDay(day);
@@ -192,46 +189,45 @@ export default function AvailabilityCalendar() {
       comments: bookingForm.comments
     };
 
-    const { data, error } = await supabase
-      .from('calendar_bookings')
-      .insert([newBookingData])
-      .select();
-      
-    if (error) {
-      console.error("Erreur lors de l'ajout :", error);
-      alert(error.code === '23505' || error.message?.includes("n'est plus disponible")
-        ? "Cette période vient d'être réservée ou contient déjà une séance apprenant. Choisissez un autre créneau."
-        : "Une erreur est survenue lors de la réservation.");
-      return;
+    if (saving || !hasCurrentBookings) return;
+    const fingerprint = JSON.stringify(newBookingData);
+    if (requestIntent.current?.fingerprint !== fingerprint) {
+      requestIntent.current = { fingerprint, id: crypto.randomUUID() };
     }
-    
-    if (data && data.length > 0) {
-      const addedBooking = {
-        ...data[0],
-        date: parseDatabaseDate(data[0].date),
-        of: data[0].of_name,
-        source: 'of',
-      };
-      setBookings([...bookings, addedBooking]);
-    }
-    
-    setIsModalOpen(false);
+    setSaving(true);
+    try {
+      await manageCalendarBooking(supabase, {
+        action: 'create', booking: newBookingData, request_id: requestIntent.current.id,
+      });
+      requestIntent.current = null;
+      setIsModalOpen(false);
+      setBookingsLoading(true);
+      setRefreshVersion(value => value + 1);
+    } catch (error) {
+      alert(error.message);
+      setBookingsError(true);
+    } finally { setSaving(false); }
   };
 
   const handleAdminConfirm = async () => {
-    const { error } = await supabase
-      .from('calendar_bookings')
-      .update({ type: 'confirmé' })
-      .eq('id', selectedBooking.id);
-
-    if (error) {
-      console.error("Erreur lors de la validation :", error);
-      alert("Erreur lors de la validation.");
-      return;
+    if (saving) return;
+    const fingerprint = `confirm:${selectedBooking.id}`;
+    if (requestIntent.current?.fingerprint !== fingerprint) {
+      requestIntent.current = { fingerprint, id: crypto.randomUUID() };
     }
-
-    setBookings(bookings.map(b => b.id === selectedBooking.id ? { ...b, type: 'confirmé' } : b));
-    setIsAdminEditModalOpen(false);
+    setSaving(true);
+    try {
+      await manageCalendarBooking(supabase, {
+        action: 'confirm', booking_id: selectedBooking.id, request_id: requestIntent.current.id,
+      });
+      requestIntent.current = null;
+      setIsAdminEditModalOpen(false);
+      setBookingsLoading(true);
+      setRefreshVersion(value => value + 1);
+    } catch (error) {
+      alert(error.message);
+      setBookingsError(true);
+    } finally { setSaving(false); }
   };
 
   const handleAdminDelete = async () => {
@@ -262,8 +258,7 @@ export default function AvailabilityCalendar() {
   const selectedMorningBusy = selectedDateBookings.some((booking) => booking.slot === 'Matin' || booking.slot === 'Journée');
   const selectedAfternoonBusy = selectedDateBookings.some((booking) => booking.slot === 'Après-midi' || booking.slot === 'Journée');
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = currentParisDay();
   const weekEnd = new Date(today);
   weekEnd.setDate(today.getDate() + (7 - (today.getDay() || 7)));
   const mobileAvailableDays = Array.from({ length: daysInMonth }, (_, index) => index + 1)
@@ -306,8 +301,7 @@ export default function AvailabilityCalendar() {
 
   const renderDays = () => {
     const days = [];
-    const today = new Date();
-    today.setHours(0,0,0,0);
+    const today = currentParisDay();
 
     for (let i = 0; i < startDay; i++) {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
@@ -360,7 +354,7 @@ export default function AvailabilityCalendar() {
                    >
                    A-M ({bookingStatusLabel(dayBookings.find(b => b.slot === 'Après-midi' || b.slot === 'Journée'))})
                  </div>
-                ) : <div className="slot-badge slot-available">A-M libre</div>}
+                ) : (thisDate.getDay() !== 6 || isAdmin) && <div className="slot-badge slot-available">A-M libre</div>}
               </>
             )}
 
@@ -547,7 +541,7 @@ export default function AvailabilityCalendar() {
                 <button type="button" className="btn" style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} onClick={() => setIsModalOpen(false)}>
                   Annuler
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button type="submit" className="btn btn-primary" disabled={saving || !hasCurrentBookings}>
                   Valider
                 </button>
               </div>
@@ -585,6 +579,7 @@ export default function AvailabilityCalendar() {
                   className="btn btn-primary" 
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                   onClick={handleAdminConfirm}
+                disabled={saving}
                 >
                   <Check size={18} />
                   Valider définitivement

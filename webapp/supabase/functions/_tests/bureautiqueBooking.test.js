@@ -16,6 +16,8 @@ const giftMigration = readFileSync(new URL('../../migrations/20260913124811_enab
 const individualEdge = readFileSync(new URL('../create-course-booking/index.ts', import.meta.url), 'utf8');
 const learnerEdge = readFileSync(new URL('../join-course-cohort/index.ts', import.meta.url), 'utf8');
 const adminEdge = readFileSync(new URL('../manage-course-cohorts/index.ts', import.meta.url), 'utf8');
+const unifiedMigration = readFileSync(new URL('../../migrations/20261019083603_unified_calendar_availability.sql', import.meta.url), 'utf8');
+const calendarServer = readFileSync(new URL('../_shared/calendarServer.ts', import.meta.url), 'utf8');
 
 test('le catalogue ferme douze droits commerciaux et deux formats totalisant 840 minutes', () => {
   assert.equal(Object.keys(BUREAUTIQUE_BOOKING_COURSES).length, 12);
@@ -35,7 +37,9 @@ test('le catalogue ferme douze droits commerciaux et deux formats totalisant 840
 test('l individuel exige 28 identifiants uniques et délègue à la RPC bureautique', () => {
   assert.match(individualEdge, /INDIVIDUAL_14H_COURSE_IDS\.map\(\(courseId\) => \[courseId, 28\]\)/);
   assert.match(individualEdge, /new Set\(body\.slot_ids\)\.size !== expectedSlotCount/);
-  assert.match(individualEdge, /create_bureautique_booking_request/);
+  assert.match(individualEdge, /runCalendarAction/);
+  assert.match(individualEdge, /action: 'create_course_booking'/);
+  assert.match(unifiedMigration, /public\.create_bureautique_booking_request/);
   assert.match(migration, /cardinality\(p_slot_ids\) <> 28/);
   assert.match(migration, /status = 'active'/);
   assert.match(migration, /expires_at IS NULL OR expires_at > now\(\)/);
@@ -87,7 +91,8 @@ test('les Edge cohortes authentifient puis n acceptent que des identifiants born
   assert.doesNotMatch(learnerEdge, /capacity.*body|slot_ids.*body/);
   assert.match(adminEdge, /COHORT_COURSE_IDS/);
   assert.match(adminEdge, /record\.code === '23P01'.*Un autre créneau chevauchant est déjà réservé\./s);
-  assert.match(individualEdge, /error\.code === '23P01'.*Un autre créneau chevauchant est déjà réservé\./s);
+  assert.match(individualEdge, /calendarErrorResponse\(error\)/);
+  assert.match(calendarServer, /\['23P01', '23505', '40001', 'P0001'\]\.includes/);
 });
 
 test('annuler une cohorte demande une raison, libère ses créneaux et ne rembourse rien automatiquement', () => {

@@ -1,3 +1,4 @@
+import { classifyPrerenderRequest, unavailableCalendarResponse } from './prerender-network-policy.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
@@ -130,7 +131,10 @@ try {
     const page = await browser.newPage();
     let mutationAttempted = false;
     await page.route('**/*', route => {
-      if (!['GET', 'HEAD', 'OPTIONS'].includes(route.request().method())) {
+      const request = route.request();
+      const policy = classifyPrerenderRequest({ method: request.method(), url: request.url(), postData: request.postData() });
+      if (policy === 'unavailable_calendar') return route.fulfill(unavailableCalendarResponse);
+      if (policy === 'block_mutation') {
         mutationAttempted = true;
         return route.abort();
       }

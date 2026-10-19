@@ -11,7 +11,7 @@ function formatSession(session) {
   const start = new Date(session.starts_at);
   const end = new Date(session.ends_at);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 'Horaire à confirmer';
-  return `${start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}–${end.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
+  return `${start.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${start.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })}–${end.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' })}`;
 }
 
 function isJoinable(cohort) {
@@ -31,6 +31,7 @@ export default function CourseCohortPicker({
   const [localError, setLocalError] = useState('');
   const displayedCohorts = useMemo(() => cohorts.filter((cohort) => cohort.course_id === courseId), [cohorts, courseId]);
 
+  if (error) return <p role="alert">Disponibilités temporairement indisponibles. {error}</p>;
   if (loading) return <p role="status">Chargement des prochaines sessions inter…</p>;
 
   return (

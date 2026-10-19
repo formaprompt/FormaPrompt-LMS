@@ -296,7 +296,7 @@ function availabilityItems(slots) {
     title: new Intl.DateTimeFormat('fr-FR', {
       timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long',
     }).format(new Date(daySlots[0].starts_at)),
-    detail: `${daySlots.length} plage${daySlots.length > 1 ? 's' : ''} libre${daySlots.length > 1 ? 's' : ''}`,
+    detail: `${daySlots.length} plage${daySlots.length > 1 ? 's' : ''} publiée${daySlots.length > 1 ? 's' : ''} · agendas à vérifier`,
     href: OPERATIONAL_DESTINATIONS.availability,
     actionLabel: 'Gérer',
   }));
@@ -314,14 +314,14 @@ function buildAvailabilitySection(slots, now) {
 
   return {
     id: 'availability',
-    title: 'Disponibilités libres',
+    title: 'Créneaux publiés',
     count: slotsAfterHorizon.length,
     tone: hasSlotAfterHorizon ? 'success' : 'warning',
     summary: hasSlotAfterHorizon
-      ? `${slotsAfterHorizon.length} créneau${slotsAfterHorizon.length > 1 ? 'x sont' : ' est'} ouvert${slotsAfterHorizon.length > 1 ? 's' : ''} après le ${horizonLabel}.`
-      : `Aucun créneau libre après le ${horizonLabel}. Il faut en ajouter.`,
+      ? `${slotsAfterHorizon.length} créneau${slotsAfterHorizon.length > 1 ? 'x sont' : ' est'} publié${slotsAfterHorizon.length > 1 ? 's' : ''} après le ${horizonLabel}. Les agendas restent à vérifier.`
+      : `Aucun créneau publié après le ${horizonLabel}. Il faut en ajouter.`,
     items: availabilityItems(freeSlots),
-    emptyLabel: 'Aucun créneau libre actuellement.',
+    emptyLabel: 'Aucun créneau publié actuellement.',
     href: OPERATIONAL_DESTINATIONS.availability,
     actionLabel: 'Ouvrir les disponibilités',
   };

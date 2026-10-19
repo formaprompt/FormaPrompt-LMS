@@ -4,6 +4,38 @@ const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
 const FREE_BUSY_ENDPOINT = 'https://www.googleapis.com/calendar/v3/freeBusy'
 const CALENDAR_API_ENDPOINT = 'https://www.googleapis.com/calendar/v3'
 const GOOGLE_MEET_URL_PATTERN = /^https:\/\/meet[.]google[.]com\/[A-Za-z0-9-]+$/
+const ALLOWED_WRITE_CALENDAR_ID = '3802495b2d992809bc164fd81537eb8f9b71aec9410226335bd20ff37fc8c558@group.calendar.google.com'
+const GOOGLE_INSTANT = /^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,9})?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/
+
+function validGoogleInstant(value) {
+  if (typeof value !== 'string' || !GOOGLE_INSTANT.test(value) || !Number.isFinite(Date.parse(value))) return false
+  const date = new Date(value.slice(0, 10) + 'T00:00:00Z')
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value.slice(0, 10)
+}
+
+export function assertProfessionalWriteCalendar(calendarId) {
+  if (calendarId !== ALLOWED_WRITE_CALENDAR_ID) throw new Error('google_calendar_write_forbidden')
+}
+
+async function googleCalendarFetch(fetchImpl, url, options) {
+  try {
+    return await fetchImpl(url, { ...options, signal: AbortSignal.timeout(8000) })
+  } catch {
+    throw new Error('google_calendar_unavailable')
+  }
+}
+
+// Bound external calls and normalize network/JSON failures without logging credentials.
+async function calendarJsonRequest(fetchImpl, url, options, errorCode) {
+  try {
+    const response = await fetchImpl(url, { ...options, signal: AbortSignal.timeout(8000) })
+    const payload = await response.json()
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new Error(errorCode)
+    return { response, payload }
+  } catch {
+    throw new Error(errorCode)
+  }
+}
 
 export function parseGoogleCalendarIds(diagnosticCalendarId, additionalCalendarIds = '') {
   return [...new Set([
@@ -18,7 +50,7 @@ export async function refreshGoogleCalendarAccessToken({
   refreshToken,
   fetchImpl = fetch,
 }) {
-  const response = await fetchImpl(TOKEN_ENDPOINT, {
+  const { response, payload } = await calendarJsonRequest(fetchImpl, TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -27,9 +59,8 @@ export async function refreshGoogleCalendarAccessToken({
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     }),
-  })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok || typeof payload.access_token !== 'string') {
+  }, 'google_oauth_refresh_failed')
+  if (!response.ok || typeof payload.access_token !== 'string' || !payload.access_token.trim()) {
     throw new Error('google_oauth_refresh_failed')
   }
   return payload.access_token
@@ -42,7 +73,11 @@ export async function queryGoogleCalendarFreeBusy({
   timeMax,
   fetchImpl = fetch,
 }) {
-  const response = await fetchImpl(FREE_BUSY_ENDPOINT, {
+  if (!Array.isArray(calendarIds) || calendarIds.length === 0 || calendarIds.length > 50
+    || calendarIds.some((id) => typeof id !== 'string' || !id.trim())
+    || !validGoogleInstant(timeMin) || !validGoogleInstant(timeMax)
+    || Date.parse(timeMin) >= Date.parse(timeMax)) throw new Error('google_freebusy_input_invalid')
+  const { response, payload } = await calendarJsonRequest(fetchImpl, FREE_BUSY_ENDPOINT, {
     method: 'POST',
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -54,16 +89,20 @@ export async function queryGoogleCalendarFreeBusy({
       timeZone: 'Europe/Paris',
       items: calendarIds.map((id) => ({ id })),
     }),
-  })
-  const payload = await response.json().catch(() => ({}))
-  if (!response.ok || !payload.calendars) throw new Error('google_freebusy_failed')
+  }, 'google_freebusy_failed')
+  if (!response.ok || !payload.calendars || typeof payload.calendars !== 'object'
+    || Array.isArray(payload.calendars)) throw new Error('google_freebusy_failed')
 
   const busy = []
   for (const calendarId of calendarIds) {
     const calendar = payload.calendars[calendarId]
-    if (!calendar || calendar.errors?.length) throw new Error('google_calendar_unavailable')
-    for (const period of calendar.busy || []) {
-      if (period?.start && period?.end) busy.push({ start: period.start, end: period.end })
+    if (!calendar || (calendar.errors !== undefined && (!Array.isArray(calendar.errors) || calendar.errors.length))
+      || !Array.isArray(calendar.busy)) throw new Error('google_calendar_unavailable')
+    for (const period of calendar.busy) {
+      if (typeof period?.start !== 'string' || typeof period?.end !== 'string'
+        || !validGoogleInstant(period.start) || !validGoogleInstant(period.end)
+        || Date.parse(period.start) >= Date.parse(period.end)) throw new Error('google_calendar_unavailable')
+      busy.push({ calendarId, start: period.start, end: period.end })
     }
   }
   return busy
@@ -137,7 +176,8 @@ export async function readDiagnosticGoogleEvent({
   eventId,
   fetchImpl = fetch,
 }) {
-  const response = await fetchImpl(
+  assertProfessionalWriteCalendar(calendarId)
+  const response = await googleCalendarFetch(fetchImpl,
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
     { headers: { authorization: `Bearer ${accessToken}` } },
   )
@@ -161,7 +201,8 @@ export async function createDiagnosticGoogleEvent({
   event,
   fetchImpl = fetch,
 }) {
-  const response = await fetchImpl(
+  assertProfessionalWriteCalendar(calendarId)
+  const response = await googleCalendarFetch(fetchImpl,
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
     {
       method: 'POST',
@@ -207,7 +248,8 @@ export function buildCourseCohortCalendarEvent({ eventId, courseTitle, position,
 }
 
 export async function createCourseCohortGoogleEvent({ accessToken, calendarId, event, fetchImpl = fetch }) {
-  const response = await fetchImpl(
+  assertProfessionalWriteCalendar(calendarId)
+  const response = await googleCalendarFetch(fetchImpl,
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=none`,
     {
       method: 'POST',
@@ -224,7 +266,8 @@ export async function createCourseCohortGoogleEvent({ accessToken, calendarId, e
 }
 
 export async function retryCourseCohortConference({ accessToken, calendarId, eventId, attempt, fetchImpl = fetch }) {
-  const response = await fetchImpl(
+  assertProfessionalWriteCalendar(calendarId)
+  const response = await googleCalendarFetch(fetchImpl,
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?conferenceDataVersion=1&sendUpdates=none`,
     {
       method: 'PATCH',
@@ -241,7 +284,8 @@ export async function retryCourseCohortConference({ accessToken, calendarId, eve
 }
 
 export async function deleteCourseCohortGoogleEvent({ accessToken, calendarId, eventId, fetchImpl = fetch }) {
-  const response = await fetchImpl(
+  assertProfessionalWriteCalendar(calendarId)
+  const response = await googleCalendarFetch(fetchImpl,
     `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=none`,
     { method: 'DELETE', headers: { authorization: `Bearer ${accessToken}` } },
   )
@@ -256,4 +300,42 @@ export function courseCohortConferenceState(event) {
   const statusCode = event?.conferenceData?.createRequest?.status?.statusCode
   if (statusCode === 'failure') return { status: 'failed', meetingUrl: null }
   return { status: 'pending', meetingUrl: null }
+}
+
+export async function updateDiagnosticGoogleEvent({
+  accessToken,
+  calendarId,
+  eventId,
+  startsAt,
+  endsAt,
+  etag = null,
+  fetchImpl = fetch,
+}) {
+  assertProfessionalWriteCalendar(calendarId)
+  if (!eventId || !startsAt || !endsAt) throw new Error('google_event_input_invalid')
+  const response = await googleCalendarFetch(fetchImpl,
+    `${CALENDAR_API_ENDPOINT}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}?conferenceDataVersion=1&sendUpdates=all`,
+    {
+      method: 'PATCH',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': 'application/json',
+        ...(etag ? { 'if-match': etag } : {}),
+      },
+      body: JSON.stringify({
+        start: { dateTime: startsAt, timeZone: 'Europe/Paris' },
+        end: { dateTime: endsAt, timeZone: 'Europe/Paris' },
+      }),
+    },
+  )
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload.id || payload.status === 'cancelled') {
+    throw new Error('google_event_update_failed')
+  }
+  return payload
+}
+
+// FreeBusy merges events: subtraction cannot prove that another event is absent.
+export function excludeDiagnosticCalendarEventBusy({ busyPeriods }) {
+  return busyPeriods
 }

@@ -31,9 +31,11 @@ test('le cockpit sépare les séances des disponibilités et alerte après quinz
   const availability = section(result, 'availability');
   assert.equal(sessions.count, 1);
   assert.equal(sessions.items[0].title, 'Entreprise Alpha — Marie DUPONT');
+  assert.equal(availability.title, 'Créneaux publiés');
+  assert.match(availability.items[0].detail, /publiée.*agendas à vérifier/);
   assert.equal(availability.count, 0);
   assert.equal(availability.tone, 'warning');
-  assert.match(availability.summary, /Aucun créneau libre après/);
+  assert.match(availability.summary, /Aucun créneau publié après/);
 });
 
 test('les formations pas prêtes signalent les pièces, le financement et les informations manquantes', () => {

@@ -30,7 +30,8 @@ export async function fetchDiagnosticAvailability(supabase, orderId) {
     body: { order_id: orderId },
   })
   if (error) throw new Error(await functionErrorMessage(error))
-  return Array.isArray(data?.candidates) ? data.candidates.filter(validCandidate) : []
+  if (!Array.isArray(data?.candidates) || !data.candidates.every(validCandidate)) throw new Error(GENERIC_AVAILABILITY_ERROR)
+  return data.candidates
 }
 
 export async function fetchDiagnosticRescheduleAvailability(supabase, bookingId, range = {}) {
@@ -40,7 +41,8 @@ export async function fetchDiagnosticRescheduleAvailability(supabase, bookingId,
   if (range.to) body.to = range.to
   const { data, error } = await supabase.functions.invoke('get-diagnostic-availability', { body })
   if (error) throw new Error(await functionErrorMessage(error))
-  return Array.isArray(data?.candidates) ? data.candidates.filter(validCandidate) : []
+  if (!Array.isArray(data?.candidates) || !data.candidates.every(validCandidate)) throw new Error(GENERIC_AVAILABILITY_ERROR)
+  return data.candidates
 }
 
 export async function rescheduleDiagnosticBooking(supabase, bookingId, candidate) {
