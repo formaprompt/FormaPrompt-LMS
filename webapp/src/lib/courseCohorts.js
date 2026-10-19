@@ -1,3 +1,4 @@
+import { fetchUnifiedAvailability } from './unifiedAvailability.js'
 async function readFunctionError(error, fallback) {
   try {
     const payload = await error?.context?.json()
@@ -56,28 +57,11 @@ export function getParisMonthBounds(monthKey) {
   }
 }
 
-export async function fetchAdminAvailabilitySlotsForMonth(client, monthKey, { now = new Date() } = {}) {
-  const { startsAt, endsAt } = getParisMonthBounds(monthKey)
-  const nowIso = new Date(now).toISOString()
-  const slots = []
-
-  for (let from = 0; ; from += AVAILABILITY_PAGE_SIZE) {
-    const { data, error } = await client
-      .from('training_availability_slots')
-      .select('*')
-      .eq('is_active', true)
-      .eq('is_reserved', false)
-      .gte('starts_at', startsAt)
-      .lt('starts_at', endsAt)
-      .gt('starts_at', nowIso)
-      .order('starts_at', { ascending: true })
-      .order('id', { ascending: true })
-      .range(from, from + AVAILABILITY_PAGE_SIZE - 1)
-    if (error) throw new Error("Les disponibilités de ce mois ne peuvent pas être chargées.")
-    const page = data || []
-    slots.push(...page)
-    if (page.length < AVAILABILITY_PAGE_SIZE) return slots
-  }
+export async function fetchAdminAvailabilitySlotsForMonth(client, monthKey) {
+  getParisMonthBounds(monthKey)
+  const data = await fetchUnifiedAvailability(client, { purpose: 'admin_cohort', month: monthKey })
+  Object.defineProperty(data.slots, 'checkedAt', { value: data.checked_at })
+  return data.slots
 }
 
 export async function fetchAdminBookingAvailabilitySlots(client) {
@@ -102,7 +86,8 @@ export async function fetchAvailableCourseCohorts(client, courseId) {
     action: 'list',
     course_id: courseId,
   }, 'Les sessions inter ne peuvent pas être chargées.')
-  return Array.isArray(data?.cohorts) ? data.cohorts : []
+  if (!Array.isArray(data?.cohorts)) throw new Error('Disponibilités temporairement indisponibles. Réessayez plus tard.')
+  return data.cohorts
 }
 
 export async function fetchMyCourseCohortEnrollment(client, courseId) {

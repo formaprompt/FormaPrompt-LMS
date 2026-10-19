@@ -3,6 +3,9 @@ import { corsHeaders, jsonResponse } from '../_shared/cors.ts'
 import { COHORT_COURSE_IDS, getCohortBookingCourse } from '../_shared/bureautiqueBooking.js'
 import { deterministicCourseCohortEventId, ensureCourseCohortGoogleEvent, removeCourseCohortGoogleEvent } from '../_shared/courseCohortMeet.js'
 import { refreshGoogleCalendarAccessToken } from '../_shared/googleCalendar.js'
+import { runCalendarAction } from '../_shared/calendarAction.js'
+import { calendarServiceClient, calendarErrorResponse } from '../_shared/calendarServer.ts'
+import { assertCalendarAvailable } from '../_shared/calendarAvailability.js'
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim()
@@ -108,6 +111,14 @@ async function generateMeetLinks(client: ReturnType<typeof createClient>, cohort
     session_id: session.id,
     event_id: await deterministicCourseCohortEventId(String(session.id)),
   })))
+  const { data: ownSessions, error: ownError } = await calendarServiceClient()
+    .from('course_cohort_sessions').select('google_calendar_id,google_event_id,starts_at,ends_at')
+    .eq('cohort_id', cohortId)
+  if (ownError || !Array.isArray(ownSessions)) throw new Error('google_calendar_database_unavailable')
+  const ownEvents = ownSessions.filter((session) => session.google_event_id)
+    .map((session) => ({ calendar_id: session.google_calendar_id, event_id: session.google_event_id,
+      starts_at: session.starts_at, ends_at: session.ends_at }))
+  await assertCalendarAvailable({ intervals: sessions, accessToken, ownEvents })
   const claimToken = crypto.randomUUID()
   const claim = await rpc(client, 'admin_claim_course_cohort_meet_sessions', {
     p_cohort_id: cohortId,
@@ -130,6 +141,13 @@ async function generateMeetLinks(client: ReturnType<typeof createClient>, cohort
       continue
     }
     try {
+      await assertCalendarAvailable({
+        intervals: [{ starts_at: session.starts_at, ends_at: session.ends_at }], accessToken,
+        ownEvents: [...ownEvents, {
+          calendar_id: calendarId, event_id: String(session.google_event_id),
+          starts_at: String(session.starts_at), ends_at: String(session.ends_at),
+        }],
+      })
       const ensured = await ensureCourseCohortGoogleEvent({ accessToken, calendarId, session, courseTitle: course.title })
       const syncStatus = ensured.status === 'created' ? 'created' : 'pending'
       const finalized = await rpc(client, 'admin_finalize_course_cohort_meet_session', {
@@ -251,13 +269,26 @@ Deno.serve(async (request) => {
       args = { p_cohort_id: body.cohort_id, p_session_id: body.session_id, p_meeting_url: body.meeting_url }
     } else return jsonResponse({ error: 'Action inconnue.' }, 400)
 
-    const data = await rpc(client, name, args)
+    const checkedActions: Record<string, string> = {
+      save_draft: 'save_course_cohort', publish: 'publish_course_cohort',
+      confirm: 'confirm_course_cohort', enroll_creativity: 'enroll_creativity_cohort',
+    }
+    const data = checkedActions[action]
+      ? await runCalendarAction({
+        client: calendarServiceClient(), actorId: authData.user.id,
+        action: checkedActions[action], payload: args,
+        requestId: isUuid(body.request_id) ? body.request_id : null,
+      })
+      : await rpc(client, name, args)
     if (action === 'cancel') {
       const cleanup = await cleanupMeetEvents(client, String(body.cohort_id)).catch(() => ({ cohort_id: body.cohort_id, complete: false, sessions: [] }))
       return jsonResponse({ result: data, cleanup })
     }
     return jsonResponse(action === 'list' ? { cohorts: data || [] } : action === 'creativity_candidates' ? { candidates: data || [] } : action === 'enroll_creativity' ? { enrollment: data } : action === 'participants' ? { participants: data || [] } : { result: data })
   } catch (error) {
+    if (error instanceof Error && (error.message.startsWith('google_') || error.message === 'calendar_conflict')) {
+      return calendarErrorResponse(error)
+    }
     const record = error && typeof error === 'object' ? error as { code?: string, message?: string } : {}
     if (record.code === '42501') return jsonResponse({ error: 'Action réservée à l’administrateur.' }, 403)
     if (record.code === '23P01') return jsonResponse({ error: 'Un autre créneau chevauchant est déjà réservé.' }, 409)

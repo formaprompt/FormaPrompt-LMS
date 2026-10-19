@@ -1,6 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { COHORT_COURSE_IDS } from '../_shared/bureautiqueBooking.js';
+import { runCalendarAction } from '../_shared/calendarAction.js';
+import { calendarServiceClient, calendarErrorResponse } from '../_shared/calendarServer.ts';
+import { loadCalendarBusy, periodsOverlap } from '../_shared/calendarAvailability.js';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -44,17 +47,31 @@ Deno.serve(async (request) => {
         if (error.code === '42501') return jsonResponse({ error: 'Accès actif requis.' }, 403);
         throw error;
       }
-      return jsonResponse(action === 'list' ? { cohorts: data || [] } : { enrollment: data || null });
+      if (action === 'list') {
+        if (!Array.isArray(data)) throw new Error('google_calendar_database_unavailable');
+        const cohorts = [];
+        for (const cohort of data) {
+          if (!Array.isArray(cohort.sessions) || !cohort.sessions.length) throw new Error('google_calendar_intervals_invalid');
+          const { data: ownSessions, error: ownError } = await calendarServiceClient()
+            .from('course_cohort_sessions').select('google_calendar_id,google_event_id,starts_at,ends_at')
+            .eq('cohort_id', cohort.id);
+          if (ownError || !Array.isArray(ownSessions)) throw new Error('google_calendar_database_unavailable');
+          const result = await loadCalendarBusy({ intervals: cohort.sessions, mode: 'display', ownEvents: ownSessions
+            .filter((session: Record<string, unknown>) => session.google_event_id)
+            .map((session: Record<string, unknown>) => ({ calendar_id: session.google_calendar_id, event_id: session.google_event_id,
+              starts_at: session.starts_at, ends_at: session.ends_at })) });
+          if (!cohort.sessions.some((session: Record<string, unknown>) => result.busy.some((busy: { start: string; end: string }) => periodsOverlap(session, busy)))) cohorts.push(cohort);
+        }
+        return jsonResponse({ cohorts });
+      }
+      return jsonResponse({ enrollment: data || null });
     }
 
     if (action === 'join') {
       if (!isUuid(body.cohort_id)) return jsonResponse({ error: 'Session invalide.' }, 400);
-      const { data, error } = await client.rpc('join_course_cohort', { p_cohort_id: body.cohort_id });
-      if (error) {
-        if (error.code === '42501') return jsonResponse({ error: 'Accès actif requis.' }, 403);
-        if (error.code === '23505' || error.code === '40001') return jsonResponse({ error: error.message }, 409);
-        throw error;
-      }
+      const data = await runCalendarAction({ client: calendarServiceClient(), actorId: authData.user.id,
+        action: 'join_course_cohort', payload: { p_cohort_id: body.cohort_id },
+        requestId: isUuid(body.request_id) ? body.request_id : null });
       return jsonResponse({ enrollment: data }, 201);
     }
 
@@ -71,7 +88,6 @@ Deno.serve(async (request) => {
 
     return jsonResponse({ error: 'Action inconnue.' }, 400);
   } catch (error) {
-    console.error('join-course-cohort:', error instanceof Error ? error.name : 'unknown');
-    return jsonResponse({ error: "La réservation inter n'a pas pu être traitée." }, 500);
+    return calendarErrorResponse(error);
   }
 });

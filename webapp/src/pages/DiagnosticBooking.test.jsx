@@ -65,6 +65,19 @@ describe('réservation frontend du Diagnostic IA', () => {
     expect(screen.queryByText(/réservation confirmée/i)).not.toBeInTheDocument()
   })
 
+  it('un conflit suivi d’une panne de rafraîchissement devient une erreur explicite', async () => {
+    invoke.mockResolvedValueOnce({data:{candidates:[CANDIDATE]},error:null})
+      .mockResolvedValueOnce({data:null,error:{context:{json:async()=>({error:'Ce créneau est indisponible.'})}}})
+      .mockResolvedValueOnce({data:null,error:{context:{json:async()=>({error:'Calendrier inaccessible.'})}}})
+    renderPage()
+    fireEvent.click(await screen.findByRole('radio'))
+    fireEvent.click(screen.getByRole('button', {name:'Confirmer ce créneau'}))
+    expect(await screen.findByText('Calendrier inaccessible.')).toBeVisible()
+    expect(screen.getByRole('heading', {name:'Disponibilités temporairement indisponibles'})).toBeVisible()
+    expect(screen.queryByRole('radio')).toBeNull()
+    expect(screen.queryByText('Aucun créneau disponible actuellement')).toBeNull()
+  })
+
   it('exige les deux consentements B2C distincts et non précochés', async () => {
     invoke.mockResolvedValue({ data: { candidates: [{ ...CANDIDATE, requires_early_start_consents: true }] }, error: null })
     renderPage()

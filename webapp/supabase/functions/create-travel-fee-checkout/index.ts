@@ -2,6 +2,8 @@ import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { IN_PERSON_TRAVEL_FEE } from '../_shared/purchaseConfig.js';
+import { assertCalendarAvailable } from '../_shared/calendarAvailability.js';
+import { calendarErrorResponse } from '../_shared/calendarServer.ts';
 
 function requiredEnv(name: string) {
   const value = Deno.env.get(name)?.trim();
@@ -64,6 +66,11 @@ Deno.serve(async (request) => {
       return jsonResponse({ error: 'La participation ne peut pas encore être réglée.' }, 409);
     }
 
+    const { data: sessions, error: sessionsError } = await supabaseAdmin.from('course_session_bookings')
+      .select('starts_at,ends_at').eq('booking_request_id', booking.id);
+    if (sessionsError || !Array.isArray(sessions) || !sessions.length) throw new Error('google_calendar_database_unavailable');
+    // Existing slots stay held; this preflight does not alter payment or access.
+    await assertCalendarAvailable({ intervals: sessions });
     const stripe = new Stripe(requiredEnv('STRIPE_SECRET_KEY'));
     const siteUrl = getSiteUrl();
     const session = await stripe.checkout.sessions.create({
@@ -108,6 +115,9 @@ Deno.serve(async (request) => {
     if (!session.url) throw new Error('Stripe n’a pas retourné d’URL Checkout.');
     return jsonResponse({ url: session.url });
   } catch (error) {
+    if (error instanceof Error && (error.message.startsWith('google_') || error.message === 'calendar_conflict')) {
+      return calendarErrorResponse(error);
+    }
     console.error('create-travel-fee-checkout:', error);
     return jsonResponse({ error: 'Impossible de préparer la participation au déplacement.' }, 500);
   }

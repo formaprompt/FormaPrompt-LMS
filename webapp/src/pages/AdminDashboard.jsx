@@ -1,3 +1,4 @@
+import { approveCourseBooking } from '../lib/unifiedAvailability';
 import { useAuth } from '../contexts/useAuth';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -1329,15 +1330,19 @@ export default function AdminDashboard() {
     setBookingError('');
     setBookingFeedback('');
     setBookingAction(`booking:${booking.id}`);
-    const { data, error } = await supabase
-      .from('course_booking_requests')
-      .update(changes)
-      .eq('id', booking.id)
-      .select('id, status, distance_status')
-      .single();
+    const { data, error } = action === 'approve'
+      ? await approveCourseBooking(supabase, booking.id)
+        .then((data) => ({ data, error: null }))
+        .catch((error) => ({ data: null, error }))
+      : await supabase
+        .from('course_booking_requests')
+        .update(changes)
+        .eq('id', booking.id)
+        .select('id, status, distance_status')
+        .single();
     if (error) {
       console.error('Mise à jour de la réservation impossible :', error);
-      setBookingError("La réservation n'a pas pu être mise à jour. Rechargez la page puis réessayez.");
+      setBookingError(action === 'approve' ? error.message : "La réservation n'a pas pu être mise à jour. Rechargez la page puis réessayez.");
     } else {
       await fetchBookingManagement();
       const successMessages = {

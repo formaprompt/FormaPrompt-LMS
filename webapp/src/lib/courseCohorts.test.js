@@ -58,61 +58,14 @@ test('borne un mois Paris en UTC aux changements d’heure et au changement d’
   })
 })
 
-test('charge complètement un mois paginé avec un ordre stable', async () => {
-  const calls = []
-  const pages = [
-    Array.from({ length: 500 }, (_, index) => ({ id: `slot-${index}` })),
-    [{ id: 'slot-500' }],
-  ]
-  const client = {
-    from: () => {
-      const query = {
-        select: () => query,
-        eq: () => query,
-        gte: (field, value) => { calls.push(['gte', field, value]); return query },
-        lt: (field, value) => { calls.push(['lt', field, value]); return query },
-        gt: (field, value) => { calls.push(['gt', field, value]); return query },
-        order: (field) => { calls.push(['order', field]); return query },
-        range: async (from) => ({ data: pages[from / 500], error: null }),
-      }
-      return query
-    },
-  }
-  const slots = await fetchAdminAvailabilitySlotsForMonth(client, '2026-10')
-  assert.equal(slots.length, 501)
-  assert.deepEqual(calls.filter(([kind]) => kind === 'order'), [['order', 'starts_at'], ['order', 'id'], ['order', 'starts_at'], ['order', 'id']])
-  assert.deepEqual(calls.filter(([kind]) => ['gte', 'lt'].includes(kind)).slice(0, 2), [
-    ['gte', 'starts_at', '2026-09-30T22:00:00.000Z'],
-    ['lt', 'starts_at', '2026-10-31T23:00:00.000Z'],
-  ])
+test('charge les plages du mois uniquement via la disponibilité serveur unifiée', async () => {
+  const client = clientReturning({ status: 'available', time_zone: 'Europe/Paris', checked_at: new Date().toISOString(), range: { from: '2026-09-30T22:00:00Z', to: '2026-10-31T23:00:00Z' }, slots: [] })
+  assert.deepEqual(await fetchAdminAvailabilitySlotsForMonth(client, '2026-10'), [])
+  assert.deepEqual(client.calls, [['get-unified-availability', { body: { purpose: 'admin_cohort', month: '2026-10' } }]])
 })
 
-test('ne propose pas les disponibilités déjà passées dans le mois courant', async () => {
-  const source = [
-    { id: 'past', starts_at: '2026-09-01T08:00:00.000Z' },
-    { id: 'future', starts_at: '2026-09-21T08:00:00.000Z' },
-  ]
-  let minimumStart = ''
-  const client = {
-    from: () => {
-      const query = {
-        select: () => query,
-        eq: () => query,
-        gte: () => query,
-        lt: () => query,
-        gt: (field, value) => { assert.equal(field, 'starts_at'); minimumStart = value; return query },
-        order: () => query,
-        range: async () => ({
-          data: source.filter((slot) => new Date(slot.starts_at) > new Date(minimumStart)),
-          error: null,
-        }),
-      }
-      return query
-    },
-  }
-  const slots = await fetchAdminAvailabilitySlotsForMonth(client, '2026-09', { now: '2026-09-14T10:00:00.000Z' })
-  assert.equal(minimumStart, '2026-09-14T10:00:00.000Z')
-  assert.deepEqual(slots.map(({ id }) => id), ['future'])
+test('ne remplace pas une panne de disponibilité par un mois vide', async () => {
+  await assert.rejects(fetchAdminAvailabilitySlotsForMonth(clientReturning(null, new Error('CALENDAR_UNAVAILABLE')), '2026-10'), /temporairement indisponibles/)
 })
 
 test('charge aussi la liste de gestion par pages au-delà du plafond de réponse', async () => {

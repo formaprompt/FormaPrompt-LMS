@@ -3,15 +3,21 @@ import { supabase } from '../lib/supabaseClient';
 import { fetchAvailableCourseCohorts, fetchMyCourseCohortEnrollment, joinCourseCohort } from '../lib/courseCohorts';
 import { CREATIVITY_GROUP_COURSE_ID } from '../../supabase/functions/_shared/bureautiqueBooking.js';
 import CourseCohortPicker from './CourseCohortPicker';
+import { AVAILABILITY_REFRESH_MS } from '../lib/unifiedAvailability';
 
 export default function CreativityGroupCohorts({ userId }) {
   const [state, setState] = useState({ userId: null, cohorts: [], enrollment: null, loading: true, error: '' });
   useEffect(() => {
     let cancelled = false;
-    Promise.all([fetchAvailableCourseCohorts(supabase, CREATIVITY_GROUP_COURSE_ID), fetchMyCourseCohortEnrollment(supabase, CREATIVITY_GROUP_COURSE_ID)])
+    const load = () => {
+      setState(current => ({ ...current, loading: true, error: '' }));
+      return Promise.all([fetchAvailableCourseCohorts(supabase, CREATIVITY_GROUP_COURSE_ID), fetchMyCourseCohortEnrollment(supabase, CREATIVITY_GROUP_COURSE_ID)])
       .then(([cohorts, enrollment]) => { if (!cancelled) setState({ userId, cohorts, enrollment, loading: false, error: '' }); })
       .catch(error => { if (!cancelled) setState({ userId, cohorts: [], enrollment: null, loading: false, error: error?.message || 'Les sessions ne peuvent pas être chargées.' }); });
-    return () => { cancelled = true; };
+    };
+    load();
+    const timer = window.setInterval(load, AVAILABILITY_REFRESH_MS);
+    return () => { cancelled = true; window.clearInterval(timer); };
   }, [userId]);
   const current = state.userId === userId ? state : { cohorts: [], enrollment: null, loading: true, error: '' };
   const enrollment = current.enrollment;

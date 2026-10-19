@@ -20,7 +20,7 @@ const CANDIDATE = {
   requires_early_start_consents: false,
 }
 
-test('interroge uniquement le serveur avec la commande authentifiée et filtre les réponses invalides', async () => {
+test('interroge uniquement le serveur avec la commande authentifiée et refuse les réponses invalides', async () => {
     const calls = []
     const invoke = async (...args) => {
       calls.push(args)
@@ -30,7 +30,7 @@ test('interroge uniquement le serveur avec la commande authentifiée et filtre l
       }
     }
 
-    assert.deepEqual(await fetchDiagnosticAvailability({ functions: { invoke } }, ORDER_ID), [CANDIDATE])
+    await assert.rejects(fetchDiagnosticAvailability({ functions: { invoke } }, ORDER_ID), /ne peuvent pas être chargées/)
     assert.deepEqual(calls, [['get-diagnostic-availability', { body: { order_id: ORDER_ID } }]])
     assert.doesNotMatch(JSON.stringify(calls), /amount|price/i)
   })

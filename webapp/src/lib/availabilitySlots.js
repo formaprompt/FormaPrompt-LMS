@@ -24,34 +24,49 @@ function parseTime(value) {
   return { hours, minutes, totalMinutes: hours * 60 + minutes };
 }
 
+const parisParts = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit',
+  hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+});
+
+// The Date passed here represents an abstract form day. Only this boundary
+// converts its calendar fields and Paris clock time into an actual instant.
 function atTime(date, time) {
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    time.hours,
-    time.minutes,
-    0,
-    0,
-  );
+  const target = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), time.hours, time.minutes);
+  let instant = target;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const parts = Object.fromEntries(parisParts.formatToParts(new Date(instant))
+      .filter(({ type }) => type !== 'literal')
+      .map(({ type, value }) => [type, Number(value)]));
+    const displayedAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+    if (displayedAsUtc === target) return new Date(instant);
+    instant += target - displayedAsUtc;
+  }
+  throw new Error('Cet horaire n’existe pas en heure de Paris à cette date.');
 }
 
-export function formatDateInput(date) {
+function formatAbstractDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
+export function formatDateInput(date) {
+  const parts = Object.fromEntries(parisParts.formatToParts(new Date(date))
+    .filter(({ type }) => type !== 'literal').map(({ type, value }) => [type, value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
 export function createInitialAvailabilityForm(referenceDate = new Date()) {
-  const firstDay = new Date(referenceDate);
+  const firstDay = parseDate(formatDateInput(referenceDate));
   firstDay.setDate(firstDay.getDate() + 1);
   const lastDay = new Date(firstDay);
   lastDay.setDate(lastDay.getDate() + 29);
 
   return {
-    fromDate: formatDateInput(firstDay),
-    toDate: formatDateInput(lastDay),
+    fromDate: formatAbstractDate(firstDay),
+    toDate: formatAbstractDate(lastDay),
     dayStart: '08:30',
     dayEnd: '16:30',
     lunchStart: '12:30',

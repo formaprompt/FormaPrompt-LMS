@@ -14,6 +14,8 @@ function response(status, payload = {}) {
   return { ok: status >= 200 && status < 300, status, json: async () => payload }
 }
 
+const fixtureCalendarId = readFileSync(new URL('../_shared/googleCalendar.js', import.meta.url), 'utf8').match(/const ALLOWED_WRITE_CALENDAR_ID = '([^']+)'/)[1]
+
 const baseSession = {
   session_id: '11111111-1111-4111-8111-111111111111',
   position: 1,
@@ -39,7 +41,7 @@ test('crée un événement sans participant ni notification et restitue le lien 
     return response(200, { ...body, hangoutLink: 'https://meet.google.com/abc-defg-hij' })
   }
   const result = await ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test', session: baseSession,
+    accessToken: 'token', calendarId: fixtureCalendarId, session: baseSession,
     courseTitle: 'Excel Initiation', fetchImpl,
   })
   assert.equal(result.status, 'created')
@@ -60,7 +62,7 @@ test('récupère l événement déterministe existant sans double insertion', as
     })
   }
   const result = await ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test',
+    accessToken: 'token', calendarId: fixtureCalendarId,
     session: { ...baseSession, google_event_id: eventId }, courseTitle: 'Excel Initiation', fetchImpl,
   })
   assert.equal(result.outcome, 'recovered')
@@ -82,7 +84,7 @@ test('une conférence Google en échec est relancée sur le même événement', 
     })
   }
   const result = await ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test',
+    accessToken: 'token', calendarId: fixtureCalendarId,
     session: { ...baseSession, google_event_id: eventId }, courseTitle: 'Excel Initiation', fetchImpl,
   })
   assert.deepEqual(methods, ['GET', 'PATCH'])
@@ -102,14 +104,14 @@ test('une conférence pending est relue sur le même événement jusqu au lien r
       : { conferenceData: { createRequest: { status: { statusCode: 'pending' } } } }),
   })
   const first = await ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test',
+    accessToken: 'token', calendarId: fixtureCalendarId,
     session: { ...baseSession, google_event_id: eventId }, courseTitle: 'Excel Initiation', fetchImpl,
   })
   assert.equal(first.status, 'pending')
   assert.equal(first.meetingUrl, null)
   ready = true
   const second = await ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test',
+    accessToken: 'token', calendarId: fixtureCalendarId,
     session: { ...baseSession, google_event_id: eventId }, courseTitle: 'Excel Initiation', fetchImpl,
   })
   assert.equal(second.outcome, 'recovered')
@@ -120,7 +122,7 @@ test('refuse un événement déterministe dont les horaires ne correspondent plu
   const eventId = await deterministicCourseCohortEventId(baseSession.session_id)
   let calls = 0
   await assert.rejects(ensureCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test',
+    accessToken: 'token', calendarId: fixtureCalendarId,
     session: { ...baseSession, google_event_id: eventId }, courseTitle: 'Excel Initiation',
     fetchImpl: async () => {
       calls += 1
@@ -136,7 +138,7 @@ test('refuse un événement déterministe dont les horaires ne correspondent plu
 
 test('un événement déjà absent est un nettoyage idempotent', async () => {
   const result = await removeCourseCohortGoogleEvent({
-    accessToken: 'token', calendarId: 'calendar@example.test', eventId: 'abcde',
+    accessToken: 'token', calendarId: fixtureCalendarId, eventId: 'abcde',
     fetchImpl: async (url, options) => {
       assert.equal(options.method, 'DELETE')
       assert.match(url, /sendUpdates=none/)

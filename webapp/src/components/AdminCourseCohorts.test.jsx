@@ -366,3 +366,15 @@ it.each(['manual', 'opco'])('nomme le candidat %s dossier administratif et son i
   expect(row).not.toHaveTextContent('Remboursement à vérifier dans Stripe');
   expect(row).not.toHaveTextContent('Formation offerte');
 });
+
+it('ne réintroduit jamais les slots bruts fournis après la vérification mensuelle', async () => {
+  useSeptemberFixtureDate();
+  const onLoadAvailabilityMonth = vi.fn().mockResolvedValue([]);
+  const view = renderAdmin({availableSlots:fourDays,onLoadAvailabilityMonth});
+  fillBase('four_half_days_3h30');
+  await waitFor(() => expect(onLoadAvailabilityMonth).toHaveBeenCalled());
+  await waitFor(() => expect(screen.getByLabelText(selectLabel('Demi-journée 1'))).toBeEnabled());
+  expect(screen.getByLabelText(selectLabel('Demi-journée 1')).options).toHaveLength(1);
+  view.rerender(<AdminCourseCohorts courseOptions={[{id:'word-initiation',label:'Word Initiation'}]} availableSlots={[...fourDays]} onLoadAvailabilityMonth={onLoadAvailabilityMonth} />);
+  expect(screen.getByLabelText(selectLabel('Demi-journée 1')).options).toHaveLength(1);
+});
