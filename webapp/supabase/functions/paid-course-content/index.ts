@@ -1,6 +1,8 @@
+import { handleIagPrivateAction } from '../_shared/iagPrivateDelivery.js';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
 import { courseCatalog } from '../_shared/paidCourseCatalog.js';
+import { IAG_COURSE_ID, normalizeIagAnswers, requireIagPositioning } from '../_shared/iagPositioning.js';
 import {
   courseHasIonVideo,
   hasUsableCourseAccess,
@@ -169,6 +171,65 @@ Deno.serve(async (request) => {
     if (profileError) throw profileError;
     const canAccessTrainerContent = hasTrainerRole(profile?.role);
 
+    // Same authoritative profiles role as private.iag_staff(): admin/employee.
+    // Staff rubric access never authorizes learner documents or signed resources.
+    if (courseId === IAG_COURSE_ID && action === 'iag_rubrics' && canAccessTrainerContent) {
+      const response = await handleIagPrivateAction({ action, payload, adminClient });
+      const result = jsonResponse(response.body, response.status);
+      result.headers.set('Cache-Control', 'private, no-store');
+      return result;
+    }
+
+    // Le nouveau questionnaire est propre à ce cours ; aucun contrôle global de connexion.
+    // L'origine achat/cadeau/promo ne remplace jamais le droit course_access actif.
+    if (courseId === IAG_COURSE_ID) {
+      const { data: access, error: accessError } = await adminClient.from('course_access')
+        .select('status, expires_at').eq('user_id', authData.user.id).eq('course_id', courseId).maybeSingle();
+      if (accessError) throw accessError;
+      if (!hasUsableCourseAccess(access)) return jsonResponse({ error: 'Accès à la formation refusé.' }, 403);
+      const operations: Record<string, string> = { positioning: 'status', save_positioning: 'save', submit_positioning: 'submit' };
+      if (Object.hasOwn(operations, action)) {
+        const revision = action === 'positioning' ? 0 : payload.revision;
+        if (!Number.isInteger(revision) || (revision as number) < 0 || (revision as number) > 2147483646) {
+          return jsonResponse({ error: 'La version enregistrée du questionnaire est invalide. Rechargez la page.' }, 400);
+        }
+        let answers = null;
+        if (action !== 'positioning') {
+          try { answers = normalizeIagAnswers(payload.answers, action === 'submit_positioning'); }
+          catch (error) { return jsonResponse({ error: (error as Error).message }, 400); }
+        }
+        // Le RPC reçoit le JWT vérifié, jamais un user_id fourni par le navigateur.
+        const learnerClient = createClient(supabaseUrl, anonKey, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+          auth: { persistSession: false, autoRefreshToken: false },
+        });
+        const { data: positioning, error: saveError } = await learnerClient.rpc('iag_positioning', {
+          p_action: operations[action], p_answers: answers, p_expected_revision: revision,
+        });
+        if (saveError) {
+          if (saveError.code === '40001') return jsonResponse({ error: 'Une autre fenêtre a enregistré ce questionnaire. Rechargez la version enregistrée avant de poursuivre.' }, 409);
+          if (saveError.code === '42501') return jsonResponse({ error: 'Accès à la formation refusé.' }, 403);
+          if (saveError.code === '22023') return jsonResponse({ error: 'Vérifiez les six réponses ; « Je ne sais pas encore » convient aussi.' }, 400);
+          throw saveError;
+        }
+        return jsonResponse({ positioning });
+      }
+      // Contrôle obligatoire AVANT tout contenu, URL signée ou autorisation vidéo,
+      // y compris si un compte personnel appelle directement l'API sans l'interface.
+      if (!await requireIagPositioning(adminClient, authData.user.id)) {
+        return jsonResponse({ error: 'Complétez votre questionnaire de départ pour poursuivre ce cours.', code: 'IAG_POSITIONING_REQUIRED' }, 412);
+      }
+    }
+
+    if (courseId === IAG_COURSE_ID && ['iag_document', 'iag_resource', 'iag_resource_renew', 'iag_rubrics'].includes(action)) {
+      // Session, droit exact actif et questionnaire viennent d'être relus ci-dessus,
+      // y compris pour le personnel. Aucun user_id/chemin provenant du navigateur.
+      const response = await handleIagPrivateAction({ action, payload, adminClient });
+      const result = jsonResponse(response.body, response.status);
+      result.headers.set('Cache-Control', 'private, no-store');
+      return result;
+    }
+
     if (isOfficeTrainerRequest) {
       if (!canAccessTrainerContent) return jsonResponse({ error: 'Accès refusé.' }, 403);
       return jsonResponse({ resources: await signOfficeResources(adminClient, courseId, 'trainer') });
@@ -222,6 +283,12 @@ Deno.serve(async (request) => {
         .maybeSingle();
       if (accessError) throw accessError;
       if (!hasUsableCourseAccess(access)) return jsonResponse({ error: 'Accès à la formation refusé.' }, 403);
+    }
+
+    if (courseId === IAG_COURSE_ID && !courseCatalog[IAG_COURSE_ID as keyof typeof courseCatalog]) {
+      const result = jsonResponse({ code: 'IAG_PRIVATE_BUNDLE_REQUIRED', error: 'Le contenu privé de cette formation est indisponible.' }, 503);
+      result.headers.set('Cache-Control', 'private, no-store');
+      return result;
     }
 
     const sourceCourse = courseCatalog[courseId as keyof typeof courseCatalog];

@@ -1,3 +1,4 @@
+import * as iagOffer from '../_shared/iagOffer.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
@@ -211,6 +212,7 @@ function checkoutHarness(offer, { missingPrice = false, invalidPromotion = false
     'npm:stripe@^22': { default: LocalStripe },
     'npm:@supabase/supabase-js@2.105.1': { createClient: () => admin },
     '../_shared/cors.ts': { corsHeaders: {}, jsonResponse: (body, status = 200) => Response.json(body, { status }) },
+    '../_shared/iagOffer.js': iagOffer,
     '../_shared/purchaseConfig.js': purchaseConfig,
     '../_shared/coursePromotion.js': coursePromotion,
   };

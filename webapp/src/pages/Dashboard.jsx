@@ -22,11 +22,13 @@ import { isCourseAccessOpen, learnerAccessMessage } from '../lib/courseAccessLif
 import { ATTESTATION_TYPES } from '../lib/attestationDocument';
 import { keepOwnVisibleAdministrativeDocuments } from '../lib/administrativeDocuments';
 import { fetchClientDiagnostics } from '../lib/diagnosticRestitution';
+import { issuedDocumentPath, iagIssuedDocumentTitle } from '../lib/issuedDocumentNavigation.js';
 import './Dashboard.css';
 
 // Petit dictionnaire pour afficher le beau nom de la formation
 const courseNames = {
   ...Object.fromEntries(Object.values(CREATIVITY_PURCHASES).map(offer => [offer.courseId, offer.label])),
+  'formation-ia-generative-elearning': 'IA générative - e-learning',
   'formation-ia': 'Formation IA Générative',
   'formation-ia-act': 'IA : acculturation et préparation à la conformité AI Act',
   'formation-prompt-level-1': 'Formation Prompt Engineering – Niveau 1',
@@ -459,16 +461,16 @@ function DashboardContent() {
                   {attestations.map((attestation) => (
                     <article key={attestation.id} className="learner-attestation-card">
                       <div>
-                        <h3>{ATTESTATION_TYPES[attestation.document_type]?.title || 'Attestation'}</h3>
+                        <h3>{iagIssuedDocumentTitle(attestation) || ATTESTATION_TYPES[attestation.document_type]?.title || 'Attestation'}</h3>
                         <p>{courseNames[attestation.course_id] || attestation.course_id}</p>
                         <span>
                           Délivrée le {new Date(attestation.issued_at).toLocaleDateString('fr-FR')}
                           {' · '}{attestation.reference}
                         </span>
                       </div>
-                      <Link to={`/attestations/${attestation.id}`} className="btn learner-attestation-card__action">
+                      {issuedDocumentPath(attestation) ? <Link to={issuedDocumentPath(attestation)} className="btn learner-attestation-card__action">
                         Consulter et imprimer
-                      </Link>
+                      </Link> : <span role="status">Référence du document à vérifier auprès de FormaPrompt.</span>}
                     </article>
                   ))}
                 </div>

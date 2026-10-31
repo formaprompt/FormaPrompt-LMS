@@ -3,6 +3,7 @@ import { Printer } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AttestationPaper from '../components/AttestationPaper';
 import { useAuth } from '../contexts/useAuth';
+import { startIssuedAttestationRequest } from '../lib/issuedAttestationRequest.js';
 import { supabase } from '../lib/supabaseClient';
 import './AttestationDocument.css';
 
@@ -10,43 +11,32 @@ export default function IssuedAttestationDocument() {
   const { issuanceId } = useParams();
   const { user, role } = useAuth();
   const navigate = useNavigate();
-  const [issuance, setIssuance] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
+  const userId = user?.id;
   useEffect(() => {
-    if (!user) {
-      navigate('/login', { replace: true });
-      return;
-    }
+    if (!userId) navigate('/login', { replace: true });
+  }, [navigate, userId]);
+  if (!userId) return null;
+  return <IssuedAttestationSession
+    key={`${userId}:${role || ''}:${issuanceId}`}
+    issuanceId={issuanceId} role={role} navigate={navigate}
+  />;
+}
 
-    async function loadIssuance() {
-      setLoading(true);
-      setError('');
-      const { data, error: loadError } = await supabase
-        .from('course_attestation_issuances')
-        .select('id, reference, user_id, course_id, document_type, content_snapshot, issued_at')
-        .eq('id', issuanceId)
-        .maybeSingle();
-
-      if (loadError || !data) {
-        console.error("Chargement de l’attestation délivrée impossible :", loadError);
-        setError("Cette attestation est introuvable ou vous n’êtes pas autorisé à la consulter.");
-      } else {
-        setIssuance(data);
-      }
-      setLoading(false);
-    }
-
-    loadIssuance();
-  }, [issuanceId, navigate, user]);
-
-  if (!user) return null;
+function IssuedAttestationSession({ issuanceId, role, navigate }) {
+  const [result, setResult] = useState(null);
+  useEffect(() => {
+    const request = startIssuedAttestationRequest(supabase, issuanceId, setResult);
+    return request.cancel;
+  }, [issuanceId]);
+  const issuance = result?.issuance || null;
+  const error = result?.error || '';
+  const loading = result === null;
+  const ready = !loading && !error && Boolean(issuance);
 
   return (
     <main className="attestation-page">
       <div className="attestation-actions">
-        <button type="button" className="btn btn-primary" onClick={() => window.print()} disabled={!issuance}>
+        <button type="button" className="btn btn-primary" onClick={() => { if (ready) window.print(); }} disabled={!ready}>
           <Printer size={18} aria-hidden="true" /> Imprimer ou enregistrer en PDF
         </button>
         <button

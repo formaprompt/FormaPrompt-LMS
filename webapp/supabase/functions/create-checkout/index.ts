@@ -1,3 +1,4 @@
+import { IAG_ELEARNING_COURSE_ID, resolveIagIntentPurchase, validateIagStripeCatalog } from '../_shared/iagOffer.js';
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import { corsHeaders, jsonResponse } from '../_shared/cors.ts';
@@ -6,6 +7,7 @@ import {
   CREATIVITY_PURCHASES,
   CONSENT_TYPES,
   getCommercialRoute,
+  getCourseCheckoutAccessDecision,
   getConsentDocumentVersion,
   getPurchaseConfig,
   getRequiredConsentTypes,
@@ -70,6 +72,22 @@ function getSiteUrl() {
   return siteUrl.origin;
 }
 
+function iagPending(checkoutIntentId: string) {
+  return jsonResponse({ confirmationPending: true, pending: true,
+    reconciliation_required: true, checkoutIntentId, checkout_context_reset: false,
+    retry_same_context: false,
+  }, 202);
+}
+
+async function safelyResetIagCheckout(context: { admin: ReturnType<typeof createClient>; intentId: string; userId: string }) {
+  try {
+    const { data, error } = await context.admin.rpc('reset_iag_course_promotion_checkout', {
+      p_checkout_intent_id: context.intentId, p_user_id: context.userId,
+    });
+    return !error && data === true;
+  } catch { return false; }
+}
+
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -86,6 +104,8 @@ Deno.serve(async (request) => {
     redemptionId: string | null;
   } | null = null;
   let stripeSessionCreated = false;
+  let iagCheckout: { admin: ReturnType<typeof createClient>; intentId: string; userId: string } | null = null;
+  let iagClaimId: string | null = null;
 
   try {
     const stripeSecretKey = requiredEnv('STRIPE_SECRET_KEY');
@@ -98,7 +118,7 @@ Deno.serve(async (request) => {
     }
 
     const body = await request.json().catch(() => ({}));
-    const purchase = getPurchaseConfig(body.course_id);
+    let purchase = getPurchaseConfig(body.course_id, new Date());
     if (!purchase || !purchase.checkoutEnabled) {
       return jsonResponse({ error: purchase?.checkoutUnavailableMessage || 'Formation non disponible au paiement.', checkout_unavailable: Boolean(purchase) }, 400);
     }
@@ -147,16 +167,18 @@ Deno.serve(async (request) => {
     });
     const { data: existingAccess, error: accessError } = await supabaseAdmin
       .from('course_access')
-      .select('id')
+      .select('id, status, expires_at')
       .eq('user_id', user.id)
       .eq('course_id', purchase.courseId)
-      .eq('status', 'active')
-      .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
       .maybeSingle();
 
     if (accessError) throw accessError;
-    if (existingAccess) {
+    const accessDecision = getCourseCheckoutAccessDecision(existingAccess);
+    if (accessDecision === 'already_purchased') {
       return jsonResponse({ alreadyPurchased: true });
+    }
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID && accessDecision === 'lifecycle_review') {
+      return jsonResponse({ error: 'Un droit existe déjà. Une décision administrative explicite est nécessaire.' }, 409);
     }
 
     // Une preuve de paiement existante bloque également un second débit, même
@@ -170,9 +192,27 @@ Deno.serve(async (request) => {
     if (purchaseError) throw purchaseError;
     if (existingPurchase) return jsonResponse({ alreadyPurchased: true });
 
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+      // Même intention que la RPC existante : conserver une session déjà figée.
+      const { data: savedIntent, error: savedIntentError } = await supabaseAdmin
+        .from('commercial_checkout_intents')
+        .select('course_id, original_amount_cents, catalog_price_id, checkout_configuration_locked_at')
+        .eq('user_id', user.id).eq('course_id', purchase.courseId)
+        .not('checkout_request_id', 'is', null).in('status', ['created', 'stripe_session_created'])
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (savedIntentError) throw savedIntentError;
+      if (savedIntent?.checkout_configuration_locked_at) {
+        purchase = resolveIagIntentPurchase(purchase, savedIntent, (name: string) => Deno.env.get(name));
+      }
+    }
     const priceId = Deno.env.get(purchase.priceEnvName)?.trim();
     if (!priceId) {
       return jsonResponse({ error: 'Le paiement de cette offre n’est pas encore ouvert. Aucun montant n’a été débité.', checkout_unavailable: true }, 503);
+    }
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID
+      && (!Deno.env.get('STRIPE_IAG_ELEARNING_INTRO_PRICE_ID')?.trim()
+        || !Deno.env.get('STRIPE_IAG_ELEARNING_STANDARD_PRICE_ID')?.trim())) {
+      return jsonResponse({ error: 'Le catalogue tarifaire IAG est incomplet. Aucun montant n’a été débité.', checkout_unavailable: true }, 503);
     }
     const stripe = new Stripe(stripeSecretKey);
     const price = await stripe.prices.retrieve(priceId);
@@ -192,6 +232,11 @@ Deno.serve(async (request) => {
     const bureautiqueOffer = Object.hasOwn(BUREAUTIQUE_PURCHASES, purchase.courseId)
       ? BUREAUTIQUE_PURCHASES[purchase.courseId]
       : null;
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+      const product = await stripe.products.retrieve(catalogProductId);
+      const catalogError = validateIagStripeCatalog(purchase, price, product, stripeMode === 'live');
+      if (catalogError) throw new Error(catalogError);
+    }
     const creativityOffer = CREATIVITY_PURCHASES[purchase.courseId];
     if (creativityOffer) {
       const product = await stripe.products.retrieve(catalogProductId);
@@ -237,8 +282,11 @@ Deno.serve(async (request) => {
     const cgvDocument = consentDocuments.find(({ consentType }: RequiredDocumentPair) => (
       consentType === CONSENT_TYPES.CGV_ACCEPTANCE
     ))!.document!;
+    const preparationRpc = purchase.courseId === IAG_ELEARNING_COURSE_ID
+      ? 'prepare_iag_course_checkout_intent'
+      : 'prepare_course_checkout_intent';
     const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
-      .rpc('prepare_course_checkout_intent', {
+      .rpc(preparationRpc, {
         p_checkout_request_id: checkoutRequestId,
         p_user_id: user.id,
         p_course_id: purchase.courseId,
@@ -255,9 +303,31 @@ Deno.serve(async (request) => {
         })),
         p_catalog_price_id: priceId,
         p_stripe_product_id: catalogProductId,
+        ...(purchase.courseId === IAG_ELEARNING_COURSE_ID ? {
+          p_intro_price_id: requiredEnv('STRIPE_IAG_ELEARNING_INTRO_PRICE_ID'),
+          p_standard_price_id: requiredEnv('STRIPE_IAG_ELEARNING_STANDARD_PRICE_ID'),
+        } : {}),
       })
       .single();
+    // Un worker concurrent peut avoir verrouillé 79 après notre lecture à 99.
+    // Ne jamais nettoyer ce snapshot : la reprise relira le prix autoritaire.
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID && checkoutIntentError?.code === '23505') {
+      return jsonResponse({
+        error: 'La configuration de cette tentative a changé. Relancez le paiement pour la relire.',
+        retry_same_context: true,
+        checkout_context_reset: false,
+      }, 409);
+    }
     if (checkoutIntentError) throw checkoutIntentError;
+
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+      iagCheckout = { admin: supabaseAdmin, intentId: checkoutIntent.id, userId: user.id };
+      // Le code est figé même sans identifiant de session enregistré.
+      if (checkoutIntent.checkout_configuration_locked_at
+        && (checkoutIntent.normalized_code || null) !== requestedPromotionCode) {
+        return jsonResponse({ error: 'Cette tentative conserve son code promotionnel et son tarif. Sa configuration ne peut pas être remplacée.', checkout_context_reset: false }, 409);
+      }
+    }
 
     if (checkoutIntent.stripe_checkout_session_id) {
       if ((checkoutIntent.normalized_code || null) !== requestedPromotionCode) {
@@ -278,6 +348,9 @@ Deno.serve(async (request) => {
       if (existingSession.status === 'complete') {
         return jsonResponse({ confirmationPending: true, checkoutIntentId: checkoutIntent.id });
       }
+      // Aucun statut inconnu n'est assimilé à une expiration. Même une session
+      // expirée connue reste à réconcilier ici ; aucun release/expiry IAG.
+      if (purchase.courseId === IAG_ELEARNING_COURSE_ID) return iagPending(checkoutIntent.id);
       if (checkoutIntent.promo_redemption_id) {
         const { error: releaseError } = await supabaseAdmin.rpc('release_promo_redemption_for_checkout', {
           p_redemption_id: checkoutIntent.promo_redemption_id,
@@ -299,7 +372,8 @@ Deno.serve(async (request) => {
     }
 
     const { data: checkoutConfiguration, error: configurationError } = await supabaseAdmin
-      .rpc('prepare_course_promotion_checkout', {
+      .rpc(purchase.courseId === IAG_ELEARNING_COURSE_ID
+        ? 'prepare_iag_course_promotion_checkout' : 'prepare_course_promotion_checkout', {
         p_checkout_intent_id: checkoutIntent.id,
         p_user_id: user.id,
         p_email: user.email,
@@ -309,6 +383,10 @@ Deno.serve(async (request) => {
       })
       .single();
     if (configurationError?.code === 'P0001') {
+      if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+        if (!await safelyResetIagCheckout({ admin: supabaseAdmin, intentId: checkoutIntent.id, userId: user.id })) return iagPending(checkoutIntent.id);
+        return jsonResponse({ promotion_invalid: true, message: COURSE_PROMOTION.genericInvalidMessage });
+      }
       await supabaseAdmin.rpc('reset_course_promotion_checkout', {
         p_checkout_intent_id: checkoutIntent.id,
         p_user_id: user.id,
@@ -326,7 +404,14 @@ Deno.serve(async (request) => {
       }, 409);
     }
 
-    promotionCleanup = {
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+      const { data: claim, error: claimError } = await supabaseAdmin.rpc('claim_iag_stripe_attempt', {
+        p_checkout_intent_id: checkoutIntent.id, p_user_id: user.id,
+      }).single();
+      if (claimError || !claim?.claimed || !claim.claim_id) return iagPending(checkoutIntent.id);
+      iagClaimId = claim.claim_id;
+    }
+    promotionCleanup = purchase.courseId === IAG_ELEARNING_COURSE_ID ? null : {
       admin: supabaseAdmin,
       checkoutIntentId: checkoutIntent.id,
       userId: user.id,
@@ -401,6 +486,18 @@ Deno.serve(async (request) => {
     stripeSessionCreated = true;
 
     if (!session.url) throw new Error('Stripe n’a pas retourné d’URL Checkout.');
+    if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+      const { data: recorded, error: recordError } = await supabaseAdmin.rpc('record_iag_stripe_session', {
+        p_checkout_intent_id: checkoutIntent.id, p_user_id: user.id,
+        p_claim_id: iagClaimId, p_session_id: session.id,
+      });
+      if (recordError || !recorded) return iagPending(checkoutIntent.id);
+      return jsonResponse({ url: session.url,
+        catalog_amount_cents: checkoutConfiguration.original_amount_cents,
+        discount_amount_cents: checkoutConfiguration.discount_amount_cents,
+        final_amount_cents: checkoutConfiguration.final_amount_cents,
+      });
+    }
     const { error: intentUpdateError } = await supabaseAdmin
       .from('commercial_checkout_intents')
       .update({
@@ -419,6 +516,12 @@ Deno.serve(async (request) => {
       final_amount_cents: checkoutConfiguration.final_amount_cents,
     });
   } catch (error) {
+    if (iagCheckout) {
+      // Une erreur Stripe quelconque après claim ne prouve jamais l'absence de session.
+      if (iagClaimId || stripeSessionCreated) return iagPending(iagCheckout.intentId);
+      if (!await safelyResetIagCheckout(iagCheckout)) return iagPending(iagCheckout.intentId);
+      return jsonResponse({ error: 'Préparation IAG interrompue avant toute tentative Stripe.', checkout_context_reset: true }, 500);
+    }
     const ambiguous = isAmbiguousCourseStripeCreationError(error);
     if (promotionCleanup && !stripeSessionCreated && !ambiguous) {
       const { error: cleanupError } = await promotionCleanup.admin.rpc('reset_course_promotion_checkout', {

@@ -1,3 +1,4 @@
+import * as iagOffer from '../_shared/iagOffer.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
@@ -74,6 +75,7 @@ function harness({ currentStatus = 'published', oldRuntime = false } = {}) {
     'npm:stripe@^22': { default: Stripe },
     'npm:@supabase/supabase-js@2.105.1': { createClient: () => admin },
     '../_shared/cors.ts': { corsHeaders: {}, jsonResponse: (body, status = 200) => Response.json(body, { status }) },
+    '../_shared/iagOffer.js': iagOffer,
     '../_shared/purchaseConfig.js': runtime,
     '../_shared/coursePromotion.js': coursePromotion,
   };

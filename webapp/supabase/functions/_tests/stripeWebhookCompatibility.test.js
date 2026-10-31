@@ -1,3 +1,4 @@
+import * as iagOffer from '../_shared/iagOffer.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -151,6 +152,7 @@ function harness(options = {}) {
           error: options.rpcError ? { code: 'fixture_rpc_error' } : null };
       } };
     } },
+    '../_shared/iagOffer.js': iagOffer,
     '../_shared/purchaseConfig.js': purchaseConfig,
     '../_shared/coursePromotion.js': coursePromotion,
     '../_shared/stripePostPayment.js': postPayment,

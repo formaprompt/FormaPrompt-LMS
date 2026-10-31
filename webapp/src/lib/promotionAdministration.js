@@ -3,6 +3,7 @@ import { BUREAUTIQUE_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/func
 export const PROMOTION_TARGET_OPTIONS = [
   { target_type: 'diagnostic', target_key: 'diagnostic-ia-express', label: 'Diagnostic IA Express' },
   { target_type: 'all', target_key: 'all', label: 'Toutes les offres FormaPrompt' },
+  { target_type: 'course', target_key: 'formation-ia-generative-elearning', label: 'IA générative - e-learning' },
   { target_type: 'course', target_key: 'formation-ia', label: 'Formation IA générative' },
   { target_type: 'course', target_key: 'formation-ia-act', label: 'Formation IA Act' },
   { target_type: 'course', target_key: 'formation-prompt-level-1', label: 'Formation Prompt Engineering – Niveau 1' },

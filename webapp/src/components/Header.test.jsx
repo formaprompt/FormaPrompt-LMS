@@ -20,6 +20,16 @@ function showMobileControls() {
 }
 
 describe('Navigation publique', () => {
+  it('expose le parcours e-learning au clavier et ferme le menu mobile après sélection', async () => {
+    const user = userEvent.setup(); mount(); showMobileControls();
+    await user.click(screen.getByRole('button', { name: 'Ouvrir le menu' }));
+    const group = screen.getByRole('button', { name: 'Formations' });
+    group.focus(); await user.keyboard('{Enter}'); await user.tab(); await user.tab();
+    const link = screen.getByRole('link', { name: 'IA générative — e-learning' });
+    expect(link).toHaveFocus(); expect(link).toHaveAttribute('href', '/formation-ia-generative-elearning');
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('button', { name: 'Ouvrir le menu' })).toHaveAttribute('aria-expanded', 'false');
+  });
   it('ouvre au clavier puis ferme un groupe avec Échap et restitue le focus', async () => {
     const user = userEvent.setup();
     mount();

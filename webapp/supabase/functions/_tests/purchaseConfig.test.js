@@ -1,3 +1,4 @@
+import { EXPECTED_COMMERCIAL_COURSE_IDS } from './commercialExpectedCourses.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -76,7 +77,8 @@ test('les trois offres publiques conservent le paiement direct et une configurat
 });
 
 test('les douze offres bureautiques suivent le modèle en ligne et accompagnement sans désactiver les offres IA', () => {
-  assert.equal(Object.keys(COURSE_PURCHASES).length, 18);
+  assert.equal(Object.keys(COURSE_PURCHASES).length, 19);
+  assert.deepEqual(Object.keys(COURSE_PURCHASES).sort(), EXPECTED_COMMERCIAL_COURSE_IDS);
   assert.equal(Object.keys(EXCEL_PURCHASES).length, 6);
   assert.equal(Object.keys(OFFICE_PURCHASES).length, 6);
   for (const purchase of [...Object.values(EXCEL_PURCHASES), ...Object.values(OFFICE_PURCHASES)]) {
@@ -90,7 +92,8 @@ test('les douze offres bureautiques suivent le modèle en ligne et accompagnemen
 });
 
 test('le registre cadeau reprend les trois formations IA, les douze offres bureautiques et les trois offres créativité exactes', () => {
-  assert.equal(Object.keys(ADMIN_GIFT_COURSES).length, 18);
+  assert.equal(Object.keys(ADMIN_GIFT_COURSES).length, 19);
+  assert.deepEqual(Object.keys(ADMIN_GIFT_COURSES).sort(), EXPECTED_COMMERCIAL_COURSE_IDS);
   assert.deepEqual(
     Object.keys(ADMIN_GIFT_COURSES).filter((courseId) => (
       Object.hasOwn(EXCEL_PURCHASES, courseId) || Object.hasOwn(OFFICE_PURCHASES, courseId)

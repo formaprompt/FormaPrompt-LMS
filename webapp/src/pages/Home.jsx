@@ -178,11 +178,19 @@ export default function Home() {
               <p style={{color: 'var(--color-text-light)'}}>Consultez le programme, les modalités et le tarif de chaque parcours. Selon la formation, inscrivez-vous en ligne ou demandez un devis adapté à votre besoin.</p>
             </div>
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+              <div className="card">
+                <Monitor size={40} color="var(--color-primary)" className="mb-2" aria-hidden="true" />
+                <h3 className="card-title">IA générative — e-learning</h3>
+                <p className="mb-3">22 leçons à votre rythme, environ 13 heures et trois corrections écrites de vos travaux.</p>
+                <p className="mb-3">79 € jusqu’au 31 décembre 2026 inclus, puis 99 € · Paiement unique.</p>
+                <Link to="/formation-ia-generative-elearning" className="link-arrow">Découvrir le parcours e-learning &rarr;</Link>
+              </div>
               {/* Offer 1 */}
               <div className="card">
                 <Bot size={40} color="var(--color-primary)" className="mb-2" />
-                <h3 className="card-title">IA générative</h3>
+                <h3 className="card-title">IA générative — formation accompagnée</h3>
                 <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
+                <p className="mb-3">497 € par apprenant · Présentiel ou classe virtuelle.</p>
                 <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
               </div>
               {/* Offer 2 */}

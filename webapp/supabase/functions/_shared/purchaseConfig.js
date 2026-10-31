@@ -1,3 +1,5 @@
+import { getIagOffer, IAG_ELEARNING_COURSE_ID } from './iagOffer.js';
+
 export const OFFER_CLASSIFICATIONS = Object.freeze({
   B2C_STANDARD: 'B2C_STANDARD',
   B2C_INDIVIDUAL_TRAINING_CONTRACT: 'B2C_INDIVIDUAL_TRAINING_CONTRACT',
@@ -193,7 +195,13 @@ export function validateCreativityStripeCatalog(purchase, price, product, liveMo
   return null;
 }
 
+export const IAG_ELEARNING_PURCHASE = Object.freeze({
+  ...MIXED_DIRECT_PURCHASE,
+  ...getIagOffer(new Date('2026-10-21T00:00:00Z')),
+});
+
 export const COURSE_PURCHASES = Object.freeze({
+  [IAG_ELEARNING_COURSE_ID]: IAG_ELEARNING_PURCHASE,
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
   [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
@@ -202,6 +210,7 @@ export const COURSE_PURCHASES = Object.freeze({
 });
 
 export const ADMIN_GIFT_COURSES = Object.freeze({
+  [IAG_ELEARNING_COURSE_ID]: IAG_ELEARNING_PURCHASE,
   [GENERATIVE_AI_PURCHASE.courseId]: GENERATIVE_AI_PURCHASE,
   [AI_ACT_PURCHASE.courseId]: AI_ACT_PURCHASE,
   [PROMPT_LEVEL_ONE_PURCHASE.courseId]: PROMPT_LEVEL_ONE_PURCHASE,
@@ -209,7 +218,8 @@ export const ADMIN_GIFT_COURSES = Object.freeze({
   ...CREATIVITY_PURCHASES,
 });
 
-export function getPurchaseConfig(courseId) {
+export function getPurchaseConfig(courseId, now = new Date()) {
+  if (courseId === IAG_ELEARNING_COURSE_ID) return Object.freeze({ ...IAG_ELEARNING_PURCHASE, ...getIagOffer(now) });
   return typeof courseId === 'string' && Object.hasOwn(COURSE_PURCHASES, courseId)
     ? COURSE_PURCHASES[courseId]
     : null;
@@ -411,6 +421,16 @@ export function validateCommercialConsentEvidence(session, purchase, intent, con
 
 export function shouldActivateCourseAccess(intent) {
   return intent?.access_activation_policy === ACCESS_ACTIVATION_POLICIES.IMMEDIATE_AFTER_PAYMENT;
+}
+
+export function getCourseCheckoutAccessDecision(access, now = new Date()) {
+  if (!access) return 'checkout';
+  if (access.status === 'active'
+    && (access.expires_at == null || new Date(access.expires_at).getTime() > now.getTime())) {
+    return 'already_purchased';
+  }
+  // Un nouveau paiement/code ne constitue jamais une décision de réactivation.
+  return 'lifecycle_review';
 }
 
 export const IN_PERSON_TRAVEL_FEE = Object.freeze({

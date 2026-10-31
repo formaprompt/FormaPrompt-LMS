@@ -34,7 +34,7 @@ Deno.serve(async (request) => {
     if (!accessToken) return jsonResponse({ error: 'Connexion requise pour vérifier ce code.' }, 401);
 
     const body = await request.json().catch(() => ({}));
-    const purchase = getPurchaseConfig(body?.course_id);
+    const purchase = getPurchaseConfig(body?.course_id, new Date());
     if (!purchase || !purchase.checkoutEnabled) return jsonResponse({ error: 'Formation non disponible au paiement.' }, 400);
     const normalizedCode = normalizeCoursePromotionCode(body?.promo_code);
     if (!hasCoursePromotionInput(body?.promo_code) || !normalizedCode) {

@@ -64,6 +64,19 @@ export function checkPublicHtml(html, route) {
   return document;
 }
 
+// This public React route needs its own physical HTML; Apache deliberately
+// returns a real 404 for an unknown route without a matching file.
+export function checkIagPublicRoute(contents) {
+  const route = '/formation-ia-generative-elearning';
+  assert.ok(publicRoutes(contents.get('sitemap.xml') || '').includes(route),
+    'Formation IAG e-learning absente du sitemap');
+  const target = outputForRoute(route);
+  assert.equal(target, 'formation-ia-generative-elearning.html', 'Cible publique IAG incorrecte');
+  assert.ok(contents.has(target), `Route sans pré-rendu : ${route}`);
+  checkPublicHtml(contents.get(target), route);
+  return target;
+}
+
 export function checkSafeFile(name, text) {
   assert.ok(!/(^|\/)(?:\.env[^/]*|\.branches|supabase|node_modules|src|tests?|test-results)(\/|$)|\.(?:map|tsx?|jsx|py|ps1|md)$|\.test\./i.test(name), `Fichier exclu de la release : ${name}`);
   assert.ok(!/(?:sk_live_|sk_test_|sb_secret_|ghp_)[A-Za-z0-9_-]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(text), `Secret détecté dans ${name}`);
@@ -171,6 +184,7 @@ export async function verifyRelease(root = path.resolve('dist')) {
   checkPrivateShells(contents);
   checkDeliveryPolicies(contents.get('.htaccess'), contents.get('sw.js') || '');
   const routes = publicRoutes(contents.get('sitemap.xml'));
+  checkIagPublicRoute(contents);
   for (const route of routes) {
     const name = outputForRoute(route);
     assert.ok(contents.has(name), `Route sans pré-rendu : ${route}`);

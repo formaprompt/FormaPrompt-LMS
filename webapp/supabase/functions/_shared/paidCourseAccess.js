@@ -1,6 +1,7 @@
 export const PAID_COURSE_BUCKET = 'paid-course-content';
 export const PAID_COURSE_IDS = Object.freeze([
   'formation-ia',
+  'formation-ia-generative-elearning',
   'formation-ia-act',
   'formation-prompt-level-1',
   'ia-creativite-individuel',
