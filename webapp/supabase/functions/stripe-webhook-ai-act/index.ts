@@ -1,6 +1,8 @@
 import { IAG_ELEARNING_COURSE_ID, resolveIagIntentPurchase } from '../_shared/iagOffer.js';
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
+import { notifyPaymentSafely } from '../_shared/adminEmailNotifications.js';
+declare const EdgeRuntime: { waitUntil(task: Promise<unknown>): void };
 import {
   getPurchaseConfig,
   IN_PERSON_TRAVEL_FEE,
@@ -259,6 +261,12 @@ Deno.serve(async (request) => {
       p_event: payload,
     });
     if (error) throw error;
+
+    if (event.livemode && ['checkout.session.completed','checkout.session.async_payment_succeeded'].includes(event.type)) {
+      // Payment transaction and outbox were committed by the RPC. Email cannot
+      // change the payment result or cause Stripe to replay a successful charge.
+      EdgeRuntime.waitUntil(notifyPaymentSafely(supabaseAdmin, object.id));
+    }
 
     if (
       diagnosticEvent

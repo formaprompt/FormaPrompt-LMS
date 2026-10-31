@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -13,6 +13,8 @@ import {
   REQUEST_TYPE_LABELS,
 } from '../lib/commercialAdministration';
 import { learnerRecordPath } from '../lib/adminLearnerRecord';
+import AdminClientReply from '../components/AdminClientReply';
+import AdminEmailNotifications from '../components/AdminEmailNotifications';
 import './AdminCommercial.css';
 
 function qualificationFrom(request) {
@@ -64,6 +66,7 @@ function enrollmentFrom(request, quote) {
 export default function AdminCommercial() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [requests, setRequests] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [history, setHistory] = useState([]);
@@ -73,7 +76,7 @@ export default function AdminCommercial() {
   const [profiles, setProfiles] = useState([]);
   const [trainingEnrollments, setTrainingEnrollments] = useState([]);
   const [selectedId, setSelectedId] = useState('');
-  const selectedIdRef = useRef('');
+  const selectedIdRef = useRef(searchParams.get('demande') || '');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [qualification, setQualification] = useState(null);
@@ -99,13 +102,19 @@ export default function AdminCommercial() {
     ]);
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) setFeedback({ type: 'error', message: 'Le module commercial ne peut pas être chargé. Appliquez la migration Sprint 3 localement.' });
-    setRequests(results[0].data || []); setQuotes(results[1].data || []);
+    const requestRows = [...(results[0].data || [])];
+    if (selectedIdRef.current && !requestRows.some((item)=>item.id===selectedIdRef.current) && /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(selectedIdRef.current)) {
+      const target = await supabase.from('contact_requests').select('*').eq('id',selectedIdRef.current).maybeSingle();
+      if (target.data) requestRows.unshift(target.data);
+      else setFeedback({type:'error',message:'La demande liée à cette alerte est introuvable ou inaccessible.'});
+    }
+    setRequests(requestRows); setQuotes(results[1].data || []);
     setHistory(results[2].data || []); setCommunications(results[3].data || []);
     setFollowUps(results[4].data || []); setPurchases(results[5].data || []); setProfiles(results[6].data || []); setTrainingEnrollments(results[7].data || []);
-    const nextSelectedId = selectedIdRef.current || results[0].data?.[0]?.id || '';
+    const nextSelectedId = selectedIdRef.current || requestRows[0]?.id || '';
     selectedIdRef.current = nextSelectedId;
     setSelectedId(nextSelectedId);
-    const nextSelected = (results[0].data || []).find((item) => item.id === nextSelectedId);
+    const nextSelected = requestRows.find((item) => item.id === nextSelectedId);
     const nextAcceptedQuote = (results[1].data || []).find((item) => item.contact_request_id === nextSelectedId && item.status === 'accepted');
     if (nextSelected) {
       setQualification(qualificationFrom(nextSelected));
@@ -198,6 +207,7 @@ export default function AdminCommercial() {
         <Link className="btn" to="/admin">Retour à l’administration</Link>
       </header>
       {feedback && <div className={`admin-commercial__feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>{feedback.message}</div>}
+      <AdminEmailNotifications />
       <div className="admin-commercial__layout">
         <aside className="admin-commercial__sidebar" aria-label="Demandes commerciales">
           <label>Rechercher<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, e-mail, sujet…" /></label>
@@ -209,7 +219,7 @@ export default function AdminCommercial() {
         <section className="admin-commercial__detail">
           {!selected ? <p>Sélectionnez une demande.</p> : <>
             <header className="admin-commercial__request-header"><div><h2>{selectedEnrollment?.user_id ? <Link to={learnerRecordPath(selectedEnrollment.user_id)}>{selected.name}</Link> : selected.name}</h2><p>{selected.email} · {REQUEST_TYPE_LABELS[selected.request_type]}</p>{!selectedEnrollment?.user_id && <small>Demande non reliée à un compte apprenant par identifiant exact.</small>}</div><span className={`admin-commercial__badge is-${selected.status}`}>{REQUEST_STATUS_LABELS[selected.status]}</span></header>
-            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small></article>
+            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small><AdminClientReply key={selected.id} request={selected} /></article>
 
             <details open><summary>Qualification et notes</summary>
               <form className="admin-commercial__form" onSubmit={saveQualification}>

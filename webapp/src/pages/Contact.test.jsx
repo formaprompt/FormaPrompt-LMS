@@ -14,7 +14,7 @@ const { insertMock, fromMock } = vi.hoisted(() => {
 
 vi.mock('../lib/supabaseClient', () => ({
   supabase: {
-    from: fromMock,
+    functions: { invoke: insertMock },
   },
 }));
 
@@ -36,7 +36,7 @@ describe('formulaire de contact', () => {
   beforeEach(() => {
     insertMock.mockReset();
     fromMock.mockClear();
-    insertMock.mockResolvedValue({ error: null });
+    insertMock.mockResolvedValue({ data: {accepted:true}, error: null });
   });
 
   it('explique les corrections avant tout appel réseau', async () => {
@@ -69,16 +69,15 @@ describe('formulaire de contact', () => {
     await user.click(screen.getByRole('button', { name: /envoyer ma demande/i }));
 
     await waitFor(() => {
-      expect(insertMock).toHaveBeenCalledWith([
-        {
+      expect(insertMock).toHaveBeenCalledWith('submit-contact-request', {body: {
           name: 'Organisme Exemple',
           email: 'contact@example.com',
           request_type: 'individual',
           funding_requested: false,
           subject: 'Autre question',
           message: 'Je souhaite obtenir des informations sur une formation.',
-        },
-      ]);
+          submissionId: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        }});
     });
 
     expect(await screen.findByRole('status')).toHaveTextContent(

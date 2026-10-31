@@ -78,10 +78,10 @@ function event(type, object, id = 'evt_test_compatibility') {
 // Exécute le véritable Deno.serve transpilé, sans serveur ni accès réseau.
 // Les validations métier sont réelles ; RPC, Stripe et transport SMTP sont simulés.
 function harness(options = {}) {
-  const calls = [], queries = [], deliveries = [], warnings = [];
+  const calls = [], queries = [], deliveries = [], warnings = [], adminAlerts = [], background = [];
   let handler, clientCount = 0;
   const env = {
-    STRIPE_SECRET_KEY: 'sk_test_fixture_not_a_real_key', STRIPE_WEBHOOK_SIGNING_SECRET: 'fixture-only',
+    STRIPE_SECRET_KEY: options.live ? 'sk_live_fixture' : 'sk_test_fixture_not_a_real_key', STRIPE_WEBHOOK_SIGNING_SECRET: 'fixture-only',
     SUPABASE_URL: 'https://supabase.invalid', SUPABASE_SERVICE_ROLE_KEY: 'fixture-only',
     STRIPE_AI_ACT_PRICE_ID: 'price_test_course', STRIPE_DIAGNOSTIC_IA_PRICE_ID: 'price_test_diagnostic',
   };
@@ -156,6 +156,7 @@ function harness(options = {}) {
     '../_shared/purchaseConfig.js': purchaseConfig,
     '../_shared/coursePromotion.js': coursePromotion,
     '../_shared/stripePostPayment.js': postPayment,
+    '../_shared/adminEmailNotifications.js': { notifyPaymentSafely: async (_database,sessionId)=>{adminAlerts.push(sessionId);return [{status:options.adminEmailFails?'failed':'sent'}];} },
     '../_shared/diagnosticPayment.js': diagnosticPayment,
     '../_shared/diagnosticContractConfirmation.js': {
       ...diagnosticContract,
@@ -174,16 +175,30 @@ function harness(options = {}) {
   runInNewContext(executable, {
     exports: {}, require(name) { assert.ok(dependencies[name], `Import inattendu : ${name}`); return dependencies[name]; },
     Deno: { env: { get: (name) => env[name] }, serve: (callback) => { handler = callback; } },
+    EdgeRuntime: { waitUntil:(task)=>background.push(task) },
     Response, TextEncoder, crypto: webcrypto, Error,
     console: { error() {}, warn(message) { warnings.push(message); } },
   });
-  return { calls, queries, deliveries, warnings, get clientCount() { return clientCount; },
+  return { calls, queries, deliveries, warnings, adminAlerts, background, get clientCount() { return clientCount; },
     dispatch: (payload, signature = 'fixture-signature', method = 'POST') => handler(new Request(
       'https://webhook.invalid', { method, headers: signature ? { 'Stripe-Signature': signature } : {},
         ...(method === 'POST' ? { body: JSON.stringify(payload) } : {}) },
     )),
   };
 }
+
+test('un paiement live confirmé déclenche l’alerte admin après la RPC ; la panne mail ne fait pas échouer le paiement', async()=>{
+  const fixture=courseFixture({prepared:true});const h=harness({...fixture,live:true,adminEmailFails:true});
+  const paid={...event('checkout.session.completed',fixture.object),livemode:true};
+  assert.equal((await h.dispatch(paid)).status,200);await Promise.all(h.background);
+  assert.deepEqual(h.adminAlerts,[fixture.object.id]);assert.equal(h.calls.length,1);
+});
+test('aucune alerte admin avant signature, validation et réussite de la transaction',async()=>{
+  const fixture=courseFixture({prepared:true});const paid={...event('checkout.session.completed',fixture.object),livemode:true};
+  const invalid=harness({...fixture,live:true});assert.equal((await invalid.dispatch(paid,'invalid')).status,400);assert.equal(invalid.adminAlerts.length,0);
+  const failed=harness({...fixture,live:true,rpcError:true});assert.equal((await failed.dispatch(paid)).status,500);assert.equal(failed.adminAlerts.length,0);
+  const testMode=harness(fixture);assert.equal((await testMode.dispatch(event('checkout.session.completed',fixture.object))).status,200);assert.equal(testMode.adminAlerts.length,0);
+});
 
 for (const prepared of [false, true]) {
   test(`formation sans remise : pipeline ${prepared ? '1G-C puis historique' : 'historique v42'} conservé`, async () => {

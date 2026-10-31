@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import AdminEmailNotifications from '../components/AdminEmailNotifications';
 import { supabase } from '../lib/supabaseClient';
 import {
   filterStripeRows,
@@ -23,6 +24,8 @@ function formatDate(value) {
 }
 
 export default function AdminStripePostPayment() {
+  const [searchParams] = useSearchParams();
+  const transactionId = searchParams.get('transaction');
   const [activeTab, setActiveTab] = useState('transactions');
   const [search, setSearch] = useState('');
   const [caseStatus, setCaseStatus] = useState('open');
@@ -46,8 +49,13 @@ export default function AdminStripePostPayment() {
       if (profileError) throw profileError;
       if (profile?.role !== 'admin') throw new Error('Cette page est réservée au rôle administrateur.');
 
+      const transactionQuery = supabase.from('stripe_payment_transactions').select('*').order('created_at', { ascending: false }).limit(250);
+      if (transactionId) {
+        if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(transactionId)) throw new Error('Référence de transaction invalide.');
+        transactionQuery.eq('id',transactionId);
+      }
       const results = await Promise.all([
-        supabase.from('stripe_payment_transactions').select('*').order('created_at', { ascending: false }).limit(250),
+        transactionQuery,
         supabase.from('stripe_refunds').select('*').order('last_event_created_at', { ascending: false }).limit(250),
         supabase.from('stripe_disputes').select('*').order('last_event_created_at', { ascending: false }).limit(250),
         supabase.from('stripe_reconciliation_cases').select('*').order('last_seen_at', { ascending: false }).limit(250),
@@ -68,7 +76,7 @@ export default function AdminStripePostPayment() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [transactionId]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => { loadData(); }, 0);
@@ -82,8 +90,9 @@ export default function AdminStripePostPayment() {
         caseStatus === 'open' ? ['pending', 'reviewed'].includes(row.status) : row.status === caseStatus
       ))
       : rows;
-    return filterStripeRows(filtered, search);
-  }, [activeTab, caseStatus, data, search]);
+    const scoped = activeTab === 'transactions' && transactionId ? filtered.filter((row)=>row.id === transactionId) : filtered;
+    return filterStripeRows(scoped, search);
+  }, [activeTab, caseStatus, data, search, transactionId]);
 
   async function runReconciliation(kind) {
     setRunning(kind);
@@ -149,6 +158,8 @@ export default function AdminStripePostPayment() {
 
       {error && <div className="admin-stripe__message is-error" role="alert">{error}</div>}
       {feedback && <div className="admin-stripe__message is-success" role="status">{feedback}</div>}
+      <AdminEmailNotifications />
+      {transactionId && <p>Dossier de la transaction {transactionId}. <Link to="/admin/stripe-apres-paiement">Afficher toutes les transactions</Link></p>}
 
       <nav className="admin-stripe__tabs" aria-label="Registres Stripe">
         {Object.entries(TABS).map(([key, label]) => (

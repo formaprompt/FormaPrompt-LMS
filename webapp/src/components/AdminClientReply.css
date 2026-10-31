@@ -1,0 +1,17 @@
+.admin-client-reply { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #475569; color: #e2e8f0; }
+.admin-client-reply h3 { color: #f8fafc; margin: 0 0 .75rem; }
+.admin-client-reply p { margin: .75rem 0; line-height: 1.6; }
+.admin-client-reply small { display: block; color: #cbd5e1; line-height: 1.6; }
+.admin-client-reply__address { overflow-wrap: anywhere; user-select: all; }
+.admin-client-reply a:focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
+.admin-client-reply__form fieldset { display: grid; gap: .8rem; border: 0; padding: 0; margin: 0; min-width: 0; }
+.admin-client-reply__form label { display: grid; gap: .4rem; }
+.admin-client-reply__form input, .admin-client-reply__form textarea { box-sizing: border-box; width: 100%; min-width: 0; color: #f8fafc; background: #0f131b; border: 1px solid #64748b; border-radius: .4rem; padding: .7rem; }
+.admin-client-reply__form textarea { font: inherit; }
+.admin-client-reply__form ul { padding: 0; list-style: none; display: grid; gap: .5rem; }
+.admin-client-reply__form li { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; overflow-wrap: anywhere; }
+.admin-client-reply__form li button { color: #f8fafc; background: #334155; border: 1px solid #64748b; border-radius: .4rem; padding: .4rem; cursor: pointer; }
+.admin-client-reply__review { margin: 1rem 0; border: 1px solid #60a5fa; padding: .8rem; border-radius: .5rem; overflow-wrap: anywhere; }
+.admin-client-reply__body { white-space: pre-wrap; }
+.admin-client-reply > .btn { margin: .5rem .5rem .5rem 0; }
+.admin-client-reply :focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
