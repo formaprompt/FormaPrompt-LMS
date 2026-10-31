@@ -66,6 +66,7 @@ export default function Contact() {
   const emailRef = useRef(null);
   const messageRef = useRef(null);
   const statusRef = useRef(null);
+  const submissionIdRef = useRef(null);
 
   const fieldRefs = {
     name: nameRef,
@@ -113,17 +114,19 @@ export default function Contact() {
     };
 
     try {
-      const { error } = await supabase
-        .from('contact_requests')
-        .insert([request]);
+      submissionIdRef.current ||= crypto.randomUUID();
+      const { data, error } = await supabase.functions.invoke('submit-contact-request', {
+        body: { ...request, submissionId: submissionIdRef.current },
+      });
 
-      if (error) throw error;
+      if (error || !data?.accepted) throw error || new Error('contact_not_accepted');
 
       setStatus('success');
       setFormData(initialFormData);
+      submissionIdRef.current = null;
       focusAfterRender(statusRef);
-    } catch (error) {
-      console.error('Échec de la demande de contact', error);
+    } catch {
+      console.error('Échec de la demande de contact');
       setStatus('error');
       focusAfterRender(statusRef);
     }

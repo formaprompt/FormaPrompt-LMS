@@ -25,6 +25,17 @@ verify_jwt = true
 [functions.admin-commercial-cycle]
 verify_jwt = true
 
+# Same public operation as the existing contact form. Server validates fields,
+# bounds requests, persists first, and sends the admin alert in the background.
+[functions.submit-contact-request]
+verify_jwt = false
+
+[functions.admin-email-notifications]
+verify_jwt = true
+
+[functions.admin-reply-client]
+verify_jwt = true
+
 [functions.admin-reconcile-stripe]
 verify_jwt = true
 

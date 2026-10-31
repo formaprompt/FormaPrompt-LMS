@@ -2,10 +2,11 @@ const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 export class SmtpReceiptError extends Error {
-  constructor(code) {
+  constructor(code, outcome = 'not_sent') {
     super(code);
     this.name = 'SmtpReceiptError';
     this.code = code;
+    this.outcome = outcome;
   }
 }
 
@@ -44,7 +45,7 @@ function wrapBase64(value) {
 
 function safeHeaderAddress(value) {
   const normalized = String(value || '').trim().toLowerCase();
-  if (!/^[^\s@<>\r\n]+@[^\s@<>\r\n]+\.[^\s@<>\r\n]+$/.test(normalized)) {
+  if (!/^[^\s@<>,;:"()[\]\\\r\n]+@[^\s@<>,;:"()[\]\\\r\n]+\.[^\s@<>,;:"()[\]\\\r\n]+$/.test(normalized)) {
     throw new SmtpReceiptError('smtp_recipient_invalid');
   }
   return normalized;
@@ -94,7 +95,7 @@ export function buildWithdrawalReceiptEmail(receipt, fromAddress, contactEmail =
   };
 }
 
-export function buildCommercialEmail({ recipientEmail, subject, body, messageId }, fromAddress) {
+export function buildCommercialEmail({ recipientEmail, subject, body, messageId, replyTo, attachments = [] }, fromAddress) {
   const to = safeHeaderAddress(recipientEmail);
   const from = safeHeaderAddress(fromAddress);
   const normalizedSubject = String(subject || '').trim();
@@ -119,12 +120,42 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId 
     'Content-Type: text/plain; charset=UTF-8',
     'Content-Transfer-Encoding: base64',
   ];
+  if (replyTo) headers.splice(2, 0, `Reply-To: <${safeHeaderAddress(replyTo)}>`);
+  let content = wrapBase64(base64Utf8(normalizedBody));
+  if (attachments.length) {
+    // Attachments are validated before this encoder; enforce a second, bounded
+    // transport guard even when called by another server-side workflow.
+    if (attachments.length > 3 || attachments.reduce((sum, file) => sum + file.bytes?.length, 0) > 6 * 1024 * 1024) {
+      throw new SmtpReceiptError('smtp_attachments_invalid');
+    }
+    const boundary = `fp-${crypto.randomUUID()}`;
+    headers.splice(headers.findIndex((line) => line.startsWith('Content-Type:')), 2,
+      `Content-Type: multipart/mixed; boundary="${boundary}"`);
+    const parts = [`--${boundary}`, 'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64', '', content];
+    for (const [index, file] of attachments.entries()) {
+      if (!(file.bytes instanceof Uint8Array) || !['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.mime)
+        || !file.name || /[\r\n]/.test(file.name) || encoder.encode(file.name).length > 150) {
+        throw new SmtpReceiptError('smtp_attachments_invalid');
+      }
+      const filename = encodeURIComponent(file.name).replace(/['()*]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
+      let binary = '';
+      for (let offset = 0; offset < file.bytes.length; offset += 8192) {
+        binary += String.fromCharCode(...file.bytes.subarray(offset, offset + 8192));
+      }
+      parts.push(`--${boundary}`, `Content-Type: ${file.mime}`,
+        `Content-Disposition: attachment; filename="document-${index + 1}.${file.mime === 'application/pdf' ? 'pdf' : 'docx'}"; filename*=UTF-8''${filename}`,
+        'Content-Transfer-Encoding: base64', '', wrapBase64(btoa(binary)));
+    }
+    parts.push(`--${boundary}--`);
+    content = parts.join('\r\n');
+  }
   return {
     from,
     to,
     subject: normalizedSubject,
     body: normalizedBody,
-    data: `${headers.join('\r\n')}\r\n\r\n${wrapBase64(base64Utf8(normalizedBody))}\r\n`,
+    data: `${headers.join('\r\n')}\r\n\r\n${content}\r\n`,
   };
 }
 
@@ -137,13 +168,22 @@ async function readReply(connection) {
     response += decoder.decode(buffer.subarray(0, count));
     const lines = response.split(/\r?\n/).filter(Boolean);
     const last = lines.at(-1) || '';
-    if (/^\d{3} /.test(last)) return { code: Number(last.slice(0, 3)), response };
+    if (response.endsWith('\n') && /^\d{3} /.test(last)) return { code: Number(last.slice(0, 3)), response };
     if (response.length > 32768) throw new SmtpReceiptError('smtp_response_too_large');
   }
 }
 
 async function writeLine(connection, value) {
-  await connection.write(encoder.encode(`${value}\r\n`));
+  await writeAll(connection, encoder.encode(`${value}\r\n`));
+}
+
+async function writeAll(connection, bytes) {
+  let offset = 0;
+  while (offset < bytes.length) {
+    const count = await connection.write(bytes.subarray(offset));
+    if (!Number.isInteger(count) || count <= 0) throw new SmtpReceiptError('smtp_connection_closed');
+    offset += count;
+  }
 }
 
 async function command(connection, value, expectedCodes) {
@@ -194,6 +234,8 @@ export async function sendCommercialEmail(message, options = {}) {
   const connection = await connectTls({ hostname: config.host, port: config.port });
   const timeoutMs = options.timeoutMs || 12000;
   let timeoutId;
+  let dataStarted = false;
+  let acceptedByServer = false;
   try {
     return await Promise.race([
       (async () => {
@@ -206,16 +248,24 @@ export async function sendCommercialEmail(message, options = {}) {
         await command(connection, `MAIL FROM:<${email.from}>`, [250]);
         await command(connection, `RCPT TO:<${email.to}>`, [250, 251]);
         await command(connection, 'DATA', [354]);
-        await connection.write(encoder.encode(`${email.data}.\r\n`));
+        dataStarted = true;
+        await writeAll(connection, encoder.encode(`${email.data}.\r\n`));
         const accepted = await readReply(connection);
         if (accepted.code !== 250) throw new SmtpReceiptError(`smtp_rejected_${accepted.code || 'unknown'}`);
-        await command(connection, 'QUIT', [221]);
+        acceptedByServer = true;
+        // Once DATA has been accepted, a broken QUIT must not imply failure and
+        // encourage a duplicate. Closing the connection is sufficient here.
         return { status: 'sent', messageId: message.messageId };
       })(),
       new Promise((_, reject) => {
         timeoutId = setTimeout(() => reject(new SmtpReceiptError('smtp_timeout')), timeoutMs);
       }),
     ]);
+  } catch (error) {
+    if (acceptedByServer) return { status: 'sent', messageId: message.messageId };
+    const explicitlyRejected = error instanceof SmtpReceiptError && /^smtp_rejected_\d{3}$/.test(error.code);
+    if (dataStarted && !explicitlyRejected) throw new SmtpReceiptError('smtp_delivery_uncertain', 'uncertain');
+    throw error;
   } finally {
     clearTimeout(timeoutId);
     try { connection.close(); } catch { /* connexion déjà fermée */ }

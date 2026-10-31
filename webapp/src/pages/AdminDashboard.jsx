@@ -42,6 +42,8 @@ import {
 import SignaturePad from '../components/SignaturePad';
 import AdminCourseCohorts from '../components/AdminCourseCohorts';
 import AdminLearnerDirectory from '../components/AdminLearnerDirectory';
+import AdminClientReply from '../components/AdminClientReply';
+import AdminEmailNotifications from '../components/AdminEmailNotifications';
 import './AdminDashboard.css';
 
 const MAX_BLOG_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -1966,6 +1968,7 @@ export default function AdminDashboard() {
             {activeTab === 'contacts' && (
               <div>
                 <h2 style={{ marginBottom: '1.5rem' }}>Demandes de Devis et Contacts</h2>
+                <AdminEmailNotifications />
                 <p style={{ marginBottom: '1.5rem' }}>
                   <Link className="btn btn-primary" to="/admin/commercial">
                     Ouvrir le cycle commercial complet
@@ -2000,6 +2003,7 @@ export default function AdminDashboard() {
                         <div style={{ background: '#1e1e1e', padding: '1rem', borderRadius: '6px', color: '#ddd', whiteSpace: 'pre-wrap' }}>
                           {c.message}
                         </div>
+                          <AdminClientReply request={c} />
                       </div>
                     ))
                   )}

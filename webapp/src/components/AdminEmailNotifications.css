@@ -1,0 +1,8 @@
+.admin-email-notifications { border: 1px solid #64748b; border-radius: .75rem; padding: 1rem; margin-bottom: 1rem; background: #171b24; color: #e2e8f0; }
+.admin-email-notifications summary { cursor: pointer; font-weight: 700; }
+.admin-email-notifications p { line-height: 1.6; }
+.admin-email-notifications ul { list-style: none; padding: 0; display: grid; gap: .8rem; }
+.admin-email-notifications li { display: grid; gap: .4rem; border-top: 1px solid #475569; padding-top: .8rem; overflow-wrap: anywhere; }
+.admin-email-notifications button { justify-self: start; }
+.admin-email-notifications a { color: #93c5fd; text-decoration: underline; }
+.admin-email-notifications :focus-visible { outline: 3px solid #60a5fa; outline-offset: 3px; }
