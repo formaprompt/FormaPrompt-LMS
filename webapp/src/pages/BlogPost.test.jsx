@@ -105,4 +105,22 @@ describe('article de blog et métadonnées SEO', () => {
       mainEntityOfPage: 'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
     });
   });
+
+  it('utilise le logo public pour les métadonnées sans ajouter de visuel à un article sans image', async () => {
+    singlePostMock.mockResolvedValue({ data: {
+      title: 'Genie 4', slug: 'meilleur-generateur-prompts-comparatif-2026',
+      category: 'Outils IA', excerpt: 'Décryptage de Genie 4.', content: 'Texte de l’article.',
+      image_url: null, image_alt: null, author: 'Thierry FREZARD', created_at: '2026-10-31T11:22:43.198571+00:00',
+    }, error: null });
+    const { container } = renderBlogPost();
+    await screen.findByRole('heading', { level: 1, name: 'Genie 4' });
+    expect(container.querySelector('.blog-post-hero')).toBeNull();
+    expect(container.querySelector('article img')).toBeNull();
+    await waitFor(() => {
+      expect(document.querySelector('meta[property="og:image"]')).toHaveAttribute('content', 'https://formaprompt.com/assets/logo-new.png');
+      expect(document.querySelector('meta[name="twitter:image"]')).toHaveAttribute('content', 'https://formaprompt.com/assets/logo-new.png');
+      const schema = JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent);
+      expect(schema.image).toEqual(['https://formaprompt.com/assets/logo-new.png']);
+    });
+  });
 });
