@@ -15,6 +15,7 @@ export default function Layout() {
     '/informations-precontractuelles',
     '/contact',
     '/disponibilites',
+    '/diagnostic-ia',
     '/faq',
     '/aide/bien-demarrer',
     '/feedback',
@@ -29,7 +30,7 @@ export default function Layout() {
     '/studio',
   ];
   const pageProvidesDedicatedSeo = dedicatedSeoRoutes.some((route) => (
-    route === '/' ? pathname === '/' : pathname.startsWith(route)
+    route === '/' || route === '/diagnostic-ia' ? pathname === route : pathname.startsWith(route)
   ));
 
   return (

@@ -15,12 +15,30 @@ export function publicRoutes(sitemap) {
   assert.ok(urls.length > 0, 'Sitemap vide');
   assert.equal(new Set(urls).size, urls.length, 'URL dupliquée dans le sitemap');
   for (const url of urls) {
-    assert.equal(new URL(url).origin, canonicalOrigin, 'Origine incorrecte dans le sitemap');
-    assert.notEqual(new URL(url).pathname, '/formation-ia-formateur', 'Ancienne URL dans le sitemap');
+    const parsed = new URL(url);
+    assert.equal(parsed.origin, canonicalOrigin, 'Origine incorrecte dans le sitemap');
+    assert.ok(!parsed.search && !parsed.hash, 'Paramètre ou fragment dans le sitemap');
+    assert.notEqual(parsed.pathname, '/formation-ia-formateur', 'Ancienne URL dans le sitemap');
+    assert.ok(!/^\/(?:feedback|retractation|login|register|forgot-password|reset-password|dashboard|admin|course|parcours|formateur|attestations|dossiers|aide|paiement-reussi|reservation-formation)(?:\/|$)|^\/diagnostic-ia\//.test(parsed.pathname),
+      `Route privée ou non indexable dans le sitemap : ${parsed.pathname}`);
   }
-  // La rétractation utilise le shell applicatif prévu par .htaccess.
-  return [...new Set([...urls.map(url => new URL(url).pathname).filter(route => route !== '/retractation'),
-    '/diagnostic-ia', '/faq'])];
+  return urls.map(url => new URL(url).pathname);
+}
+
+// Comparer seulement les articles déjà lisibles anonymement sur la page Blog.
+// Aucun accès CMS/privilégié et aucun ajout automatique depuis la base.
+export function checkPublicBlogRoutes(sitemap, posts) {
+  assert.ok(Array.isArray(posts), 'Réponse publique du blog invalide');
+  const expected = publicRoutes(sitemap).filter(route => route.startsWith('/blog/')).sort();
+  const actual = posts.map(post => {
+    assert.match(post.slug || '', /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug public invalide');
+    return `/blog/${post.slug}`;
+  }).sort();
+  assert.equal(new Set(actual).size, actual.length, 'Slug public dupliqué');
+  const missing = actual.filter(route => !expected.includes(route));
+  const unavailable = expected.filter(route => !actual.includes(route));
+  assert.ok(!missing.length && !unavailable.length,
+    `Sitemap/blog désynchronisés. Absents du sitemap : ${missing.join(', ') || 'aucun'}. Non publics : ${unavailable.join(', ') || 'aucun'}`);
 }
 
 export function outputForRoute(route) {
@@ -53,6 +71,7 @@ export function checkPrivateShells(contents) {
 
 export function checkPublicHtml(html, route) {
   const document = new JSDOM(html).window.document;
+  assert.equal(document.querySelectorAll('head > title').length, 1, `Title dupliqué ou absent : ${route}`);
   assert.equal(document.querySelectorAll('h1').length, 1, `H1 incorrect : ${route}`);
   assert.ok(document.querySelector('h1').textContent.trim(), `H1 vide : ${route}`);
   assert.equal(document.querySelectorAll('link[rel="canonical"]').length, 1, `Canonical dupliquée : ${route}`);

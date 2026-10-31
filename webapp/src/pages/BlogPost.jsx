@@ -117,6 +117,11 @@ export default function BlogPost() {
           rehypePlugins={[rehypeSanitize]}
           components={{
             a: BlogVideoLink,
+            // Le titre de l'article constitue déjà l'unique H1 de la page.
+            h1: ({ node, ...props }) => {
+              void node;
+              return <h2 {...props} />;
+            },
             table: ({ node, ...props }) => {
               void node;
               return (
