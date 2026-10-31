@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import SEO from '../components/SEO';
 import { SITE_CONFIG } from '../config/site';
+import BlogVideoLink from '../components/BlogVideoLink';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -45,7 +46,7 @@ export default function BlogPost() {
   const seoDescription = post.meta_description
     || post.excerpt
     || `Lisez l'article ${post.title} sur le blog de FormaPrompt.`;
-  const socialImage = post.image_url || 'https://www.formaprompt.com/assets/blog-cover.png';
+  const socialImage = post.image_url || 'https://formaprompt.com/assets/logo-new.png';
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -115,6 +116,7 @@ export default function BlogPost() {
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeSanitize]}
           components={{
+            a: BlogVideoLink,
             table: ({ node, ...props }) => {
               void node;
               return (
