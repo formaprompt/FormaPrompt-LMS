@@ -75,6 +75,7 @@ describe('article de blog et métadonnées SEO', () => {
       level: 1,
       name: 'Quel est le meilleur générateur de prompts en 2026 ?',
     })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
 
     expect(screen.getByRole('img', {
       name: 'Comparaison visuelle des principales méthodes de création de prompts.',
@@ -104,6 +105,18 @@ describe('article de blog et métadonnées SEO', () => {
       author: { '@type': 'Person', name: 'Thierry FREZARD' },
       mainEntityOfPage: 'https://formaprompt.com/blog/meilleur-generateur-prompts-comparatif-2026',
     });
+  });
+
+  it('conserve un seul H1 quand le contenu Markdown contient son propre titre', async () => {
+    const fixture = await singlePostMock();
+    singlePostMock.mockResolvedValue({ data: {
+      ...fixture.data,
+      content: '# Titre du contenu\n\nTexte de l’article.\n\n## Une section',
+    }, error: null });
+    renderBlogPost();
+    await screen.findByRole('heading', { level: 2, name: 'Titre du contenu' });
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 2, name: 'Une section' })).toBeInTheDocument();
   });
 
   it('utilise le logo public pour les métadonnées sans ajouter de visuel à un article sans image', async () => {

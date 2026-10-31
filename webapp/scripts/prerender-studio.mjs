@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from '@playwright/test';
 import { preview } from 'vite';
-import { checkPublicHtml, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
+import { checkPublicBlogRoutes, checkPublicHtml, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
 
 const host = '127.0.0.1';
 const port = 4175;
@@ -148,7 +148,9 @@ try {
     await page.getByRole('heading', { level: 1, name: pageConfig.heading }).waitFor();
     await page.waitForFunction(() => Boolean(document.querySelector('link[rel="canonical"]')));
     if (blogResponse) {
-      if (!(await blogResponse).ok()) throw new Error('Lecture publique du blog échouée');
+      const response = await blogResponse;
+      if (!response.ok()) throw new Error('Lecture publique du blog échouée');
+      checkPublicBlogRoutes(sitemap, await response.json());
       await page.getByText('Chargement des articles...', { exact: true }).waitFor({ state: 'hidden' });
     }
     if (mutationAttempted) throw new Error(`Opération non autorisée pendant le pré-rendu : ${pageConfig.name}`);

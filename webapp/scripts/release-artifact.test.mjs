@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPrivateShells, checkPublicHtml, checkSafeFile, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
+import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPrivateShells, checkPublicBlogRoutes, checkPublicHtml, checkSafeFile, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
 
 const initialShell = '<html><head><title>FormaPrompt</title></head><body><div id="root"></div><script type="module" src="/assets/main.js"></script></body></html>';
 
@@ -42,12 +42,39 @@ test('les chemins de sortie préservent les six pages et les cibles Apache', () 
 });
 
 test('la liste publique refuse www, doublons et ancienne URL, sans pré-rendre les parcours privés', () => {
-  const sitemap = '<loc>https://formaprompt.com/contact</loc><loc>https://formaprompt.com/retractation</loc>';
+  const sitemap = '<loc>https://formaprompt.com/contact</loc>';
   assert.ok(publicRoutes(sitemap).includes('/contact'));
-  assert.ok(!publicRoutes(sitemap).includes('/retractation'));
+  assert.deepEqual(publicRoutes(sitemap), ['/contact']);
+  for (const route of ['/feedback', '/retractation', '/login', '/dashboard', '/admin/dossiers', '/course/prive', '/diagnostic-ia/questionnaire']) {
+    assert.throws(() => publicRoutes(`<loc>https://formaprompt.com${route}</loc>`), /non indexable/);
+  }
   assert.throws(() => publicRoutes(sitemap + sitemap));
   assert.throws(() => publicRoutes('<loc>https://www.formaprompt.com/contact</loc>'));
   assert.throws(() => publicRoutes('<loc>https://formaprompt.com/formation-ia-formateur</loc>'));
+});
+
+test('le sitemap correspond au routage React et contient diagnostic et FAQ sans liste parallèle', () => {
+  const sitemap = readFileSync(new URL('../public/sitemap.xml', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8');
+  const routes = publicRoutes(sitemap);
+  const declared = [...app.matchAll(/<Route\s+path="([^"]+)"/g)].map(match => match[1]);
+  for (const route of routes) {
+    const relative = route.replace(/^\/|\/$/g, '');
+    assert.ok(route === '/' || declared.some(pattern => {
+      const expression = pattern.replace(/:[a-zA-Z]+/g, '[^/]+');
+      return pattern !== '*' && new RegExp(`^${expression}$`).test(relative);
+    }), `Route React absente : ${route}`);
+  }
+  assert.ok(routes.includes('/diagnostic-ia'));
+  assert.ok(routes.includes('/faq'));
+});
+
+test('le pré-rendu refuse un article public oublié ou une entrée blog non publique', () => {
+  const sitemap = '<loc>https://formaprompt.com/blog/article-public</loc>';
+  assert.doesNotThrow(() => checkPublicBlogRoutes(sitemap, [{ slug: 'article-public' }]));
+  assert.throws(() => checkPublicBlogRoutes(sitemap, [{ slug: 'article-public' }, { slug: 'autre-public' }]), /Absents du sitemap : \/blog\/autre-public/);
+  assert.throws(() => checkPublicBlogRoutes(sitemap, []), /Non publics : \/blog\/article-public/);
+  assert.throws(() => checkPublicBlogRoutes(sitemap, [{ slug: '../prive' }]), /Slug public invalide/);
 });
 
 test('les deux guides GPT ont une route publique pré-rendue', () => {
@@ -71,6 +98,7 @@ test('le guide Claude rejoint les routes publiques sans perdre le billet publié
 test('une page publique doit avoir un H1 et la canonical exacte, sans noindex', () => {
   const html = '<html><head><title>Contact</title><meta name="description" content="Contact"><link rel="canonical" href="https://formaprompt.com/contact"></head><body><h1>Contact</h1></body></html>';
   assert.doesNotThrow(() => checkPublicHtml(html, '/contact'));
+  assert.throws(() => checkPublicHtml(html.replace('</head>', '<title>Second titre</title></head>'), '/contact'), /Title dupliqué/);
   assert.throws(() => checkPublicHtml(html.replace('/contact"', '/contact/"'), '/contact'));
   assert.throws(() => checkPublicHtml(html.replace('</body>', '<h1>Autre titre</h1></body>'), '/contact'));
   assert.throws(() => checkPublicHtml(html.replace('</head>', '<meta name="robots" content="noindex"></head>'), '/contact'));
