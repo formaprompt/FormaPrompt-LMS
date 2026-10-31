@@ -1,6 +1,12 @@
 // Généré par scripts/generatePublicCourseMetadata.mjs.
 // Aucun cours, exercice, corrigé ou URL de ressource payante ne doit être ajouté ici.
 export const courseCatalog = {
+  "formation-ia-generative-elearning": {
+    title: "IA générative - e-learning",
+    landingPath: "/formation-ia-generative-elearning",
+    durationLabel: "Environ 13 heures à votre rythme",
+    exercises: [],
+  },
   "formation-ia": {
     "title": "IA générative : comprendre, pratiquer et sécuriser ses usages",
     "landingPath": "/formation-ia-generative",

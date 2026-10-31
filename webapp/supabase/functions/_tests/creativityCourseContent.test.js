@@ -1,3 +1,4 @@
+import * as iagPositioning from '../_shared/iagPositioning.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -8,9 +9,14 @@ import * as officeHelpers from '../_shared/officeResources.js';
 import { courseCatalog } from '../_shared/paidCourseCatalog.js';
 import { creativityCourseCatalog } from '../_shared/creativityCourseCatalog.js';
 const ids = Object.keys(creativityCourseCatalog);
+test('les symboles IAG exportés réellement sont disponibles pour le banc de contenu', () => {
+  assert.equal(iagPositioning.IAG_COURSE_ID, 'formation-ia-generative-elearning');
+  assert.equal(typeof iagPositioning.normalizeIagAnswers, 'function');
+  assert.equal(typeof iagPositioning.requireIagPositioning, 'function');
+});
 const source = readFileSync(new URL('../paid-course-content/index.ts', import.meta.url), 'utf8').replace(/^import[\s\S]*?from\s+['"][^'"]+['"];\s*/gm, '');
 const code = ts.transpile(source, { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext });
-function fixture(access) {
+function fixture(access, { includeIagSymbols = true } = {}) {
   let handler;
   const reads = [];
   const client = { auth: { getUser: async () => ({ data: { user: { id: 'learner' } }, error: null }) }, from: table => {
@@ -19,7 +25,7 @@ function fixture(access) {
     const query = { select: () => query, eq: (key,value) => { filters.push([key,value]); return query; }, maybeSingle: async () => ({ data: table === 'profiles' ? { role: 'user' } : access && filters.every(([key,value]) => access[key] === value) ? access : null, error: null }) };
     return query;
   }, storage: { from: () => { throw new Error('Aucune ressource Storage fictive ne doit être signée.'); } } };
-  const values = { ...accessHelpers, ...excelHelpers, ...officeHelpers, courseCatalog, createClient: () => client, corsHeaders: {}, jsonResponse: (value,status=200) => new Response(JSON.stringify(value),{status}), Deno: { env: { get: () => 'configured' }, serve: h => { handler=h; } } };
+  const values = { ...(includeIagSymbols ? iagPositioning : {}), ...accessHelpers, ...excelHelpers, ...officeHelpers, courseCatalog, createClient: () => client, corsHeaders: {}, jsonResponse: (value,status=200) => new Response(JSON.stringify(value),{status}), Deno: { env: { get: () => 'configured' }, serve: h => { handler=h; } } };
   new Function(...Object.keys(values), code)(...Object.values(values));
   return { reads, send: (body,token=true) => handler(new Request('https://local.test',{method:'POST',headers:{...(token ? { Authorization: 'Bearer token' } : {}), 'Content-Type':'application/json'},body:JSON.stringify(body)})) };
 }
@@ -46,6 +52,13 @@ test('un droit de groupe ne donne pas le contenu individuel et un autre compte n
   const other=fixture({user_id:'other',course_id:'ia-creativite-individuel',status:'active',expires_at:null});assert.equal((await other.send({action:'course',courseId:'ia-creativite-individuel'})).status,403);
 });
 test('anonyme et variante inconnue sont refusés',async()=>{assert.equal((await fixture(null).send({action:'course',courseId:ids[0]},false)).status,401);assert.equal((await fixture(null).send({action:'course',courseId:'ia-creativite'})).status,400);});
+test('contre-test du banc incomplet : sans les symboles importés, un droit Créativité actif ne peut pas atteindre la validation réelle', async () => {
+ const id = ids[0];
+ const broken = fixture({ user_id: 'learner', course_id: id, status: 'active', expires_at: null }, { includeIagSymbols: false });
+ const response = await broken.send({ action: 'course', courseId: id });
+ assert.equal(response.status, 409);
+ assert.equal(broken.reads.some(({ table }) => table === 'course_access'), false);
+});
 test('les métadonnées publiques ne contiennent aucune leçon ou support privé',()=>{
  const text=readFileSync(new URL('../../../src/data/courseCatalog.js',import.meta.url),'utf8');assert.doesNotMatch(text,/initialPositioningRequired|textResources|markdown|guidedSteps|lesson|glossary|\/assets\//);
  for(const id of ids){assert.match(text,new RegExp(id));assert.equal(courseCatalog[id].exercises.length,6)}

@@ -108,6 +108,7 @@ export default function Header() {
           
           <NavigationGroup id="navigation-formations" label="Formations">
               <Link to="/formation-ia-generative" onClick={() => setIsMenuOpen(false)}>IA Générative</Link>
+              <Link to="/formation-ia-generative-elearning" onClick={() => setIsMenuOpen(false)}>IA générative — e-learning</Link>
               <Link to="/formation-ia-act-conformite" onClick={() => setIsMenuOpen(false)}>IA &amp; AI Act</Link>
               <Link to="/formation-prompt-engineering" onClick={() => setIsMenuOpen(false)}>Prompt Engineering</Link>
               <Link to="/formation-agents-ia-workflows" onClick={() => setIsMenuOpen(false)}>Agents IA &amp; Workflows</Link>

@@ -7,6 +7,7 @@ import { fetchActiveCourseAccess } from '../lib/courseAccess';
 import { BOOKING_COURSES, DEFAULT_BOOKING_COURSE_ID, getBookingCourse } from '../data/bookingCatalog';
 import { BUREAUTIQUE_PURCHASES, CREATIVITY_PURCHASES } from '../../supabase/functions/_shared/purchaseConfig.js';
 import CreativityPurchaseConfirmation from '../components/CreativityPurchaseConfirmation';
+import IagPurchaseConfirmation from '../components/IagPurchaseConfirmation.jsx';
 import BureautiquePurchaseConfirmation from '../components/BureautiquePurchaseConfirmation';
 import { useGoogleAdsPurchase } from '../hooks/useGoogleAdsPurchase';
 
@@ -14,6 +15,7 @@ export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   useGoogleAdsPurchase(searchParams.get('session_id'));
   const offerId = searchParams.get('course');
+  if (offerId === 'formation-ia-generative-elearning') return <IagPurchaseConfirmation />;
   if (Object.hasOwn(CREATIVITY_PURCHASES, offerId)) return <CreativityPurchaseConfirmation key={offerId} offer={CREATIVITY_PURCHASES[offerId]} />;
   if (Object.hasOwn(BUREAUTIQUE_PURCHASES, offerId)) {
     return <BureautiquePurchaseConfirmation key={offerId} offer={BUREAUTIQUE_PURCHASES[offerId]} />;

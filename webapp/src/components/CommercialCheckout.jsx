@@ -11,6 +11,7 @@ import {
   validateCommercialCheckoutRequest,
 } from '../../supabase/functions/_shared/purchaseConfig.js'
 import { supabase } from '../lib/supabaseClient'
+import { pendingCourseConfirmationPath } from '../lib/iagPurchaseConfirmation.js'
 import './CommercialCheckout.css'
 
 const EMPTY_CONSENTS = Object.freeze({
@@ -189,7 +190,7 @@ export default function CommercialCheckout({
         return
       }
       if (data?.confirmationPending) {
-        window.location.assign(`/paiement-reussi?course=${encodeURIComponent(courseId)}`)
+        window.location.assign(pendingCourseConfirmationPath(courseId, data))
         return
       }
       const checkoutUrl = new URL(data?.url)

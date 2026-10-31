@@ -11,6 +11,7 @@ const StudioPage = lazy(() => import("./studio/StudioPage"));
 const Home = lazy(() => import("./pages/Home"));
 const AdvertisingConsent = lazy(() => import("./components/AdvertisingConsent"));
 const FormationIA = lazy(() => import("./pages/FormationIA"));
+const FormationIagElearning = lazy(() => import("./pages/FormationIagElearning.jsx"));
 const FormationAIAct = lazy(() => import("./pages/FormationAIAct"));
 const FormationPrompt = lazy(() => import("./pages/FormationPrompt"));
 const FormationAgentsIA = lazy(() => import("./pages/FormationAgentsIA"));
@@ -63,6 +64,7 @@ const CourseBooking = lazy(() => import("./pages/CourseBooking"));
 const AttendanceSheet = lazy(() => import("./pages/AttendanceSheet"));
 const AttestationDocument = lazy(() => import("./pages/AttestationDocument"));
 const IssuedAttestationDocument = lazy(() => import("./pages/IssuedAttestationDocument"));
+const IagCertificatePage = lazy(() => import("./pages/IagCertificatePage.jsx"));
 const AdminEnrollments = lazy(() => import("./pages/AdminEnrollments"));
 const AdminLearnerRecord = lazy(() => import("./pages/AdminLearnerRecord"));
 const AdminAccessIncidents = lazy(() => import("./pages/AdminAccessIncidents"));
@@ -104,6 +106,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="studio" element={<StudioErrorBoundary><StudioPage /></StudioErrorBoundary>} />
             <Route path="formation-ia-generative" element={<FormationIA />} />
+            <Route path="formation-ia-generative-elearning" element={<FormationIagElearning />} />
             <Route path="formation-ia-act-conformite" element={<FormationAIAct />} />
             <Route path="formation-prompt-engineering" element={<FormationPrompt />} />
             <Route path="formation-agents-ia-workflows" element={<FormationAgentsIA />} />
@@ -175,6 +178,7 @@ function App() {
             <Route path="admin/emargements/:bookingId" element={<AdminShell><AttendanceSheet /></AdminShell>} />
             <Route path="admin/attestations/:submissionId/:documentType" element={<AttestationDocument />} />
             <Route path="attestations/:issuanceId" element={<IssuedAttestationDocument />} />
+            <Route path="course/formation-ia-generative-elearning/certificats/:issuanceId" element={<RequireAuth><IagCertificatePage /></RequireAuth>} />
             <Route path="dossiers/:enrollmentId/documents/:documentType" element={<RequireAuth><TrainingDocument /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Route>

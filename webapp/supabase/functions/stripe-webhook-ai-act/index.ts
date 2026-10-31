@@ -1,3 +1,4 @@
+import { IAG_ELEARNING_COURSE_ID, resolveIagIntentPurchase } from '../_shared/iagOffer.js';
 import Stripe from 'npm:stripe@^22';
 import { createClient } from 'npm:@supabase/supabase-js@2.105.1';
 import {
@@ -122,16 +123,19 @@ Deno.serve(async (request) => {
       if (validationError) return new Response(validationError, { status: 400 });
       validationStatus = 'validated';
     } else {
-      const purchase = getPurchaseConfig(object.metadata?.course_id);
+      let purchase = getPurchaseConfig(object.metadata?.course_id);
       if (!purchase) return new Response('Formation Stripe inconnue.', { status: 400 });
-      const priceId = requiredEnv(purchase.priceEnvName);
+      let priceId = purchase.courseId === IAG_ELEARNING_COURSE_ID ? '' : requiredEnv(purchase.priceEnvName);
 
+      if (purchase.courseId === IAG_ELEARNING_COURSE_ID && requiresLegacyPaymentReview(object)) {
+        return new Response('Preuve commerciale IAG obligatoire.', { status: 400 });
+      }
       if (requiresLegacyPaymentReview(object)) {
         const legacyValidationError = validateCompletedCourseSessionBase(object, purchase, priceId);
         if (legacyValidationError) return new Response(legacyValidationError, { status: 400 });
         validationStatus = 'legacy_review';
       } else {
-        if (!object.metadata?.promo_redemption_id) {
+        if (purchase.courseId !== IAG_ELEARNING_COURSE_ID && !object.metadata?.promo_redemption_id) {
           const validationError = validateCompletedCourseSession(object, purchase, priceId);
           if (validationError) return new Response(validationError, { status: 400 });
         }
@@ -139,7 +143,7 @@ Deno.serve(async (request) => {
         const checkoutIntentId = object.metadata!.checkout_intent_id;
         const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
           .from('commercial_checkout_intents')
-          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id, cgv_document_version_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id')
+          .select('id, user_id, course_id, offer_classification, sales_context, access_start_choice, access_activation_policy, status, stripe_checkout_session_id, cgv_document_version_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id, checkout_configuration_locked_at')
           .eq('id', checkoutIntentId)
           .maybeSingle();
         if (checkoutIntentError) {
@@ -147,6 +151,14 @@ Deno.serve(async (request) => {
           return new Response('Vérification commerciale impossible.', { status: 500 });
         }
 
+        if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+          try {
+            purchase = resolveIagIntentPurchase(purchase, checkoutIntent, (name: string) => Deno.env.get(name));
+            priceId = requiredEnv(purchase.priceEnvName);
+          } catch {
+            return new Response('Configuration tarifaire IAG incohérente.', { status: 400 });
+          }
+        }
         const currentPromotionCheckout = checkoutIntent?.original_amount_cents != null;
         const validationError = currentPromotionCheckout
           ? validateCompletedCoursePromotionSession(object, purchase, priceId, checkoutIntent)
@@ -205,7 +217,7 @@ Deno.serve(async (request) => {
     const checkoutIntentId = object.metadata?.checkout_intent_id;
     const { data: checkoutIntent, error: checkoutIntentError } = await supabaseAdmin
       .from('commercial_checkout_intents')
-      .select('id, user_id, course_id, status, stripe_checkout_session_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id')
+      .select('id, user_id, course_id, status, stripe_checkout_session_id, original_amount_cents, discount_amount_cents, final_amount_cents, promo_redemption_id, catalog_price_id, stripe_product_id, checkout_configuration_locked_at')
       .eq('id', checkoutIntentId)
       .maybeSingle();
     if (checkoutIntentError) {
@@ -213,8 +225,15 @@ Deno.serve(async (request) => {
       return new Response('Vérification commerciale impossible.', { status: 500 });
     }
     if (checkoutIntent?.original_amount_cents != null) {
-      const purchase = getPurchaseConfig(object.metadata?.course_id);
+      let purchase = getPurchaseConfig(object.metadata?.course_id);
       if (!purchase) return new Response('Formation Stripe inconnue.', { status: 400 });
+      if (purchase.courseId === IAG_ELEARNING_COURSE_ID) {
+        try {
+          purchase = resolveIagIntentPurchase(purchase, checkoutIntent, (name: string) => Deno.env.get(name));
+        } catch {
+          return new Response('Configuration tarifaire IAG incohérente.', { status: 400 });
+        }
+      }
       const validationError = validateCoursePromotionEventIdentity(
         object,
         purchase,

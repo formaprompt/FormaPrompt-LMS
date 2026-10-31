@@ -3,6 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, Check, Clock3, Code, Copy, Download, ExternalLink, FileText, Play, Save, Search, Send, Sparkles } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
 import PrerequisiteQuiz from '../components/PrerequisiteQuiz';
+import IagCourseGate from '../components/IagCourseGate.jsx';
+import IagLearningPlayer from '../components/IagLearningPlayer.jsx';
+import IagAssessmentPanel from '../components/IagAssessmentPanel.jsx';
+import { IAG_COURSE_ID } from '../../supabase/functions/_shared/iagPositioning.js';
 import { useAuth } from '../contexts/useAuth';
 import { courseCatalog } from '../data/courseCatalog';
 import { calculateCourseProgress } from '../lib/courseProgress';
@@ -30,6 +34,13 @@ const emptyFinalProjectWork = {
 };
 
 export default function CoursePlayer() {
+  const { id } = useParams();
+  return id === IAG_COURSE_ID
+    ? <IagCourseGate><IagLearningPlayer /></IagCourseGate>
+    : <ExistingCoursePlayer />;
+}
+
+function ExistingCoursePlayer() {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -85,7 +96,7 @@ export default function CoursePlayer() {
           setAccessError(contentResult.error.message);
         }
       } else {
-        const positioningRequired = contentResult.data.initialPositioningRequired !== false;
+        const positioningRequired = id !== IAG_COURSE_ID && contentResult.data.initialPositioningRequired !== false;
         const positioningResult = positioningRequired ? await supabase
           .from('course_positioning_assessments')
           .select('id')
@@ -495,6 +506,8 @@ export default function CoursePlayer() {
           )}
         </div>
       </div>
+
+      {id === IAG_COURSE_ID && <IagAssessmentPanel supabase={supabase} userId={user.id} />}
 
       <CourseProgress
         progress={courseProgress}

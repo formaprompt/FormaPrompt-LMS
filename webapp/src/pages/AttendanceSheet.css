@@ -177,7 +177,7 @@
   }
 
   .header,
-  body > #root footer,
+  body > #root footer.footer,
   .skip-link,
   .attendance-sheet-actions {
     display: none !important;

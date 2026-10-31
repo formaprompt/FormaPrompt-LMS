@@ -240,6 +240,7 @@
 .attestation-paper__result p {
   margin: 0;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .attestation-paper__evaluation-heading {
@@ -409,7 +410,7 @@
   }
 
   .header,
-  body > #root footer,
+  body > #root footer.footer,
   .skip-link,
   .attestation-actions,
   .attestation-warning,

@@ -1,0 +1,45 @@
+.iag-elearning-page .generative-ai-hero p { max-width: 48rem; }
+.iag-elearning-page .iag-hero-price { margin-top: 1.5rem; color: #f6c453; font-weight: 700; }
+.iag-elearning-page .generative-ai-hero { padding-block: clamp(2rem, 4vw, 3.5rem); }
+.iag-elearning-page .generative-ai-hero h1 { font-size: clamp(2rem, 3.5vw, 3.2rem); line-height: 1.12; }
+.iag-elearning-page .generative-ai-lead { font-size: clamp(1rem, 1.4vw, 1.15rem); line-height: 1.6; }
+.iag-elearning-page .generative-ai-hero-visual img { width: 100%; height: auto; aspect-ratio: auto; object-fit: contain; }
+.iag-elearning-page .iag-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding-top: 2rem; }
+.iag-elearning-page .iag-facts article { padding: 1.5rem; border: 1px solid #d6e8e2; border-radius: 16px; background: #fff; }
+.iag-elearning-page .iag-facts svg { color: #075f59; margin-bottom: .75rem; }
+.iag-elearning-page .iag-facts h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+.iag-elearning-page .iag-facts p { margin: 0; }
+.iag-elearning-page :is(#programme, #inscription) { scroll-margin-top: 7rem; }
+.iag-elearning-page .iag-programme { display: grid; gap: 1rem; }
+.iag-elearning-page :is(.iag-programme details, .iag-faq details) { background: #fff; border: 1px solid #d6e8e2; border-radius: 14px; padding: 1.25rem 1.5rem; }
+.iag-elearning-page summary { cursor: pointer; }
+.iag-elearning-page .iag-programme summary h3 { display: inline; font-size: 1.1rem; margin: 0 .75rem; }
+.iag-elearning-page .iag-programme summary > span { color: #075f59; font-size: .9rem; font-weight: 700; }
+.iag-elearning-page .iag-programme ol { padding-left: 1.5rem; margin-top: 1rem; }
+.iag-elearning-page .iag-programme li { padding: .35rem 0; }
+.iag-elearning-page .iag-tinted-section { background: #eaf5f1; }
+.iag-elearning-page .iag-journey { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; padding-left: 1.5rem; }
+.iag-elearning-page .iag-journey li::marker { color: #075f59; font-weight: 800; }
+.iag-elearning-page .iag-journey h3 { font-size: 1.15rem; }
+.iag-elearning-page .iag-certificate-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.iag-elearning-page .iag-pricing-section { background: #eaf5f1; padding-block: clamp(3.5rem, 7vw, 5.5rem); }
+.iag-elearning-page .iag-pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
+.iag-elearning-page .iag-price { font-size: 3.5rem; font-weight: 800; color: #075f59; line-height: 1.2; }
+.iag-elearning-page .iag-checkout-card { min-width: 0; padding: 1.5rem; border-radius: 20px; background: #fff; box-shadow: 0 12px 32px #0b303512; }
+.iag-elearning-page .iag-faq details { margin-bottom: 1rem; }
+.iag-elearning-page .iag-faq summary { font-weight: 700; }
+.iag-elearning-page .iag-faq details p { margin-top: 1rem; }
+.iag-elearning-page :is(a, button, summary):focus-visible { outline: 3px solid #b07400; outline-offset: 4px; }
+@media (max-width: 900px) {
+  .iag-elearning-page .iag-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .iag-elearning-page .iag-pricing-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+}
+@media (max-width: 600px) {
+  .iag-elearning-page .iag-facts { gap: .75rem; }
+  .iag-elearning-page .iag-facts article { padding: 1rem; }
+  .iag-elearning-page .iag-facts h2 { font-size: 1rem; }
+  .iag-elearning-page :is(.iag-journey, .iag-certificate-grid) { grid-template-columns: 1fr; }
+  .iag-elearning-page .iag-programme summary h3 { display: block; margin: .5rem 0; }
+  .iag-elearning-page .iag-checkout-card { padding: 1rem; }
+  .iag-elearning-page .generative-ai-actions .btn { width: 100%; justify-content: center; }
+}

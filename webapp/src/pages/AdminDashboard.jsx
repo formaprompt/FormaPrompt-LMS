@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { fetchActiveCourseAccesses } from '../lib/courseAccess';
 import { courseCatalog } from '../data/courseCatalog';
+import IagAdminAssessments from '../components/IagAdminAssessments.jsx';
 import { BOOKING_COURSES } from '../data/bookingCatalog';
 import { CREATIVITY_GROUP_BOOKING } from '../../supabase/functions/_shared/bureautiqueBooking.js';
 import { adminBookingAnchor, adminCorrectionAnchor, adminWorkTarget, exactTargetRows } from '../lib/adminLearnerRecord';
@@ -51,6 +52,7 @@ const BLOG_IMAGE_EXTENSIONS = {
 };
 
 const COURSE_LABELS = {
+  'formation-ia-generative-elearning': 'IA générative - e-learning',
   'formation-ia': 'Formation IA générative',
   'formation-ia-act': 'IA Act – acculturation et conformité',
   'formation-prompt-level-1': 'Prompt Engineering – Niveau 1',
@@ -991,7 +993,7 @@ export default function AdminDashboard() {
     }
   }, [slotForm, user, availabilitySlots]);
 
-  const exerciseCorrections = useMemo(() => exerciseSubmissions.map((submission) => {
+  const exerciseCorrections = useMemo(() => exerciseSubmissions.filter((submission) => submission.course_id !== 'formation-ia-generative-elearning').map((submission) => {
     const course = courseCatalog[submission.course_id];
     const exercise = course?.exercises?.find(
       (item) => String(item.id) === String(submission.exercise_id),
@@ -1021,7 +1023,7 @@ export default function AdminDashboard() {
     };
   }), [exerciseReviewHistory, exerciseSubmissions, positioningAssessments, users]);
 
-  const finalProjectEvaluations = useMemo(() => finalProjectSubmissions.map((submission) => {
+  const finalProjectEvaluations = useMemo(() => finalProjectSubmissions.filter((submission) => submission.course_id !== 'formation-ia-generative-elearning').map((submission) => {
     const course = courseCatalog[submission.course_id];
     const learnerProfile = users.find((profile) => profile.id === submission.user_id);
     const positioning = positioningAssessments.find((assessment) => (
@@ -2384,6 +2386,7 @@ export default function AdminDashboard() {
 
             {activeTab === 'corrections' && (
               <section className="exercise-corrections" aria-labelledby="correction-workspace-title">
+                <IagAdminAssessments supabase={supabase} viewerId={user.id} />
                 <div className="booking-workspace-heading">
                   <h2 id="correction-workspace-title">Corrections et évaluations</h2>
                   <p>

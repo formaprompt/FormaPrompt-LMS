@@ -1,3 +1,4 @@
+import { iagPrivateCourseCatalog } from './iagPrivateCourseCatalog.js';
 import { creativityCourseCatalog } from './creativityCourseCatalog.js';
 
 // La vidéo reste sur IONOS et n'entre jamais dans le catalogue public ni dans
@@ -3991,4 +3992,5 @@ export const courseCatalog = {
     ],
   },
   ...creativityCourseCatalog,
+  ...iagPrivateCourseCatalog,
 };

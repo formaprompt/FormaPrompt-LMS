@@ -9,6 +9,7 @@ import {
   learnerDirectoryPath,
 } from '../lib/adminLearnerRecord';
 import { fetchAdminLearnerRecord } from '../lib/adminLearnerRecordApi';
+import { issuedDocumentPath, iagIssuedDocumentTitle } from '../lib/issuedDocumentNavigation.js';
 import './AdminLearnerRecord.css';
 
 const ACCESS_LABELS = { active: 'Actif', suspended: 'Suspendu', revoked: 'Révoqué', refunded: 'Remboursé', expired: 'Expiré' };
@@ -52,7 +53,7 @@ export function AdminLearnerRecordView({ record, returnSearch = '', returnPage =
   const requests = [...(record.bookingRequests || []).map((item) => ({ ...item, kind: 'Réservation' })), ...(record.commercialRequests || []).map((item) => ({ ...item, kind: 'Demande commerciale' }))]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const printableDocumentTypes = new Set(['training_agreement', 'convocation', 'completion_certificate']);
-  const documents = [...(record.documents || []).map((item) => ({ ...item, kind: DOCUMENT_LABELS[item.documentType] || item.documentType, href: item.status !== 'missing' && printableDocumentTypes.has(item.documentType) ? `/dossiers/${item.enrollmentId}/documents/${item.documentType}` : null })), ...(record.attestations || []).map((item) => ({ ...item, kind: item.documentType === 'competences' ? 'Attestation de compétences' : 'Attestation de réalisation', href: `/attestations/${item.id}`, generatedAt: item.issuedAt }))];
+  const documents = [...(record.documents || []).map((item) => ({ ...item, kind: DOCUMENT_LABELS[item.documentType] || item.documentType, href: item.status !== 'missing' && printableDocumentTypes.has(item.documentType) ? `/dossiers/${item.enrollmentId}/documents/${item.documentType}` : null })), ...(record.attestations || []).map((item) => ({ ...item, kind: iagIssuedDocumentTitle(item) || (item.documentType === 'competences' ? 'Attestation de compétences' : 'Attestation de réalisation'), href: issuedDocumentPath(item), generatedAt: item.issuedAt }))];
   const acquisitions = [
     ...(record.purchases || []).map((item) => ({ ...item, kind: 'purchase', occurredAt: item.purchasedAt })),
     ...(record.gifts || []).map((item) => ({ ...item, kind: 'gift', occurredAt: item.grantedAt })),

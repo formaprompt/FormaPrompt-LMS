@@ -6,6 +6,15 @@ import Home from './Home';
 vi.mock('../components/SEO', () => ({ default: () => null }));
 vi.mock('../lib/supabaseClient', () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ order: () => ({ limit: async () => ({ data: [] }) }) }) }) }) } }));
 afterEach(cleanup);
+
+it('distingue le parcours e-learning de la formation accompagnée dans le catalogue', async () => {
+  render(<MemoryRouter><Home /></MemoryRouter>);
+  const online = screen.getByRole('heading', { name: 'IA générative — e-learning' }).closest('.card');
+  expect(within(online).getByText(/79 € jusqu’au 31 décembre 2026 inclus, puis 99 €/)).toBeInTheDocument();
+  expect(within(online).getByRole('link')).toHaveAttribute('href', '/formation-ia-generative-elearning');
+  const accompanied = screen.getByRole('heading', { name: 'IA générative — formation accompagnée' }).closest('.card');
+  expect(within(accompanied).getByText(/497 € par apprenant/)).toBeInTheDocument();
+});
 it('oriente vers les formations et le diagnostic, sans ouvrir le Lab au public', async () => {
   const { container } = render(<MemoryRouter><Home /></MemoryRouter>);
   await screen.findByText('Ivan');
