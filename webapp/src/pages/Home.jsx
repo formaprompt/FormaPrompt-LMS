@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Bot, BookOpen, Monitor, CheckCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { CheckCircle, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import './Home.css';
@@ -178,51 +178,87 @@ export default function Home() {
               <p style={{color: 'var(--color-text-light)'}}>Consultez le programme, les modalités et le tarif de chaque parcours. Selon la formation, inscrivez-vous en ligne ou demandez un devis adapté à votre besoin.</p>
             </div>
             <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-              <div className="card">
-                <Monitor size={40} color="var(--color-primary)" className="mb-2" aria-hidden="true" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-ia-generative-elearning-640.webp"
+                  srcSet="/assets/formation-ia-generative-elearning-640.webp 640w, /assets/formation-ia-generative-elearning-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : apprentissage autonome au casque, avec ordinateur et carnet."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">IA générative — e-learning</h3>
                 <p className="mb-3">22 leçons à votre rythme, environ 13 heures et trois corrections écrites de vos travaux.</p>
                 <p className="mb-3">79 € jusqu’au 31 décembre 2026 inclus, puis 99 € · Paiement unique.</p>
                 <Link to="/formation-ia-generative-elearning" className="link-arrow">Découvrir le parcours e-learning &rarr;</Link>
               </div>
               {/* Offer 1 */}
-              <div className="card">
-                <Bot size={40} color="var(--color-primary)" className="mb-2" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-ia-generative-accompagnee-640.webp"
+                  srcSet="/assets/formation-ia-generative-accompagnee-640.webp 640w, /assets/formation-ia-generative-accompagnee-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : un formateur accompagne une apprenante devant son ordinateur."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">IA générative — formation accompagnée</h3>
                 <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
                 <p className="mb-3">497 € par apprenant · Présentiel ou classe virtuelle.</p>
                 <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
               </div>
               {/* Offer 2 */}
-              <div className="card">
-                <BookOpen size={40} color="var(--color-primary)" className="mb-2" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-prompt-engineering-640.webp"
+                  srcSet="/assets/formation-prompt-engineering-640.webp 640w, /assets/formation-prompt-engineering-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : préparation structurée d’une demande avec quatre cartes et un ordinateur."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">Prompt Engineering</h3>
                 <p className="mb-3">Apprendre à construire de bons prompts, créer des workflows et produire des livrables fiables avec ChatGPT, Copilot ou Claude.</p>
                 <Link to="/formation-prompt-engineering" className="link-arrow">Voir le programme Prompt Engineering &rarr;</Link>
               </div>
               {/* Offer 3 */}
-              <div className="card">
-                <Bot size={40} color="var(--color-primary)" className="mb-2" aria-hidden="true" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-agents-ia-workflows-640.webp"
+                  srcSet="/assets/formation-agents-ia-workflows-640.webp 640w, /assets/formation-agents-ia-workflows-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : un professionnel examine un workflow sur son écran."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">Agents IA &amp; Workflows</h3>
                 <p className="mb-3">28 heures en distanciel synchrone pour choisir, construire et tester une automatisation encadrée avec CADRES. Formation sur devis.</p>
                 <Link to="/formation-agents-ia-workflows" className="link-arrow">Découvrir le parcours Agents IA &rarr;</Link>
               </div>
-              <div className="card home-creativity-card">
+              <div className="card home-training-card">
                 <img src="/assets/formation-ia-creativite-640.webp" alt="Illustration générée avec l’IA : atelier de recherche artistique et outils numériques" width="640" height="427" loading="lazy" />
                 <h3 className="card-title">IA et créativité</h3>
                 <p className="mb-3">14 heures pour explorer des usages de l’IA à partir de votre pratique artistique et de votre projet, en gardant la maîtrise de vos choix.</p>
                 <Link to="/formation-ia-creativite" className="link-arrow">Découvrir le parcours IA et créativité &rarr;</Link>
               </div>
               {/* Bureautique */}
-              <div className="card">
-                <Monitor size={40} color="var(--color-primary)" className="mb-2" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-bureautique-pro-640.webp"
+                  srcSet="/assets/formation-bureautique-pro-640.webp 640w, /assets/formation-bureautique-pro-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : travail sur un tableur, un document et une présentation."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">Bureautique Pro</h3>
                 <p className="mb-3">Maîtriser Word, Excel, PowerPoint, Outlook et Teams pour gagner en efficacité et en productivité.</p>
                 <Link to="/formation-bureautique" className="link-arrow">Voir les formations bureautiques &rarr;</Link>
               </div>
               {/* Offer 4 */}
-              <div className="card">
-                <ShieldCheck size={40} color="var(--color-primary)" className="mb-2" />
+              <div className="card home-training-card">
+                <img
+                  src="/assets/formation-acculturation-ia-act-640.webp"
+                  srcSet="/assets/formation-acculturation-ia-act-640.webp 640w, /assets/formation-acculturation-ia-act-960.webp 960w"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  alt="Illustration générée avec l’IA : trois professionnels examinent ensemble une grille de vérification."
+                  width="640" height="427" loading="lazy" decoding="async"
+                />
                 <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
                 <p className="mb-3">Comprendre les enjeux de l'AI Act et préparer un premier plan d'action pour des usages professionnels responsables.</p>
                 <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>

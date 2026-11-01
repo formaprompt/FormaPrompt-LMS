@@ -1,0 +1,29 @@
+.gpt6-guide .gpt-model-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gpt6-guide .gpt-model-card.teal { transform: none; border: 1px solid #e8ebf0; box-shadow: 0 16px 45px rgba(26, 43, 70, .08); }
+.gpt6-guide .blue .gpt-model-icon { color: #1d4ed8; background: #dbeafe; }
+.gpt6-guide .gpt-model-summary { min-height: 0; }
+.gpt6-guide .gpt6-update { margin: 0 0 1.5rem; color: #d9e8eb; font-size: .9rem; }
+.gpt6-guide .gpt6-advanced { max-width: 980px; margin: 1.5rem auto 0; padding: 1.25rem; border: 1px solid rgba(255,255,255,.25); border-radius: 16px; }
+.gpt6-guide .gpt6-advanced summary { cursor: pointer; font-weight: 700; }
+.gpt6-guide .gpt6-advanced p { margin-top: 1rem; color: #d5dfeb; }
+.gpt6-guide .gpt6-advanced code { color: white; overflow-wrap: anywhere; }
+.gpt6-guide .gpt6-check { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.35); }
+.gpt6-guide .gpt6-practice { max-width: 850px; margin: 2rem auto 0; color: var(--gpt-muted); }
+.gpt6-guide .gpt-sources a { text-decoration: underline; text-underline-offset: 2px; }
+.gpt6-guide .gpt6-download { max-width: 940px; padding-top: 2rem; padding-bottom: 4rem; }
+.gpt6-guide .gpt6-download > div { padding: 2rem; border: 1px solid #b9d3ce; border-radius: 20px; background: #e9f4f0; }
+.gpt6-guide .gpt6-download h2 { display: flex; align-items: center; gap: .7rem; font-size: clamp(1.4rem, 3vw, 1.9rem); }
+.gpt6-guide .gpt6-download h2 svg { flex-shrink: 0; color: #0f766e; }
+.gpt6-guide .gpt6-download p { max-width: 800px; color: var(--gpt-muted); margin-bottom: 1.2rem; }
+.gpt6-guide .gpt6-download-link { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem; max-width: 100%; }
+.gpt6-guide .gpt6-download-link span { font-size: .85rem; font-weight: 400; }
+.gpt6-guide .tool-guide-download-note { margin-top: 1rem; margin-bottom: 0; color: #3e6159; font-size: .9rem; }
+@media print { .gpt6-guide .gpt6-download { display: none !important; } }
+.gpt6-guide .gpt-choices button:focus-visible,
+.gpt6-guide .gpt6-advanced summary:focus-visible,
+.gpt6-guide a:focus-visible { outline: 3px solid #c2410c; outline-offset: 4px; }
+.gpt6-guide .gpt-effort-section summary:focus-visible { outline-color: #5eead4; }
+@media (max-width: 700px) {
+  .gpt6-guide .gpt-model-grid { grid-template-columns: minmax(0, 1fr); }
+  .gpt6-guide .gpt6-download > div { padding: 1.25rem; }
+}
