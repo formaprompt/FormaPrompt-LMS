@@ -40,6 +40,7 @@ export const practicalGuides = [
       { id: 'comprendre', label: 'Ce que l’outil fait' },
       { id: 'premier-essai', label: 'Un premier essai' },
       { id: 'precautions', label: 'Les précautions' },
+      { id: 'verifier-reponse', label: 'Vérifier une réponse' },
     ],
   },
   {

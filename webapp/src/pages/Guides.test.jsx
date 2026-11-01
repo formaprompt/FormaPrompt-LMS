@@ -1,8 +1,9 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import Guides from './Guides';
 import GuidePage from './GuidePage';
+import { practicalGuides } from '../data/practicalGuides';
 
 vi.mock('../components/SEO', () => ({ default: () => null }));
 
@@ -28,6 +29,41 @@ describe('Guides', () => {
     expect(screen.getByRole('heading', { name: /cette page est introuvable/i })).toBeInTheDocument();
     expect(screen.queryByText('La méthode CROP : contexte, rôle, objectif, précisions')).not.toBeInTheDocument();
   });
+
+  it('relie le sommaire débutant à une vérification explicitement fictive et conserve les repères existants', () => {
+    const { container } = render(<MemoryRouter initialEntries={['/guides/ia-generative-debutants']}><Routes><Route path="/guides/:slug" element={<GuidePage />} /></Routes></MemoryRouter>);
+    expect(screen.getByRole('heading', { level: 1, name: 'IA générative pour débutants : comprendre, essayer, vérifier' })).toBeInTheDocument();
+    const toc = screen.getByRole('complementary', { name: 'Sommaire' });
+    const verificationLink = within(toc).getByRole('link', { name: 'Vérifier une réponse' });
+    expect(verificationLink).toHaveAttribute('href', '#verifier-reponse');
+    const verification = container.querySelector(verificationLink.getAttribute('href'));
+    expect(within(verification).getByRole('heading', { level: 2, name: 'Comment vérifier une réponse d’IA générative ?' })).toBeInTheDocument();
+    expect(within(verification).getByText('Exemple fictif — avant vérification :')).toBeInTheDocument();
+    expect(within(verification).getByText('« Le 1er novembre 2026 est un lundi. »')).toBeInTheDocument();
+    expect(within(verification).getByText('Après vérification dans le calendrier :')).toBeInTheDocument();
+    expect(within(verification).getByText('« Le 1er novembre 2026 est un dimanche. »')).toBeInTheDocument();
+    expect(within(verification).getByText(/ne remplace pas cette vérification indépendante/)).toBeInTheDocument();
+    expect(container.querySelector('#precautions').nextElementSibling).toBe(verification);
+    expect(verification.nextElementSibling).toHaveClass('guides-studio-figure');
+    ['comprendre', 'premier-essai', 'precautions'].forEach(id => {
+      expect(container.querySelector(`#${id}`)).toBeInTheDocument();
+      expect(toc.querySelector(`a[href="#${id}"]`)).not.toBeNull();
+    });
+    expect(screen.getByText(/Ne copiez pas dans un outil grand public des données personnelles/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'formation IA générative' })).toHaveAttribute('href', '/formation-ia-generative');
+    expect(screen.getByRole('link', { name: 'Studio FormaPrompt' })).toHaveAttribute('href', '/studio/');
+  });
+
+  it.each(practicalGuides.filter(guide => guide.slug !== 'ia-generative-debutants').map(guide => [guide.slug]))(
+    'réserve le nouvel exemple au guide débutant, sans ajout dans %s',
+    (slug) => {
+      const { container } = render(<MemoryRouter initialEntries={[`/guides/${slug}`]}><Routes><Route path="/guides/:slug" element={<GuidePage />} /></Routes></MemoryRouter>);
+      expect(container.querySelector('#verifier-reponse')).toBeNull();
+      expect(container.querySelector('a[href="#verifier-reponse"]')).toBeNull();
+      expect(screen.queryByText('« Le 1er novembre 2026 est un lundi. »')).not.toBeInTheDocument();
+      expect(screen.queryByText('« Le 1er novembre 2026 est un dimanche. »')).not.toBeInTheDocument();
+    },
+  );
 
   it('présente le parcours Claude lisible sans vidéo et ses médias accessibles', () => {
     const { container } = render(<MemoryRouter initialEntries={['/guides/claude-preparer-activite-bureautique']}><Routes><Route path="/guides/:slug" element={<GuidePage />} /></Routes></MemoryRouter>);
