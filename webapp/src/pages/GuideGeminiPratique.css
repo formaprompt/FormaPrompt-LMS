@@ -1,0 +1,12 @@
+.tool-guide-gemini .tool-guide-table-wrap:focus-visible { outline: 3px solid #e09b13; outline-offset: 4px; }
+.tool-guide-gemini .gemini-plans th:first-child { min-width: 150px; }
+.tool-guide-gemini .gemini-plans td:nth-child(2) { white-space: nowrap; font-weight: 750; }
+@media print {
+  .tool-guide-gemini .tool-guide-print-logo { width: 125px; height: 84px; }
+  .tool-guide-gemini #gemini-offres, .tool-guide-gemini #gemini-cas, .tool-guide-gemini #gemini-limites { break-before: page; }
+  .tool-guide-gemini .gemini-plans th:first-child { min-width: 0; }
+  .tool-guide-gemini th, .tool-guide-gemini td { padding: .5rem; font-size: 9pt; }
+  .tool-guide-gemini tr { break-inside: avoid; }
+  .tool-guide-gemini .tool-guide-table-wrap { overflow: visible; }
+  .tool-guide-gemini .tool-guide-prompt p { line-height: 1.5; }
+}

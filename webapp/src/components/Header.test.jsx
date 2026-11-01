@@ -51,8 +51,10 @@ describe('Navigation publique', () => {
     render(<MemoryRouter><Header /><LocationProbe /></MemoryRouter>);
     await user.click(screen.getByRole('button', { name: 'Ressources' }));
     const resourceLinks = [...document.querySelector('#navigation-ressources').querySelectorAll('a')];
+    expect(screen.getByRole('link', { name: 'Guide Gemini' })).toHaveAttribute('href', '/guides/gemini-guide-pratique');
+    expect(screen.getByRole('link', { name: 'Guide GPT‑6 et GPT‑6.1' })).toHaveAttribute('href', '/guide-gpt-6-codex');
     expect(resourceLinks.map(link => link.getAttribute('href'))).toEqual([
-      '/blog', '/studio', '/guides', '/guides/claude-guide-pratique', '/guides/copilot-guide-pratique',
+      '/blog', '/studio', '/guides', '/guides/claude-guide-pratique', '/guides/copilot-guide-pratique', '/guides/gemini-guide-pratique',
       '/guide-gpt-6-codex', '/guide-gpt-5-6-codex',
     ]);
     await user.tab();

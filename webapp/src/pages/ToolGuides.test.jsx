@@ -12,6 +12,20 @@ function showGuide(slug) {
 }
 
 describe('Nouveaux guides pratiques', () => {
+  it.each(['claude', 'copilot'])('préserve la sélection existante de %s sans activer la réouverture réservée à Gemini', (tool) => {
+    const { container } = showGuide(`${tool}-guide-pratique`);
+    const choices = container.querySelectorAll('.gpt-choices button');
+    fireEvent.click(choices[1]);
+    const panel = container.querySelector(`#${tool}-case-1`);
+    expect(panel.open).toBe(true);
+    panel.open = false;
+    fireEvent.click(choices[1]);
+    expect(panel.open).toBe(false);
+    fireEvent.click(choices[2]);
+    fireEvent.click(choices[1]);
+    expect(panel.open).toBe(true);
+  });
+
   it.each([
     ['claude-guide-pratique', /guide claude ia/i, /comprendre un document/i, 'claude-case-1'],
     ['copilot-guide-pratique', /guide microsoft copilot/i, /comprendre excel/i, 'copilot-case-2'],

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BrainCircuit, Check, ChevronRight, Download, Gauge, Lightbulb, ShieldCheck, Sparkles, Zap, ScanEye } from 'lucide-react';
 import SEO from '../components/SEO';
+import GPTPlanComparison from '../components/GPTPlanComparison';
+import { reasoningLevels, reasoningNotes, reasoningSources } from '../data/gptReasoningGuide';
 import './GuideGPT56.css';
 import './GuideGPT6.css';
 
@@ -85,7 +87,7 @@ export default function GuideGPT6() {
               <ArrowRight className="gpt-arrow" aria-hidden="true" />
               <div className="gpt-result"><Check size={22} aria-hidden="true" /><span>Ajuster l’effort</span></div>
             </div>
-            <a className="gpt-scroll-link" href="#gpt6-choisir">Voir des exemples <ChevronRight size={18} aria-hidden="true" /></a>
+            <div className="gpt6-hero-links"><a className="gpt-scroll-link" href="#gpt6-choisir">Voir des exemples <ChevronRight size={18} aria-hidden="true" /></a><a className="gpt-scroll-link" href="#gpt6-abonnements">Voir les abonnements et tarifs <ChevronRight size={18} aria-hidden="true" /></a></div>
           </div>
         </section>
 
@@ -122,17 +124,17 @@ export default function GuideGPT6() {
               <h2 id="gpt6-effort">Ajuster l’effort de raisonnement</h2>
               <p>Un effort plus élevé peut aider à traiter un problème complexe. Il demande généralement davantage de temps et de tokens, les unités de texte consommées par le modèle. La longueur souhaitée reste une consigne à préciser séparément.</p>
             </div>
-            <div className="gpt-analogy"><Gauge size={34} aria-hidden="true" /><p><strong>Commencez avec le réglage par défaut de votre produit.</strong> Si des contraintes restent oubliées, précisez la demande, puis essayez un effort supérieur et comparez les résultats.</p></div>
+            <div className="gpt-analogy"><Gauge size={34} aria-hidden="true" /><p>{reasoningNotes.defaults}</p></div>
+            <p className="gpt6-effort-context">{reasoningNotes.names}</p>
             <div className="gpt-effort-list">
-              <article className="gpt-effort-row"><div className="gpt-effort-number">1</div><div className="gpt-effort-name"><h3>Faible</h3></div><p>Une piste pour une tâche courte et facile à contrôler.</p><p className="gpt-effort-example">Exemple : corriger une phrase.</p></article>
-              <article className="gpt-effort-row"><div className="gpt-effort-number">2</div><div className="gpt-effort-name"><h3>Moyen</h3></div><p>Un repère pour une demande structurée avec plusieurs consignes.</p><p className="gpt-effort-example">Exemple : préparer un exercice de formation.</p></article>
-              <article className="gpt-effort-row"><div className="gpt-effort-number">3</div><div className="gpt-effort-name"><h3>Élevé</h3></div><p>À essayer si le problème nécessite davantage d’analyse.</p><p className="gpt-effort-example">Exemple : chercher des contradictions entre documents.</p></article>
+              {reasoningLevels.map((level, index) => <article className="gpt-effort-row" key={level.label}><div className="gpt-effort-number">{index + 1}</div><div className="gpt-effort-name"><h3>{level.label}</h3><span>{level.alias}</span></div><p>{level.description}<span className="gpt6-effort-tradeoff">{level.tradeoff}</span></p><p className="gpt-effort-example"><strong>Exemple :</strong> {level.example}</p></article>)}
             </div>
+            <div className="gpt6-effort-context"><p>{reasoningNotes.chat}</p><p>{reasoningNotes.availability}</p><h3>Ultra et Ultrafast : deux réglages distincts</h3><p>{reasoningNotes.ultra}</p></div>
             <details className="gpt6-advanced">
               <summary>Comprendre les réglages avancés</summary>
-              <p>Dans l’API, Astra et Sol 6.1 proposent <code>low</code>, <code>medium</code>, <code>high</code>, <code>xhigh</code> et <code>max</code>. Terra 6.1 et Luna proposent aussi <code>none</code>. Les intitulés visibles dans une application peuvent différer.</p>
-              <p>Le mode Ultra de Work et Codex fait intervenir des sous-agents. Il ne correspond pas simplement au réglage <code>max</code> de l’API. Consultez les options réellement disponibles dans votre compte.</p>
+              <p>{reasoningNotes.api}</p>
             </details>
+            <p className="gpt6-effort-context gpt6-effort-sources">Sources officielles : {reasoningSources.map((source, index) => <span key={source.href}>{index > 0 && ', '}<a href={source.href} target="_blank" rel="noopener noreferrer">{source.label}<span className="sr-only"> (nouvel onglet)</span></a></span>)}.</p>
           </div>
         </section>
 
@@ -164,6 +166,8 @@ export default function GuideGPT6() {
           </div>
         </section>
 
+        <GPTPlanComparison />
+
         <section className="gpt-sources container" aria-labelledby="gpt6-sources">
           <ShieldCheck size={26} aria-hidden="true" />
           <div>
@@ -178,9 +182,9 @@ export default function GuideGPT6() {
           <div>
             <p className="gpt-step">À conserver</p>
             <h2 id="gpt6-download-title"><Download size={26} aria-hidden="true" /> Télécharger le guide en PDF</h2>
-            <p>Conservez les quatre modèles, les repères de raisonnement et les cinq exemples CROP dans un document de quatre pages, avec les sources et les liens vers FormaPrompt.</p>
+            <p>Conservez les quatre modèles, les tableaux d’abonnements, les repères de raisonnement et les cinq exemples CROP dans un document complet, avec les sources et les liens vers FormaPrompt.</p>
             <a className="btn btn-primary gpt6-download-link" href="/assets/guides/pdf/guide-gpt-6-gpt-6-1-formaprompt.pdf" download="guide-gpt-6-gpt-6-1-formaprompt.pdf">
-              <Download size={20} aria-hidden="true" /> Télécharger le guide PDF <span>(PDF, 4 pages)</span>
+              <Download size={20} aria-hidden="true" /> Télécharger le guide PDF <span>(PDF)</span>
             </a>
             <p className="tool-guide-download-note">Le PDF correspond aux informations datées de ce guide. Les modèles et les interfaces peuvent évoluer.</p>
           </div>

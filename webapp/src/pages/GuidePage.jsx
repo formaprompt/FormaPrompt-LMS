@@ -5,6 +5,7 @@ import NotFound from './NotFound';
 import GuideClaude from './GuideClaude';
 import GuideClaudePratique from './GuideClaudePratique';
 import GuideCopilotPratique from './GuideCopilotPratique';
+import GuideGeminiPratique from './GuideGeminiPratique';
 import { getPracticalGuide, practicalGuides } from '../data/practicalGuides';
 import './Guides.css';
 
@@ -70,6 +71,7 @@ export default function GuidePage() {
   const { slug } = useParams();
   const guide = getPracticalGuide(slug);
   if (!guide) return <NotFound />;
+  if (slug === 'gemini-guide-pratique') return <GuideGeminiPratique />;
   if (slug === 'claude-guide-pratique') return <GuideClaudePratique />;
   if (slug === 'copilot-guide-pratique') return <GuideCopilotPratique />;
   const canonicalUrl = `https://formaprompt.com/guides/${guide.slug}`;

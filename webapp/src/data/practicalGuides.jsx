@@ -1,5 +1,13 @@
 export const practicalGuides = [
   {
+    slug: 'gemini-guide-pratique',
+    title: 'Guide Gemini : utiliser le texte, les images, l’audio et la vidéo',
+    description: 'Apprenez à utiliser Gemini avec des exemples concrets : analyser une image, un PDF, un audio ou une vidéo, rédiger vos prompts et vérifier les réponses.',
+    label: 'Pratiquer le multimodal avec Gemini',
+    readingTime: '15 min',
+    sections: [],
+  },
+  {
     slug: 'copilot-guide-pratique',
     title: 'Guide Microsoft Copilot pour débuter en bureautique',
     description: 'Identifier votre accès Copilot, préparer un document ou une présentation et comprendre un tableau avec quatre exemples CROP.',
