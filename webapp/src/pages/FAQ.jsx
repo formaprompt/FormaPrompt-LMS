@@ -26,7 +26,7 @@ const faqs = [
     questions: [
       {
         q: "Vos formations sont-elles éligibles au CPF ou certifiées Qualiopi ?",
-        a: "Nous intervenons en tant que sous-traitant pour des organismes certifiés Qualiopi. Pour une prise en charge (OPCO, CPF), nous travaillons avec nos partenaires agréés pour vous proposer une solution adaptée."
+        a: "FormaPrompt n'est pas certifié Qualiopi. Lorsqu'une prestation est portée par un organisme partenaire certifié, cette certification concerne ce partenaire. Les possibilités de financement doivent être vérifiées pour chaque formation et chaque dossier ; elles ne sont pas automatiques."
       },
       {
         q: "Quels sont vos tarifs ?",
