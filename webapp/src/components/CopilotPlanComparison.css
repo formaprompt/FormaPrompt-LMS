@@ -1,0 +1,67 @@
+.tool-guide-copilot .copilot-plan-group { margin: 2.3rem 0; }
+.tool-guide-copilot .copilot-plan-group > h3 { margin-bottom: .7rem; }
+.tool-guide-copilot .copilot-plan-table-wrap { border: 1px solid #b9d3ce; border-radius: 16px; overflow: hidden; }
+.tool-guide-copilot .copilot-plan-table { table-layout: fixed; font-size: .94rem; line-height: 1.65; }
+.tool-guide-copilot .copilot-plan-table caption { color: #fff; background: #125c59; padding: .8rem 1rem; }
+.tool-guide-copilot .copilot-plan-table thead th { background: #e8f3f0; color: #10233f; font-size: .84rem; }
+.tool-guide-copilot .copilot-plan-table th, .tool-guide-copilot .copilot-plan-table td { padding: 1rem; overflow-wrap: anywhere; border-right: 1px solid #e1ebe8; }
+.tool-guide-copilot .copilot-plan-table th:last-child, .tool-guide-copilot .copilot-plan-table td:last-child { border-right: 0; }
+.tool-guide-copilot .copilot-plan-table tbody th { background: #f2f8f5; font-weight: 500; }
+.tool-guide-copilot .copilot-plan-table tbody tr:last-child > * { border-bottom: 0; }
+.copilot-plan-name { display: block; color: #10233f; font-weight: 800; font-size: 1.02rem; }
+.copilot-plan-price { display: block; margin: .6rem 0 .35rem; font-size: 1.12rem; color: #125c59; }
+.copilot-plan-commitment { display: block; font-size: .84rem; line-height: 1.55; }
+.tool-guide-copilot .copilot-personal-table thead th:nth-child(1) { width: 20%; }
+.tool-guide-copilot .copilot-personal-table thead th:nth-child(2) { width: 12%; }
+.tool-guide-copilot .copilot-personal-table thead th:nth-child(3) { width: 20%; }
+.tool-guide-copilot .copilot-personal-table thead th:nth-child(4) { width: 23%; }
+.tool-guide-copilot .copilot-personal-table thead th:nth-child(5) { width: 25%; }
+.tool-guide-copilot .copilot-business-table th:first-child { width: 31%; }
+.tool-guide-copilot .copilot-business-price { margin: .7rem 0; font-size: .86rem; }
+.copilot-business-price > span, .copilot-business-price > strong { display: block; }
+.copilot-business-price > strong { color: #125c59; font-size: 1rem; }
+.copilot-base-required { display: block; margin-top: .8rem; color: #8d3c0d; font-size: .85rem; }
+.copilot-plan-date { padding: .9rem 1.1rem; background: #eff7f5; border-radius: 12px; font-weight: 700; }
+.copilot-plan-choice { padding: 1.2rem 1.4rem; border: 2px solid #b9d3ce; border-radius: 16px; margin-top: 1.5rem; background: white; }
+.tool-guide-copilot .copilot-plan-choice li { margin-bottom: .8rem; }
+.copilot-plan-promotion { padding: 1.1rem 1.3rem; background: #fff6d9; border-left: 4px solid #b45309; border-radius: 12px; }
+.copilot-plan-bundles { border: 1px solid #b9d3ce; border-radius: 12px; padding: 1rem 1.2rem; }
+.copilot-plan-bundles summary { cursor: pointer; font-weight: 750; }
+.copilot-plan-bundles ul { margin-top: 1rem; }
+.tool-guide-copilot .copilot-modes-table { font-size: .95rem; line-height: 1.7; }
+.tool-guide-copilot .copilot-modes-table ul { padding-left: 1.1rem; margin: 0; }
+.tool-guide-copilot .copilot-plan-table p { margin-bottom: .6rem; }
+.tool-guide-copilot .copilot-plan-table ul { padding: 0; margin: 0; list-style: none; }
+.tool-guide-copilot .copilot-plan-table li { margin-bottom: .55rem; }
+.copilot-plan-mobile-label { display: none; }
+@media (max-width: 760px) {
+  .tool-guide-copilot .copilot-plan-table, .tool-guide-copilot .copilot-plan-table tbody { display: block; width: 100%; }
+  .tool-guide-copilot .copilot-plan-table caption { display: block; }
+  .tool-guide-copilot .copilot-plan-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .tool-guide-copilot .copilot-plan-table tr { display: block; padding-bottom: .75rem; border-bottom: 3px solid #b9d3ce; }
+  .tool-guide-copilot .copilot-plan-table tr:last-child { border-bottom: 0; }
+  .tool-guide-copilot .copilot-plan-table tbody th, .tool-guide-copilot .copilot-plan-table td { display: block; width: 100%; border: 0; padding: .8rem 1rem; }
+  .tool-guide-copilot .copilot-plan-table tbody th { border-bottom: 1px solid #d4e2e1; }
+  .tool-guide-copilot .copilot-personal-table th, .tool-guide-copilot .copilot-business-table th:first-child { width: 100%; }
+  .copilot-plan-mobile-label { display: block; font-size: .8rem; font-weight: 800; color: #125c59; margin-bottom: .35rem; text-transform: uppercase; letter-spacing: .03em; }
+}
+@media print {
+  .tool-guide-copilot .copilot-plan-group { margin: 1.4rem 0; }
+  .tool-guide-copilot .copilot-plan-table-wrap { overflow: visible; border: 0; border-radius: 0; }
+  .tool-guide-copilot .copilot-plan-table { display: table; table-layout: fixed; font-size: 9.5pt; line-height: 1.5; }
+  .tool-guide-copilot .copilot-plan-table caption { display: table-caption; color: #125c59; background: #e8f3f0; font-size: 10pt; }
+  .tool-guide-copilot .copilot-plan-table thead { display: table-header-group; position: static; width: auto; height: auto; clip: auto; }
+  .tool-guide-copilot .copilot-plan-table tbody { display: table-row-group; }
+  .tool-guide-copilot .copilot-plan-table tr { display: table-row; break-inside: avoid; }
+  .tool-guide-copilot .copilot-plan-table tbody th, .tool-guide-copilot .copilot-plan-table td, .tool-guide-copilot .copilot-plan-table thead th { display: table-cell; width: auto; padding: .5rem; border: 1px solid #d4e2e1; font-size: 9.5pt; }
+  .tool-guide-copilot .copilot-personal-table th, .tool-guide-copilot .copilot-business-table th:first-child { width: auto; }
+  .copilot-plan-name { font-size: 9.5pt; }
+  .copilot-plan-price { font-size: 10pt; }
+  .copilot-plan-commitment, .tool-guide-copilot .copilot-business-price, .copilot-base-required { font-size: 9.5pt; }
+  .copilot-business-price > strong { font-size: 10pt; }
+  .copilot-plan-date, .copilot-plan-promotion, .copilot-plan-choice { break-inside: avoid; }
+  .copilot-plan-choice { padding: .7rem 1rem; }
+  .tool-guide-copilot .copilot-modes-table { font-size: 9.5pt; }
+  .tool-guide-copilot .copilot-modes-table tr { break-inside: avoid; }
+  .copilot-plan-mobile-label { display: none; }
+}

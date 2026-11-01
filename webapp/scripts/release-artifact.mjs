@@ -176,6 +176,18 @@ export function checkDeliveryPolicies(htaccess, worker) {
   assert.ok(!precached.includes('config/learner-onboarding.json'), 'Configuration vidéo interdite dans le précache');
 }
 
+export function checkGuideDownloadAssets(html, files) {
+  const document = new JSDOM(html).window.document;
+  const links = [...document.querySelectorAll('.tool-guide-download a[download][href]')];
+  for (const link of links) {
+    const url = new URL(link.getAttribute('href'), canonicalOrigin);
+    assert.equal(url.origin, canonicalOrigin, 'PDF de guide sur une origine inattendue');
+    assert.match(url.pathname, /^\/assets\/guides\/pdf\/[a-z0-9-]+\.pdf$/, 'Chemin PDF de guide inattendu');
+    assert.ok(files.has(url.pathname.slice(1)), `PDF de guide absent : ${url.pathname}`);
+  }
+  return links.length;
+}
+
 export async function verifyRelease(root = path.resolve('dist')) {
   const files = [];
   async function walk(directory, prefix = '') {
@@ -192,7 +204,7 @@ export async function verifyRelease(root = path.resolve('dist')) {
   const contents = new Map();
   for (const name of files) {
     const bytes = await readFile(path.join(root, name));
-    const text = /\.(?:html|js|css|json|xml|txt|php|svg|webmanifest)$/.test(name) || name === '.htaccess' ? bytes.toString('utf8') : '';
+    const text = /\.(?:html|js|css|json|xml|txt|php|svg|webmanifest)$/.test(name) || path.basename(name) === '.htaccess' ? bytes.toString('utf8') : '';
     checkSafeFile(name, text);
     contents.set(name, text);
     inventory.push({ path: name, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') });
@@ -230,6 +242,11 @@ export async function verifyRelease(root = path.resolve('dist')) {
   for (const [name, text] of contents) {
     if (name.endsWith('.html')) {
       const document = new JSDOM(text).window.document;
+      const guideDownloads = checkGuideDownloadAssets(text, contents);
+      if (['guides/claude-guide-pratique.html', 'guides/copilot-guide-pratique.html'].includes(name)) {
+        assert.equal(guideDownloads, 1, `Lien de téléchargement PDF manquant ou dupliqué : ${name}`);
+      }
+      references += guideDownloads;
       for (const element of document.querySelectorAll('script[src], img[src], video[src], video source[src], link[rel="stylesheet"][href], link[rel="modulepreload"][href], link[rel="icon"][href]')) {
         checkReference(element.getAttribute('src') || element.getAttribute('href'), name);
       }

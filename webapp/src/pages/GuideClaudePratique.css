@@ -1,0 +1,32 @@
+.tool-guide-claude .claude-price-table { table-layout: fixed; font-size: .98rem; line-height: 1.7; }
+.tool-guide-claude .claude-price-table caption { background: #125c59; color: white; }
+.tool-guide-claude .claude-price-table thead th:first-child { width: 16%; }
+.tool-guide-claude .claude-price-table thead th:nth-child(2) { width: 35%; }
+.tool-guide-claude .claude-price-table tbody th { background: #f0f7f4; }
+.claude-price { display: block; color: #125c59; font-size: 1.08rem; }
+.claude-price-small { display: block; margin-top: .5rem; font-size: .93rem; }
+.claude-price-date { padding: 1rem 1.2rem; border-radius: 12px; background: #eff7f5; }
+.claude-team-plans { margin: 1.5rem 0; padding: 1rem 1.3rem; border: 1px solid #b9d3ce; border-radius: 14px; }
+.claude-team-plans summary { font-weight: 750; cursor: pointer; }
+.claude-price-mobile-label { display: none; }
+@media (max-width: 700px) {
+  .tool-guide-claude .claude-price-table, .tool-guide-claude .claude-price-table tbody, .tool-guide-claude .claude-price-table tr { display: block; width: 100%; }
+  .tool-guide-claude .claude-price-table caption { display: block; }
+  .tool-guide-claude .claude-price-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .tool-guide-claude .claude-price-table th, .tool-guide-claude .claude-price-table td { display: block; width: 100%; border: 0; }
+  .tool-guide-claude .claude-price-table tr { border-bottom: 3px solid #b9d3ce; }
+  .claude-price-mobile-label { display: block; font-size: .8rem; font-weight: 750; color: #125c59; margin-bottom: .4rem; }
+}
+@media print {
+  .tool-guide-claude .claude-price-table { display: table; font-size: 10pt; }
+  .tool-guide-claude .claude-price-table caption { display: table-caption; color: #125c59; background: #eff7f5; }
+  .tool-guide-claude .claude-price-table thead { display: table-header-group; position: static; width: auto; height: auto; clip: auto; }
+  .tool-guide-claude .claude-price-table tbody { display: table-row-group; }
+  .tool-guide-claude .claude-price-table tr { display: table-row; break-inside: avoid; }
+  .tool-guide-claude .claude-price-table th, .tool-guide-claude .claude-price-table td { display: table-cell; width: auto; padding: .6rem; border: 1px solid #d4e2e1; }
+  .tool-guide-claude .tool-guide-table-wrap { overflow: visible; border-radius: 0; }
+  .claude-team-plans { border: 0; padding: 0; }
+  .claude-price, .claude-price-small { font-size: 10pt; }
+  .claude-price-date { break-inside: avoid; }
+  .claude-price-mobile-label { display: none; }
+}

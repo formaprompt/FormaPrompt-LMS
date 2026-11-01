@@ -1,0 +1,9 @@
+# Guides gratuits publics : type PDF explicite et revalidation des éditions.
+<IfModule mod_mime.c>
+  AddType application/pdf .pdf
+</IfModule>
+<IfModule mod_headers.c>
+  <FilesMatch "\.pdf$">
+    Header always set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+</IfModule>

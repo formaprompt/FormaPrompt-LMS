@@ -48,7 +48,18 @@ describe('Navigation publique', () => {
   });
   it('ferme le groupe après sélection et expose le contact sans accès public au Lab', async () => {
     const user = userEvent.setup();
-    mount();
+    render(<MemoryRouter><Header /><LocationProbe /></MemoryRouter>);
+    await user.click(screen.getByRole('button', { name: 'Ressources' }));
+    const resourceLinks = [...document.querySelector('#navigation-ressources').querySelectorAll('a')];
+    expect(resourceLinks.map(link => link.getAttribute('href'))).toEqual([
+      '/blog', '/studio', '/guides', '/guides/claude-guide-pratique', '/guides/copilot-guide-pratique',
+      '/guide-gpt-6-codex', '/guide-gpt-5-6-codex',
+    ]);
+    await user.tab();
+    expect(screen.getByRole('link', { name: 'Blog' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('header-location')).toHaveTextContent('/blog');
+    expect(screen.getByRole('button', { name: 'Ressources' })).toHaveAttribute('aria-expanded', 'false');
     await user.click(screen.getByRole('button', { name: 'Ressources' }));
     expect(screen.getByRole('link', { name: 'Guides pratiques' })).toHaveAttribute('href', '/guides');
     await user.click(screen.getByRole('link', { name: 'Studio — outil gratuit' }));

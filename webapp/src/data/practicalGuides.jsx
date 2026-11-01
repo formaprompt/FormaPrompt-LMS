@@ -1,5 +1,21 @@
 export const practicalGuides = [
   {
+    slug: 'copilot-guide-pratique',
+    title: 'Guide Microsoft Copilot pour débuter en bureautique',
+    description: 'Identifier votre accès Copilot, préparer un document ou une présentation et comprendre un tableau avec quatre exemples CROP.',
+    label: 'Pratiquer avec Copilot',
+    readingTime: '10 min',
+    sections: [],
+  },
+  {
+    slug: 'claude-guide-pratique',
+    title: "Guide Claude IA pour débuter et l'utiliser au travail",
+    description: 'Choisir les fonctions et les réglages utiles, adapter quatre prompts CROP et vérifier les documents produits avec Claude.',
+    label: 'Choisir avec Claude',
+    readingTime: '10 min',
+    sections: [],
+  },
+  {
     slug: 'claude-preparer-activite-bureautique',
     title: 'Claude : préparer et vérifier une activité de bureautique',
     description: 'Un exemple pas à pas avec Claude : cadrer une activité fictive avec CROP, relire la proposition et adapter l’aide sans réduire les objectifs.',
