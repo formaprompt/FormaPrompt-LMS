@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowRight, Check, CircleAlert, ExternalLink, Lightbulb } fr
 import SEO from '../components/SEO';
 import NotFound from './NotFound';
 import GuideClaude from './GuideClaude';
+import GuideClaudePratique from './GuideClaudePratique';
+import GuideCopilotPratique from './GuideCopilotPratique';
 import { getPracticalGuide, practicalGuides } from '../data/practicalGuides';
 import './Guides.css';
 
@@ -59,6 +61,8 @@ export default function GuidePage() {
   const { slug } = useParams();
   const guide = getPracticalGuide(slug);
   if (!guide) return <NotFound />;
+  if (slug === 'claude-guide-pratique') return <GuideClaudePratique />;
+  if (slug === 'copilot-guide-pratique') return <GuideCopilotPratique />;
   const canonicalUrl = `https://formaprompt.com/guides/${guide.slug}`;
   const jsonLd = { '@context': 'https://schema.org', '@graph': [
     { '@type': 'Article', headline: guide.title, description: guide.description, inLanguage: 'fr-FR', mainEntityOfPage: canonicalUrl, author: { '@type': 'Person', name: 'Thierry FREZARD' }, publisher: { '@type': 'Organization', name: 'FormaPrompt' } },

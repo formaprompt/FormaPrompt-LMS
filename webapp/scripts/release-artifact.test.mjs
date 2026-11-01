@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkHtmlEntryVersions, checkPrivateShells, checkPublicBlogRoutes, checkPublicHtml, checkSafeFile, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
+import { checkAdsConfirmationHtml, checkApacheTargets, checkDeliveryPolicies, checkGuideDownloadAssets, checkHtmlEntryVersions, checkPrivateShells, checkPublicBlogRoutes, checkPublicHtml, checkSafeFile, createShells, outputForRoute, privateShellFiles, publicRoutes } from './release-artifact.mjs';
 
 const initialShell = '<html><head><title>FormaPrompt</title></head><body><div id="root"></div><script type="module" src="/assets/main.js"></script></body></html>';
 
@@ -154,4 +154,12 @@ test('seul le relais Ads strictement neutre peut omettre l’entrée Vite', () =
   }
   contents.set('another-relay.html', html);
   assert.throws(() => checkHtmlEntryVersions(contents), /HTML d'une autre release : another-relay.html/);
+});
+
+test('les PDF de guides publics exigent un fichier présent sur le domaine canonique', () => {
+  const target = 'assets/guides/pdf/guide-claude-2026-11-01.pdf';
+  const html = `<section class="tool-guide-download"><a download href="/${target}">PDF</a></section>`;
+  assert.equal(checkGuideDownloadAssets(html, new Set([target])), 1);
+  assert.throws(() => checkGuideDownloadAssets(html, new Set()), /PDF de guide absent/);
+  assert.throws(() => checkGuideDownloadAssets(html.replace(`/${target}`, `https://example.org/${target}`), new Set([target])), /origine inattendue/);
 });

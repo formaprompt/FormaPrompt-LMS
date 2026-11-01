@@ -1,0 +1,11 @@
+--- a/webapp/supabase/functions/_shared/purchaseConfig.js
++++ b/webapp/supabase/functions/_shared/purchaseConfig.js
+@@ -176,7 +176,7 @@
+   'ia-creativite-groupe': creativityPurchase('ia-creativite-groupe', 'groupe', 69_000, 'STRIPE_CREATIVITY_GROUP_PRICE_ID', {
+     checkoutEnabled: true, minimumParticipants: 4,
+     openingPolicy: 'conditional_minimum_participants', paymentTiming: 'at_enrollment', nonOpeningRefund: 'full',
+-    groupOpeningMessage: 'Seuil prévu de quatre participants. Thierry peut décider de confirmer un groupe à partir de deux participants ; six maximum. Le paiement est encaissé dès l’inscription. Remboursement intégral si le groupe n’ouvre pas. L’ouverture de la session reste conditionnelle.',
++    groupOpeningMessage: 'Quatre participants minimum, six maximum. Le paiement est encaissé dès l’inscription. Remboursement intégral si le groupe n’ouvre pas. L’ouverture de la session reste conditionnelle.',
+   }),
+   'ia-creativite-individuel': creativityPurchase('ia-creativite-individuel', 'individuel', 90_000, 'STRIPE_CREATIVITY_INDIVIDUAL_PRICE_ID'),
+   'ia-creativite-ecole-association': creativityPurchase('ia-creativite-ecole-association', 'ecole-association', 160_000, 'STRIPE_CREATIVITY_SCHOOL_ASSOCIATION_PRICE_ID', { organizationRequired: true }),
