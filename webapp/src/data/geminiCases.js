@@ -1,0 +1,67 @@
+export const geminiCases = [
+  {
+    title: 'Croiser un PDF et une image',
+    need: 'Préparer une fiche à partir de deux sources',
+    feature: 'Discussion avec import d’un PDF fictif de deux pages et d’une capture de planning lisible.',
+    setting: 'Commencez avec Auto ou Flash disponible. Essayez Pro si le croisement reste difficile et si votre offre le permet. Si un niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. Conseil pédagogique à comparer sur vos sources.',
+    prompt: [
+      ['Contexte', 'Je prépare une visite fictive pour des adultes débutants. Je joins deux sources autorisées : « accueil.pdf », deux pages de consignes, et « planning.png », une capture des horaires. Ces fichiers ne contiennent aucune donnée personnelle.'],
+      ['Rôle', 'Tu es un assistant de préparation pédagogique attentif à la fidélité aux documents.'],
+      ['Objectif', 'Produis une fiche pratique avec les horaires, le matériel à apporter, les étapes de la visite et les questions qui restent à poser.'],
+      ['Précisions', 'Utilise seulement les deux fichiers. Pour chaque information, cite le nom du fichier et la page du PDF ou la zone identifiable de l’image. Sépare les faits des interprétations. Écris « non précisé » lorsqu’une information manque et « illisible » si tu ne peux pas la lire. Si les horaires se contredisent, présente les deux valeurs sans choisir. N’invente ni matériel ni étape. Termine par trois points à vérifier dans les originaux avant diffusion.'],
+    ],
+    check: 'Ouvrez chaque source citée, comparez les horaires et vérifiez les zones peu lisibles. Une référence produite par Gemini peut être fausse. Corrigez la fiche avant de la transmettre.',
+  },
+  {
+    title: 'Structurer une note vocale',
+    need: 'Retrouver les actions sans inventer des décisions',
+    feature: 'Import d’un enregistrement personnel de deux minutes, compatible avec votre application. Cela se distingue de la dictée d’un prompt et de Live.',
+    setting: 'Auto ou Flash pour ce premier essai court ; un modèle plus avancé ne réparera pas un son inaudible. Si le niveau de raisonnement est affiché, commencez avec Faible ; sinon ce réglage n’est pas disponible dans votre mode.',
+    prompt: [
+      ['Contexte', 'Je joins ma propre note vocale fictive de deux minutes pour préparer des portes ouvertes. Elle mêle des idées, quelques décisions et des informations incomplètes. Aucun tiers n’est enregistré.'],
+      ['Rôle', 'Tu es un assistant d’organisation qui distingue ce qui est dit de ce qu’il faudrait encore décider.'],
+      ['Objectif', 'Transforme l’audio en un compte rendu court : décisions confirmées, idées proposées, questions ouvertes, puis tableau des actions.'],
+      ['Précisions', 'Dans le tableau, indique action, responsable explicitement nommé et échéance explicitement donnée. Écris « à préciser » si le responsable ou la date manque. Ne transforme jamais une suggestion en engagement. Signale les passages inaudibles et les noms ou chiffres incertains avec un repère temporel approximatif. Ne complète pas avec des connaissances extérieures. Ajoute une courte liste des passages à réécouter.'],
+    ],
+    check: 'Réécoutez les dates, chiffres, noms et formulations d’engagement. Une synthèse utile doit conserver les incertitudes ; une phrase fluide ne prouve pas la qualité de la transcription.',
+  },
+  {
+    title: 'S’entraîner avec Gemini Live',
+    need: 'Montrer une affiche puis une maquette à l’écran',
+    feature: 'Live dans l’application mobile Android ou iOS, avec caméra puis partage d’écran si ces commandes sont disponibles. Les déploiements varient.',
+    setting: 'Mode Live ; le choix du modèle et de l’effort peut ne pas être exposé. Utilisez alors le fonctionnement proposé par l’application.',
+    prompt: [
+      ['Contexte', 'Je prépare une présentation orale de trente secondes pour un atelier fictif « Découvrir l’IA ». Je vais montrer une affiche de démonstration à la caméra, puis une maquette sans donnée personnelle sur mon écran.'],
+      ['Rôle', 'Tu es un formateur patient qui m’aide à rendre mon explication compréhensible pour un adulte débutant.'],
+      ['Objectif', 'Aide-moi à préparer une présentation courte, laisse-moi la dire, puis propose deux améliorations concrètes.'],
+      ['Précisions', 'Décris uniquement ce qui est réellement visible et lisible. Si une zone est floue, demande de rapprocher la caméra ou de montrer cette zone ; ne devine pas son texte. Pose une seule question à la fois. N’invente aucune date, adresse ou promesse sur l’événement. Pendant mon essai, laisse-moi terminer. Tes deux améliorations doivent porter sur la clarté et la fidélité à l’affiche. Rappelle-moi à la fin d’arrêter caméra et partage d’écran.'],
+    ],
+    check: 'Fermez notifications, onglets et documents sensibles avant le partage : l’écran entier peut être transmis. Vérifiez l’affiche vous-même et arrêtez explicitement les partages. Sans caméra disponible, importez une photo autorisée dans une discussion classique.',
+  },
+  {
+    title: 'Comprendre une courte vidéo',
+    need: 'Décrire les étapes d’un pliage',
+    feature: 'Import d’une vidéo personnelle de pliage papier de 60 à 90 secondes. Il s’agit d’analyse, pas de création ou de montage vidéo.',
+    setting: 'Auto ou Flash pour commencer ; Pro si disponible pour comparer une interprétation difficile. Si le niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. La vérification reste visuelle et pratique.',
+    prompt: [
+      ['Contexte', 'Je joins une vidéo personnelle et autorisée de 60 à 90 secondes montrant un pliage papier simple. Je veux préparer une fiche pour des adultes débutants.'],
+      ['Rôle', 'Tu es un assistant de rédaction de procédures qui décrit une manipulation observable.'],
+      ['Objectif', 'Propose une fiche de cinq étapes courtes, avec matériel visible et point de contrôle après chaque étape.'],
+      ['Précisions', 'Sépare ce que tu vois de ce qui est dit dans l’audio. Donne des repères temporels approximatifs, explicitement présentés comme tels. Pour un geste caché, ambigu ou absent, écris « non observable » et pose une question au lieu d’inventer. Si cinq étapes ne suffisent pas ou ne sont pas justifiées, signale-le. Ne prétends pas à une analyse exhaustive image par image. Termine par les gestes à revoir dans la vidéo.'],
+    ],
+    check: 'Rejouez les passages cités et refaites le pliage avec la fiche. Une étape impossible à reproduire doit être corrigée. N’utilisez pas ce type d’essai comme validation d’une procédure dangereuse.',
+  },
+  {
+    title: 'Créer une image puis l’animer',
+    need: 'Illustrer un atelier sans personnes réelles',
+    feature: 'Génération d’image, puis création vidéo à partir de l’image validée si votre compte et votre région le permettent. Deux productions distinctes.',
+    setting: 'Outil Images (Nano Banana 2 selon l’aide actuelle), puis outil Vidéos (Gemini Omni). Les options Pro, quotas et formats dépendent de l’offre. Aucun effort textuel ne remplace ces outils.',
+    prompt: [
+      ['Contexte', 'Je prépare un support pour un atelier fictif « Découvrir l’IA », destiné à des adultes débutants. Je veux expliquer les entrées texte, photo et voix sans représenter une personne réelle.'],
+      ['Rôle', 'Tu es un illustrateur pédagogique qui privilégie une composition claire et des références dont les droits sont maîtrisés.'],
+      ['Objectif', 'Étape 1 : crée une illustration composée de trois petites scènes : une feuille de texte, une photo de paysage générique et un microphone. Attends ma validation avant toute animation.'],
+      ['Précisions', 'Style papier découpé sobre, fond clair, couleurs douces et contrastes lisibles. Aucun logo, aucune personne réelle, aucun texte intégré ; garde une zone libre pour ajouter le titre dans mon logiciel. Après ma validation seulement, et si la fonction vidéo est disponible, anime doucement cette image : préserve couleurs et trois scènes, sans nouveau personnage, texte ou voix ; un son discret est acceptable. Ne promets pas de durée exacte. Si la fonction manque, arrête-toi à l’image et explique la limite.'],
+    ],
+    check: 'Inspectez l’image avant de lancer la vidéo, puis visionnez le résultat entier : objets déformés, mouvement, son et droits. En France, partez ici d’une image ; l’import d’une vidéo pour la modifier n’est pas disponible dans l’EEE selon l’aide datée.',
+  },
+];

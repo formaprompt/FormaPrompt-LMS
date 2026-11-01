@@ -123,7 +123,8 @@ export default function Header() {
               <Link to="/guides" onClick={() => setIsMenuOpen(false)}>Guides pratiques</Link>
                 <Link to="/guides/claude-guide-pratique" onClick={() => setIsMenuOpen(false)}>Guide Claude</Link>
                 <Link to="/guides/copilot-guide-pratique" onClick={() => setIsMenuOpen(false)}>Guide Microsoft Copilot</Link>
-              <Link to="/guide-gpt-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑6</Link>
+                <Link to="/guides/gemini-guide-pratique" onClick={() => setIsMenuOpen(false)}>Guide Gemini</Link>
+              <Link to="/guide-gpt-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑6 et GPT‑6.1</Link>
               <Link to="/guide-gpt-5-6-codex" onClick={() => setIsMenuOpen(false)}>Guide GPT‑5.6 (repère 2026)</Link>
           </NavigationGroup>
           <NavigationGroup id="navigation-informations" label="Informations">

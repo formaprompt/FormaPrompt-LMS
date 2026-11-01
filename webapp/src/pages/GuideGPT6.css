@@ -7,9 +7,37 @@
 .gpt6-guide .gpt6-advanced summary { cursor: pointer; font-weight: 700; }
 .gpt6-guide .gpt6-advanced p { margin-top: 1rem; color: #d5dfeb; }
 .gpt6-guide .gpt6-advanced code { color: white; overflow-wrap: anywhere; }
+.gpt6-guide .gpt6-effort-context { max-width: 980px; margin: 1.5rem auto; color: #d5dfeb; line-height: 1.75; }
+.gpt6-guide .gpt6-effort-context p + p { margin-top: .85rem; }
+.gpt6-guide .gpt6-effort-context h3 { margin: 1.5rem 0 .75rem; color: white; }
+.gpt6-guide .gpt6-effort-tradeoff { display: block; margin-top: .5rem; font-size: .9rem; }
+.gpt6-guide .gpt-effort-section a { color: #99f6e4; text-decoration: underline; text-underline-offset: 2px; }
+.gpt6-guide .gpt6-effort-sources { font-size: .85rem; }
 .gpt6-guide .gpt6-check { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,.35); }
 .gpt6-guide .gpt6-practice { max-width: 850px; margin: 2rem auto 0; color: var(--gpt-muted); }
 .gpt6-guide .gpt-sources a { text-decoration: underline; text-underline-offset: 2px; }
+.gpt6-guide .gpt6-hero-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 0 1.75rem; }
+.gpt6-guide .gpt6-plans > p { margin: 1.25rem 0; line-height: 1.8; }
+.gpt6-guide .gpt6-price-date, .gpt6-guide .gpt6-plan-note { padding: 1rem 1.2rem; background: #eff7f5; border-radius: 12px; }
+.gpt6-guide .gpt6-price-table-wrap { margin: 1.5rem 0; border: 1px solid #b9d3ce; border-radius: 14px; overflow: hidden; }
+.gpt6-guide .gpt6-price-table { width: 100%; border-collapse: collapse; table-layout: fixed; text-align: left; line-height: 1.65; }
+.gpt6-guide .gpt6-price-table caption { padding: 1rem 1.2rem; background: #125c59; color: white; text-align: left; font-weight: 700; }
+.gpt6-guide .gpt6-price-table th, .gpt6-guide .gpt6-price-table td { padding: 1rem; border-bottom: 1px solid #d4e2e1; vertical-align: top; overflow-wrap: anywhere; }
+.gpt6-guide .gpt6-price-table thead { background: #e9f4f0; }
+.gpt6-guide .gpt6-price-table thead th:first-child { width: 20%; }
+.gpt6-guide .gpt6-price-table thead th:nth-child(2) { width: 38%; }
+.gpt6-guide .gpt6-access-table thead th:nth-child(2) { width: 40%; }
+.gpt6-guide .gpt6-price-table tbody th { background: #f0f7f4; }
+.gpt6-guide .gpt6-price { display: block; color: #125c59; font-size: 1.08rem; }
+.gpt6-guide .gpt6-price-small { display: block; margin-top: .4rem; font-size: .93rem; }
+.gpt6-guide .gpt6-price-mobile-label { display: none; }
+.gpt6-guide .gpt6-team-plans { margin: 1.5rem 0 2.5rem; padding: 1rem 1.3rem; border: 1px solid #b9d3ce; border-radius: 14px; }
+.gpt6-guide .gpt6-team-plans summary { font-weight: 750; cursor: pointer; }
+.gpt6-guide .gpt6-team-plans summary:focus-visible { outline: 3px solid #c2410c; outline-offset: 4px; }
+.gpt6-guide .gpt6-api-note { padding: 1.5rem; margin-top: 1.5rem; border-left: 4px solid #0f766e; background: #f0f7f4; border-radius: 12px; }
+.gpt6-guide .gpt6-api-note p { margin-bottom: .75rem; }
+.gpt6-guide .gpt6-plans a { text-decoration: underline; text-underline-offset: 2px; }
+.gpt6-guide .gpt6-price-sources { font-size: .88rem; overflow-wrap: anywhere; }
 .gpt6-guide .gpt6-download { max-width: 940px; padding-top: 2rem; padding-bottom: 4rem; }
 .gpt6-guide .gpt6-download > div { padding: 2rem; border: 1px solid #b9d3ce; border-radius: 20px; background: #e9f4f0; }
 .gpt6-guide .gpt6-download h2 { display: flex; align-items: center; gap: .7rem; font-size: clamp(1.4rem, 3vw, 1.9rem); }
@@ -26,4 +54,10 @@
 @media (max-width: 700px) {
   .gpt6-guide .gpt-model-grid { grid-template-columns: minmax(0, 1fr); }
   .gpt6-guide .gpt6-download > div { padding: 1.25rem; }
+  .gpt6-guide .gpt6-price-table, .gpt6-guide .gpt6-price-table tbody, .gpt6-guide .gpt6-price-table tr { display: block; width: 100%; }
+  .gpt6-guide .gpt6-price-table caption { display: block; }
+  .gpt6-guide .gpt6-price-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .gpt6-guide .gpt6-price-table th, .gpt6-guide .gpt6-price-table td { display: block; width: 100%; border: 0; }
+  .gpt6-guide .gpt6-price-table tr { border-bottom: 3px solid #b9d3ce; }
+  .gpt6-guide .gpt6-price-mobile-label { display: block; margin-bottom: .35rem; color: #125c59; font-size: .8rem; font-weight: 750; }
 }

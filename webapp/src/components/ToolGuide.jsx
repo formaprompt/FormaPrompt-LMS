@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Check, ChevronRight, Download, Lightbulb } from 'lucide-react';
 import SEO from './SEO';
@@ -23,13 +23,20 @@ function CopyPrompt({ prompt }) {
   return <div className="tool-guide-copy"><button type="button" onClick={copy}>Copier la consigne</button><p role="status">{message}</p></div>;
 }
 
-export function GuideCases({ cases, id }) {
+export function GuideCases({ cases, id, title = 'Quatre cas pratiques avec des prompts CROP', reopenSelectedCase = false }) {
   const [selected, setSelected] = useState(0);
+  const panels = useRef([]);
+  function selectCase(index) {
+    setSelected(index);
+    if (reopenSelectedCase) {
+      panels.current.forEach((panel, panelIndex) => { if (panel) panel.open = panelIndex === index; });
+    }
+  }
   return <section className="gpt-section container" id={`${id}-cas`} aria-labelledby={`${id}-cas-title`}>
-    <div className="gpt-section-heading"><span className="gpt-step">À vous de choisir</span><h2 id={`${id}-cas-title`}>Quatre cas pratiques avec des prompts CROP</h2><p>CROP : Contexte, Rôle, Objectif, Précisions. Adaptez les crochets avec des informations fictives, publiques ou autorisées.{id === 'claude' && ' Les réglages proposés sont des conseils pédagogiques à tester.'}</p></div>
+    <div className="gpt-section-heading"><span className="gpt-step">À vous de choisir</span><h2 id={`${id}-cas-title`}>{title}</h2><p>CROP : Contexte, Rôle, Objectif, Précisions. Adaptez les crochets avec des informations fictives, publiques ou autorisées.{id === 'claude' && ' Les réglages proposés sont des conseils pédagogiques à tester.'}</p></div>
     <div className="gpt-chooser">
-      <div className="gpt-choices" role="group" aria-label="Choisir une situation de travail">{cases.map((item, index) => <button type="button" key={item.title} aria-pressed={selected === index} aria-controls={`${id}-case-${index}`} className={selected === index ? 'active' : ''} onClick={() => setSelected(index)}><span><strong>{item.title}</strong><small>{item.need}</small></span><ChevronRight size={18} aria-hidden="true" /></button>)}</div>
-      <div className="tool-guide-panels">{cases.map((item, index) => <details id={`${id}-case-${index}`} className="gpt-recommendation" key={item.title} open={selected === index}>
+      <div className="gpt-choices" role="group" aria-label="Choisir une situation de travail">{cases.map((item, index) => <button type="button" key={item.title} aria-pressed={selected === index} aria-controls={`${id}-case-${index}`} className={selected === index ? 'active' : ''} onClick={() => selectCase(index)}><span><strong>{item.title}</strong><small>{item.need}</small></span><ChevronRight size={18} aria-hidden="true" /></button>)}</div>
+      <div className="tool-guide-panels">{cases.map((item, index) => <details ref={panel => { panels.current[index] = panel; }} id={`${id}-case-${index}`} className="gpt-recommendation" key={item.title} open={selected === index}>
         <summary>{item.title}</summary><p className="gpt-reco-label">Un point de départ</p><p><strong>Fonction :</strong> {item.feature}</p>{item.setting && <p><strong>Réglage :</strong> {item.setting}</p>}
         <div className="tool-guide-prompt">{item.prompt.map(([label, content]) => <p key={label}><strong>{label} :</strong> {content}</p>)}</div>
         <CopyPrompt prompt={item.prompt} />
