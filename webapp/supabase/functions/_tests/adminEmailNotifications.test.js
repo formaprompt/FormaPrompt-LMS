@@ -10,13 +10,14 @@ const notification = { id,source_id:sourceId,kind:'contact_request',recipient_em
 function memoryStore() {
   const row = structuredClone(notification);
   return { row,
+    async contactForSource() { return null; },
     async pendingForSource() { return row.status === 'pending' ? [row] : []; },
     async claim() { if(row.status !== 'pending')return null; row.status='sending'; row.attempts++; return structuredClone(row); },
     async finish(_id,changes) { Object.assign(row,changes); },
   };
 }
 
-test('l’alerte admin vise uniquement le Gmail choisi, sans données du prospect',()=> {
+test('sans source liée, l’alerte admin vise le Gmail choisi et ignore les champs ajoutés à la file',()=> {
   const mail = buildAdminNotification({...notification,name:'Privé',email:'secret@example.test',message:'Besoin médical confidentiel'});
   assert.equal(mail.recipientEmail,'formaprompt@gmail.com');
   assert.match(mail.body,new RegExp(`/admin/commercial\\?demande=${sourceId}`));

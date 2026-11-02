@@ -95,7 +95,7 @@ export function buildWithdrawalReceiptEmail(receipt, fromAddress, contactEmail =
   };
 }
 
-export function buildCommercialEmail({ recipientEmail, subject, body, messageId, replyTo, attachments = [] }, fromAddress) {
+export function buildCommercialEmail({ recipientEmail, subject, body, htmlBody, messageId, replyTo, attachments = [] }, fromAddress) {
   const to = safeHeaderAddress(recipientEmail);
   const from = safeHeaderAddress(fromAddress);
   const normalizedSubject = String(subject || '').trim();
@@ -110,6 +110,9 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId,
   if (normalizedMessageId.length < 8 || normalizedMessageId.length > 180) {
     throw new SmtpReceiptError('smtp_message_id_invalid');
   }
+  if (htmlBody !== undefined && (typeof htmlBody !== 'string' || htmlBody.length < 2 || htmlBody.length > 200000)) {
+    throw new SmtpReceiptError('smtp_body_invalid');
+  }
   const headers = [
     `From: FormaPrompt <${from}>`,
     `To: <${to}>`,
@@ -121,7 +124,20 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId,
     'Content-Transfer-Encoding: base64',
   ];
   if (replyTo) headers.splice(2, 0, `Reply-To: <${safeHeaderAddress(replyTo)}>`);
+  let contentType = 'text/plain; charset=UTF-8';
   let content = wrapBase64(base64Utf8(normalizedBody));
+  if (htmlBody !== undefined) {
+    // Callers must supply trusted markup with escaped user content. Existing
+    // workflows stay text-only; contact alerts opt into an HTML alternative.
+    const alternative = `fp-alt-${crypto.randomUUID()}`;
+    contentType = `multipart/alternative; boundary="${alternative}"`;
+    headers.splice(headers.findIndex((line) => line.startsWith('Content-Type:')), 2, `Content-Type: ${contentType}`);
+    content = [`--${alternative}`, 'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64', '', content,
+      `--${alternative}`, 'Content-Type: text/html; charset=UTF-8',
+      'Content-Transfer-Encoding: base64', '', wrapBase64(base64Utf8(htmlBody)),
+      `--${alternative}--`].join('\r\n');
+  }
   if (attachments.length) {
     // Attachments are validated before this encoder; enforce a second, bounded
     // transport guard even when called by another server-side workflow.
@@ -129,10 +145,11 @@ export function buildCommercialEmail({ recipientEmail, subject, body, messageId,
       throw new SmtpReceiptError('smtp_attachments_invalid');
     }
     const boundary = `fp-${crypto.randomUUID()}`;
-    headers.splice(headers.findIndex((line) => line.startsWith('Content-Type:')), 2,
+    const typeIndex = headers.findIndex((line) => line.startsWith('Content-Type:'));
+    headers.splice(typeIndex, htmlBody === undefined ? 2 : 1,
       `Content-Type: multipart/mixed; boundary="${boundary}"`);
-    const parts = [`--${boundary}`, 'Content-Type: text/plain; charset=UTF-8',
-      'Content-Transfer-Encoding: base64', '', content];
+    const parts = [`--${boundary}`, `Content-Type: ${contentType}`,
+      ...(htmlBody === undefined ? ['Content-Transfer-Encoding: base64'] : []), '', content];
     for (const [index, file] of attachments.entries()) {
       if (!(file.bytes instanceof Uint8Array) || !['application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(file.mime)
         || !file.name || /[\r\n]/.test(file.name) || encoder.encode(file.name).length > 150) {
