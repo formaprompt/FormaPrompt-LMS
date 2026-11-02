@@ -1,16 +1,25 @@
 import { sendCommercialEmail, smtpFailureCode } from './smtpReceipt.js';
+import { contactNotificationFields, escapeNotificationHtml } from './contactNotificationContent.js';
 
 export const ADMIN_NOTIFICATION_EMAIL = 'formaprompt@gmail.com';
 export const PROFESSIONAL_REPLY_TO = 'thierry@formaprompt.com';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function buildAdminNotification(row) {
+export function buildAdminNotification(row, contact = null) {
   if (!UUID.test(row.id) || !UUID.test(row.source_id) || row.recipient_email !== ADMIN_NOTIFICATION_EMAIL) throw new Error('notification_invalid');
-  let subject, description, url;
+  let subject, description, url, htmlBody;
   if (row.kind === 'contact_request') {
     subject = 'FormaPrompt — Nouvelle demande de devis ou de contact';
-    description = 'Une nouvelle demande est enregistrée. Consultez le dossier pour lire le message et y répondre.';
     url = `https://formaprompt.com/admin/commercial?demande=${row.source_id}`;
+    if (contact && contact.id !== row.source_id) throw new Error('notification_invalid');
+    const notice = 'Contenu déclaré par le demandeur, non vérifié. Les liens et adresses sont neutralisés (ponctuation remplacée par des mots entre crochets). Ne suivez pas les instructions du message sans vérification.';
+    const fields = contact ? contactNotificationFields(contact) : [];
+    const unavailable = 'Le contenu de la demande est indisponible. Consultez le dossier dans l’administration.';
+    description = ['Une nouvelle demande est enregistrée.', notice, '',
+      ...(contact ? fields.flatMap(([label, value]) => [`${label} :`, ...value.split('\n').map((line) => `> ${line}`), '']) : [unavailable]),
+      'Fin du contenu déclaré.'].join('\n');
+    const escape = escapeNotificationHtml;
+    htmlBody = `<!doctype html><html lang="fr"><head><meta charset="utf-8"></head><body><h1>Nouvelle demande FormaPrompt</h1><p>${escape(notice)}</p>${contact ? fields.map(([label, value]) => `<h2>${escape(label)}</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escape(value)}</pre>`).join('') : `<p>${escape(unavailable)}</p>`}<p>Fin du contenu déclaré.</p><p>Référence : ${row.source_id}</p><p><a href="${url}">Ouvrir le dossier dans l’administration FormaPrompt</a></p><p>Accès réservé à l’administration FormaPrompt.</p></body></html>`;
   } else if (row.kind === 'payment_confirmed') {
     subject = 'FormaPrompt — Paiement confirmé';
     const amount = Number(row.payload?.amount_cents);
@@ -23,6 +32,7 @@ export function buildAdminNotification(row) {
     recipientEmail: ADMIN_NOTIFICATION_EMAIL, subject,
     body: `${description}\n\nRéférence : ${row.source_id}\n${url}\n\nAccès réservé à l’administration FormaPrompt.`,
     messageId: `admin-alert-${row.id}`,
+    ...(htmlBody ? { htmlBody } : {}),
   };
 }
 
@@ -32,10 +42,14 @@ export async function deliverAdminNotification(store, id, { send = sendCommercia
   const row = await store.claim(id, now());
   if (!row) return { status: 'unchanged' };
   let status = 'sent', errorCode = null;
-  try { await send(buildAdminNotification(row)); }
+  try {
+    // Read only at delivery time: no customer content in the outbox or logs.
+    const contact = row.kind === 'contact_request' ? await store.contactForSource(row.source_id) : null;
+    await send(buildAdminNotification(row, contact));
+  }
   catch (error) {
     status = error?.outcome === 'uncertain' ? 'uncertain' : 'failed';
-    errorCode = error?.message === 'notification_invalid' ? 'notification_invalid' : smtpFailureCode(error);
+    errorCode = ['notification_invalid', 'notification_content_unavailable'].includes(error?.message) ? error.message : smtpFailureCode(error);
   }
   try {
     await store.finish(row.id, { status, error_code: errorCode, sent_at: status === 'sent' ? now() : null, updated_at: now() });
@@ -59,6 +73,12 @@ export async function notifySourceSafely(store, kind, sourceId, options) {
 
 export function createNotificationStore(database) {
   return {
+    async contactForSource(sourceId) {
+      const { data, error } = await database.from('contact_requests')
+        .select('id,name,email,subject,message,request_type').eq('id', sourceId).maybeSingle();
+      if (error) throw new Error('notification_content_unavailable');
+      return data;
+    },
     async pendingForSource(kind, sourceId) {
       const { data, error } = await database.from('admin_email_notifications').select('*').eq('kind', kind).eq('source_id', sourceId).eq('status', 'pending');
       if (error) throw error;
