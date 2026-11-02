@@ -1162,7 +1162,7 @@ const aiActModules = [
     ],
     keyPoints: [
       "L’AI Act raisonne à partir du système, de l’usage, du rôle de l’organisation et des effets possibles",
-      "Les définitions, les pratiques interdites et l’obligation de maîtrise de l’IA s’appliquent depuis le 2 février 2025",
+      "Les premières interdictions et dispositions générales s'appliquent depuis le 2 février 2025 ; l'article 4 et le calendrier ont été modifiés le 27 juillet 2026",
       "Une cartographie factuelle prépare l’analyse, mais ne constitue pas à elle seule une qualification juridique",
     ],
     activity: "Cartographier un à trois usages réels ou réalistes, distinguer les acteurs et noter les informations qui restent à vérifier.",
@@ -1254,7 +1254,7 @@ const aiActModules = [
       takeaways: [
         "L’analyse commence par un usage précis, pas par le nom commercial d’un outil.",
         "Le fournisseur, le déployeur, les utilisateurs et les personnes concernées ont des positions différentes.",
-        "La maîtrise de l’IA doit être adaptée aux fonctions, aux connaissances et au contexte d’utilisation.",
+        "Les mesures de soutien à la maîtrise de l'IA sont adaptées aux fonctions, aux connaissances et au contexte, sans niveau individuel garanti.",
         "La cartographie conserve les faits, les sources et les questions à faire confirmer ; elle ne remplace pas un avis juridique.",
       ],
     },
@@ -1381,7 +1381,7 @@ const aiActModules = [
       "Prévoir des traces simples, une actualisation et des règles de minimisation des données",
     ],
     keyPoints: [
-      "L’article 4 ne prévoit pas un programme identique pour tous : les mesures dépendent des personnes, des systèmes et du contexte",
+      "L'article 4 modifié le 27 juillet 2026 demande des mesures adaptées pour soutenir la maîtrise de l'IA, sans garantie de niveau individuel particulier",
       "Une formation peut être complétée par des consignes, exercices, ressources, échanges et rappels adaptés aux usages",
       "Aucun certificat ni aucune structure de gouvernance particulière n’est imposé pour l’article 4 ; un registre interne proportionné peut conserver les actions réalisées",
     ],
@@ -1398,8 +1398,8 @@ const aiActModules = [
           description: "Personnel ou autre personne qui utilise ou fait fonctionner un système d’IA pour le compte de l’organisation. Le périmètre peut inclure des prestataires ou partenaires selon la situation.",
         },
         {
-          title: "Niveau suffisant",
-          description: "Compétences, connaissances et compréhension adaptées à la fonction, à l’expérience, au système utilisé, à ses risques et aux personnes sur lesquelles il peut produire des effets.",
+          title: "Mesures adaptées",
+          description: "L'article 4 modifié demande des mesures de soutien adaptées aux connaissances, à l'expérience, à la formation, au contexte et aux personnes concernées, sans garantir un niveau individuel particulier.",
         },
         {
           title: "Preuve proportionnée",
@@ -2033,7 +2033,7 @@ const aiActGlossary = [
   },
   {
     term: "Maîtrise de l'IA",
-    definition: "Compétences, connaissances et compréhension permettant un usage éclairé des systèmes d’IA et une conscience adaptée de leurs possibilités et risques.",
+    definition: "Connaissances et compétences pour un usage éclairé de l'IA. L'article 4 actuel demande des mesures adaptées pour soutenir leur développement, sans niveau individuel garanti.",
     example: "Un utilisateur sait ce que l’outil peut faire, quelles données il ne doit pas saisir, quels contrôles réaliser et quand arrêter l’usage.",
   },
   {
@@ -2177,7 +2177,7 @@ const aiActQuiz = [
   {
     id: 'literacy',
     domain: 'literacy_and_action',
-    question: "Les personnes qui utilisent l'IA ont-elles été sensibilisées à ses limites et à ses risques ?",
+    question: "Des mesures adaptées soutiennent-elles la compréhension des limites et risques de l'IA par les personnes qui l'utilisent ?",
     answers: [
       { label: 'Pas encore', score: 0 },
       { label: 'Pour une partie des utilisateurs', score: 1 },
@@ -3832,16 +3832,23 @@ export const courseCatalog = {
         download: 'modele-cas-final-ia-act-formaprompt.pdf',
       },
       {
+        title: "Calendrier actuel de l'AI Act",
+        description: "Après l'AI Omnibus du 27 juillet 2026 : application générale le 2 août 2026, transition ciblée le 2 décembre 2026, annexe III le 2 décembre 2027 et annexe I le 2 août 2028. Vérifié le 2 novembre 2026.",
+        href: 'https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act',
+        action: 'Vérifier les échéances applicables',
+        external: true,
+      },
+      {
         title: "Règlement européen sur l'intelligence artificielle",
-        description: 'Texte officiel du règlement (UE) 2024/1689 publié sur EUR-Lex.',
-        href: 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj?locale=fr',
+        description: 'Texte consolidé au 27 juillet 2026, intégrant le règlement modificatif (UE) 2026/1744 ; référence vérifiée le 2 novembre 2026.',
+        href: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:02024R1689-20260727',
         action: 'Consulter le texte officiel',
         external: true,
       },
       {
-        title: "Questions-réponses sur la maîtrise de l'IA",
-        description: "Précisions de la Commission européenne sur l'application de l'article 4.",
-        href: 'https://digital-strategy.ec.europa.eu/en/faqs/ai-literacy-questions-answers',
+        title: "Article 4 : mesures de maîtrise de l'IA",
+        description: "Version actuelle publiée par le Service Desk ; mesures adaptées et absence de niveau individuel garanti. Vérifiée le 2 novembre 2026.",
+        href: 'https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-4',
         action: 'Consulter la ressource officielle',
         external: true,
       },

@@ -9,6 +9,10 @@ import { STUDIO_DRAFT_KEY } from './draft';
 import { calculateCategoryScore } from './engine/scoreCategory';
 import StudioPage from './StudioPage';
 
+// Cold lazy chunks can exceed Testing Library's default 1 s under parallel load.
+// Keep checking the real rendered field rather than assuming the keyboard event completed loading.
+const workspaceRenderTimeout = { timeout: 10_000 };
+
 const clipboardWrite = vi.fn<(text: string) => Promise<void>>();
 
 function renderStudio() {
@@ -62,7 +66,7 @@ describe('Sprint 1 UX du Studio', () => {
 
     expect(screen.getAllByRole('heading', { name: 'Formation' }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: 'Changer de cas d’usage' })).toBeInTheDocument();
-    expect(await screen.findByLabelText(/^Décrivez le besoin de formation/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/^Décrivez le besoin de formation/, {}, workspaceRenderTimeout)).toBeInTheDocument();
     await waitFor(() => expect(document.getElementById('studio-form-start')).toHaveFocus());
     expect(JSON.parse(window.localStorage.getItem(STUDIO_DRAFT_KEY) ?? '{}')).toMatchObject({ categoryId: 'training' });
   });
@@ -74,13 +78,13 @@ describe('Sprint 1 UX du Studio', () => {
     const emailCard = screen.getByRole('button', { name: 'Courriel professionnel', pressed: false });
     emailCard.focus();
     await user.keyboard('{Enter}');
-    expect(screen.getByLabelText(/^Décrivez votre besoin/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/^Décrivez votre besoin/, {}, workspaceRenderTimeout)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Changer de cas d’usage' }));
     const trainingCard = screen.getByRole('button', { name: 'Formation', pressed: false });
     trainingCard.focus();
     await user.keyboard(' ');
-    expect(screen.getByLabelText(/^Décrivez le besoin de formation/)).toBeInTheDocument();
+    expect(await screen.findByLabelText(/^Décrivez le besoin de formation/, {}, workspaceRenderTimeout)).toBeInTheDocument();
   });
 
   it.each([

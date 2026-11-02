@@ -30,7 +30,7 @@ from generate_guide_formateur_ia_generative import (
 
 
 OUTPUT = ROOT / "output" / "pdf" / "guide-formateur-ia-act-formaprompt.pdf"
-PUBLIC_COPY = ROOT / "webapp" / "public" / "assets" / "guide-formateur-ia-act-formaprompt.pdf"
+PRIVATE_COPY = ROOT / "webapp" / "supabase" / "seed" / "paid-course-content" / "formation-ia-act" / "trainer" / "guide-formateur-ia-act-formaprompt.pdf"
 
 
 def cover_page(canvas, doc):
@@ -63,7 +63,7 @@ def regular_page(canvas, doc):
     canvas.setStrokeColor(BORDER)
     canvas.line(20 * mm, 15 * mm, PAGE_WIDTH - 20 * mm, 15 * mm)
     canvas.setFont("Arial", 8)
-    canvas.drawString(20 * mm, 10 * mm, "Version juillet 2026 - Document interne")
+    canvas.drawString(20 * mm, 10 * mm, "Version du 2 novembre 2026 - Document interne")
     canvas.drawRightString(PAGE_WIDTH - 20 * mm, 10 * mm, f"Page {doc.page}")
     canvas.restoreState()
 
@@ -483,12 +483,16 @@ def build_story():
     ]))
     story.append(callout("Dernier repère", "Une bonne animation apprend à décrire, vérifier, transmettre et réviser. Elle ne transforme jamais un support, un quiz ou une attestation en promesse automatique de conformité.", "green"))
 
+    story.append(Spacer(1, 3 * mm))
+    story.append(callout("Repère actualisé le 2 novembre 2026", "L'article 4 modifié le 27 juillet 2026 demande des mesures adaptées de soutien à la maîtrise de l'IA, sans niveau individuel garanti. Les exigences de supervision des articles 14 et 26 visent les systèmes à haut risque, selon leurs conditions d'application. Calendrier : application générale le 2 août 2026 ; nouvelles interdictions et transition ciblée de l'article 50(2) le 2 décembre 2026 ; annexe III le 2 décembre 2027 ; annexe I le 2 août 2028.", "gray"))
+    story.append(p('Sources : <link href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-4">article 4 actuel</link> ; <link href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act">calendrier du Service Desk</link> ; <link href="https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force">AI Omnibus adopté, entré en vigueur le 27 juillet 2026</link>.', "small"))
+
     return story
 
 
 def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    PUBLIC_COPY.parent.mkdir(parents=True, exist_ok=True)
+    PRIVATE_COPY.parent.mkdir(parents=True, exist_ok=True)
     prepare_logo()
     document = GuideDocTemplate(
         str(OUTPUT),
@@ -505,9 +509,9 @@ def main():
         pageCompression=1,
     )
     document.build(build_story(), onFirstPage=cover_page, onLaterPages=regular_page)
-    PUBLIC_COPY.write_bytes(OUTPUT.read_bytes())
+    PRIVATE_COPY.write_bytes(OUTPUT.read_bytes())
     print(f"PDF créé : {OUTPUT}")
-    print(f"Copie web : {PUBLIC_COPY}")
+    print(f"Copie privée : {PRIVATE_COPY}")
 
 
 if __name__ == "__main__":

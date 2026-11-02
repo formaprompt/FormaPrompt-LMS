@@ -27,7 +27,7 @@ from generate_guide_ia_generative import (
 
 
 OUTPUT = ROOT / "output" / "pdf" / "cahier-activites-ia-act-formaprompt.pdf"
-PUBLIC_COPY = ROOT / "webapp" / "public" / "assets" / "cahier-activites-ia-act-formaprompt.pdf"
+PRIVATE_COPY = ROOT / "webapp" / "supabase" / "seed" / "paid-course-content" / "formation-ia-act" / "resources" / "cahier-activites-ia-act-formaprompt.pdf"
 
 def activity_cover(canvas, doc):
     canvas.saveState()
@@ -405,12 +405,16 @@ def build_story():
         story.extend(realization_page(exercise))
         story.extend(bilan_page(exercise))
 
+    story.append(Spacer(1, 3 * mm))
+    story.append(callout("Repère actualisé le 2 novembre 2026", "L'article 4 modifié le 27 juillet 2026 demande des mesures adaptées de soutien à la maîtrise de l'IA, sans niveau individuel garanti. Les exigences de supervision des articles 14 et 26 visent les systèmes à haut risque, selon leurs conditions d'application. Calendrier : application générale le 2 août 2026 ; nouvelles interdictions et transition ciblée de l'article 50(2) le 2 décembre 2026 ; annexe III le 2 décembre 2027 ; annexe I le 2 août 2028.", "gray"))
+    story.append(p('Sources : <link href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-4">article 4 actuel</link> ; <link href="https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act">calendrier du Service Desk</link> ; <link href="https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force">AI Omnibus adopté, entré en vigueur le 27 juillet 2026</link>.', "small"))
+
     return story
 
 
 def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    PUBLIC_COPY.parent.mkdir(parents=True, exist_ok=True)
+    PRIVATE_COPY.parent.mkdir(parents=True, exist_ok=True)
     prepare_logo()
     document = ActivityDocTemplate(
         str(OUTPUT),
@@ -427,9 +431,9 @@ def main():
         pageCompression=1,
     )
     document.build(build_story(), onFirstPage=activity_cover)
-    PUBLIC_COPY.write_bytes(OUTPUT.read_bytes())
+    PRIVATE_COPY.write_bytes(OUTPUT.read_bytes())
     print(f"PDF créé : {OUTPUT}")
-    print(f"Copie web : {PUBLIC_COPY}")
+    print(f"Copie privée : {PRIVATE_COPY}")
 
 
 if __name__ == "__main__":
