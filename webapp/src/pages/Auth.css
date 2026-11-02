@@ -36,19 +36,21 @@
   gap: 1.5rem;
 }
 
-.form-group {
+/* Lazy-loaded page styles persist during navigation. Keep the dark form
+   palette inside authentication forms without changing selector specificity. */
+:where(.auth-form) .form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.form-group label {
+:where(.auth-form) .form-group label {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-secondary, #ccc);
 }
 
-.form-group input {
+:where(.auth-form) .form-group input {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid var(--border-color, #444);
@@ -58,7 +60,7 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.form-group input:focus {
+:where(.auth-form) .form-group input:focus {
   outline: none;
   border-color: var(--primary-color, #3b82f6);
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
