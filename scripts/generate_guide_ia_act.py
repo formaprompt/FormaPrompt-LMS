@@ -30,7 +30,7 @@ from generate_guide_ia_generative import (
 
 
 OUTPUT = ROOT / "output" / "pdf" / "guide-pratique-ia-act-formaprompt.pdf"
-PUBLIC_COPY = ROOT / "webapp" / "public" / "assets" / "guide-pratique-ia-act-formaprompt.pdf"
+PRIVATE_COPY = ROOT / "webapp" / "supabase" / "seed" / "paid-course-content" / "formation-ia-act" / "resources" / "guide-pratique-ia-act-formaprompt.pdf"
 
 cover_note_style = ParagraphStyle(
     "AiActCoverNote",
@@ -81,7 +81,7 @@ def regular_page(canvas, doc):
     canvas.setStrokeColor(BORDER)
     canvas.line(20 * mm, 15 * mm, PAGE_WIDTH - 20 * mm, 15 * mm)
     canvas.setFont("Arial", 8)
-    canvas.drawString(20 * mm, 10 * mm, "Version du 18 juillet 2026")
+    canvas.drawString(20 * mm, 10 * mm, "Version du 2 novembre 2026")
     canvas.drawRightString(PAGE_WIDTH - 20 * mm, 10 * mm, f"Page {doc.page}")
     canvas.restoreState()
 
@@ -352,7 +352,7 @@ def build_story():
                 "une modalité de vérification par groupe ;",
                 "des preuves minimisées, une échéance et une règle de révision.",
             ],
-            "Le plan dépend-il des connaissances, de l'expérience, du contexte d'usage et des personnes concernées, comme le demande l'article 4 actuellement applicable ?",
+            "Le plan soutient-il la maîtrise de l'IA par des mesures adaptées aux connaissances, à l'expérience, au contexte et aux personnes concernées, sans promettre un niveau individuel garanti ?",
         )
     )
 
@@ -537,7 +537,7 @@ def build_story():
         page_title(
             "Repères réglementaires datés",
             "Un calendrier à vérifier avant toute décision",
-            "Situation consultée le 18 juillet 2026. Les textes, lignes directrices, standards et dates d'application peuvent évoluer.",
+            "Situation vérifiée le 2 novembre 2026, après le modificatif (UE) 2026/1744 entré en vigueur le 27 juillet 2026. Les textes, lignes directrices, standards et dates d'application peuvent évoluer.",
         )
     )
     story.append(
@@ -548,13 +548,15 @@ def build_story():
                 ["2 février 2025", "Application des définitions, pratiques interdites et maîtrise de l'IA", "Agir sur les usages et l'acculturation"],
                 ["2 août 2025", "Règles de gouvernance et obligations relatives aux modèles d'IA à usage général", "Vérifier le rôle et les documents du fournisseur"],
                 ["2 août 2026", "Date générale d'application prévue par le règlement, avec exceptions", "Recontrôler les obligations applicables à chaque usage"],
-                ["Calendrier en évolution", "Un accord politique de mai 2026 modifie certaines échéances relatives aux systèmes à haut risque", "Vérifier le texte final adopté avant de retenir une date"],
+                ["2 décembre 2026", "Nouvelles interdictions : contenus sexuels non consentis et pédocriminels générés par IA ; transition ciblée de l'article 50(2)", "Vérifier si le système relève de la transition (mise sur le marché avant le 2 août 2026)"],
+                ["2 décembre 2027", "Règles relatives aux systèmes à haut risque de l'annexe III", "Qualifier l'usage et les conditions applicables"],
+                ["2 août 2028", "Règles relatives aux systèmes à haut risque intégrés aux produits réglementés de l'annexe I", "Examiner le produit et le rôle de l'organisation"],
             ],
             [32 * mm, 83 * mm, 56 * mm],
         )
     )
     story.append(Spacer(1, 4 * mm))
-    story.append(callout("Article 4 : point de vigilance", "L'obligation de maîtrise de l'IA figure dans le règlement actuellement applicable. La Commission indique aussi qu'une modification a été proposée dans le cadre du paquet de simplification. Ne fondez pas une décision sur ce guide : vérifiez le texte consolidé et les communications officielles à la date de l'analyse.", "amber"))
+    story.append(callout("Article 4 : point de vigilance", "Depuis le modificatif adopté du 27 juillet 2026, l'article 4 demande des mesures adaptées pour soutenir la maîtrise de l'IA, sans garantir un niveau individuel particulier. Les exigences spécifiques de supervision des articles 14 et 26 concernent les systèmes à haut risque, selon leur calendrier et leurs conditions d'application.", "amber"))
     story.append(p("Réflexe avant une échéance", "h2"))
     story.extend(numbered(["Ouvrir le texte consolidé sur EUR-Lex.", "Consulter le calendrier de la Commission.", "Identifier la disposition et l'exception utiles au cas.", "Dater la source et faire confirmer l'interprétation compétente."]))
     story.append(PageBreak())
@@ -615,10 +617,12 @@ def build_story():
     story.append(p("Sources officielles consultées", "h2"))
     story.extend(
         [
-            source_link("Règlement (UE) 2024/1689 - texte EUR-Lex", "https://eur-lex.europa.eu/eli/reg/2024/1689/oj?locale=fr"),
+            source_link("AI Act consolidé au 27 juillet 2026 - EUR-Lex", "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:02024R1689-20260727"),
             source_link("Commission européenne - présentation et calendrier de l'AI Act", "https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai"),
             source_link("Commission européenne - questions et réponses sur la maîtrise de l'IA", "https://digital-strategy.ec.europa.eu/en/faqs/ai-literacy-questions-answers"),
-            source_link("Commission européenne - Navigating the AI Act", "https://digital-strategy.ec.europa.eu/en/faqs/navigating-ai-act"),
+            source_link("Commission européenne - AI Omnibus entré en vigueur le 27 juillet 2026", "https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force"),
+            source_link("Service Desk - calendrier actualisé", "https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act"),
+            source_link("Service Desk - article 4 actuel", "https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-4"),
         ]
     )
     story.append(callout("Dernier repère", "Ce guide structure une première démarche. Pour une situation réelle à effet important, recherchez les informations manquantes, protégez les personnes et demandez les validations compétentes avant de poursuivre.", "red"))
@@ -628,7 +632,7 @@ def build_story():
 
 def main():
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    PUBLIC_COPY.parent.mkdir(parents=True, exist_ok=True)
+    PRIVATE_COPY.parent.mkdir(parents=True, exist_ok=True)
     prepare_logo()
     document = GuideDocTemplate(
         str(OUTPUT),
@@ -645,9 +649,9 @@ def main():
         pageCompression=1,
     )
     document.build(build_story(), onFirstPage=cover_page, onLaterPages=regular_page)
-    PUBLIC_COPY.write_bytes(OUTPUT.read_bytes())
+    PRIVATE_COPY.write_bytes(OUTPUT.read_bytes())
     print(f"PDF créé : {OUTPUT}")
-    print(f"Copie web : {PUBLIC_COPY}")
+    print(f"Copie privée : {PRIVATE_COPY}")
 
 
 if __name__ == "__main__":

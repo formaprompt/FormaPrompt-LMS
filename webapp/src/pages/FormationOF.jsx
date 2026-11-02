@@ -20,7 +20,7 @@ export default function FormationOF() {
           </p>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
             <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>⏱ Durée : 14 heures</span>
-            <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>🎓 Formation Certifiante</span>
+            <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>🎓 Certification : conditions à vérifier</span>
             <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.9rem', fontWeight: '500' }}>📌 Réf : F07-AIFORM-C03</span>
           </div>
         </div>
@@ -38,12 +38,12 @@ export default function FormationOF() {
         <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid #10b981', marginBottom: '2rem', textAlign: 'left' }}>
           <h3 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Certification RS6891 (CertifIAG)</h3>
           <p style={{ margin: 0 }}>
-            Cette formation permet l'accès à la certification RS6891 en partenariat avec <strong>Manager Solution Calais</strong>. Elle inclut la production d’un dossier certifiable et la préparation complète à la soutenance.
+            Cette formation de 14 heures prépare à la production d'un dossier et à la soutenance du référentiel RS6891. L'accès à la certification dépend de la voie choisie, de l'admissibilité du candidat et des modalités confirmées avant l'inscription ; il n'est pas automatique.
           </p>
         </div>
 
         <h3 className="mb-2">Objectifs de la formation</h3>
-        <p className="mb-4">Cette formation certifiante permet aux formateurs et ingénieurs pédagogiques d’utiliser l’Intelligence Artificielle Générative (IAG) de manière professionnelle et éthique. Pour approfondir la structuration des demandes, découvrez aussi la <Link to="/formation-prompt-engineering">formation Prompt Engineering – Niveau 1</Link>.</p>
+        <p className="mb-4">Cette formation permet aux formateurs et ingénieurs pédagogiques d’utiliser l’Intelligence Artificielle Générative (IAG) de manière professionnelle et éthique. Pour approfondir la structuration des demandes, découvrez aussi la <Link to="/formation-prompt-engineering">formation Prompt Engineering – Niveau 1</Link>.</p>
 
         <div className="mb-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', textAlign: 'left' }}>
           <div className="card" style={{ border: '1px solid #e5e7eb' }}>
@@ -70,9 +70,9 @@ export default function FormationOF() {
 
         <div className="grid grid-cols-2" style={{ gap: '1.5rem', textAlign: 'left', marginBottom: '2rem' }}>
           <div className="card" style={{ padding: '1.5rem', border: '1px solid #e5e7eb' }}>
-            <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>Prérequis</h4>
+            <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>Prérequis d'entrée en formation</h4>
             <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', fontSize: '0.95rem' }}>
-              <li>Avoir une expérience en formation ou en conception pédagogique.</li>
+              <li>Avoir un projet professionnel de production de contenus pédagogiques ou multimédias, ou une expérience dans ce domaine.</li>
               <li>Aisance globale avec les outils numériques.</li>
             </ul>
           </div>
@@ -85,6 +85,18 @@ export default function FormationOF() {
               <li>Responsables pédagogiques</li>
             </ul>
           </div>
+        </div>
+
+        <div className="card mb-4" style={{ textAlign: 'left', border: '1px solid #e5e7eb' }}>
+          <h3>Accès à la certification RS6891 : une vérification distincte</h3>
+          <p>Les prérequis de formation ci-dessus ne suffisent pas à établir l'admissibilité à la certification.</p>
+          <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem' }}>
+            <li><strong>Formation continue :</strong> diplôme Bac+2 obtenu dans un domaine justifiant la création de contenu professionnel multimédia, au moins 6 mois d'expérience professionnelle dans une fonction de création de contenu multimédia sur le web, et inscription auprès d'un organisme habilité.</li>
+            <li><strong>Formation initiale :</strong> préparation d'un diplôme Bac+2 pertinent, au moins 6 mois d'expérience professionnelle ou scolaire dans une tâche de création de contenu multimédia sur le web, et établissement habilité, selon la fiche officielle.</li>
+            <li><strong>Candidature individuelle :</strong> diplôme Bac+2 pertinent obtenu, au moins 6 mois d'expérience professionnelle dans cette fonction et lettre de motivation étayée par des projets et les compétences d'usage responsable de l'IA générative.</li>
+          </ul>
+          <p>Avant tout engagement dans un parcours certifiant FormaPrompt, le dossier est contrôlé : diplôme, expérience et voie d'accès. L'organisme habilité portant l'inscription, le cadre d'intervention de FormaPrompt et les modalités d'évaluation doivent être confirmés par écrit. La réussite relève de l'évaluation du jury.</p>
+          <p>Sources consultées le 2 novembre 2026 : <a href="https://www.francecompetences.fr/recherche/rs/6891/" target="_blank" rel="noreferrer">fiche officielle RS6891</a> et <a href="https://kompetences.fr/certification-ia/certifiag/" target="_blank" rel="noreferrer">conditions du certificateur Kompétences</a>. La fiche distingue les voies d'accès ; les conditions de la voie retenue sont vérifiées avec le certificateur.</p>
         </div>
 
         <h3 className="mb-2 mt-4 text-left">Programme de la formation</h3>
@@ -133,7 +145,7 @@ export default function FormationOF() {
               <li>Évaluations formatives (quiz, exercices).</li>
               <li>Production d’un contenu généré avec l'IA (C1 à C4).</li>
               <li>Soutenance orale finale : analyse des risques et démonstration (C5).</li>
-              <li>Remise d’une attestation et accès à la certification RS6891.</li>
+              <li>Remise d'une attestation de formation ; présentation à la certification sous réserve d'admissibilité et des modalités confirmées avant engagement.</li>
             </ul>
           </div>
         </div>
@@ -141,7 +153,7 @@ export default function FormationOF() {
 
       <div style={{ padding: '2rem', background: 'var(--card-bg)', borderRadius: '12px', border: '1px solid var(--color-primary)', marginBottom: '2rem', textAlign: 'center' }}>
         <h3 className="mb-2">Prêt à intégrer l'IA dans vos formations ?</h3>
-        <p className="mb-4">Contactez-nous pour planifier votre session et préparer votre certification.</p>
+        <p className="mb-4">Contactez-nous pour planifier votre session et vérifier votre projet de certification avant tout engagement.</p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link to="/contact" className="btn btn-primary">
             Demander un devis

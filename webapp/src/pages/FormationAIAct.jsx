@@ -19,8 +19,20 @@ import './FormationAIAct.css';
 
 const officialSources = [
   {
-    label: 'Règlement (UE) 2024/1689 – EUR-Lex',
-    href: 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj?locale=fr',
+    label: 'AI Omnibus entré en vigueur le 27 juillet 2026 - Commission européenne',
+    href: 'https://digital-strategy.ec.europa.eu/en/news/ai-omnibus-enters-force',
+  },
+  {
+    label: 'Calendrier actualisé - AI Act Service Desk',
+    href: 'https://ai-act-service-desk.ec.europa.eu/en/ai-act/timeline/timeline-implementation-eu-ai-act',
+  },
+  {
+    label: 'Article 4 actuel - AI Act Service Desk',
+    href: 'https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-4',
+  },
+  {
+    label: 'AI Act consolidé au 27 juillet 2026 - EUR-Lex',
+    href: 'https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:02024R1689-20260727',
   },
   {
     label: "Calendrier d'application – Commission européenne",
@@ -30,6 +42,16 @@ const officialSources = [
     label: "Questions-réponses sur la maîtrise de l'IA – Commission européenne",
     href: 'https://digital-strategy.ec.europa.eu/en/faqs/ai-literacy-questions-answers',
   },
+];
+
+const applicationTimeline = [
+  ['2 février 2025', "Premières interdictions et dispositions générales, dont la maîtrise de l'IA."],
+  ['2 août 2025', "Gouvernance et obligations relatives aux modèles d'IA à usage général."],
+  ['27 juillet 2026', "Entrée en vigueur du règlement modificatif (UE) 2026/1744 (AI Omnibus)."],
+  ['2 août 2026', "Application générale, notamment transparence (article 50), sous réserve des exceptions et transitions."],
+  ['2 décembre 2026', "Nouvelles interdictions visant les contenus sexuels non consentis et pédocriminels générés par IA ; échéance transitoire de l'article 50(2) pour certains systèmes déjà commercialisés avant le 2 août 2026."],
+  ['2 décembre 2027', "Règles relatives aux systèmes d'IA à haut risque de l'annexe III."],
+  ['2 août 2028', "Règles relatives aux systèmes d'IA à haut risque intégrés aux produits réglementés de l'annexe I."],
 ];
 
 const modules = [
@@ -58,7 +80,7 @@ const modules = [
     title: "Organiser l'acculturation des équipes",
     duration: '1 h',
     items: [
-      "Comprendre l'obligation de maîtrise de l'IA prévue à l'article 4",
+      "Comprendre les mesures adaptées de soutien à la maîtrise de l'IA (article 4 actuel)",
       'Adapter le niveau de formation aux fonctions et aux usages',
       'Tracer les actions réalisées sans collecter de données inutiles',
     ],
@@ -135,7 +157,7 @@ export default function FormationAIAct() {
 
             <aside className="ai-act-deadline-card" aria-label="Repères réglementaires">
               <ShieldCheck size={44} aria-hidden="true" />
-              <p className="ai-act-deadline-label">Échéance-clé</p>
+              <p className="ai-act-deadline-label">Application générale</p>
               <p className="ai-act-deadline-date">2 août 2026</p>
               <p>
                 Date d'application générale de nombreuses dispositions du règlement, avec des exceptions et
@@ -143,10 +165,24 @@ export default function FormationAIAct() {
               </p>
               <div className="ai-act-already-active">
                 <CheckCircle size={20} aria-hidden="true" />
-                <span>L'obligation de maîtrise de l'IA de l'article 4 s'applique depuis le 2 février 2025.</span>
+                <span>Article 4 applicable depuis le 2 février 2025, modifié le 27 juillet 2026 : soutenir la maîtrise de l'IA par des mesures adaptées, sans garantir un niveau individuel particulier.</span>
               </div>
             </aside>
           </div>
+        </section>
+
+        <section className="container ai-act-section" aria-labelledby="ai-act-calendar-title">
+          <div className="ai-act-section-heading">
+            <p className="ai-act-kicker">Repères vérifiés le 2 novembre 2026</p>
+            <h2 id="ai-act-calendar-title">Un calendrier d'application progressif</h2>
+            <p>Le modificatif (UE) 2026/1744 est entré en vigueur le 27 juillet 2026. Les échéances ci-dessous intègrent ce texte adopté ; l'obligation précise reste à vérifier pour chaque système et chaque rôle.</p>
+          </div>
+          <ol className="ai-act-check-list">
+            {applicationTimeline.map(([date, description]) => (
+              <li key={date}><strong>{date} :</strong> {description}</li>
+            ))}
+          </ol>
+          <p>Les exigences spécifiques de supervision humaine des articles 14 et 26 concernent les systèmes à haut risque selon leur calendrier et leurs conditions d'application. Elles se distinguent des mesures générales de l'article 4.</p>
         </section>
 
         <section className="container ai-act-section">
@@ -328,7 +364,7 @@ export default function FormationAIAct() {
               audit de conformité, un conseil juridique ou l'analyse d'un système d'IA particulier. Les obligations
               applicables dépendent notamment du rôle de l'organisation, de l'usage et du niveau de risque du système.
             </p>
-            <p className="ai-act-sources-title">Sources officielles consultées :</p>
+            <p className="ai-act-sources-title">Sources officielles consultées le 2 novembre 2026 :</p>
             <ul>
               {officialSources.map((source) => (
                 <li key={source.href}>
