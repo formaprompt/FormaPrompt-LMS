@@ -7,6 +7,7 @@ webapp/dist-ssr/
 webapp/.env*
 .env*
 !webapp/.env.example
+!webapp/.env.production
 !webapp/supabase/functions/.env.example
 
 # Logs

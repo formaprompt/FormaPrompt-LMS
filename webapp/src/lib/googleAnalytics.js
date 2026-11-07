@@ -18,7 +18,15 @@ const PUBLIC_PAGES = new Map(Object.entries({
   '/blog': 'Blog — FormaPrompt',
   '/guides': 'Guides — FormaPrompt',
   '/guide-gpt-5-6-codex': 'Guide GPT et Codex — FormaPrompt',
-  '/guide-gpt-6-codex': 'Guide GPT et Codex — FormaPrompt',
+  '/guide-gpt-6-codex': 'Guide GPT-6 et GPT-6.1 — FormaPrompt',
+  // Reviewed, fixed public guide paths only: never allow arbitrary /guides/* slugs.
+  '/guides/claude-guide-pratique': 'Guide Claude — FormaPrompt',
+  '/guides/copilot-guide-pratique': 'Guide Microsoft Copilot — FormaPrompt',
+  '/guides/gemini-guide-pratique': 'Guide Gemini — FormaPrompt',
+  '/guides/claude-preparer-activite-bureautique': 'Activité de bureautique avec Claude — FormaPrompt',
+  '/guides/ia-generative-debutants': 'IA générative pour débutants — FormaPrompt',
+  '/guides/prompt-engineering-professionnel-methode': 'Méthode de prompt engineering — FormaPrompt',
+  '/guides/checklist-ai-act-organisme-formation': 'Checklist AI Act pour les organismes — FormaPrompt',
   '/contact': 'Contact — FormaPrompt',
   '/mentions-legales': 'Mentions légales — FormaPrompt',
   '/privacy': 'Confidentialité — FormaPrompt',
@@ -51,6 +59,7 @@ export function createGoogleAnalytics({ window: win, document: doc, env = {},
   let configured = false;
   let lastView = null;
   let script;
+  let sealed = false;
   function eligible() {
     try {
       const auth = getAuthState();
@@ -69,9 +78,21 @@ export function createGoogleAnalytics({ window: win, document: doc, env = {},
     }
     return false;
   }
-  function stopAudienceMeasurement() {
+  function stopAudienceMeasurement({ blockDocument = true } = {}) {
     stopped = true;
     if (win && /^G-[A-Z0-9]+$/.test(id || '')) win[`ga-disable-${id}`] = true;
+    // The SDK may flush an already queued view on pagehide despite ga-disable.
+    // Seal outgoing resources in this old document before its replacement.
+    // The fresh document starts with its normal policy and no audience SDK.
+    if (blockDocument && inserted && !sealed && doc?.head && doc.createElement) {
+      try {
+        const policy = doc.createElement('meta');
+        policy.httpEquiv = 'Content-Security-Policy';
+        policy.content = "default-src 'none'; connect-src 'none'; img-src 'none'; form-action 'none'; base-uri 'none'";
+        doc.head.appendChild(policy);
+        sealed = true;
+      } catch { /* The route/consent boundary still replaces this document. */ }
+    }
     if (script) { script.onload = null; script.onerror = null; }
     // Removing a script cannot unload an SDK. The route boundary replaces the document.
     try { clearCookies(); } catch { /* Blocking emissions does not depend on cleanup. */ }
@@ -101,7 +122,7 @@ export function createGoogleAnalytics({ window: win, document: doc, env = {},
     const page = getPublicAnalyticsPage(pathname);
     current = { page, navigationKey, key: navigationKey === undefined ? pathname : `${pathname}:${navigationKey}` };
     if (!eligible()) {
-      if (inserted) stopAudienceMeasurement();
+      if (inserted && !stopped) stopAudienceMeasurement();
       return { status: 'ineligible' };
     }
     if (ready) { sendCurrentPage(); return { status: 'ready' }; }
@@ -115,11 +136,12 @@ export function createGoogleAnalytics({ window: win, document: doc, env = {},
       script.referrerPolicy = 'no-referrer';
       script.src = `https://www.googletagmanager.com/gtag/js?id=${id}&l=formapromptAudienceLayer`;
       script.onload = () => { if (!eligible()) { stopAudienceMeasurement(); return; } ready = true; sendCurrentPage(); };
-      script.onerror = () => { stopAudienceMeasurement(); };
+      // A failed SDK download must not freeze ordinary public-page networking.
+      script.onerror = () => { stopAudienceMeasurement({ blockDocument: false }); };
       inserted = true;
       doc.head.appendChild(script);
       return { status: 'loading' };
-    } catch { stopAudienceMeasurement(); return { status: 'unavailable' }; }
+    } catch { stopAudienceMeasurement({ blockDocument: false }); return { status: 'unavailable' }; }
   }
   subscribeConsent((choice) => {
     if (choice !== 'granted') { if (inserted) stopAudienceMeasurement(); return; }
