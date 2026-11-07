@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createGoogleAnalytics, getPublicAnalyticsPage } from './googleAnalytics.js';
 
 const ID = 'G-FL8HMVXF4Z';
@@ -9,15 +10,17 @@ function fixture(options = {}) {
   let subscriber;
   let cleaned = 0;
   const scripts = [];
+  const policies = [];
   const win = { location: { origin: 'https://formaprompt.com', search: '', hash: '', ...options.location },
     ...options.window };
-  const doc = { head: { appendChild: (script) => scripts.push(script) }, createElement: () => ({}) };
+  const doc = { head: { appendChild: (node) => node.tagName === 'SCRIPT' ? scripts.push(node) : policies.push(node) },
+    createElement: (tag) => ({ tagName: tag.toUpperCase() }) };
   const engine = createGoogleAnalytics({ window: win, document: doc,
     env: { PROD: true, VITE_GOOGLE_ANALYTICS_ENABLED: 'true', VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: ID,
       VITE_GOOGLE_ANALYTICS_PRIVACY_REVIEWED: 'true', ...options.env },
     getConsent: () => choice, subscribeConsent: (fn) => { subscriber = fn; },
     getAuthState: () => auth, clearCookies: () => { cleaned += 1; } });
-  return { engine, win, scripts, load: () => scripts.at(-1)?.onload?.(),
+  return { engine, win, scripts, policies, load: () => scripts.at(-1)?.onload?.(),
     choose: (value) => { choice = value; subscriber(value); }, setAuth: (value) => { auth = value; },
     commands: () => (win.formapromptAudienceLayer || []).map((args) => [...args]),
     views: () => (win.formapromptAudienceLayer || []).filter((args) => args[0] === 'event'), cleaned: () => cleaned };
@@ -97,6 +100,89 @@ test('private or dirty transition after SDK loaded blocks all further emissions'
 test('script failure leaves document disabled and cannot trigger retries or queued views', () => {
   const f = fixture(); f.engine.updateAnalyticsPage('/'); f.scripts[0].onerror();
   f.engine.updateAnalyticsPage('/'); assert.equal(f.scripts.length, 1); assert.deepEqual(f.commands(), []);
+  assert.equal(f.policies.length, 0);
+});
+
+test('withdrawal seals the loaded document before replacement, once only', () => {
+  const f = fixture(); f.engine.updateAnalyticsPage('/'); f.load();
+  f.choose('denied');
+  assert.equal(f.policies.length, 1);
+  assert.equal(f.policies[0].httpEquiv, 'Content-Security-Policy');
+  assert.match(f.policies[0].content, /connect-src 'none'/);
+  assert.match(f.policies[0].content, /default-src 'none'/);
+  f.engine.stopAudienceMeasurement(); f.choose('denied');
+  assert.equal(f.policies.length, 1);
+  assert.equal(f.win[`ga-disable-${ID}`], true);
+});
+
+test('private transition seals an audience document while a never-loaded document stays unchanged', () => {
+  const f = fixture(); f.engine.updateAnalyticsPage('/'); f.load();
+  f.engine.updateAnalyticsPage('/dashboard');
+  assert.equal(f.policies.length, 1);
+  const g = fixture({ choice: 'denied' }); g.engine.stopAudienceMeasurement();
+  assert.equal(g.policies.length, 0);
+});
+
+test('every published catalogue guide has an explicit reviewed audience path', () => {
+  const catalogue = readFileSync(new URL('../data/practicalGuides.jsx', import.meta.url), 'utf8');
+  const slugs = [...catalogue.matchAll(/slug: '([^']+)'/g)].map((match) => match[1]);
+  assert.equal(slugs.length, 7);
+  for (const slug of slugs) {
+    const page = getPublicAnalyticsPage(`/guides/${slug}`);
+    assert.ok(page, `Review and explicitly allow the public guide: ${slug}`);
+    assert.equal(page.url, `https://formaprompt.com/guides/${slug}`);
+    assert.ok(page.title.endsWith(' — FormaPrompt'));
+  }
+  for (const path of ['/guides/new-unreviewed-guide', '/guides/gemini-guide-pratique/learner-123',
+    '/guides/gemini-guide-pratique?email=private@example.test', '/guides/gemini-guide-pratique#answer',
+    '/guides/%67emini-guide-pratique', '/guides//gemini-guide-pratique']) {
+    assert.equal(getPublicAnalyticsPage(path), null, path);
+  }
+});
+
+test('new guides send only fixed public metadata after a separate audience grant', () => {
+  for (const name of ['claude', 'copilot', 'gemini']) {
+    const path = `/guides/${name}-guide-pratique`;
+    const f = fixture({ choice: 'unknown' });
+    f.win.document = { title: 'Private Person — private@example.test — score 9/12' };
+    f.engine.updateAnalyticsPage(path, 'guide');
+    assert.equal(f.scripts.length, 0);
+    f.choose('granted');
+    assert.equal(f.scripts.length, 1);
+    assert.deepEqual(f.commands(), []);
+    f.load();
+    assert.deepEqual(f.views()[0][2], { send_to: ID,
+      page_location: `https://formaprompt.com${path}`,
+      page_title: getPublicAnalyticsPage(path).title, page_referrer: '' });
+    assert.equal(/Private Person|private@example|9\/12|user_id|user_data|score|answer/.test(JSON.stringify(f.views())), false);
+    f.choose('denied');
+    f.engine.updateAnalyticsPage('/contact', 'after-withdrawal');
+    assert.equal(f.views().length, 1);
+  }
+});
+
+test('new guides cannot bypass disabled environment, private sessions or dirty URLs', () => {
+  for (const name of ['claude', 'copilot', 'gemini']) {
+    for (const options of [{ env: { VITE_GOOGLE_ANALYTICS_ENABLED: undefined } },
+      { env: { VITE_GOOGLE_ANALYTICS_ENABLED: 'false' } },
+      { env: { VITE_GOOGLE_ANALYTICS_PRIVACY_REVIEWED: undefined } },
+      { env: { VITE_GOOGLE_ANALYTICS_PRIVACY_REVIEWED: 'false' } },
+      { env: { VITE_GOOGLE_ANALYTICS_MEASUREMENT_ID: undefined } },
+      { auth: { loading: false, user: { id: 'private-account' } } },
+      { location: { search: '?utm_source=newsletter' } }, { location: { hash: '#consigne' } },
+      { choice: 'denied' }]) {
+      const f = fixture(options);
+      f.engine.updateAnalyticsPage(`/guides/${name}-guide-pratique`);
+      assert.equal(f.scripts.length, 0);
+      assert.deepEqual(f.commands(), []);
+    }
+  }
+});
+
+test('example configuration keeps both production activation gates disabled', () => {
+  const example = readFileSync(new URL('../../.env.example', import.meta.url), 'utf8');
+  assert.match(example, /^VITE_GOOGLE_ANALYTICS_ENABLED=false$/m);
+  assert.match(example, /^VITE_GOOGLE_ANALYTICS_PRIVACY_REVIEWED=false$/m);
 });
 
 test('Challenge, learner, trainer and administration routes never load or emit audience commands', () => {
