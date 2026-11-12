@@ -31,6 +31,8 @@ const EVENT_LABELS = {
   identity_verification_changed: 'Vérification d’identité mise à jour',
   administrative_decision_recorded: 'Décision administrative enregistrée',
   analysis_finalized: 'Plan de traitement préparé',
+  analysis_stripe_evidence_added: 'Preuves financières inventoriées',
+  analysis_iag_dependencies_added: 'Données complémentaires IAG inventoriées',
   action_decided: 'Décision par catégorie enregistrée',
   execution_started: 'Exécution contrôlée démarrée',
   action_executed: 'Action exécutée',
@@ -327,6 +329,9 @@ export default function AdminPrivacyRequests() {
               {requests.map((request) => {
                 const profile = profileById.get(request.subject_user_id);
                 const requestAssessments = latestAssessmentRun(assessments.filter((item) => item.request_id === request.id));
+                const hasIagRetention = request.request_type === 'erasure' && requestAssessments.some(
+                  (item) => item.note_code === 'iag_retention_decision_required',
+                );
                 const requestEvents = events.filter((item) => item.request_id === request.id);
                 const actionByAssessment = new Map(actions.filter((item) => item.request_id === request.id).map((item) => [item.assessment_id, item]));
                 const dependencyCount = requestAssessments.reduce((sum, item) => sum + (item.category === 'profile' ? 0 : item.record_count), 0);
@@ -349,6 +354,7 @@ export default function AdminPrivacyRequests() {
 
                     {requestAssessments.length > 0 && <div className="privacy-assessments" aria-label="Résultat de la dernière analyse">
                       <h4>Catégories concernées</h4>
+                      {hasIagRetention && <p>Pour un effacement partiel, justifiez la conservation de chaque catégorie IAG.</p>}
                       <ul>{requestAssessments.map((assessment) => {
                         const action = actionByAssessment.get(assessment.id);
                         const actionDraft = action ? actionDrafts[action.id] || {} : {};
@@ -388,13 +394,13 @@ export default function AdminPrivacyRequests() {
                         </label>
                         <label>Décision administrative
                           <select value={draft.decision} onChange={(event) => updateDraft(request.id, 'decision', event.target.value)}>
-                            <option value="">Aucune décision</option>{Object.entries(PRIVACY_CONCLUSION_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                            <option value="">Aucune décision</option>{Object.entries(PRIVACY_CONCLUSION_LABELS).map(([value, label]) => <option key={value} value={value} disabled={hasIagRetention && value === 'full_erasure_possible'}>{label}</option>)}
                           </select>
                         </label>
                         <label>Motif de la décision
                           <textarea rows="3" minLength="5" maxLength="4000" required={Boolean(draft.decision)} value={draft.reason} onChange={(event) => updateDraft(request.id, 'reason', event.target.value)} />
                         </label>
-                        <button type="submit" disabled={submitting}>Enregistrer la revue administrative</button>
+                        <button type="submit" disabled={submitting || (hasIagRetention && draft.decision === 'full_erasure_possible')}>Enregistrer la revue administrative</button>
                       </form>
                     </details>
 
@@ -408,7 +414,7 @@ export default function AdminPrivacyRequests() {
                         <label>Recopier exactement « {expectedConfirmation} »
                           <input autoComplete="off" required value={executionDraft.confirmation || ''} onChange={(event) => updateExecutionDraft(request.id, 'confirmation', event.target.value)} />
                         </label>
-                        <button type="submit" disabled={submitting || executionDraft.confirmation !== expectedConfirmation || (executionDraft.reason || '').trim().length < 10}>Exécuter le plan approuvé</button>
+                        <button type="submit" disabled={submitting || (hasIagRetention && request.administrative_decision === 'full_erasure_possible') || executionDraft.confirmation !== expectedConfirmation || (executionDraft.reason || '').trim().length < 10}>Exécuter le plan approuvé</button>
                       </form>
                     </details>}
 

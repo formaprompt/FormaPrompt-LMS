@@ -17,6 +17,7 @@ test('exécute le plan SQL avant toute action irréversible Auth', () => {
   const databaseExecution = endpointSource.indexOf("rpc('admin_execute_privacy_request'");
   const authDeletion = endpointSource.indexOf('auth.admin.deleteUser');
   assert.ok(databaseExecution >= 0 && authDeletion > databaseExecution);
+  assert.match(endpointSource, /rpc\('admin_execute_privacy_request',\s*\{[^}]*p_reason: input\.reason/);
 });
 
 test('ne journalise ni motif, ni confirmation, ni jeton', () => {

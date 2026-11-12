@@ -74,6 +74,23 @@ function toLocalDateTime(value) {
   return new Date(date.getTime() - offset).toISOString().slice(0, 16);
 }
 
+function needsCompletionDocuments(enrollment) {
+  const types = ['completion_certificate'];
+  if (enrollment.booking_request_id) types.push('satisfaction_questionnaire');
+  return types.some((type) => !enrollment.training_documents?.some(
+    (document) => document.document_type === type && document.status !== 'missing',
+  ));
+}
+
+async function enrollmentActionError(data, error, fallback) {
+  if (data?.error) return data.error;
+  try {
+    return (await error?.context?.json?.())?.error || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function AdminEnrollments() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
@@ -213,7 +230,8 @@ export default function AdminEnrollments() {
     });
 
     if (error || data?.error) {
-      setFeedback({ type: 'error', message: data?.error || "L'inscription n'a pas pu être créée." });
+      const fallback = editingEnrollmentId ? 'Le dossier n’a pas pu être actualisé.' : "L'inscription n'a pas pu être créée.";
+      setFeedback({ type: 'error', message: await enrollmentActionError(data, error, fallback) });
       setSubmitting(false);
       return;
     }
@@ -242,12 +260,15 @@ export default function AdminEnrollments() {
       body: { action, enrollmentId, documentType },
     });
     if (error || data?.error) {
-      setFeedback({ type: 'error', message: data?.error || "L'action n'a pas pu être réalisée." });
+      const fallback = action === 'complete_enrollment'
+        ? 'La clôture n’a pas pu être confirmée. Réessayez.'
+        : "L'action n'a pas pu être réalisée.";
+      setFeedback({ type: 'error', message: await enrollmentActionError(data, error, fallback) });
     } else {
       setFeedback({
         type: 'success',
         message: action === 'complete_enrollment'
-          ? "Formation terminée et attestation générée."
+          ? 'Clôture confirmée. Les documents de fin de formation sont disponibles.'
           : 'Document actualisé avec les données du dossier.',
       });
       await loadData();
@@ -263,7 +284,7 @@ export default function AdminEnrollments() {
       body: { action, enrollmentId, ...payload },
     });
     if (error || data?.error) {
-      setFeedback({ type: 'error', message: data?.error || "L'action administrative a échoué." });
+      setFeedback({ type: 'error', message: await enrollmentActionError(data, error, "L'action administrative a échoué.") });
     } else {
       setFeedback({
         type: 'success',
@@ -521,14 +542,17 @@ export default function AdminEnrollments() {
                   running={actionRunning}
                   onAction={runLifecycleAction}
                 />
-                {!['completed', 'archived', 'cancelled', 'abandoned'].includes(enrollment.status) && (
+                {!['archived', 'cancelled', 'abandoned'].includes(enrollment.status)
+                  && (enrollment.status !== 'completed' || needsCompletionDocuments(enrollment)) && (
                   <button
                     type="button"
                     className="btn admin-enrollments__complete"
                     disabled={Boolean(actionRunning)}
                     onClick={() => runEnrollmentAction(enrollment.id, 'complete_enrollment')}
                   >
-                    {actionRunning === `complete_enrollment:${enrollment.id}:` ? 'Finalisation…' : 'Marquer terminée et générer l’attestation'}
+                    {actionRunning === `complete_enrollment:${enrollment.id}:` ? 'Finalisation…'
+                      : enrollment.status === 'completed' ? 'Compléter les documents de clôture'
+                        : 'Marquer terminée et générer l’attestation'}
                   </button>
                 )}
               </article>

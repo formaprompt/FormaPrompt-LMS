@@ -26,7 +26,7 @@ it('staff fetches the protected rubric before showing the correction form and ca
   expect((await screen.findByRole('alert')).textContent).toBe('Personnel non habilité.');
   expect(screen.queryByRole('form')).toBeNull();
   await userEvent.setup().click(screen.getByRole('button', { name: 'Actualiser les remises' }));
-  await screen.findByText(/1 version\(s\) affichée/);
+  await screen.findByText('Fictif — API fictif 1');
   expect(world.api.loadRubrics).toHaveBeenCalledTimes(2);
   expect(screen.getByText('Fictif — API fictif 1')).not.toBeNull();
 });

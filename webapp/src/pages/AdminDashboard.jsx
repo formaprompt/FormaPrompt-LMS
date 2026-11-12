@@ -1087,7 +1087,7 @@ export default function AdminDashboard() {
     [finalProjectEvaluations],
   );
   const visibleExerciseCorrections = useMemo(() => {
-    if (targetSubmissionId && requestedCorrection !== 'project') {
+    if (targetSubmissionId && requestedCorrection === 'exercise') {
       return exactTargetRows(exerciseCorrections, targetSubmissionId);
     }
     if (!normalizedCorrectionSearch) return pendingExerciseCorrections;
@@ -1118,13 +1118,13 @@ export default function AdminDashboard() {
     if (loading) return undefined;
     const targetId = targetBookingId
       ? adminBookingAnchor(targetBookingId)
-      : targetSubmissionId
+      : targetSubmissionId && requestedCorrection !== 'iag'
         ? adminCorrectionAnchor(requestedCorrection, targetSubmissionId)
         : null;
     if (!targetId) return undefined;
     const frame = window.requestAnimationFrame(() => {
       const target = document.getElementById(targetId);
-      target?.scrollIntoView({ block: 'start' });
+      target?.scrollIntoView?.({ block: 'start' });
       target?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
@@ -2390,7 +2390,11 @@ export default function AdminDashboard() {
 
             {activeTab === 'corrections' && (
               <section className="exercise-corrections" aria-labelledby="correction-workspace-title">
-                <IagAdminAssessments supabase={supabase} viewerId={user.id} />
+                <IagAdminAssessments
+                  supabase={supabase}
+                  viewerId={user.id}
+                  targetSubmissionId={requestedCorrection === 'iag' ? targetSubmissionId : null}
+                />
                 <div className="booking-workspace-heading">
                   <h2 id="correction-workspace-title">Corrections et évaluations</h2>
                   <p>

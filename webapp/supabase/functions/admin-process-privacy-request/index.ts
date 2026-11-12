@@ -55,7 +55,7 @@ Deno.serve(async (request) => {
     const { data: execution, error: executionError } = await adminRpc.rpc('admin_execute_privacy_request', {
       p_request_id: requestId,
       p_confirmation: confirmation,
-      p_execution_reason: input.reason,
+      p_reason: input.reason,
     });
     if (executionError) throw executionError;
 

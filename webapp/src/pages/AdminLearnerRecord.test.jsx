@@ -83,6 +83,22 @@ describe('fiche apprenant administrative', () => {
     expect(screen.getByText('Offert')).toBeInTheDocument();
   });
 
+  it('associe chaque travail IAG à la version à corriger', async () => {
+    rpcMock.mockResolvedValue({ data: {
+      ...record,
+      pendingCorrections: [51, 52].map((submissionId) => ({
+        kind: 'exercise', submissionId, courseId: 'formation-ia-generative-elearning',
+        exerciseId: String(submissionId - 50), submittedAt: '2026-09-15T08:00:00Z',
+      })),
+    }, error: null });
+    renderPage();
+    const links = await screen.findAllByRole('link', { name: 'Corriger' });
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/admin/pedagogique?onglet=corrections&correction=iag&submissionId=51#iag-submission-51',
+      '/admin/pedagogique?onglet=corrections&correction=iag&submissionId=52#iag-submission-52',
+    ]);
+  });
+
   it.each(['user', 'employee'])('redirige le rôle %s sans appeler la RPC', async (role) => {
     authState.role = role;
     renderPage();

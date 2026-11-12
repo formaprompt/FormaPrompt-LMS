@@ -436,8 +436,10 @@ Deno.serve(async (request) => {
       }
 
       const { data: enrollment, error } = await supabaseAdmin.from('training_enrollments')
-        .update(changes).eq('id', enrollmentId).select('*').single();
+        .update(changes).eq('id', enrollmentId).eq('status', current.status)
+        .eq('updated_at', current.updated_at).select('*').maybeSingle();
       if (error) throw error;
+      if (!enrollment) return jsonResponse({ error: 'Le dossier a changé. Actualisez la liste et réessayez.' }, 409);
 
       if (['postpone_enrollment', 'transfer_beneficiary'].includes(action)) {
         const learnerEmail = action === 'transfer_beneficiary'
@@ -564,9 +566,12 @@ Deno.serve(async (request) => {
           updated_at: updatedAt,
         })
         .eq('id', enrollmentId)
+        .eq('status', existingEnrollment.status)
+        .eq('updated_at', existingEnrollment.updated_at)
         .select('*, profiles!training_enrollments_user_id_fkey(email)')
-        .single();
+        .maybeSingle();
       if (enrollmentError) throw enrollmentError;
+      if (!enrollment) return jsonResponse({ error: 'Le dossier a changé. Actualisez la liste et réessayez.' }, 409);
 
       const documentTypesToRefresh = ['training_agreement', 'convocation'];
       if (enrollment.status === 'completed') documentTypesToRefresh.push('completion_certificate');
@@ -604,66 +609,46 @@ Deno.serve(async (request) => {
     if (action === 'complete_enrollment') {
       const enrollmentId = typeof body.enrollmentId === 'string' ? body.enrollmentId : '';
       if (!enrollmentId) return jsonResponse({ error: 'Dossier invalide.' }, 400);
-      const completedAt = new Date().toISOString();
-      const { data: dossierToComplete, error: dossierError } = await supabaseAdmin
+      const { data: dossier, error: dossierError } = await supabaseAdmin
         .from('training_enrollments')
-        .select('ends_at, status')
-        .eq('id', enrollmentId)
-        .single();
-      if (dossierError) throw dossierError;
-      if (['archived', 'cancelled', 'abandoned'].includes(dossierToComplete.status)) {
-        return jsonResponse({ error: 'Un dossier archivé, annulé ou abandonné ne peut pas être terminé.' }, 409);
-      }
-      if (new Date(dossierToComplete.ends_at) > new Date(completedAt)) {
-        return jsonResponse({ error: 'La formation ne peut pas être terminée avant sa date de fin prévue.' }, 409);
-      }
-      const { data: enrollment, error: enrollmentError } = await supabaseAdmin
-        .from('training_enrollments')
-        .update({ status: 'completed', completed_at: completedAt, updated_at: completedAt })
-        .eq('id', enrollmentId)
         .select('*, profiles!training_enrollments_user_id_fkey(email)')
-        .single();
-      if (enrollmentError) throw enrollmentError;
+        .eq('id', enrollmentId)
+        .maybeSingle();
+      if (dossierError) throw dossierError;
+      if (!dossier) return jsonResponse({ error: 'Dossier introuvable.' }, 404);
 
+      const generatedAt = new Date().toISOString();
+      const completedAt = dossier.status === 'completed' ? dossier.completed_at : generatedAt;
       const certificateSnapshot = buildAdministrativeDocument(
         'completion_certificate',
-        enrollment,
-        relatedProfileEmail(enrollment.profiles),
-        completedAt,
+        { ...dossier, status: 'completed', completed_at: completedAt },
+        relatedProfileEmail(dossier.profiles),
+        generatedAt,
       );
-      const { error: certificateError } = await supabaseAdmin.from('training_documents').upsert({
-        enrollment_id: enrollment.id,
-        user_id: enrollment.user_id,
-        course_id: enrollment.course_id,
-        document_type: 'completion_certificate',
-        status: 'ready',
-        content_snapshot: certificateSnapshot,
-        visible_to_learner: true,
-        generated_by: actor.id,
-        generated_at: completedAt,
-        updated_at: completedAt,
-      }, { onConflict: 'enrollment_id,document_type' });
-      if (certificateError) throw certificateError;
-
-      if (enrollment.booking_request_id) {
-        const { error: satisfactionError } = await supabaseAdmin.from('training_documents').upsert({
-          enrollment_id: enrollment.id,
-          user_id: enrollment.user_id,
-          course_id: enrollment.course_id,
-          document_type: 'satisfaction_questionnaire',
-          status: 'ready',
-          content_snapshot: {
-            version: 1,
-            documentType: 'satisfaction_questionnaire',
-            bookingRequestId: enrollment.booking_request_id,
-            courseId: enrollment.course_id,
-          },
-          visible_to_learner: true,
-          generated_by: actor.id,
-          generated_at: completedAt,
-          updated_at: completedAt,
-        }, { onConflict: 'enrollment_id,document_type' });
-        if (satisfactionError) throw satisfactionError;
+      const { data: enrollment, error: completionError } = await supabaseAdmin
+        .rpc('complete_training_enrollment', {
+          p_enrollment_id: enrollmentId,
+          p_actor_id: actor.id,
+          p_expected_updated_at: dossier.updated_at,
+          p_generated_at: generatedAt,
+          p_certificate: certificateSnapshot,
+        })
+        .single();
+      if (completionError) {
+        switch (completionError.message) {
+          case 'ENROLLMENT_COMPLETION_INVALID_STATUS':
+            return jsonResponse({ error: 'Un dossier archivé, annulé ou abandonné ne peut pas être terminé.' }, 409);
+          case 'ENROLLMENT_COMPLETION_TOO_EARLY':
+            return jsonResponse({ error: 'La formation ne peut pas être terminée avant sa date de fin prévue.' }, 409);
+          case 'ENROLLMENT_COMPLETION_STALE':
+            return jsonResponse({ error: 'Le dossier a changé. Réessayez la clôture pour utiliser ses dernières données.' }, 409);
+          case 'ENROLLMENT_COMPLETION_FORBIDDEN':
+            return jsonResponse({ error: 'Cette action est réservée au personnel autorisé.' }, 403);
+          case 'ENROLLMENT_COMPLETION_NOT_FOUND':
+            return jsonResponse({ error: 'Dossier introuvable.' }, 404);
+          default:
+            throw completionError;
+        }
       }
 
       return jsonResponse({ enrollment, certificateGenerated: true });

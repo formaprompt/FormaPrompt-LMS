@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import CourseProgress from '../components/CourseProgress';
@@ -10,15 +10,58 @@ import { getLearningPathProgress, getResumeLessonId } from '../lib/learningProgr
 import { supabase } from '../lib/supabaseClient';
 import './LearningPath.css';
 
+const progressColumns = 'course_id, lesson_id, status, progress_percent, last_viewed_at, completed_at';
+
+function mergeProgressRow(rows, incoming) {
+  const previous = rows.find((row) => row.lesson_id === incoming.lesson_id);
+  if (!previous) return [...rows, incoming];
+
+  // Une réponse de consultation peut arriver après une validation plus récente.
+  const incomingIsNewer = Date.parse(incoming.last_viewed_at) >= Date.parse(previous.last_viewed_at);
+  const latest = incomingIsNewer ? incoming : previous;
+  const completed = [previous, incoming].find((row) => row.status === 'completed');
+  const merged = completed ? { ...completed, last_viewed_at: latest.last_viewed_at } : latest;
+  return rows.map((row) => row.lesson_id === incoming.lesson_id ? merged : row);
+}
+
+async function saveLessonProgress({ userId, courseId, lessonId, complete = false }) {
+  const viewedAt = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('course_lesson_progress')
+    .upsert({
+      user_id: userId,
+      course_id: courseId,
+      lesson_id: lessonId,
+      status: complete ? 'completed' : 'in_progress',
+      progress_percent: complete ? 100 : 0,
+      last_viewed_at: viewedAt,
+      completed_at: complete ? viewedAt : null,
+    }, { onConflict: 'user_id,course_id,lesson_id' })
+    .select(progressColumns)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 export default function LearningPath() {
   const { slug, lessonId } = useParams();
   const { user } = useAuth();
+  return <LearningPathContent key={`${user.id}:${slug}`} slug={slug} lessonId={lessonId} userId={user.id} />;
+}
+
+function LearningPathContent({ slug, lessonId, userId }) {
   const navigate = useNavigate();
   const course = learningPathCatalog[slug];
   const [progressRows, setProgressRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const [loadedLessonId, setLoadedLessonId] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [viewErrorLessonId, setViewErrorLessonId] = useState(null);
+  const [viewRetry, setViewRetry] = useState(0);
+  const [completionStates, setCompletionStates] = useState({});
+  const completionsInFlight = useRef(new Set());
+  const savedProgressRevision = useRef(0);
   const [courseAccess, setCourseAccess] = useState(null);
   const [accessChecked, setAccessChecked] = useState(false);
 
@@ -29,6 +72,10 @@ export default function LearningPath() {
     [course, progressRows],
   );
   const currentProgress = progressRows.find((row) => row.lesson_id === currentLesson?.id);
+  const applySavedProgress = useCallback((row) => {
+    savedProgressRevision.current += 1;
+    setProgressRows((current) => mergeProgressRow(current, row));
+  }, []);
 
   useEffect(() => {
     if (!course) {
@@ -40,11 +87,11 @@ export default function LearningPath() {
 
     async function loadProgress() {
       setLoading(true);
-      setError('');
+      setLoadError('');
       setAccessChecked(false);
 
       const { data: entitlement, error: accessError } = await fetchCourseAccessEntitlement({
-        userId: user.id,
+        userId,
         courseId: course.requiredCourseAccessId,
       });
 
@@ -54,7 +101,7 @@ export default function LearningPath() {
 
       if (accessError) {
         console.error("Vérification du droit d'accès impossible :", accessError);
-        setError("Votre droit d'accès n'a pas pu être vérifié. Réessayez dans quelques instants.");
+        setLoadError("Votre droit d'accès n'a pas pu être vérifié. Réessayez dans quelques instants.");
         setLoading(false);
         return;
       }
@@ -64,104 +111,81 @@ export default function LearningPath() {
         return;
       }
 
+      const revisionBeforeRead = savedProgressRevision.current;
       const { data, error: loadError } = await supabase
         .from('course_lesson_progress')
-        .select('course_id, lesson_id, status, progress_percent, last_viewed_at, completed_at')
-        .eq('user_id', user.id)
+        .select(progressColumns)
+        .eq('user_id', userId)
         .eq('course_id', course.id)
         .order('last_viewed_at', { ascending: false });
 
       if (!active) return;
       if (loadError) {
         console.error('Chargement de la progression impossible :', loadError);
-        setError("Votre progression n'a pas pu être chargée. Réessayez dans quelques instants.");
+        setLoadError("Votre progression n'a pas pu être chargée. Réessayez dans quelques instants.");
         setLoading(false);
         return;
       }
 
       const rows = data || [];
-      setProgressRows(rows);
+      const saveArrivedDuringRead = revisionBeforeRead !== savedProgressRevision.current;
+      setProgressRows((previous) => saveArrivedDuringRead ? rows.reduce(mergeProgressRow, previous) : rows);
       const requestedLessonExists = course.lessons.some((lesson) => lesson.id === lessonId);
       const destination = requestedLessonExists ? lessonId : getResumeLessonId(course.lessons, rows);
       if (destination !== lessonId) {
         navigate(`/parcours/${course.id}/${destination}`, { replace: true });
       }
+      setLoadedLessonId(lessonId);
       setLoading(false);
     }
 
     loadProgress();
     return () => { active = false; };
-  }, [course, lessonId, navigate, user.id]);
+  }, [course, lessonId, navigate, userId]);
 
   useEffect(() => {
-    if (loading || !currentLesson || error || !isCourseAccessOpen(courseAccess)) return;
+    if (loading || loadedLessonId !== lessonId || !currentLesson || loadError
+      || !isCourseAccessOpen(courseAccess)) return;
 
-    const existing = progressRows.find((row) => row.lesson_id === currentLesson.id);
-    const viewedAt = new Date().toISOString();
-    const nextRow = {
-      user_id: user.id,
-      course_id: course.id,
-      lesson_id: currentLesson.id,
-      status: existing?.status || 'in_progress',
-      progress_percent: existing?.progress_percent || 0,
-      last_viewed_at: viewedAt,
-      completed_at: existing?.completed_at || null,
-    };
+    let active = true;
+    async function recordView() {
+      setViewErrorLessonId(null);
+      try {
+        const row = await saveLessonProgress({ userId, courseId: course.id, lessonId });
+        if (active) applySavedProgress(row);
+      } catch (error) {
+        if (!active) return;
+        console.error('Enregistrement de la consultation impossible :', error);
+        setViewErrorLessonId(lessonId);
+      }
+    }
 
-    supabase
-      .from('course_lesson_progress')
-      .upsert(nextRow, { onConflict: 'user_id,course_id,lesson_id' })
-      .then(({ error: saveError }) => {
-        if (saveError) {
-          console.error('Enregistrement de la consultation impossible :', saveError);
-          setError("La reprise automatique n'a pas pu être enregistrée.");
-          return;
-        }
-        setProgressRows((current) => [
-          ...current.filter((row) => row.lesson_id !== currentLesson.id),
-          nextRow,
-        ]);
-      });
-  // La consultation est enregistrée uniquement lors du changement de leçon.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course?.id, courseAccess, currentLesson?.id, error, loading, user.id]);
+    recordView();
+    return () => { active = false; };
+  }, [applySavedProgress, course, courseAccess, currentLesson, lessonId, loadedLessonId, loadError, loading, userId, viewRetry]);
 
   async function markCompleted() {
-    if (!currentLesson || saving || !isCourseAccessOpen(courseAccess)) return;
-    setSaving(true);
-    setError('');
-    const completedAt = new Date().toISOString();
-    const completedRow = {
-      user_id: user.id,
-      course_id: course.id,
-      lesson_id: currentLesson.id,
-      status: 'completed',
-      progress_percent: 100,
-      last_viewed_at: completedAt,
-      completed_at: completedAt,
-    };
-    const { error: saveError } = await supabase
-      .from('course_lesson_progress')
-      .upsert(completedRow, { onConflict: 'user_id,course_id,lesson_id' });
-
-    if (saveError) {
-      console.error('Validation de la leçon impossible :', saveError);
-      setError("La leçon n'a pas été marquée comme terminée.");
-    } else {
-      setProgressRows((current) => [
-        ...current.filter((row) => row.lesson_id !== currentLesson.id),
-        completedRow,
-      ]);
+    if (!currentLesson || !isCourseAccessOpen(courseAccess) || completionsInFlight.current.has(lessonId)) return;
+    completionsInFlight.current.add(lessonId);
+    setCompletionStates((current) => ({ ...current, [lessonId]: 'saving' }));
+    try {
+      const row = await saveLessonProgress({ userId, courseId: course.id, lessonId, complete: true });
+      applySavedProgress(row);
+      setCompletionStates((current) => ({ ...current, [lessonId]: null }));
+    } catch (error) {
+      console.error('Validation de la leçon impossible :', error);
+      setCompletionStates((current) => ({ ...current, [lessonId]: 'error' }));
+    } finally {
+      completionsInFlight.current.delete(lessonId);
     }
-    setSaving(false);
   }
 
   if (!course || loading) {
     return <div className="container section" role="status">Chargement de votre parcours…</div>;
   }
 
-  if (error) {
-    return <div className="container section" role="alert">{error}</div>;
+  if (loadError) {
+    return <div className="container section" role="alert">{loadError}</div>;
   }
 
   if (accessChecked && !isCourseAccessOpen(courseAccess)) {
@@ -187,6 +211,7 @@ export default function LearningPath() {
 
   const previousLesson = course.lessons[currentLessonIndex - 1];
   const nextLesson = course.lessons[currentLessonIndex + 1];
+  const completionState = completionStates[lessonId];
 
   return (
     <div className="container learning-path">
@@ -200,10 +225,17 @@ export default function LearningPath() {
           <h1>{course.title}</h1>
           <p>{course.description}</p>
         </div>
-        <CourseProgress progress={progress} compact />
+        <CourseProgress progress={progress} compact unit="module" />
       </header>
 
-      {error && <p className="learning-path__error" role="alert">{error}</p>}
+      {viewErrorLessonId === lessonId && (
+        <div className="learning-path__error">
+          <p role="alert">La reprise automatique n’a pas pu être enregistrée.</p>
+          <button type="button" className="btn btn-outline" onClick={() => setViewRetry((retry) => retry + 1)}>
+            Réessayer d’enregistrer la reprise
+          </button>
+        </div>
+      )}
 
       <div className="learning-path__layout">
         <aside className="learning-path__sidebar" aria-label="Modules de la formation">
@@ -211,11 +243,13 @@ export default function LearningPath() {
           <ol>
             {course.lessons.map((lesson, index) => {
               const lessonProgress = progressRows.find((row) => row.lesson_id === lesson.id);
+              const statusLabel = lessonProgress?.status === 'completed' ? 'terminé' : lessonProgress ? 'en cours' : 'à commencer';
               return (
                 <li key={lesson.id}>
                   <Link
                     to={`/parcours/${course.id}/${lesson.id}`}
                     aria-current={lesson.id === currentLesson.id ? 'step' : undefined}
+                    aria-label={`${lesson.title}, ${statusLabel}`}
                   >
                     <span className="learning-path__module-number" aria-hidden="true">
                       {lessonProgress?.status === 'completed' ? <Check size={16} /> : index + 1}
@@ -244,11 +278,14 @@ export default function LearningPath() {
           </section>
 
           <div className="learning-path__completion">
+            {completionState === 'error' && currentProgress?.status !== 'completed' && (
+              <p className="learning-path__error" role="alert">Le module n’a pas pu être marqué comme terminé.</p>
+            )}
             {currentProgress?.status === 'completed' ? (
               <p><Check size={18} aria-hidden="true" /> Module terminé et enregistré dans votre progression.</p>
             ) : (
-              <button type="button" className="btn btn-primary" onClick={markCompleted} disabled={saving}>
-                {saving ? 'Enregistrement…' : 'Marquer comme terminé'}
+              <button type="button" className="btn btn-primary" onClick={markCompleted} disabled={completionState === 'saving'}>
+                {completionState === 'saving' ? 'Enregistrement…' : 'Marquer comme terminé'}
               </button>
             )}
           </div>

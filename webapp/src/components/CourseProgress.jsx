@@ -1,19 +1,17 @@
 import './CourseProgress.css';
 
-function pluralizeExercise(count) {
-  return count === 1 ? 'exercice' : 'exercices';
-}
-
 export default function CourseProgress({
   progress,
   compact = false,
   loading = false,
   headingLevel = 2,
+  unit = 'exercice',
 }) {
   if (!progress?.total) return null;
 
   const Heading = `h${headingLevel}`;
-  const completedLabel = `${progress.completed} ${pluralizeExercise(progress.completed)} terminé${progress.completed === 1 ? '' : 's'} sur ${progress.total}`;
+  const plural = progress.completed === 1 ? '' : 's';
+  const completedLabel = `${progress.completed} ${unit}${plural} terminé${plural} sur ${progress.total}`;
 
   return (
     <section className={`course-progress${compact ? ' course-progress--compact' : ''}`} aria-label="Progression dans la formation">
@@ -35,12 +33,14 @@ export default function CourseProgress({
             {progress.percentage} %
           </progress>
           <p className="course-progress__summary">{completedLabel}</p>
-          <ul className="course-progress__details" aria-label="Détail de la progression">
-            <li><strong>{progress.started}</strong> commencé{progress.started === 1 ? '' : 's'}</li>
-            <li><strong>{progress.completed}</strong> terminé{progress.completed === 1 ? '' : 's'}</li>
-            <li><strong>{progress.validated}</strong> validé{progress.validated === 1 ? '' : 's'} par le formateur</li>
-          </ul>
-          {!compact && (
+          {unit === 'exercice' && (
+            <ul className="course-progress__details" aria-label="Détail de la progression">
+              <li><strong>{progress.started}</strong> commencé{progress.started === 1 ? '' : 's'}</li>
+              <li><strong>{progress.completed}</strong> terminé{progress.completed === 1 ? '' : 's'}</li>
+              <li><strong>{progress.validated}</strong> validé{progress.validated === 1 ? '' : 's'} par le formateur</li>
+            </ul>
+          )}
+          {unit === 'exercice' && !compact && (
             <p className="course-progress__help">
               Un exercice est compté comme terminé lorsque vous choisissez « Déclarer la réponse terminée ».
               La validation du formateur est indiquée séparément.
