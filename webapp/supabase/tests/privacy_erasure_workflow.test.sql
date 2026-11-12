@@ -3,7 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 SET search_path = public, extensions;
 
-SELECT plan(42);
+SELECT plan(43);
 
 SELECT has_table('public', 'privacy_requests', 'Le registre des demandes RGPD existe');
 SELECT has_table('public', 'privacy_dependency_assessments', 'Les dépendances RGPD sont séparées');
@@ -111,9 +111,14 @@ SELECT is(
   'Le corps historique délégué est identique à la migration initiale'
 );
 SELECT ok(
-  position('RETURN public.challenge_privacy_execution_v1(p_request_id,p_confirmation,p_reason);'
+  position('RETURN private.iag_privacy_execution_previous(p_request_id, p_confirmation, p_reason);'
     IN pg_get_functiondef('public.admin_execute_privacy_request(uuid,text,text)'::regprocedure)) > 0,
-  'Le wrapper public délègue effectivement au wrapper Challenge précédent'
+  'Le wrapper public délègue au wrapper privé après les contrôles IAG'
+);
+SELECT ok(
+  position('RETURN public.challenge_privacy_execution_v1(p_request_id,p_confirmation,p_reason);'
+    IN pg_get_functiondef('private.iag_privacy_execution_previous(uuid,text,text)'::regprocedure)) > 0,
+  'Le wrapper privé délègue au wrapper Challenge précédent'
 );
 SELECT ok(
   position('RETURN private.challenge_privacy_original_execution(p_request_id,p_confirmation,p_reason);'

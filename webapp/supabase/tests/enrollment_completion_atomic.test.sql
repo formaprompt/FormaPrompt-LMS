@@ -1,5 +1,9 @@
 BEGIN;
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
+SET LOCAL search_path = public, extensions;
 SET LOCAL plpgsql.check_asserts = on;
+
+SELECT plan(1);
 
 INSERT INTO auth.users (id, aud, role, email, encrypted_password, raw_app_meta_data, raw_user_meta_data)
 VALUES
@@ -43,6 +47,7 @@ VALUES
 
 SET LOCAL ROLE service_role;
 
+SELECT lives_ok($test$
 DO $$
 DECLARE
   staff_id constant uuid := '9e110000-0000-4000-8000-000000000001';
@@ -134,5 +139,8 @@ BEGIN
   END;
 END;
 $$;
+$test$, 'La clôture respecte les droits, reste atomique et peut être relancée');
+RESET ROLE;
 
+SELECT * FROM finish();
 ROLLBACK;
