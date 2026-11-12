@@ -102,6 +102,18 @@ describe('workflow RGPD non destructif', () => {
           created_at: request.last_analyzed_at,
         });
         database.privacy_request_events.unshift({ id: `event-${Date.now()}`, request_id: request.id, event_type: 'analysis_completed', created_at: request.last_analyzed_at });
+        if (complex) {
+          database.privacy_dependency_assessments.push({
+            id: 'assessment-iag', request_id: request.id, analysis_run_id: run,
+            category: 'iag_certificate_identities', record_count: 1, risk_level: 'high',
+            proposed_action: 'legal_review_required', note_code: 'iag_retention_decision_required',
+            assessed_at: request.last_analyzed_at,
+          });
+          database.privacy_request_events.unshift(
+            { id: 'event-stripe', request_id: request.id, event_type: 'analysis_stripe_evidence_added', created_at: request.last_analyzed_at },
+            { id: 'event-iag', request_id: request.id, event_type: 'analysis_iag_dependencies_added', created_at: request.last_analyzed_at },
+          );
+        }
         return { data: { analysis_conclusion: request.analysis_conclusion }, error: null };
       }
       if (name === 'admin_set_privacy_action_decision') {
@@ -156,6 +168,15 @@ describe('workflow RGPD non destructif', () => {
     expect(screen.getByText('Achats')).toBeInTheDocument();
     expect(screen.getByText('Contrôle externe requis')).toBeInTheDocument();
     expect(screen.getByText(/Conservation potentiellement nécessaire/i)).toBeInTheDocument();
+    expect(screen.getByText('IAG — Identités déclarées pour les certificats')).toBeVisible();
+    expect(screen.getByText(/justifiez la conservation de chaque catégorie IAG/i)).toBeVisible();
+    await user.click(screen.getByText('Revue humaine et décision'));
+    expect(within(screen.getByLabelText('Décision administrative')).getByRole('option', {
+      name: 'Effacement complet potentiellement possible',
+    })).toBeDisabled();
+    await user.click(screen.getByText(/Journal de traitement/));
+    expect(screen.getByText('Preuves financières inventoriées')).toBeVisible();
+    expect(screen.getByText('Données complémentaires IAG inventoriées')).toBeVisible();
   });
 
   it('refuse visuellement l’accès à un apprenant', async () => {

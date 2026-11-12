@@ -29,9 +29,10 @@ export function createIagAssessmentApi(client) {
         return Object.fromEntries(WORK_IDS.map(id => [id, rubricFor(data.rubrics, id)]));
       } catch { throw new Error('La grille reçue ne correspond pas à la version attendue.'); }
     },
-    async loadHistory(userId) {
+    async loadHistory(userId, responseId) {
       let query = client.from('iag_assessment_history').select('*').order('received_at', { ascending: true });
       if (userId) query = query.eq('user_id', userId);
+      if (responseId) query = query.eq('response_id', responseId);
       const { data, error } = await query;
       if (error) throw new Error(error.message || 'Historique indisponible.');
       return data || [];

@@ -19,6 +19,7 @@ import {
 import {
   buildStripePostPaymentPayload,
   isStripePostPaymentEvent,
+  resolveCourseCheckoutCharge,
 } from '../_shared/stripePostPayment.js';
 import {
   DIAGNOSTIC_IA_PAYMENT,
@@ -98,6 +99,7 @@ Deno.serve(async (request) => {
   const object = event.data.object as Stripe.Checkout.Session;
   let diagnosticEvent = false;
   let courseEvent = false;
+  let validatedCoursePayment = false;
 
   if (
     event.type === 'checkout.session.completed'
@@ -193,6 +195,7 @@ Deno.serve(async (request) => {
         if (consentValidationError) return new Response(consentValidationError, { status: 400 });
         validationStatus = 'validated';
         courseEvent = currentPromotionCheckout;
+        validatedCoursePayment = true;
       }
     }
   } else if (
@@ -249,9 +252,18 @@ Deno.serve(async (request) => {
   }
 
   try {
-    const payload = buildStripePostPaymentPayload(event, await sha256(rawBody), {
+    let payload = buildStripePostPaymentPayload(event, await sha256(rawBody), {
       validation_status: validationStatus,
     });
+    if (validatedCoursePayment) {
+      try {
+        payload = await resolveCourseCheckoutCharge(payload, (id: string) =>
+          stripe.paymentIntents.retrieve(id, {}, { timeout: 8000, maxNetworkRetries: 0 }));
+      } catch {
+        console.error(`Charge Stripe non vérifiée pour l’événement ${event.id}.`);
+        return new Response('Vérification de la charge Stripe temporairement impossible.', { status: 500 });
+      }
+    }
     const processor = diagnosticEvent
       ? 'process_diagnostic_ia_stripe_event'
       : courseEvent

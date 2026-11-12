@@ -33,3 +33,16 @@ test('unexpected rubric version and incomplete grids are rejected before renderi
   for (const response of [{ rubricVersion: 'other', rubrics: source() }, { rubricVersion: 'v7-2026-10-21', rubrics: {} }])
     await assert.rejects(() => createIagAssessmentApi(client({ response })).loadRubrics(), /version attendue/);
 });
+
+test('queries the exact response ID at the server for a staff deep link', async () => {
+  const calls = [];
+  const chain = {
+    select: () => chain,
+    order: () => chain,
+    eq: (...filter) => { calls.push(filter); return chain; },
+    then: (resolve) => resolve({ data: [{ response_id: 15001 }], error: null }),
+  };
+  const api = createIagAssessmentApi({ from: (table) => { calls.push(table); return chain; } });
+  assert.deepEqual(await api.loadHistory(undefined, '15001'), [{ response_id: 15001 }]);
+  assert.deepEqual(calls, ['iag_assessment_history', ['response_id', '15001']]);
+});

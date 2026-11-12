@@ -99,6 +99,28 @@ export function buildStripePostPaymentPayload(event, payloadSha256, overrides = 
   return { ...base, ...overrides };
 }
 
+export async function resolveCourseCheckoutCharge(payload, retrievePaymentIntent) {
+  const paymentIntentId = payload.stripe_payment_intent_id;
+  if (!/^pi_[A-Za-z0-9_]+$/.test(paymentIntentId || '')) {
+    throw new Error('Référence du paiement Stripe absente ou invalide.');
+  }
+  if (payload.stripe_charge_id) {
+    if (!/^ch_[A-Za-z0-9_]+$/.test(payload.stripe_charge_id)) {
+      throw new Error('Référence de la charge Stripe invalide.');
+    }
+    return payload;
+  }
+
+  const paymentIntent = await retrievePaymentIntent(paymentIntentId);
+  const chargeId = stripeId(paymentIntent?.latest_charge);
+  if (paymentIntent?.id !== paymentIntentId || paymentIntent.livemode !== payload.livemode
+    || paymentIntent.status !== 'succeeded' || paymentIntent.currency !== payload.currency
+    || paymentIntent.amount_received !== payload.amount_total || !/^ch_[A-Za-z0-9_]+$/.test(chargeId || '')) {
+    throw new Error('La charge Stripe ne confirme pas le paiement du cours.');
+  }
+  return { ...payload, stripe_charge_id: chargeId };
+}
+
 export function stripeReconciliationWindow(value, now = new Date()) {
   const defaultStart = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
   if (!value) return defaultStart;

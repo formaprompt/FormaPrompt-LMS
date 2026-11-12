@@ -1,4 +1,5 @@
 import { BOOKING_COURSES } from '../data/bookingCatalog.js';
+import { IAG_COURSE_ID } from './iagAssessmentApi.js';
 
 export const LEARNER_RECORD_COURSE_LABELS = {
   ...Object.fromEntries(Object.values(BOOKING_COURSES).map((course) => [course.id, course.shortTitle || course.title])),
@@ -22,8 +23,8 @@ export function learnerRecordPath(userId, returnSearch = '', returnPage = 0) {
   return `/admin/apprenants/${encodeURIComponent(userId)}${query ? `?${query}` : ''}`;
 }
 
-export function adminCorrectionPath({ kind, submissionId }) {
-  const correction = kind === 'final_project' ? 'project' : 'exercise';
+export function adminCorrectionPath({ kind, courseId, submissionId }) {
+  const correction = kind === 'final_project' ? 'project' : courseId === IAG_COURSE_ID ? 'iag' : 'exercise';
   const id = encodeURIComponent(String(submissionId));
   return `/admin/pedagogique?onglet=corrections&correction=${correction}&submissionId=${id}#${adminCorrectionAnchor(correction, id)}`;
 }
@@ -34,6 +35,7 @@ export function adminBookingResponsePath(bookingId) {
 }
 
 export function adminCorrectionAnchor(correction, submissionId) {
+  if (correction === 'iag') return `iag-submission-${submissionId}`;
   return `${correction === 'project' ? 'final-project-submission' : 'exercise-submission'}-${submissionId}`;
 }
 
@@ -42,8 +44,9 @@ export function adminBookingAnchor(bookingId) {
 }
 
 export function adminWorkTarget(searchParams) {
+  const correction = searchParams.get('correction');
   return {
-    correction: searchParams.get('correction') === 'project' ? 'project' : 'exercise',
+    correction: ['iag', 'project'].includes(correction) ? correction : 'exercise',
     submissionId: searchParams.get('submissionId'),
     bookingId: searchParams.get('bookingId'),
   };

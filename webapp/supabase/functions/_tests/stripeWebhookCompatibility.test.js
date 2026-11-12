@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
-import { webcrypto } from 'node:crypto';
+import { createHash, webcrypto } from 'node:crypto';
 import ts from 'typescript';
 import * as purchaseConfig from '../_shared/purchaseConfig.js';
 import * as coursePromotion from '../_shared/coursePromotion.js';
@@ -78,7 +78,7 @@ function event(type, object, id = 'evt_test_compatibility') {
 // Exécute le véritable Deno.serve transpilé, sans serveur ni accès réseau.
 // Les validations métier sont réelles ; RPC, Stripe et transport SMTP sont simulés.
 function harness(options = {}) {
-  const calls = [], queries = [], deliveries = [], warnings = [], adminAlerts = [], background = [];
+  const calls = [], queries = [], deliveries = [], warnings = [], adminAlerts = [], background = [], paymentIntentLookups = [];
   let handler, clientCount = 0;
   const env = {
     STRIPE_SECRET_KEY: options.live ? 'sk_live_fixture' : 'sk_test_fixture_not_a_real_key', STRIPE_WEBHOOK_SIGNING_SECRET: 'fixture-only',
@@ -141,6 +141,13 @@ function harness(options = {}) {
       if (signature !== 'fixture-signature') throw new Error('fixture_signature_invalid');
       return JSON.parse(raw);
     } };
+    paymentIntents = { async retrieve(id) {
+      paymentIntentLookups.push(id);
+      if (options.stripeChargeError) throw new Error('fixture_charge_unavailable');
+      return { id, livemode: Boolean(options.live), status: 'succeeded', currency: 'eur',
+        amount_received: options.intent?.final_amount_cents ?? 18700, latest_charge: 'ch_test_course',
+        ...options.paymentIntentOverride };
+    } };
   }
   const dependencies = {
     'npm:stripe@^22': { default: FakeStripe },
@@ -179,13 +186,47 @@ function harness(options = {}) {
     Response, TextEncoder, crypto: webcrypto, Error,
     console: { error() {}, warn(message) { warnings.push(message); } },
   });
-  return { calls, queries, deliveries, warnings, adminAlerts, background, get clientCount() { return clientCount; },
+  return { calls, queries, deliveries, warnings, adminAlerts, background, paymentIntentLookups, get clientCount() { return clientCount; },
     dispatch: (payload, signature = 'fixture-signature', method = 'POST') => handler(new Request(
       'https://webhook.invalid', { method, headers: signature ? { 'Stripe-Signature': signature } : {},
         ...(method === 'POST' ? { body: JSON.stringify(payload) } : {}) },
     )),
   };
 }
+
+test('le succès cours récupère la charge d’un PaymentIntent non étendu et conserve le hash signé', async () => {
+  const fixture = courseFixture({ prepared: true });
+  const h = harness(fixture);
+  const paid = event('checkout.session.completed', fixture.object);
+  assert.equal((await h.dispatch(paid)).status, 200);
+  assert.deepEqual(h.paymentIntentLookups, ['pi_test_course']);
+  assert.equal(h.calls[0].payload.stripe_charge_id, 'ch_test_course');
+  assert.equal(h.calls[0].payload.payload_sha256, createHash('sha256').update(JSON.stringify(paid)).digest('hex'));
+});
+
+test('la charge déjà présente dans l’événement signé évite une lecture Stripe supplémentaire', async () => {
+  const fixture = courseFixture({ prepared: true });
+  const h = harness({ ...fixture, stripeChargeError: true });
+  const object = { ...fixture.object, payment_intent: { id: 'pi_test_course', latest_charge: { id: 'ch_test_course' } } };
+  assert.equal((await h.dispatch(event('checkout.session.completed', object))).status, 200);
+  assert.deepEqual(h.paymentIntentLookups, []);
+  assert.equal(h.calls[0].payload.stripe_charge_id, 'ch_test_course');
+});
+
+test('une charge absente ou incohérente renvoie 500 avant toute RPC d’achat ou notification', async () => {
+  const fixture = courseFixture({ prepared: true });
+  for (const options of [
+    { stripeChargeError: true }, { paymentIntentOverride: { latest_charge: null } },
+    { paymentIntentOverride: { id: 'pi_other' } }, { paymentIntentOverride: { livemode: false } },
+    { paymentIntentOverride: { amount_received: 1 } }, { paymentIntentOverride: { status: 'processing' } },
+  ]) {
+    const h = harness({ ...fixture, ...options, live: true });
+    const paid = { ...event('checkout.session.completed', fixture.object), livemode: true };
+    assert.equal((await h.dispatch(paid)).status, 500);
+    assert.equal(h.calls.length, 0);
+    assert.equal(h.adminAlerts.length, 0);
+  }
+});
 
 test('un paiement live confirmé déclenche l’alerte admin après la RPC ; la panne mail ne fait pas échouer le paiement', async()=>{
   const fixture=courseFixture({prepared:true});const h=harness({...fixture,live:true,adminEmailFails:true});

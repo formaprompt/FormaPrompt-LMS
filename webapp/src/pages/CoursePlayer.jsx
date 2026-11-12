@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BookOpen, Check, Clock3, Code, Copy, Download, ExternalLink, FileText, Play, Save, Search, Send, Sparkles } from 'lucide-react';
 import CourseProgress from '../components/CourseProgress';
@@ -35,15 +35,15 @@ const emptyFinalProjectWork = {
 
 export default function CoursePlayer() {
   const { id } = useParams();
+  const { user } = useAuth();
   return id === IAG_COURSE_ID
     ? <IagCourseGate><IagLearningPlayer /></IagCourseGate>
-    : <ExistingCoursePlayer />;
+    : <ExistingCoursePlayer key={`${id}:${user?.id ?? ''}`} id={id} user={user} />;
 }
 
-function ExistingCoursePlayer() {
-  const { id } = useParams();
-  const { user } = useAuth();
+function ExistingCoursePlayer({ id, user }) {
   const navigate = useNavigate();
+  const userId = user?.id;
   const courseDefinition = courseCatalog[id];
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,6 +57,7 @@ function ExistingCoursePlayer() {
   const [savedExerciseAnswers, setSavedExerciseAnswers] = useState({});
   const [exerciseReviews, setExerciseReviews] = useState({});
   const [exerciseSaveStates, setExerciseSaveStates] = useState({});
+  const exerciseSavesInFlight = useRef(new Set());
   const [exerciseResponsesLoading, setExerciseResponsesLoading] = useState(false);
   const [exerciseResponsesAvailable, setExerciseResponsesAvailable] = useState(true);
   const [exerciseReviewsLoading, setExerciseReviewsLoading] = useState(false);
@@ -70,13 +71,14 @@ function ExistingCoursePlayer() {
   const [finalProjectReviewsAvailable, setFinalProjectReviewsAvailable] = useState(true);
 
   useEffect(() => {
+    let active = true;
     async function verifyAccess() {
       if (!courseDefinition) {
         navigate('/dashboard', { replace: true }); // Conserve l'apprenant dans son espace.
         return;
       }
 
-      if (!user) {
+      if (!userId) {
         navigate('/login');
         return;
       }
@@ -88,6 +90,7 @@ function ExistingCoursePlayer() {
       const contentResult = await fetchPaidCourseContent(supabase, id)
         .then((data) => ({ data, error: null }))
         .catch((error) => ({ data: null, error }));
+      if (!active) return;
 
       if (contentResult.error) {
         if (contentResult.error.status === 403) {
@@ -100,11 +103,12 @@ function ExistingCoursePlayer() {
         const positioningResult = positioningRequired ? await supabase
           .from('course_positioning_assessments')
           .select('id')
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('course_id', id)
           .eq('is_initial', true)
           .order('submitted_at', { ascending: true })
           .limit(1) : { data: [], error: null };
+        if (!active) return;
         if (positioningResult.error) {
           console.error('Erreur lors de la vérification du positionnement :', positioningResult.error);
           setAccessError("Le suivi des positionnements n'est pas encore disponible. Contactez FormaPrompt si le problème persiste.");
@@ -119,11 +123,13 @@ function ExistingCoursePlayer() {
     }
 
     verifyAccess();
-  }, [courseDefinition, id, navigate, user]);
+    return () => { active = false; };
+  }, [courseDefinition, id, navigate, userId]);
 
   useEffect(() => {
+    let active = true;
     async function loadLatestExerciseAnswers() {
-      if (!accessGranted || !quizCompleted || !course?.exercises?.length || !user) return;
+      if (!accessGranted || !quizCompleted || !course?.exercises?.length || !userId) return;
 
       setExerciseResponsesLoading(true);
       setExerciseResponsesAvailable(true);
@@ -131,8 +137,9 @@ function ExistingCoursePlayer() {
       const { data, error } = await supabase
         .from('course_exercise_latest_responses')
         .select('id, exercise_id, response_text, status, saved_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('course_id', id);
+      if (!active) return;
 
       if (error) {
         const tableIsNotReady = ['42P01', 'PGRST205'].includes(error.code);
@@ -170,17 +177,18 @@ function ExistingCoursePlayer() {
     }
 
     loadLatestExerciseAnswers();
-  }, [accessGranted, course, id, quizCompleted, user]);
+    return () => { active = false; };
+  }, [accessGranted, course, id, quizCompleted, userId]);
 
   useEffect(() => {
     async function loadLatestExerciseReviews() {
-      if (!accessGranted || !quizCompleted || !course?.exercises?.length || !user) return;
+      if (!accessGranted || !quizCompleted || !course?.exercises?.length || !userId) return;
 
       setExerciseReviewsLoading(true);
       const { data, error } = await supabase
         .from('course_exercise_latest_reviews')
         .select('id, response_id, exercise_id, response_saved_at, feedback_text, review_status, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('course_id', id);
 
       if (error) {
@@ -200,11 +208,11 @@ function ExistingCoursePlayer() {
     }
 
     loadLatestExerciseReviews();
-  }, [accessGranted, course, id, quizCompleted, user]);
+  }, [accessGranted, course, id, quizCompleted, userId]);
 
   useEffect(() => {
     async function loadLatestFinalProjectWork() {
-      if (!accessGranted || !quizCompleted || !course?.finalProject || !user) return;
+      if (!accessGranted || !quizCompleted || !course?.finalProject || !userId) return;
 
       setFinalProjectLoading(true);
       setFinalProjectAvailable(true);
@@ -216,7 +224,7 @@ function ExistingCoursePlayer() {
           id, prompt_and_iterations, final_output, verification_grid_reference,
           action_plan, learner_note, status, saved_at
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('course_id', id)
         .limit(1)
         .maybeSingle();
@@ -254,11 +262,11 @@ function ExistingCoursePlayer() {
     }
 
     loadLatestFinalProjectWork();
-  }, [accessGranted, course, id, quizCompleted, user]);
+  }, [accessGranted, course, id, quizCompleted, userId]);
 
   useEffect(() => {
     async function loadLatestFinalProjectReview() {
-      if (!accessGranted || !quizCompleted || !course?.finalProject || !user) return;
+      if (!accessGranted || !quizCompleted || !course?.finalProject || !userId) return;
 
       setFinalProjectReviewLoading(true);
       setFinalProjectReviewsAvailable(true);
@@ -270,7 +278,7 @@ function ExistingCoursePlayer() {
           checks_and_risks_level, choices_and_limits_level,
           appreciation, improvement_areas, review_status, created_at
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('course_id', id)
         .limit(1)
         .maybeSingle();
@@ -290,7 +298,7 @@ function ExistingCoursePlayer() {
     }
 
     loadLatestFinalProjectReview();
-  }, [accessGranted, course, id, quizCompleted, user]);
+  }, [accessGranted, course, id, quizCompleted, userId]);
 
   const handleCopy = (text, exerciseId) => {
     navigator.clipboard.writeText(text);
@@ -310,34 +318,59 @@ function ExistingCoursePlayer() {
   const handleExerciseAnswerChange = (exerciseId, value) => {
     const key = String(exerciseId);
     setExerciseAnswers((current) => ({ ...current, [key]: value }));
-    setExerciseSaveStates((current) => ({ ...current, [key]: null, global: null }));
+    setExerciseSaveStates((current) => ({
+      ...current,
+      [key]: current[key]?.state === 'saving' ? current[key] : null,
+      global: null,
+    }));
   };
 
   const handleSaveExerciseAnswer = async (exerciseId, status) => {
     const key = String(exerciseId);
-    const responseText = exerciseAnswers[key]?.trim() || '';
+    const answerAtSave = exerciseAnswers[key] || '';
+    const responseText = answerAtSave.trim();
 
-    if (!responseText || !exerciseResponsesAvailable) return;
+    if (!responseText || exerciseResponsesLoading || !exerciseResponsesAvailable
+      || exerciseSavesInFlight.current.has(key)) return;
 
+    exerciseSavesInFlight.current.add(key);
     setExerciseSaveStates((current) => ({
       ...current,
       [key]: { state: 'saving', message: 'Enregistrement en cours…' },
     }));
 
-    const { data, error } = await supabase
-      .from('course_exercise_responses')
-      .insert({
-        user_id: user.id,
-        course_id: id,
-        exercise_id: key,
-        response_text: responseText,
-        status,
-      })
-      .select('id, response_text, status, saved_at')
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('course_exercise_responses')
+        .insert({
+          user_id: user.id,
+          course_id: id,
+          exercise_id: key,
+          response_text: responseText,
+          status,
+        })
+        .select('id, response_text, status, saved_at')
+        .single();
+      if (error) throw error;
 
-    if (error) {
-      if (['42P01', 'PGRST205'].includes(error.code)) setExerciseResponsesAvailable(false);
+      setExerciseAnswers((current) => (
+        current[key] === answerAtSave ? { ...current, [key]: data.response_text } : current
+      ));
+      setSavedExerciseAnswers((current) => ({
+        ...current,
+        [key]: { id: data.id, text: data.response_text, status: data.status, savedAt: data.saved_at },
+      }));
+      setExerciseSaveStates((current) => ({
+        ...current,
+        [key]: {
+          state: 'success',
+          message: status === 'submitted'
+            ? 'Réponse terminée enregistrée.'
+            : 'Brouillon enregistré.',
+        },
+      }));
+    } catch (error) {
+      if (['42P01', 'PGRST205'].includes(error?.code)) setExerciseResponsesAvailable(false);
       console.error("Erreur lors de l'enregistrement de la réponse :", error);
       setExerciseSaveStates((current) => ({
         ...current,
@@ -346,23 +379,9 @@ function ExistingCoursePlayer() {
           message: "La réponse n'a pas été enregistrée. Réessayez dans quelques instants.",
         },
       }));
-      return;
+    } finally {
+      exerciseSavesInFlight.current.delete(key);
     }
-
-    setExerciseAnswers((current) => ({ ...current, [key]: data.response_text }));
-    setSavedExerciseAnswers((current) => ({
-      ...current,
-      [key]: { id: data.id, text: data.response_text, status: data.status, savedAt: data.saved_at },
-    }));
-    setExerciseSaveStates((current) => ({
-      ...current,
-      [key]: {
-        state: 'success',
-        message: status === 'submitted'
-          ? 'Réponse terminée enregistrée.'
-          : 'Brouillon enregistré.',
-      },
-    }));
   };
 
   const handleFinalProjectWorkChange = (fieldId, value) => {
