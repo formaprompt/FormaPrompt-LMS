@@ -78,6 +78,41 @@ const EMPTY_OPPORTUNITY = Object.freeze({
   title: '', expected_benefit: '', effort: '', indicative_cost: '', risk_or_watchpoint: '', first_action: '',
 });
 
+const PUBLICATION_ERROR_MESSAGES = {
+  overall_summary: 'Synthèse générale — vérifiez le format et la longueur du texte.',
+  overall_summary_minimum: 'Synthèse générale — saisissez au moins 50 caractères.',
+  observed_maturity_level: 'Niveau d’avancement dans l’usage de l’IA — choisissez un niveau de 1 à 5.',
+  maturity_required: 'Niveau d’avancement dans l’usage de l’IA — choisissez un niveau de 1 à 5.',
+  maturity_assessment: 'Analyse de maturité — vérifiez le format et la longueur du texte.',
+  maturity_assessment_minimum: 'Analyse de maturité — saisissez au moins 20 caractères.',
+  current_uses: 'Usages actuels — vérifiez le format et la longueur du texte.',
+  current_uses_minimum: 'Usages actuels — saisissez au moins 10 caractères.',
+  strengths: 'Points forts — vérifiez le contenu de chaque ligne ou retirez les lignes vides.',
+  strengths_required: 'Points forts — ajoutez au moins un point fort.',
+  watch_points: 'Points de vigilance — vérifiez le contenu de chaque ligne ou retirez les lignes vides.',
+  watch_points_required: 'Points de vigilance — ajoutez au moins un point de vigilance.',
+  priority_opportunities: 'Opportunités prioritaires — vérifiez le format, la longueur et le nombre de lignes.',
+  priority_opportunities_required: 'Opportunités prioritaires — renseignez le titre et la première action pour chaque opportunité. Ajoutez au moins une opportunité.',
+  recommendations: 'Recommandations concrètes — vérifiez le contenu de chaque ligne ou retirez les lignes vides.',
+  recommendations_required: 'Recommandations concrètes — ajoutez au moins une recommandation.',
+  short_term_actions: 'Plan à court terme — vérifiez le format, la longueur et le nombre d’actions.',
+  short_term_actions_required: 'Plan à court terme — ajoutez au moins une action et renseignez le texte et l’horizon de chacune.',
+  recommended_tool_families: 'Familles d’outils recommandées — vérifiez le contenu de chaque ligne ou retirez les lignes vides.',
+  privacy_rgpd_considerations: 'Confidentialité et RGPD — vérifiez le format et la longueur du texte.',
+  privacy_required: 'Confidentialité et RGPD — saisissez au moins 20 caractères.',
+  ai_act_considerations: 'AI Act — vérifiez le format et la longueur du texte.',
+  next_steps: 'Prochaines étapes proposées — vérifiez le format et la longueur du texte.',
+  next_steps_required: 'Prochaines étapes proposées — saisissez au moins 10 caractères.',
+};
+
+function serializeRestitutionContent(content) {
+  return JSON.stringify(content, (_key, value) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    // La base et le formulaire peuvent ordonner différemment les propriétés d’une même entrée.
+    return Object.fromEntries(Object.keys(value).sort().map((key) => [key, value[key]]));
+  });
+}
+
 function formatDateTime(value) {
   if (!value) return 'Non renseigné';
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -101,7 +136,7 @@ function restitutionLabel(restitution) {
   return restitution.status === 'published' ? 'Publiée' : 'Brouillon';
 }
 
-function ConfirmationDialog({ type, onCancel, onConfirm, busy }) {
+function ConfirmationDialog({ type, onCancel, onConfirm, busy, confirmDisabled }) {
   const publication = type === 'publish';
   return (
     <div className="diagnostic-admin-dialog-backdrop" role="presentation">
@@ -112,7 +147,7 @@ function ConfirmationDialog({ type, onCancel, onConfirm, busy }) {
           : 'Confirmez que le rendez-vous Diagnostic IA a bien été réalisé. Calendar et Meet ne seront pas modifiés.'}</p>
         <div className="diagnostic-admin-dialog__actions">
           <button type="button" className="button-secondary" onClick={onCancel} disabled={busy}>Annuler</button>
-          <button type="button" className="button-primary" onClick={onConfirm} disabled={busy}>
+          <button type="button" className="button-primary" onClick={onConfirm} disabled={busy || confirmDisabled}>
             {busy ? 'Traitement…' : publication ? 'Publier maintenant' : 'Marquer comme réalisé'}
           </button>
         </div>
@@ -318,13 +353,12 @@ function ReschedulePanel({ diagnostic, onCancel, onSuccess }) {
   );
 }
 
-function RestitutionForm({ diagnostic, content, setContent, working, correctionMode, setCorrectionMode, correctionReason, setCorrectionReason, onCancelCorrection, onSave, onPreview, onPublish, onCorrect }) {
+function RestitutionForm({ diagnostic, content, setContent, working, correctionMode, setCorrectionMode, correctionReason, setCorrectionReason, canPublish, hasUnsavedChanges, publicationErrors, onCancelCorrection, onSave, onPreview, onPublish, onCorrect }) {
   const restitution = diagnostic.restitution;
   const published = restitution?.status === 'published';
   const disabled = working || (published && !correctionMode);
-  const publicationValidation = validateRestitutionContent(content, { forPublication: true });
   const setField = (field) => (value) => setContent((current) => ({ ...current, [field]: value }));
-  const canPublish = restitution?.status === 'draft' && diagnostic.status === 'completed' && publicationValidation.valid;
+  const publicationMessages = [...new Set(publicationErrors.map((error) => PUBLICATION_ERROR_MESSAGES[error]))];
   const selectedMaturity = MATURITY_LEVELS.find((level) => level.value === Number(content.observed_maturity_level));
   return (
     <section className="diagnostic-admin-restitution" aria-labelledby="restitution-form-title">
@@ -367,15 +401,22 @@ function RestitutionForm({ diagnostic, content, setContent, working, correctionM
           <small>{correctionReason.length} / {RESTITUTION_LIMITS.correction_reason}</small>
         </div>}
 
+        {!published && <div id="diagnostic-publication-help" className="diagnostic-admin-help">
+          {diagnostic.status !== 'completed' && <p>Le diagnostic doit être marqué comme réalisé avant publication.</p>}
+          {!restitution && <p>Enregistrez le brouillon avant de publier.</p>}
+          {restitution && hasUnsavedChanges && <p>Enregistrez vos modifications avant de publier.</p>}
+          {diagnostic.status === 'completed' && publicationMessages.length > 0 && <>
+            <p>Champs à vérifier avant publication</p>
+            <ul>{publicationMessages.map((message) => <li key={message}>{message}</li>)}</ul>
+          </>}
+        </div>}
         <div className="diagnostic-admin-form-actions">
           <button type="button" className="button-secondary" onClick={onPreview}>Prévisualiser</button>
           {!published && <button type="button" className="button-primary" onClick={onSave} disabled={working}>Enregistrer le brouillon</button>}
-          {restitution?.status === 'draft' && <button type="button" className="button-publish" onClick={onPublish} disabled={working || !canPublish}>Publier la restitution</button>}
+          {!published && <button type="button" className="button-publish" onClick={onPublish} disabled={working || !canPublish} aria-describedby="diagnostic-publication-help">Publier la restitution</button>}
           {published && !correctionMode && <button type="button" className="button-secondary" onClick={() => setCorrectionMode(true)} disabled={working}>Corriger la restitution</button>}
           {published && correctionMode && <><button type="button" className="button-primary" onClick={onCorrect} disabled={working || correctionReason.trim().length < 5}>Enregistrer la correction</button><button type="button" className="button-tertiary" onClick={onCancelCorrection} disabled={working}>Annuler la correction</button></>}
         </div>
-        {restitution?.status === 'draft' && diagnostic.status !== 'completed' && <p className="diagnostic-admin-help">Le diagnostic doit être marqué comme réalisé avant publication.</p>}
-        {restitution?.status === 'draft' && diagnostic.status === 'completed' && !publicationValidation.valid && <p className="diagnostic-admin-help">Complétez les champs métier requis avant publication.</p>}
       </form>
     </section>
   );
@@ -437,9 +478,17 @@ export default function AdminDiagnosticRestitutions() {
   }, [role]);
 
   const selected = diagnostics.find((item) => item.id === selectedId) || null;
+  const savedRestitution = selected?.restitution;
+  const isDraft = savedRestitution?.status === 'draft';
+  const hasUnsavedChanges = isDraft
+    && serializeRestitutionContent(content) !== serializeRestitutionContent(restitutionToContent(savedRestitution));
+  const publicationValidation = validateRestitutionContent(content, { forPublication: true });
+  const canPublish = isDraft && selected.status === 'completed' && !revisionConflict
+    && !hasUnsavedChanges && publicationValidation.valid;
   const visibleDiagnostics = useMemo(() => filterDiagnostics(diagnostics, filter), [diagnostics, filter]);
 
   function openDiagnostic(diagnostic) {
+    setConfirmation(null);
     setSelectedId(diagnostic.id);
     setContent(restitutionToContent(diagnostic.restitution));
     setCorrectionMode(false);
@@ -511,7 +560,7 @@ export default function AdminDiagnosticRestitutions() {
   }
 
   async function publishRestitution() {
-    if (!selected?.restitution) return;
+    if (!canPublish || working) return;
     setWorking(true);
     try {
       const restitution = await publishDiagnosticRestitution(supabase, selected.restitution.id, selected.restitution.revision);
@@ -583,11 +632,11 @@ export default function AdminDiagnosticRestitutions() {
             <section className="diagnostic-admin-questionnaire" aria-labelledby="questionnaire-title"><header className="diagnostic-admin-section-heading"><div><p>Lecture seule</p><h2 id="questionnaire-title">Questionnaire préalable</h2></div><span className={statusClass(selected.questionnaire ? 'received' : 'missing')}>{selected.questionnaire ? 'Transmis' : 'Absent'}</span></header>{selected.questionnaire ? <><p className="diagnostic-admin-questionnaire__identity"><strong>{selected.questionnaire.first_name} {selected.questionnaire.last_name}</strong> · version {selected.questionnaire.questionnaire_version} · transmis le {formatDateTime(selected.questionnaire.submitted_at)}</p><dl>{QUESTIONNAIRE_FIELDS.map(([label, field]) => <div key={field}><dt>{label}</dt><dd>{QUESTIONNAIRE_VALUE_LABELS[selected.questionnaire[field]] || selected.questionnaire[field]}</dd></div>)}</dl></> : <p className="diagnostic-admin-muted">Aucun questionnaire n’a été transmis pour ce booking.</p>}</section>
 
             {previewOpen && <RestitutionPreview content={content} onClose={() => setPreviewOpen(false)} />}
-            <RestitutionForm diagnostic={selected} content={content} setContent={setContent} working={working} correctionMode={correctionMode} setCorrectionMode={setCorrectionMode} correctionReason={correctionReason} setCorrectionReason={setCorrectionReason} onCancelCorrection={() => { setCorrectionMode(false); setCorrectionReason(''); setContent(restitutionToContent(selected.restitution)); }} onSave={saveDraft} onPreview={() => setPreviewOpen(true)} onPublish={() => setConfirmation('publish')} onCorrect={correctRestitution} />
+            <RestitutionForm diagnostic={selected} content={content} setContent={setContent} working={working} correctionMode={correctionMode} setCorrectionMode={setCorrectionMode} correctionReason={correctionReason} setCorrectionReason={setCorrectionReason} canPublish={canPublish} hasUnsavedChanges={hasUnsavedChanges} publicationErrors={publicationValidation.errors} onCancelCorrection={() => { setCorrectionMode(false); setCorrectionReason(''); setContent(restitutionToContent(selected.restitution)); }} onSave={saveDraft} onPreview={() => setPreviewOpen(true)} onPublish={() => setConfirmation('publish')} onCorrect={correctRestitution} />
           </>}
         </section>
       </div>}
-      {confirmation && <ConfirmationDialog type={confirmation} onCancel={() => setConfirmation(null)} onConfirm={confirmation === 'publish' ? publishRestitution : completeBooking} busy={working} />}
+      {confirmation && <ConfirmationDialog type={confirmation} onCancel={() => setConfirmation(null)} onConfirm={confirmation === 'publish' ? publishRestitution : completeBooking} busy={working} confirmDisabled={confirmation === 'publish' && !canPublish} />}
     </main>
   );
 }

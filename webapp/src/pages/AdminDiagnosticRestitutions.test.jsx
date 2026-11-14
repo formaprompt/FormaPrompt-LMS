@@ -278,6 +278,8 @@ describe('administration des Diagnostics IA et restitutions', () => {
     const user = userEvent.setup();
     renderPage();
     await openDiagnostic(user, 'to-write');
+    expect(screen.getByRole('button', { name: 'Publier la restitution' })).toBeDisabled();
+    expect(screen.getByText('Enregistrez le brouillon avant de publier.')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.anything(), 'to-write', 0, expect.any(Object)));
     expect(await screen.findByRole('status')).toHaveTextContent('révision 1');
@@ -287,11 +289,42 @@ describe('administration des Diagnostics IA et restitutions', () => {
     const user = userEvent.setup();
     renderPage();
     await openDiagnostic(user, 'draft');
+    const publish = screen.getByRole('button', { name: 'Publier la restitution' });
+    expect(publish).toBeEnabled();
     await user.clear(screen.getByLabelText('Usages actuels'));
     await user.type(screen.getByLabelText('Usages actuels'), 'Usages TEST mis à jour');
+    expect(publish).toBeDisabled();
+    expect(screen.getByText('Enregistrez vos modifications avant de publier.')).toBeVisible();
+    await user.click(publish);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(mocks.publish).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }));
     await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(expect.anything(), 'draft', 1, expect.objectContaining({ current_uses: 'Usages TEST mis à jour' })));
     expect(await screen.findByRole('status')).toHaveTextContent('révision 2');
+    expect(publish).toBeEnabled();
+    await user.click(publish);
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Publier maintenant' }));
+    expect(mocks.publish).toHaveBeenCalledWith(expect.anything(), 'restitution-draft', 2);
+  });
+
+  it('indique les champs à compléter et garde un brouillon incomplet non publiable après enregistrement', async () => {
+    const user = userEvent.setup();
+    const draft = findDiagnostic('draft').restitution;
+    draft.privacy_rgpd_considerations = 'Texte bref';
+    draft.priority_opportunities[0].first_action = '';
+    draft.short_term_actions = [];
+    renderPage();
+    await openDiagnostic(user, 'draft');
+    const publish = screen.getByRole('button', { name: 'Publier la restitution' });
+    expect(publish).toBeDisabled();
+    expect(screen.getByText('Confidentialité et RGPD — saisissez au moins 20 caractères.')).toBeVisible();
+    expect(screen.getByText(/renseignez le titre et la première action/)).toBeVisible();
+    expect(screen.getByText(/ajoutez au moins une action et renseignez le texte et l’horizon/)).toBeVisible();
+    await user.type(screen.getByLabelText('Confidentialité et RGPD'), ' à compléter avec les précautions utiles.');
+    await user.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('révision 2');
+    expect(screen.queryByText(/saisissez au moins 20 caractères/, { selector: 'li' })).not.toBeInTheDocument();
+    expect(publish).toBeDisabled();
   });
 
   it('signale un conflit 40001 et propose de recharger sans écraser', async () => {
@@ -300,10 +333,12 @@ describe('administration des Diagnostics IA et restitutions', () => {
     mocks.save.mockRejectedValueOnce(error);
     renderPage();
     await openDiagnostic(user, 'draft');
+    await user.type(screen.getByLabelText('Usages actuels'), ' Ajout TEST.');
     await user.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }));
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('version plus récente');
     expect(within(alert).getByRole('button', { name: 'Recharger la fiche' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Publier la restitution' })).toBeDisabled();
   });
 
   it('prévisualise l’état courant sans aucune écriture', async () => {
