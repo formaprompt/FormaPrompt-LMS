@@ -9,6 +9,19 @@ import SEO from '../components/SEO';
 import { SITE_CONFIG } from '../config/site';
 import BlogVideoLink from '../components/BlogVideoLink';
 
+const furtherReading = new Map([
+  ['quest-ce-que-le-prompt-engineering', {
+    introduction: 'Pour appliquer cette méthode à vos usages professionnels, consultez le',
+    label: 'programme de la formation Prompt Engineering (7 h)',
+    to: '/formation-prompt-engineering',
+  }],
+  ['faut-il-changer-ia', {
+    introduction: 'Pour choisir selon vos usages, consultez le',
+    label: 'comparatif de Claude, GPT, Gemini et Mistral',
+    to: '/blog/ia-claude-gpt-gemini-et-mistral-laquelle-choisir',
+  }],
+]);
+
 export default function BlogPost() {
   const { slug } = useParams();
   const [post, setPost] = useState(null);
@@ -47,6 +60,7 @@ export default function BlogPost() {
     || post.excerpt
     || `Lisez l'article ${post.title} sur le blog de FormaPrompt.`;
   const socialImage = post.image_url || 'https://formaprompt.com/assets/logo-new.png';
+  const relatedPage = furtherReading.get(post.slug);
   const articleJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -134,6 +148,7 @@ export default function BlogPost() {
         >
           {post.content}
         </ReactMarkdown>
+        {relatedPage && <p>{relatedPage.introduction} <Link to={relatedPage.to}>{relatedPage.label}</Link>.</p>}
       </div>
 
       <div style={{ marginTop: '4rem', padding: '2rem', background: 'var(--color-secondary)', borderRadius: '16px', color: 'white', textAlign: 'center' }}>
