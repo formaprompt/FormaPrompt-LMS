@@ -53,8 +53,7 @@ export default function AdvertisingConsent() {
     <section className="advertising-consent" aria-labelledby="cookie-preferences-title">
       <div className="advertising-consent__content">
         <h2 id="cookie-preferences-title" ref={heading} tabIndex={-1}>Vos choix pour les cookies</h2>
-        <p>Choisissez séparément les mesures que vous autorisez. Refuser permet de continuer
-          à naviguer, à vous connecter et à acheter.</p>
+        <p>Ces deux mesures sont facultatives. Refuser permet de naviguer, de vous connecter et d’acheter.</p>
         <fieldset className="advertising-consent__choices">
           <legend>Mesures facultatives</legend>
           <label className="advertising-consent__choice">
@@ -62,21 +61,24 @@ export default function AdvertisingConsent() {
               aria-describedby="cookie-advertising-description" />
             <span>Mesure publicitaire Google Ads</span>
           </label>
-          <p id="cookie-advertising-description">Relier les achats confirmés aux annonces FormaPrompt,
-            sans personnalisation publicitaire.</p>
           <label className="advertising-consent__choice">
             <input type="checkbox" checked={audience} onChange={(event) => setAudience(event.target.checked)}
               aria-describedby="cookie-audience-description" />
             <span>Mesure d’audience Google Analytics</span>
           </label>
-          <p id="cookie-audience-description">Lorsqu’elle est activée après votre accord, comprendre
-            la consultation des pages publiques. Les espaces de connexion, de compte et de formation
-            ainsi que les pages de paiement sont exclus.</p>
         </fieldset>
-        <p>Vous pouvez modifier ces choix ou retirer votre accord via « Gérer mes cookies » en bas de page,
-          sans effacer votre connexion. Le choix publicitaire est conservé 150 jours.
-          Le choix d’audience est également conservé 150 jours ; les cookies Analytics durent uniquement la session.</p>
-        <a href="/politique-confidentialite">En savoir plus sur les données utilisées</a>
+        <details className="advertising-consent__details">
+          <summary>Détails et durée de conservation</summary>
+          <p id="cookie-advertising-description">Google Ads : relier les achats confirmés aux annonces FormaPrompt,
+            sans personnalisation publicitaire.</p>
+          <p id="cookie-audience-description">Google Analytics : lorsqu’elle est activée après votre accord, la mesure
+            d’audience permet de comprendre la consultation des pages publiques. Les espaces de connexion, de compte
+            et de formation ainsi que les pages de paiement sont exclus.</p>
+          <p>Vous pouvez modifier ces choix ou retirer votre accord via « Gérer mes cookies » en bas de page,
+            sans effacer votre connexion. Le choix publicitaire est conservé 150 jours.
+            Le choix d’audience est également conservé 150 jours ; les cookies Analytics durent uniquement la session.</p>
+          <a href="/politique-confidentialite">En savoir plus sur les données utilisées</a>
+        </details>
       </div>
       <div className="advertising-consent__actions">
         <button type="button" className="advertising-consent__button" onClick={() => saveChoices(false, false)}>

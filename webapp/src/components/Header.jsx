@@ -61,15 +61,16 @@ export default function Header() {
   return (
     <header className="header">
       <div className="container header-container">
-        <Link to="/" className="logo">
+        <Link to="/" className="logo" aria-label="FormaPrompt — Accueil">
           <img
             src="/assets/logo-new.png"
-            alt="Logo FormaPrompt"
+            alt=""
             width="96"
             height="64"
             decoding="async"
             fetchPriority="low"
           />
+          <span className="logo-wordmark">FormaPrompt</span>
         </Link>
 
         {user && <div className="mobile-header-actions">
@@ -146,7 +147,7 @@ export default function Header() {
               </Link>
             </div>
           ) : (
-            <Link to="/login" className="btn btn-primary" onClick={() => setIsMenuOpen(false)}>
+            <Link to="/login" className="nav-login" onClick={() => setIsMenuOpen(false)}>
               Se connecter
             </Link>
           )}

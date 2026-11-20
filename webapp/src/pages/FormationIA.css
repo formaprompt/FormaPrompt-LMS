@@ -8,11 +8,9 @@
 }
 
 .generative-ai-hero {
-  padding: clamp(3.5rem, 7vw, 6rem) 0;
+  padding: 3rem 0;
   color: #f8fafc;
-  background:
-    radial-gradient(circle at 88% 12%, rgba(245, 158, 11, 0.24), transparent 24%),
-    linear-gradient(135deg, #0b3035 0%, #075f59 55%, #0b806b 100%);
+  background: #103f3d;
 }
 
 .generative-ai-hero-grid,
@@ -27,9 +25,9 @@
   margin: 0 0 0.75rem;
   color: #0b7d68;
   font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .generative-ai-hero .generative-ai-kicker,
@@ -41,23 +39,24 @@
   max-width: 850px;
   margin-bottom: 1.25rem;
   color: #fff;
-  font-size: clamp(2.25rem, 5vw, 4.35rem);
-  line-height: 1.05;
+  font-size: clamp(2rem, 3.5vw, 3.25rem);
+  line-height: 1.12;
+  font-weight: 600;
 }
 
 .generative-ai-lead {
   max-width: 760px;
   color: #def4ef;
-  font-size: clamp(1.05rem, 2vw, 1.28rem);
-  line-height: 1.7;
+  font-size: 1.125rem;
+  line-height: 1.6;
 }
 
 .generative-ai-facts,
 .generative-ai-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem 1.2rem;
-  margin-top: 1.6rem;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .generative-ai-facts span {
@@ -132,16 +131,16 @@
 .generative-ai-objectives {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.1rem;
+  gap: 1.5rem;
 }
 
 .generative-ai-objectives article,
 .generative-ai-methods article {
-  padding: 1.6rem;
+  padding: 1.5rem;
   background: #fff;
   border: 1px solid #d9e8e4;
-  border-radius: 18px;
-  box-shadow: 0 10px 25px rgba(15, 59, 63, 0.06);
+  border-radius: 16px;
+  box-shadow: none;
 }
 
 .generative-ai-objectives svg,
@@ -201,7 +200,7 @@
   padding: clamp(1.25rem, 3vw, 1.9rem);
   background: #f8fbfa;
   border: 1px solid #d9e8e4;
-  border-radius: 18px;
+  border-radius: 16px;
 }
 
 .generative-ai-module-meta {
@@ -214,12 +213,12 @@
 .generative-ai-module-meta span {
   display: grid;
   place-items: center;
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   color: #fff;
   background: #087d69;
   border-radius: 15px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .generative-ai-module-meta strong {
@@ -320,7 +319,7 @@
   margin: 0;
   color: #087d69;
   font-size: clamp(3.2rem, 7vw, 4.2rem);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -398,4 +397,18 @@
   .generative-ai-support-card {
     flex-direction: column;
   }
+}
+
+/* Public presentation only; checkout and learner behavior are unchanged. */
+.generative-ai-page :is(#programme, #inscription) { scroll-margin-top: 6rem; }
+.generative-ai-page .course-summary { border-radius: 16px; padding: 1.25rem; margin-top: 1.5rem; background: #1a4a47; }
+.generative-ai-page .course-summary dt { text-transform: none; letter-spacing: 0; font-weight: 500; color: #d1e7de; }
+.generative-ai-page .course-summary dd { font-weight: 500; }
+.generative-ai-page .btn { transition: color .2s, background-color .2s, border-color .2s; }
+.generative-ai-page .card:hover { transform: none; }
+.generative-ai-page :is(a, button, summary):focus-visible { outline: 3px solid #b07400; outline-offset: 4px; }
+@media (max-width: 600px) {
+  .generative-ai-page .container { padding-inline: 1rem; }
+  .generative-ai-hero { padding-block: 2rem; }
+  .generative-ai-section, .generative-ai-objectives-section, .generative-ai-methods-section, .generative-ai-program-section, .generative-ai-pricing-section { padding-block: 3rem; }
 }

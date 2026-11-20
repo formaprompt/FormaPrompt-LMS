@@ -10,6 +10,7 @@ import { getPurchaseConfig } from '../../supabase/functions/_shared/purchaseConf
 import { IAG_COURSE_ID } from '../../supabase/functions/_shared/iagPositioning.js';
 import './FormationIA.css';
 import './FormationIagElearning.css';
+import { PracticeExample } from '../components/TrainingVisual';
 
 // Public programme titles only. The lesson bodies and resources remain private.
 const modules = [
@@ -67,9 +68,7 @@ function FormationIagContent({ user }) {
             </div>
             <p className="iag-hero-price">79 € jusqu’au 31 décembre 2026 inclus, puis 99 € · Paiement unique</p>
           </div>
-          <div className="generative-ai-hero-visual">
-            <img src="/assets/acculturation-ia.png" alt="Illustration FormaPrompt des usages de l’IA au travail" width="1137" height="983" />
-          </div>
+          <PracticeExample />
         </div>
       </section>
 
