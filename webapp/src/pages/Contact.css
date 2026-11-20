@@ -21,9 +21,9 @@
   margin-bottom: 0.5rem;
   color: var(--color-primary-dark);
   font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .contact-layout {

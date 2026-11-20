@@ -8,7 +8,7 @@ import {
   FileText,
   MonitorPlay,
   ShieldCheck,
-  Sparkles,
+  Lightbulb,
   Target,
   Users,
 } from 'lucide-react'
@@ -20,6 +20,7 @@ import { useAuth } from '../contexts/useAuth'
 import { getBookingUrl } from '../data/bookingCatalog'
 import { fetchActiveCourseAccess } from '../lib/courseAccess'
 import './FormationIA.css'
+import { TrainerPortrait } from '../components/TrainingVisual'
 
 const COURSE_ID = 'formation-ia'
 
@@ -27,7 +28,7 @@ const objectives = [
   {
     title: 'Comprendre',
     description: "Expliquer simplement le fonctionnement général et les limites d'une IA générative.",
-    icon: Sparkles,
+    icon: Lightbulb,
   },
   {
     title: 'Identifier',
@@ -137,7 +138,7 @@ export default function FormationIA() {
         title="Formation IA à Calais et à distance · 10 h | FormaPrompt"
         description="Formation IA générative de 10 heures avec Thierry FREZARD : usages professionnels, prompts, vérification et confidentialité. À Calais ou en classe virtuelle."
         url={`${SITE_CONFIG.baseUrl}/formation-ia-generative`}
-        image={`${SITE_CONFIG.baseUrl}/assets/acculturation-ia.png`}
+        image={`${SITE_CONFIG.baseUrl}/assets/Photo_thierry_frezard.jpg`}
       />
 
       <main className="generative-ai-page">
@@ -147,10 +148,13 @@ export default function FormationIA() {
               <p className="generative-ai-kicker">Formation professionnelle · Calais et à distance</p>
               <h1>IA générative : comprendre, pratiquer et sécuriser ses usages</h1>
               <p className="generative-ai-lead">
-                Avec Thierry FREZARD, apprenez à rédiger un courriel, synthétiser un document et préparer un support
-                avec l&apos;IA générative. Dix heures accompagnées pour structurer vos demandes, vérifier les réponses
-                et protéger vos informations, en présentiel autour de Calais ou en classe virtuelle.
+                Dix heures avec Thierry FREZARD pour rédiger, synthétiser et préparer des supports avec l’IA.
+                Apprenez à structurer vos demandes, vérifier les réponses et protéger vos informations.
               </p>
+              <div className="generative-ai-actions">
+                <a href="#inscription" className="btn btn-primary">Voir le tarif et s&apos;inscrire</a>
+                <a href="#programme" className="btn generative-ai-secondary-btn">Consulter le programme</a>
+              </div>
               <CourseSummary
                 id="formation-ia-summary"
                 items={[
@@ -162,17 +166,8 @@ export default function FormationIA() {
                   { label: 'Groupe ou entreprise', value: 'Programme et tarif adaptés sur devis' },
                 ]}
               />
-              <div className="generative-ai-actions">
-                <a href="#inscription" className="btn btn-primary">Voir le tarif et s&apos;inscrire</a>
-                <a href="#programme" className="btn generative-ai-secondary-btn">Consulter le programme</a>
-              </div>
             </div>
-            <div className="generative-ai-hero-visual">
-              <img
-                src="/assets/acculturation-ia.png"
-                alt="Illustration de la formation aux usages professionnels de l'IA générative"
-              />
-            </div>
+            <TrainerPortrait />
           </div>
         </section>
 

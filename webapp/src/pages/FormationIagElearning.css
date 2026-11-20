@@ -1,7 +1,7 @@
 .iag-elearning-page .generative-ai-hero p { max-width: 48rem; }
 .iag-elearning-page .iag-hero-price { margin-top: 1.5rem; color: #f6c453; font-weight: 700; }
 .iag-elearning-page .generative-ai-hero { padding-block: clamp(2rem, 4vw, 3.5rem); }
-.iag-elearning-page .generative-ai-hero h1 { font-size: clamp(2rem, 3.5vw, 3.2rem); line-height: 1.12; }
+.iag-elearning-page .generative-ai-hero h1 { font-size: clamp(2rem, 3.5vw, 3.25rem); line-height: 1.12; }
 .iag-elearning-page .generative-ai-lead { font-size: clamp(1rem, 1.4vw, 1.15rem); line-height: 1.6; }
 .iag-elearning-page .generative-ai-hero-visual img { width: 100%; height: auto; aspect-ratio: auto; object-fit: contain; }
 .iag-elearning-page .iag-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding-top: 2rem; }
@@ -30,11 +30,13 @@
 .iag-elearning-page .iag-faq summary { font-weight: 700; }
 .iag-elearning-page .iag-faq details p { margin-top: 1rem; }
 .iag-elearning-page :is(a, button, summary):focus-visible { outline: 3px solid #b07400; outline-offset: 4px; }
+.iag-elearning-page .generative-ai-objectives { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 900px) {
   .iag-elearning-page .iag-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .iag-elearning-page .iag-pricing-grid { grid-template-columns: 1fr; gap: 1.5rem; }
 }
 @media (max-width: 600px) {
+  .iag-elearning-page .generative-ai-objectives { grid-template-columns: minmax(0, 1fr); }
   .iag-elearning-page .iag-facts { gap: .75rem; }
   .iag-elearning-page .iag-facts article { padding: 1rem; }
   .iag-elearning-page .iag-facts h2 { font-size: 1rem; }

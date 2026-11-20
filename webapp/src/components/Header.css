@@ -19,7 +19,11 @@
   color: var(--color-secondary);
   display: flex;
   align-items: center;
+  gap: .5rem;
 }
+
+.logo .logo-wordmark { color: var(--color-primary-dark); font-size: 1.25rem; font-weight: 600; }
+.nav .nav-login { min-height: 44px; display: inline-flex; align-items: center; padding-inline: .5rem; text-decoration: underline; text-underline-offset: 4px; }
 
 /* Garantir une taille adaptée du logo */
 .logo picture,

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { CheckCircle, Sparkles } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import './Home.css';
+import { TrainerPortrait } from '../components/TrainingVisual';
 import SEO from '../components/SEO';
 import { SITE_CONFIG } from '../config/site';
 import { STUDIO_PRIVACY_COPY } from '../config/studioPrivacy';
@@ -135,38 +136,14 @@ export default function Home() {
                 <p className="mb-2">À Calais, dans le Pas-de-Calais, et à distance</p>
                 <h1 style={{textAlign: 'left'}}>Formations en IA, Prompt Engineering et Bureautique</h1>
                 <p className="hero-subtitle" style={{textAlign: 'left'}}>
-                  Avec Thierry FREZARD, apprenez à rédiger, synthétiser et organiser votre travail avec l'IA et les outils bureautiques. Des formations pour les professionnels, les organismes de formation et les personnes en reconversion, avec des exercices adaptés à votre activité.
+                  Avec Thierry FREZARD, apprenez à rédiger, synthétiser et organiser votre travail avec l'IA et les outils bureautiques. Des exercices adaptés aux professionnels, aux organismes de formation et aux personnes en reconversion.
                 </p>
                 <div className="hero-actions" style={{justifyContent: 'flex-start'}}>
                   <a href="#formations" className="btn btn-primary">Voir les formations</a>
                   <Link to="/diagnostic-ia" className="btn btn-outline">Découvrir le Diagnostic IA</Link>
                 </div>
               </div>
-              <div className="hero-image-container" style={{position: 'relative'}}>
-                <div style={{
-                  position: 'absolute',
-                  top: '-15px',
-                  right: '-15px',
-                  bottom: '15px',
-                  left: '15px',
-                  background: 'var(--color-primary-light)',
-                  borderRadius: '16px',
-                  opacity: '0.2',
-                  zIndex: '0'
-                }}></div>
-                <img
-                  src="/assets/photo page d'accueil.png?v=20260809"
-                  alt="Session de formation FormaPrompt"
-                  style={{
-                    width: '100%',
-                    borderRadius: '16px',
-                    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-                    position: 'relative',
-                    zIndex: '1',
-                    border: '4px solid white'
-                  }}
-                />
-              </div>
+              <TrainerPortrait />
             </div>
           </div>
         </section>
@@ -177,17 +154,18 @@ export default function Home() {
               <h2 id="home-formations-title">Choisissez votre formation</h2>
               <p style={{color: 'var(--color-text-light)'}}>Consultez le programme, les modalités et le tarif de chaque parcours. Selon la formation, inscrivez-vous en ligne ou demandez un devis adapté à votre besoin.</p>
             </div>
-            <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+            <div className="home-training-grid">
               <div className="card home-training-card">
                 <img
                   src="/assets/formation-ia-generative-elearning-640.webp"
                   srcSet="/assets/formation-ia-generative-elearning-640.webp 640w, /assets/formation-ia-generative-elearning-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : apprentissage autonome au casque, avec ordinateur et carnet."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">IA générative — e-learning</h3>
-                <p className="mb-3">22 leçons à votre rythme, environ 13 heures et trois corrections écrites de vos travaux.</p>
+                <p className="home-training-meta">À votre rythme · Environ 13 h</p>
+                <p className="mb-3">22 leçons et trois corrections écrites de vos travaux.</p>
                 <p className="mb-3">79 € jusqu’au 31 décembre 2026 inclus, puis 99 € · Paiement unique.</p>
                 <Link to="/formation-ia-generative-elearning" className="link-arrow">Découvrir le parcours e-learning &rarr;</Link>
               </div>
@@ -196,12 +174,13 @@ export default function Home() {
                 <img
                   src="/assets/formation-ia-generative-accompagnee-640.webp"
                   srcSet="/assets/formation-ia-generative-accompagnee-640.webp 640w, /assets/formation-ia-generative-accompagnee-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : un formateur accompagne une apprenante devant son ordinateur."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">IA générative — formation accompagnée</h3>
-                <p className="mb-3">Un parcours accompagné de 10 heures pour comprendre les usages, pratiquer avec méthode, vérifier les résultats et protéger les données.</p>
+                <p className="home-training-meta">Avec formateur · 10 h</p>
+                <p className="mb-3">Pratiquer avec méthode, vérifier les résultats et protéger les données, avec un accompagnement.</p>
                 <p className="mb-3">497 € par apprenant · Présentiel ou classe virtuelle.</p>
                 <Link to="/formation-ia-generative" className="link-arrow">Découvrir la formation 10 h &rarr;</Link>
               </div>
@@ -210,11 +189,12 @@ export default function Home() {
                 <img
                   src="/assets/formation-prompt-engineering-640.webp"
                   srcSet="/assets/formation-prompt-engineering-640.webp 640w, /assets/formation-prompt-engineering-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : préparation structurée d’une demande avec quatre cartes et un ordinateur."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">Prompt Engineering</h3>
+                <p className="home-training-meta">Avec formateur · 7 h</p>
                 <p className="mb-3">Apprendre à construire de bons prompts, créer des workflows et produire des livrables fiables avec ChatGPT, Copilot ou Claude.</p>
                 <Link to="/formation-prompt-engineering" className="link-arrow">Voir le programme Prompt Engineering &rarr;</Link>
               </div>
@@ -223,18 +203,20 @@ export default function Home() {
                 <img
                   src="/assets/formation-agents-ia-workflows-640.webp"
                   srcSet="/assets/formation-agents-ia-workflows-640.webp 640w, /assets/formation-agents-ia-workflows-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : un professionnel examine un workflow sur son écran."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">Agents IA &amp; Workflows</h3>
-                <p className="mb-3">28 heures en distanciel synchrone pour choisir, construire et tester une automatisation encadrée avec CADRES. Formation sur devis.</p>
+                <p className="home-training-meta">Classe virtuelle · 28 h</p>
+                <p className="mb-3">Choisir, construire et tester une automatisation encadrée avec CADRES. Formation sur devis.</p>
                 <Link to="/formation-agents-ia-workflows" className="link-arrow">Découvrir le parcours Agents IA &rarr;</Link>
               </div>
               <div className="card home-training-card">
                 <img src="/assets/formation-ia-creativite-640.webp" alt="Illustration générée avec l’IA : atelier de recherche artistique et outils numériques" width="640" height="427" loading="lazy" />
                 <h3 className="card-title">IA et créativité</h3>
-                <p className="mb-3">14 heures pour explorer des usages de l’IA à partir de votre pratique artistique et de votre projet, en gardant la maîtrise de vos choix.</p>
+                <p className="home-training-meta">Pratique artistique · 14 h</p>
+                <p className="mb-3">Explorer l’IA à partir de votre pratique artistique et de votre projet, en gardant la maîtrise de vos choix.</p>
                 <Link to="/formation-ia-creativite" className="link-arrow">Découvrir le parcours IA et créativité &rarr;</Link>
               </div>
               {/* Bureautique */}
@@ -242,11 +224,12 @@ export default function Home() {
                 <img
                   src="/assets/formation-bureautique-pro-640.webp"
                   srcSet="/assets/formation-bureautique-pro-640.webp 640w, /assets/formation-bureautique-pro-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : travail sur un tableur, un document et une présentation."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">Bureautique Pro</h3>
+                <p className="home-training-meta">Parcours selon votre niveau</p>
                 <p className="mb-3">Maîtriser Word, Excel, PowerPoint, Outlook et Teams pour gagner en efficacité et en productivité.</p>
                 <Link to="/formation-bureautique" className="link-arrow">Voir les formations bureautiques &rarr;</Link>
               </div>
@@ -255,11 +238,12 @@ export default function Home() {
                 <img
                   src="/assets/formation-acculturation-ia-act-640.webp"
                   srcSet="/assets/formation-acculturation-ia-act-640.webp 640w, /assets/formation-acculturation-ia-act-960.webp 960w"
-                  sizes="(max-width: 600px) 100vw, (max-width: 1100px) 50vw, 300px"
+                  sizes="(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 360px"
                   alt="Illustration générée avec l’IA : trois professionnels examinent ensemble une grille de vérification."
                   width="640" height="427" loading="lazy" decoding="async"
                 />
                 <h3 className="card-title">Acculturation IA &amp; AI Act</h3>
+                <p className="home-training-meta">Avec formateur · 4 h guidées</p>
                 <p className="mb-3">Comprendre les enjeux de l'AI Act et préparer un premier plan d'action pour des usages professionnels responsables.</p>
                 <Link to="/formation-ia-act-conformite" className="link-arrow">Découvrir la formation 4 h &rarr;</Link>
               </div>
@@ -272,7 +256,6 @@ export default function Home() {
             <div className="home-studio-card">
               <div className="home-studio-content">
                 <p className="home-studio-eyebrow">
-                  <Sparkles size={20} aria-hidden="true" />
                   Outil gratuit, accessible à tous
                 </p>
                 <h2 id="home-studio-title">Structurez vos prompts avec FormaPrompt Studio</h2>
@@ -328,54 +311,39 @@ export default function Home() {
               <p style={{color: 'var(--color-text-light)', maxWidth: '800px', margin: '0 auto'}}>
                 FormaPrompt propose des formations centrées sur les usages réels. L'objectif n'est pas seulement de présenter des outils, mais d'aider chaque participant à comprendre comment les utiliser avec méthode, autonomie et discernement.
               </p>
-              <p style={{color: 'var(--color-text-light)', maxWidth: '800px', margin: '1rem auto 0'}}>
-                Les formations sont construites avec une attention particulière portée à la pédagogie, à la clarté des explications et à la progression des apprentissages.
-              </p>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '2rem' }}>
-              <div className="card" style={{ flex: '1 1 350px', maxWidth: '450px' }}>
+            <div className="home-benefits-grid">
+              <div className="home-benefit">
                 <h3 className="card-title" style={{ marginBottom: '1rem', color: 'var(--color-primary)' }}>Approche claire et progressive</h3>
                 <p>Des contenus expliqués étape par étape, accessibles même aux personnes moins à l'aise avec le numérique.</p>
               </div>
-              <div className="card" style={{ flex: '1 1 350px', maxWidth: '450px' }}>
+              <div className="home-benefit">
                 <h3 className="card-title" style={{ marginBottom: '1rem', color: 'var(--color-primary)' }}>Exercices pratiques</h3>
                 <p>Des manipulations, exemples et cas d'usage pour favoriser l'apprentissage actif.</p>
               </div>
-              <div className="card" style={{ flex: '1 1 350px', maxWidth: '450px' }}>
+              <div className="home-benefit">
                 <h3 className="card-title" style={{ marginBottom: '1rem', color: 'var(--color-primary)' }}>Double expertise IA et bureautique</h3>
                 <p>Une articulation pertinente entre les outils bureautiques traditionnels et l'IA générative.</p>
               </div>
-              <div className="card" style={{ flex: '1 1 350px', maxWidth: '450px' }}>
+              <div className="home-benefit">
                 <h3 className="card-title" style={{ marginBottom: '1rem', color: 'var(--color-primary)' }}>Usages responsables</h3>
                 <p>Vérification des résultats, confidentialité des données, compréhension des limites des outils et développement de l'esprit critique.</p>
               </div>
             </div>
           </div>
         </section>
-        {/* Publics Section */}
-        <section className="section">
-          <div className="container">
-            <div className="grid grid-cols-2" style={{alignItems: 'center'}}>
-              <div>
-                <h2 className="mb-3">A qui s'adressent nos formations ?</h2>
-                <p className="mb-4">Notre approche s'adapte à vos besoins spécifiques, que vous soyez un professionnel en activité ou en recherche d'opportunités.</p>
-                <ul className="feature-list">
-                  <li><CheckCircle size={20} color="var(--color-primary)" /> <strong>Dirigeants de PME :</strong> Formez vos équipes à utiliser l'IA de manière utile.</li>
-                  <li><CheckCircle size={20} color="var(--color-primary)" /> <strong>Organismes de formation :</strong> Enrichissez votre offre pédagogique.</li>
-                  <li><CheckCircle size={20} color="var(--color-primary)" /> <strong>Salariés &amp; Reconversion :</strong> Développez des compétences mobilisables.</li>
-                  <li><CheckCircle size={20} color="var(--color-primary)" /> <strong>Collectivités :</strong> Sensibilisation aux usages responsables (RGPD, IA Act).</li>
-                </ul>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <img
-                  src="/assets/a_qui_sadresse_nos_formations.png?v=20260809"
-                  alt="Public visé par les formations FormaPrompt"
-                  loading="lazy"
-                  style={{ maxWidth: '100%', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
+        <section className="section" aria-labelledby="home-audience-title">
+          <div className="container home-audience">
+            <div>
+              <h2 id="home-audience-title">À qui s’adressent nos formations ?</h2>
+              <p>Des exercices adaptés à votre métier, à votre niveau et à votre objectif.</p>
             </div>
+            <ul className="feature-list">
+              <li><CheckCircle size={20} aria-hidden="true" /><span><strong>Dirigeants de PME :</strong> formez vos équipes à utiliser l’IA de manière utile.</span></li>
+              <li><CheckCircle size={20} aria-hidden="true" /><span><strong>Organismes de formation :</strong> enrichissez votre offre pédagogique.</span></li>
+              <li><CheckCircle size={20} aria-hidden="true" /><span><strong>Salariés et reconversion :</strong> développez des compétences mobilisables.</span></li>
+              <li><CheckCircle size={20} aria-hidden="true" /><span><strong>Collectivités :</strong> sensibilisez aux usages responsables (RGPD, AI Act).</span></li>
+            </ul>
           </div>
         </section>
         <section className="section section-light" aria-labelledby="home-trainer-title">
@@ -443,7 +411,7 @@ export default function Home() {
         {/* CTA Section */}
         <section className="section section-dark text-center">
           <div className="container">
-            <h2 className="mb-2">Prêt à développer vos compétences ?</h2>
+            <h2 className="mb-2">Parlons de votre besoin de formation</h2>
             <p className="mb-4" style={{maxWidth: '600px', margin: '0 auto 2rem'}}>
               Contactez-nous pour évaluer vos besoins et construire une formation sur-mesure adaptée à vos objectifs et à votre niveau.
             </p>
