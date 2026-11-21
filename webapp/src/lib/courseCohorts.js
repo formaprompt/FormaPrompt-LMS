@@ -1,3 +1,4 @@
+import { formatDateInput } from './availabilitySlots.js'
 import { fetchUnifiedAvailability } from './unifiedAvailability.js'
 async function readFunctionError(error, fallback) {
   try {
@@ -17,8 +18,8 @@ async function invoke(client, functionName, body, fallback) {
 const PARIS_TIME_ZONE = 'Europe/Paris'
 const AVAILABILITY_PAGE_SIZE = 500
 
-function parisLocalMidnightUtc(year, month) {
-  const target = Date.UTC(year, month - 1, 1)
+function parisLocalMidnightUtc(year, month, day = 1) {
+  const target = Date.UTC(year, month - 1, day)
   let instant = target
   const formatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: PARIS_TIME_ZONE,
@@ -64,12 +65,15 @@ export async function fetchAdminAvailabilitySlotsForMonth(client, monthKey) {
   return data.slots
 }
 
-export async function fetchAdminBookingAvailabilitySlots(client) {
+export async function fetchAdminBookingAvailabilitySlots(client, now = new Date()) {
+  const [year, month, day] = formatDateInput(now).split('-').map(Number)
+  const startsAt = parisLocalMidnightUtc(year, month, day)
   const slots = []
   for (let from = 0; ; from += AVAILABILITY_PAGE_SIZE) {
     const { data, error } = await client
       .from('training_availability_slots')
       .select('*')
+      .gte('starts_at', startsAt)
       .or('is_active.eq.true,is_reserved.eq.true')
       .order('starts_at', { ascending: true })
       .order('id', { ascending: true })

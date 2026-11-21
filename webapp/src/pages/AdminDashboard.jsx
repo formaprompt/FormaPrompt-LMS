@@ -2333,7 +2333,7 @@ export default function AdminDashboard() {
                 <section style={{ marginBottom: '2.5rem' }}>
                   <h3 style={{ marginBottom: '1rem' }}>Créneaux publiés</h3>
                   {availabilitySlots.length === 0 ? (
-                    <p style={{ color: '#888' }}>Aucune disponibilité publiée.</p>
+                    <p style={{ color: '#888' }}>Aucun créneau publié à partir d’aujourd’hui.</p>
                   ) : (
                     <div style={{ display: 'grid', gap: '0.75rem' }}>
                       {availabilitySlots.map((slot) => (

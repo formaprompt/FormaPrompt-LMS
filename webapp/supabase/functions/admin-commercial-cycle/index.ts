@@ -85,6 +85,21 @@ Deno.serve(async (request) => {
       return jsonResponse({ moderated: true });
     }
 
+    if (['cancel_follow_up', 'delete_test_follow_up', 'delete_test_communication', 'purge_blocked_spam'].includes(action)) {
+      if (actor.role !== 'admin') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+      const itemId = action === 'purge_blocked_spam' ? null : requiredId(body.itemId, 'Communication ou relance');
+      const { error } = await admin.rpc('cleanup_commercial_activity', {
+        p_actor_id: actor.id, p_request_id: requestId, p_action: action, p_item_id: itemId,
+      });
+      if (error) {
+        if (error.code === '42501') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+        if (error.code === 'FP404') return jsonResponse({ error: error.message }, 404);
+        if (error.code === 'FP409') return jsonResponse({ error: error.message }, 409);
+        throw error;
+      }
+      return jsonResponse({ updated: true });
+    }
+
     const { data: commercialRequest, error: requestError } = await admin.from('contact_requests')
       .select('*').eq('id', requestId).maybeSingle();
     if (requestError) throw requestError;

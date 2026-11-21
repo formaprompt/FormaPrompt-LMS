@@ -68,12 +68,14 @@ test('ne remplace pas une panne de disponibilité par un mois vide', async () =>
   await assert.rejects(fetchAdminAvailabilitySlotsForMonth(clientReturning(null, new Error('CALENDAR_UNAVAILABLE')), '2026-10'), /temporairement indisponibles/)
 })
 
-test('charge aussi la liste de gestion par pages au-delà du plafond de réponse', async () => {
+test('charge les créneaux du jour à Paris et les dates futures sur chaque page', async () => {
   const ranges = []
+  const filters = []
   const client = {
     from: () => {
       const query = {
         select: () => query,
+        gte: (column, value) => { filters.push([column, value]); return query },
         or: () => query,
         order: () => query,
         range: async (from) => {
@@ -84,6 +86,8 @@ test('charge aussi la liste de gestion par pages au-delà du plafond de réponse
       return query
     },
   }
-  assert.equal((await fetchAdminBookingAvailabilitySlots(client)).length, 501)
+  const reference = new Date('2026-11-20T23:30:00Z')
+  assert.equal((await fetchAdminBookingAvailabilitySlots(client, reference)).length, 501)
   assert.deepEqual(ranges, [0, 500])
+  assert.deepEqual(filters, Array(2).fill(['starts_at', '2026-11-20T23:00:00.000Z']))
 })

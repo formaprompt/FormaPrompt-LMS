@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export default function CommercialRequestModeration({ request, busy, linked, moderate }) {
+export default function CommercialRequestModeration({ request, busy, linked, canPurgeSpam, purgeSpam, moderate }) {
   const [reason, setReason] = useState('');
   const [blockEmail, setBlockEmail] = useState(false);
 
@@ -10,11 +10,14 @@ export default function CommercialRequestModeration({ request, busy, linked, mod
       <p>{request.discarded_reason === 'spam' ? 'Spam' : 'Test'} · Dans la corbeille</p>
       <div className="admin-commercial__actions">
         <button type="button" className="btn" disabled={busy} onClick={() => moderate('restore')}>Restaurer la demande</button>
-        {!linked && <button type="button" className="btn admin-commercial__danger" disabled={busy} onClick={() => {
+        {canPurgeSpam && <button type="button" className="btn admin-commercial__danger" disabled={busy} onClick={() => {
+          if (window.confirm('Supprimer définitivement ce spam ? Les e-mails envoyés ou à vérifier resteront consultables.')) purgeSpam();
+        }}>Supprimer le spam bloqué</button>}
+        {!linked && !canPurgeSpam && <button type="button" className="btn admin-commercial__danger" disabled={busy} onClick={() => {
           if (window.confirm('Supprimer définitivement cette demande ? Cette action est irréversible.')) moderate('delete');
         }}>Supprimer définitivement</button>}
       </div>
-      {linked && <p>Cette demande est liée à un dossier. Elle peut être conservée ici ou restaurée.</p>}
+      {linked && !canPurgeSpam && <p>Cette demande est liée à un dossier. Elle peut être conservée ici ou restaurée.</p>}
     </section>;
   }
 
@@ -44,7 +47,7 @@ export default function CommercialRequestModeration({ request, busy, linked, mod
   </details>;
 }
 
-export function BlockedContactEmails({ revision }) {
+export function BlockedContactEmails({ revision, onUnblock }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
@@ -73,6 +76,7 @@ export function BlockedContactEmails({ revision }) {
       if (issue || data?.email !== email) throw new Error('Déblocage non confirmé');
       setError('');
       setRows((previous) => previous?.filter((row) => row.email !== email));
+      onUnblock(email);
     } catch {
       setError('Le blocage n’a pas pu être levé.');
     } finally {

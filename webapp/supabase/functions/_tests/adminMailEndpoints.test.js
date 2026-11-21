@@ -74,3 +74,67 @@ test('le lecteur borné arrête aussi les corps sans Content-Length',async()=>{
   const request=new Request('https://fixture.invalid',{method:'POST',body:'x'.repeat(200)});
   await assert.rejects(input.readBoundedBody(request,100),(error)=>error.status===413);
 });
+
+function commercialCleanupFixture(role = 'admin', rpcError = null) {
+  const calls = [];
+  const requestId = randomUUID();
+  const actorId = randomUUID();
+  const query = {
+    select: () => query,
+    eq: () => query,
+    maybeSingle: async () => ({ data: { id: actorId, role }, error: null }),
+  };
+  const database = {
+    from(table) {
+      assert.equal(table, 'profiles');
+      return query;
+    },
+    async rpc(name, params) {
+      calls.push([name, params]);
+      return { error: rpcError };
+    },
+  };
+  const dependencies = {
+    'npm:@supabase/supabase-js@2.105.1': {
+      createClient: (_url, key) => key === 'fictif-public'
+        ? { auth: { getUser: async () => ({ data: { user: { id: actorId } }, error: null }) } }
+        : database,
+    },
+    '../_shared/cors.ts': {
+      jsonResponse: (body, status = 200) => new Response(JSON.stringify(body), { status }),
+    },
+    '../_shared/commercialCycle.js': {},
+    '../_shared/smtpReceipt.js': { sendCommercialEmail: () => assert.fail('Le tri ne doit déclencher aucun e-mail.') },
+  };
+  const { handler } = compile('../admin-commercial-cycle/index.ts', dependencies);
+  const call = (action, payload = {}) => handler(new Request('https://fixture.invalid', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer valid-token' },
+    body: JSON.stringify({ action, requestId, ...payload }),
+  }));
+  return { calls, call, requestId, actorId };
+}
+
+test('les actions de nettoyage sont réservées à l’administrateur', async () => {
+  const fixture = commercialCleanupFixture('employee');
+  assert.equal((await fixture.call('cancel_follow_up', { itemId: randomUUID() })).status, 403);
+  assert.equal(fixture.calls.length, 0);
+});
+
+test('la suppression du spam et le nettoyage d’une relance utilisent uniquement la fonction SQL prévue', async () => {
+  const { call, calls, actorId, requestId } = commercialCleanupFixture();
+  const itemId = randomUUID();
+  assert.equal((await call('cancel_follow_up', { itemId })).status, 200);
+  assert.equal((await call('purge_blocked_spam')).status, 200);
+  assert.deepEqual(calls.map(([name, params]) => [name, { ...params }]), [
+    ['cleanup_commercial_activity', { p_actor_id: actorId, p_request_id: requestId, p_action: 'cancel_follow_up', p_item_id: itemId }],
+    ['cleanup_commercial_activity', { p_actor_id: actorId, p_request_id: requestId, p_action: 'purge_blocked_spam', p_item_id: null }],
+  ]);
+});
+
+test('le conflit signalé par la base ressort dans l’interface sans envoi', async () => {
+  const fixture = commercialCleanupFixture('admin', { code: 'FP409', message: 'La relance a déjà été traitée.' });
+  const response = await fixture.call('cancel_follow_up', { itemId: randomUUID() });
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).error, 'La relance a déjà été traitée.');
+});
