@@ -121,6 +121,7 @@ export default function Header() {
           <NavigationGroup id="navigation-ressources" label="Ressources">
                 <Link to="/blog" onClick={() => setIsMenuOpen(false)}>Blog</Link>
               <Link to="/studio" onClick={() => setIsMenuOpen(false)}>Studio — outil gratuit</Link>
+              <a href="/outils/confidentialite/" onClick={() => setIsMenuOpen(false)}>FormaPrompt Confidentialité (bêta)</a>
               <Link to="/guides" onClick={() => setIsMenuOpen(false)}>Guides pratiques</Link>
                 <Link to="/guides/claude-guide-pratique" onClick={() => setIsMenuOpen(false)}>Guide Claude</Link>
                 <Link to="/guides/copilot-guide-pratique" onClick={() => setIsMenuOpen(false)}>Guide Microsoft Copilot</Link>
