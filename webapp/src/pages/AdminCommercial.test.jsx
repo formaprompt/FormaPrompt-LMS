@@ -65,14 +65,16 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
     await screen.findByText('Puis-je recevoir le programme ?');
     expect(screen.queryByRole('button', { name: 'Répondre au client' })).not.toBeInTheDocument();
-    expect(screen.queryByText('Retirer cette demande')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Supprimer', exact: true })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Corbeille' })).not.toBeInTheDocument();
     expect(api.invoke).not.toHaveBeenCalled();
   });
 
   function mockModeration() {
     api.invoke.mockImplementation(async (name, options) => {
-      if (name === 'admin-commercial-cycle' && options.body.action === 'moderate_request') {
+      if (name === 'admin-commercial-cycle' && options.body.action === 'remove_commercial_message') {
+        api.requests = api.requests.filter((item) => item.id !== options.body.requestId);
+      } else if (name === 'admin-commercial-cycle' && options.body.action === 'moderate_request') {
         const { requestId, operation } = options.body;
         const row = api.requests.find((item) => item.id === requestId);
         if (operation === 'delete') api.requests = api.requests.filter((item) => item.id !== requestId);
@@ -86,8 +88,8 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
   it('écarte un spam avec blocage choisi, puis restaure sa demande sans débloquer implicitement', async () => {
     mockModeration();
     render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
-    fireEvent.click(await screen.findByText('Retirer cette demande'));
-    fireEvent.change(screen.getByLabelText('Motif du retrait'), { target: { value: 'spam' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer', exact: true }));
+    fireEvent.change(screen.getByLabelText('Motif'), { target: { value: 'spam' } });
     const block = screen.getByRole('checkbox', { name: /Bloquer a@example.test/ });
     expect(block).not.toBeChecked();
     fireEvent.click(block);
@@ -107,8 +109,8 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     mockModeration();
     const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
-    fireEvent.click(await screen.findByText('Retirer cette demande'));
-    fireEvent.change(screen.getByLabelText('Motif du retrait'), { target: { value: 'test' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer', exact: true }));
+    fireEvent.change(screen.getByLabelText('Motif'), { target: { value: 'test' } });
     expect(screen.queryByRole('checkbox', { name: /Bloquer/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Mettre à la corbeille' }));
     expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'moderate_request', requestId: 'request-a', operation: 'test', blockEmail: false } });
@@ -117,10 +119,10 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     const purge = await screen.findByRole('button', { name: 'Supprimer définitivement' });
     expect(screen.queryByRole('button', { name: 'Répondre au client' })).not.toBeInTheDocument();
     fireEvent.click(purge);
-    expect(api.invoke).not.toHaveBeenCalledWith('admin-commercial-cycle', expect.objectContaining({ body: expect.objectContaining({ operation: 'delete' }) }));
+    expect(api.invoke).not.toHaveBeenCalledWith('admin-commercial-cycle', expect.objectContaining({ body: expect.objectContaining({ action: 'remove_commercial_message' }) }));
     fireEvent.click(purge);
     expect(confirm).toHaveBeenCalledTimes(2);
-    expect(await screen.findByText('Demande supprimée définitivement.')).toBeVisible();
+    expect(await screen.findByText('Demande supprimée.')).toBeVisible();
   });
 
   it('permet de lever un blocage indépendamment de la corbeille', async () => {
@@ -156,53 +158,58 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     expect(api.invoke.mock.calls.some(([, options]) => options.body.action === 'send_follow_up')).toBe(false);
   });
 
-  it('propose le retrait des tests quel que soit le type de communication et protège les envois', async () => {
-    const common = { contact_request_id: 'request-a', direction: 'outbound', prepared_at: '2026-11-20T09:00:00Z' };
+
+  it('affiche Supprimer en haut de chaque message reçu, avec des tentatives d’envoi ou sans historique', async () => {
+    api.requests[0].status = 'awaiting_client';
     api.communications = [
-      { ...common, id: 'sent', subject: 'Envoi confirmé du devis', communication_type: 'quote', delivery_status: 'sent' },
-      { ...common, id: 'ambiguous', subject: 'Relance à vérifier', communication_type: 'follow_up', delivery_status: 'failed', error_code: 'smtp_delivery_uncertain' },
-      { ...common, id: 'failed', subject: 'Devis de test', communication_type: 'quote', delivery_status: 'failed', error_code: 'smtp_rejected_550' },
-      { ...common, id: 'draft', subject: 'Réponse de test', communication_type: 'information', delivery_status: 'prepared' },
+      { id: 'failed-1', contact_request_id: 'request-a', delivery_status: 'failed', communication_type: 'information' },
+      { id: 'failed-2', contact_request_id: 'request-a', delivery_status: 'failed', communication_type: 'information' },
     ];
+    api.invoke.mockImplementation(async (_, { body }) => {
+      if (body.action === 'remove_commercial_message') api.requests = api.requests.filter((row) => row.id !== body.requestId);
+      return { data: { result: 'deleted' }, error: null };
+    });
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true).mockReturnValueOnce(true);
+    render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
+    const remove = await screen.findByRole('button', { name: 'Supprimer', exact: true });
+    expect(remove.closest('header')).toHaveTextContent('Programme');
+    fireEvent.click(remove);
+    expect(screen.getByLabelText('Motif')).toHaveValue('spam');
+    expect(screen.getByRole('checkbox', { name: /Bloquer a@example.test/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
+    expect(api.invoke.mock.calls.some(([, options]) => options.body.action === 'remove_commercial_message')).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'remove_commercial_message', requestId: 'request-a', reason: 'spam', blockEmail: false } });
+    await waitFor(() => expect(screen.queryByRole('button', { name: /Client A/ })).not.toBeInTheDocument());
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer', exact: true }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Bloquer b@example.test/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer définitivement' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'remove_commercial_message', requestId: 'request-b', reason: 'spam', blockEmail: true } });
+    await screen.findByText('Aucune demande.');
+  });
+
+  it('affiche Supprimer sur chaque communication et conserve les mails envoyés dans l’historique', async () => {
+    const common = { contact_request_id: 'request-a', prepared_at: '2026-11-20T09:00:00Z', communication_type: 'information' };
+    const mail = { ...common, id: 'sent', subject: 'Envoi confirmé', delivery_status: 'sent' };
+    api.communications = [mail, { ...common, id: 'test', subject: 'Essai de réponse', delivery_status: 'prepared' }];
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     api.invoke.mockImplementation(async (_, { body }) => {
-      if (body.action === 'delete_test_communication') api.communications = api.communications.filter((mail) => mail.id !== body.itemId);
-      return { data: {}, error: null };
+      if (body.action === 'remove_commercial_message' && body.itemId === 'sent') {
+        mail.removed_from_timeline_at = '2026-11-21T11:00:00Z';
+        return { data: { result: 'archived' }, error: null };
+      }
+      if (body.action === 'remove_commercial_message') api.communications = api.communications.filter((row) => row.id !== body.itemId);
+      return { data: { result: 'deleted' }, error: null };
     });
     render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
     fireEvent.click(await screen.findByText('Communications et relances'));
-    const mail = (subject) => within(screen.getByText(new RegExp(subject)).closest('article'));
-    expect(mail('Envoi confirmé du devis').queryByRole('button', { name: 'Supprimer le test' })).not.toBeInTheDocument();
-    expect(mail('Relance à vérifier').queryByRole('button', { name: 'Supprimer le test' })).not.toBeInTheDocument();
-    expect(mail('Réponse de test').getByRole('button', { name: 'Supprimer le test' })).toBeEnabled();
-    fireEvent.click(mail('Devis de test').getByRole('button', { name: 'Supprimer le test' }));
-    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'delete_test_communication', requestId: 'request-a', itemId: 'failed' } });
-    await waitFor(() => expect(screen.queryByText(/Devis de test/)).not.toBeInTheDocument());
-    expect(screen.getByText(/Envoi confirmé du devis/)).toBeVisible();
-  });
-
-  it('supprime un spam déjà bloqué et affiche son e-mail envoyé dans l’historique', async () => {
-    Object.assign(api.requests[0], { discarded_at: '2026-11-21T11:00:00Z', discarded_reason: 'spam' });
-    Object.assign(api.requests[1], { discarded_at: '2026-11-21T10:00:00Z', discarded_reason: 'spam' });
-    api.blocked = [{ email: 'a@example.test', expires_at: '2099-12-01T12:00:00Z' }];
-    const sent = { id: 'mail-a', contact_request_id: 'request-a', recipient_email: 'a@example.test', subject: 'Mail conservé', communication_type: 'information', delivery_status: 'sent', prepared_at: '2026-11-20T09:00:00Z' };
-    api.communications = [sent];
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    api.invoke.mockImplementation(async (_, { body }) => {
-      if (body.action === 'purge_blocked_spam') {
-        api.requests = api.requests.filter((row) => row.id !== body.requestId);
-        sent.contact_request_id = null;
-      }
-      return { data: {}, error: null };
-    });
-    render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
-    await screen.findByText('Aucune demande.');
-    fireEvent.click(screen.getByRole('button', { name: 'Corbeille' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le spam bloqué' }));
-    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'purge_blocked_spam', requestId: 'request-a' } });
-    fireEvent.click(await screen.findByText('Historique des e-mails des spams supprimés'));
-    expect(screen.getByText('Mail conservé')).toBeVisible();
-    expect(screen.queryByRole('button', { name: /Client A/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Supprimer le spam bloqué' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Supprimer : Essai de réponse' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer : Envoi confirmé' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'remove_commercial_message', requestId: 'request-a', itemId: 'sent' } });
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Supprimer : Envoi confirmé' })).not.toBeInTheDocument());
+    fireEvent.click(screen.getByText('Historique complet'));
+    expect(within(screen.getByRole('list', { name: 'Communications conservées' })).getByText('Envoi confirmé')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer : Essai de réponse' }));
+    await waitFor(() => expect(screen.queryByText(/Essai de réponse/)).not.toBeInTheDocument());
   });
 });

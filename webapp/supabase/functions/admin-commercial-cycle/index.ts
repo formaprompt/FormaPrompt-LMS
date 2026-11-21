@@ -85,6 +85,27 @@ Deno.serve(async (request) => {
       return jsonResponse({ moderated: true });
     }
 
+    if (action === 'remove_commercial_message') {
+      if (actor.role !== 'admin') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+      if ((body.reason !== undefined && !['spam', 'test'].includes(body.reason))
+        || (body.blockEmail !== undefined && typeof body.blockEmail !== 'boolean')) {
+        return jsonResponse({ error: 'Motif de suppression invalide.' }, 400);
+      }
+      const itemId = body.itemId === undefined ? null : requiredId(body.itemId, 'Communication');
+      const { data, error } = await admin.rpc('remove_commercial_message', {
+        p_actor_id: actor.id, p_request_id: requestId, p_communication_id: itemId,
+        p_reason: body.reason ?? null, p_block_email: body.blockEmail === true,
+      });
+      if (error) {
+        if (error.code === '42501') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+        if (error.code === 'FP404') return jsonResponse({ error: error.message }, 404);
+        if (error.code === 'FP409') return jsonResponse({ error: error.message }, 409);
+        if (error.code === '22023') return jsonResponse({ error: error.message }, 400);
+        throw error;
+      }
+      return jsonResponse({ result: data });
+    }
+
     if (['cancel_follow_up', 'delete_test_follow_up', 'delete_test_communication', 'purge_blocked_spam'].includes(action)) {
       if (actor.role !== 'admin') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
       const itemId = action === 'purge_blocked_spam' ? null : requiredId(body.itemId, 'Communication ou relance');
