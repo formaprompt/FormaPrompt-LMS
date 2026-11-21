@@ -100,7 +100,7 @@ Deno.serve(async (request) => {
         const { data, error } = await supabaseAdmin.from('contact_requests')
           .select('*').eq('id', commercialRequestId).maybeSingle();
         if (error) throw error;
-        if (!data || ['won', 'lost'].includes(data.status)) {
+        if (!data || data.discarded_at || ['won', 'lost'].includes(data.status)) {
           return jsonResponse({ error: 'La demande commerciale est introuvable ou déjà clôturée.' }, 409);
         }
         const expectedLearnerEmail = (data.beneficiary_email || data.email).toLowerCase();

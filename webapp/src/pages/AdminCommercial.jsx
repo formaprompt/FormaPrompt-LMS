@@ -15,6 +15,7 @@ import {
 import { learnerRecordPath } from '../lib/adminLearnerRecord';
 import AdminClientReply from '../components/AdminClientReply';
 import AdminEmailNotifications from '../components/AdminEmailNotifications';
+import CommercialRequestModeration, { BlockedContactEmails } from '../components/CommercialRequestModeration';
 import './AdminCommercial.css';
 
 function qualificationFrom(request) {
@@ -87,11 +88,15 @@ export default function AdminCommercial() {
   const [feedback, setFeedback] = useState(null);
   const [running, setRunning] = useState('');
   const [loading, setLoading] = useState(true);
+  const [trash, setTrash] = useState(false);
+  const [moderationRevision, setModerationRevision] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    const requestsQuery = supabase.from('contact_requests').select('*');
+    const visibleRequests = trash ? requestsQuery.not('discarded_at', 'is', null) : requestsQuery.is('discarded_at', null);
     const results = await Promise.all([
-      supabase.from('contact_requests').select('*').order('updated_at', { ascending: false }),
+      visibleRequests.order(trash ? 'discarded_at' : 'updated_at', { ascending: false }),
       supabase.from('commercial_quotes').select('*').order('created_at', { ascending: false }),
       supabase.from('commercial_request_history').select('*').order('created_at', { ascending: false }),
       supabase.from('commercial_communications').select('*').order('prepared_at', { ascending: false }),
@@ -101,17 +106,18 @@ export default function AdminCommercial() {
       supabase.from('training_enrollments').select('id,user_id,commercial_request_id'),
     ]);
     const firstError = results.find((result) => result.error)?.error;
-    if (firstError) setFeedback({ type: 'error', message: 'Le module commercial ne peut pas être chargé. Appliquez la migration Sprint 3 localement.' });
+    if (firstError) setFeedback({ type: 'error', message: 'Les demandes commerciales ne peuvent pas être chargées.' });
     const requestRows = [...(results[0].data || [])];
     if (selectedIdRef.current && !requestRows.some((item)=>item.id===selectedIdRef.current) && /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(selectedIdRef.current)) {
       const target = await supabase.from('contact_requests').select('*').eq('id',selectedIdRef.current).maybeSingle();
-      if (target.data) requestRows.unshift(target.data);
+      if (target.data && Boolean(target.data.discarded_at) === trash) requestRows.unshift(target.data);
+      else if (target.data?.discarded_at) setFeedback({ type: 'error', message: 'Cette demande se trouve dans la corbeille.' });
       else setFeedback({type:'error',message:'La demande liée à cette alerte est introuvable ou inaccessible.'});
     }
     setRequests(requestRows); setQuotes(results[1].data || []);
     setHistory(results[2].data || []); setCommunications(results[3].data || []);
     setFollowUps(results[4].data || []); setPurchases(results[5].data || []); setProfiles(results[6].data || []); setTrainingEnrollments(results[7].data || []);
-    const nextSelectedId = selectedIdRef.current || requestRows[0]?.id || '';
+    const nextSelectedId = requestRows.some((item) => item.id === selectedIdRef.current) ? selectedIdRef.current : requestRows[0]?.id || '';
     selectedIdRef.current = nextSelectedId;
     setSelectedId(nextSelectedId);
     const nextSelected = requestRows.find((item) => item.id === nextSelectedId);
@@ -123,7 +129,7 @@ export default function AdminCommercial() {
       setStripePurchaseId('');
     }
     setLoading(false);
-  }, []);
+  }, [trash]);
 
   useEffect(() => {
     if (!user || !['admin', 'employee'].includes(role)) { navigate('/dashboard'); return; }
@@ -154,17 +160,43 @@ export default function AdminCommercial() {
     setStripePurchaseId('');
   }
 
-  async function invoke(action, payload = {}) {
+  function switchList(nextTrash) {
+    if (nextTrash === trash) return;
+    setLoading(true);
+    setRequests([]);
+    selectedIdRef.current = '';
+    setSelectedId('');
+    setSearch('');
+    setStatusFilter('');
+    setTrash(nextTrash);
+  }
+
+  async function invoke(action, payload = {}, successMessage = 'Action enregistrée dans l’historique commercial.') {
     setRunning(action); setFeedback(null);
     const { data, error } = await supabase.functions.invoke('admin-commercial-cycle', {
       body: { action, requestId: selectedId, ...payload },
     });
     if (error || data?.error) {
-      setFeedback({ type: 'error', message: data?.error || 'Action impossible.' });
+      const response = error?.context;
+      const detail = action === 'moderate_request' && typeof response?.json === 'function'
+        ? await response.json().catch(() => null) : null;
+      setFeedback({ type: 'error', message: data?.error || detail?.error || 'Action impossible.' });
       setRunning(''); return false;
     }
-    setFeedback({ type: 'success', message: 'Action enregistrée dans l’historique commercial.' });
+    if (action === 'moderate_request') selectedIdRef.current = '';
+    setFeedback({ type: 'success', message: successMessage });
     await loadData(); setRunning(''); return true;
+  }
+
+  async function moderate(operation, blockEmail = false) {
+    const messages = {
+      spam: blockEmail ? 'Spam placé dans la corbeille et adresse bloquée sur le formulaire.' : 'Spam placé dans la corbeille.',
+      test: 'Demande de test placée dans la corbeille.',
+      restore: 'Demande restaurée.',
+      delete: 'Demande supprimée définitivement.',
+    };
+    const done = await invoke('moderate_request', { operation, blockEmail }, messages[operation]);
+    if (done) setModerationRevision((value) => value + 1);
   }
 
   function update(objectSetter, field, value) {
@@ -207,20 +239,29 @@ export default function AdminCommercial() {
         <Link className="btn" to="/admin">Retour à l’administration</Link>
       </header>
       {feedback && <div className={`admin-commercial__feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>{feedback.message}</div>}
-      <AdminEmailNotifications />
+      <AdminEmailNotifications revision={moderationRevision} />
+      {role === 'admin' && <BlockedContactEmails revision={moderationRevision} />}
       <div className="admin-commercial__layout">
         <aside className="admin-commercial__sidebar" aria-label="Demandes commerciales">
+          {role === 'admin' && <div className="admin-commercial__actions admin-commercial__views" aria-label="Vue des demandes">
+            <button type="button" className="btn" aria-pressed={!trash} disabled={loading || Boolean(running)} onClick={() => switchList(false)}>Demandes</button>
+            <button type="button" className="btn" aria-pressed={trash} disabled={loading || Boolean(running)} onClick={() => switchList(true)}>Corbeille</button>
+          </div>}
           <label>Rechercher<input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nom, e-mail, sujet…" /></label>
           <label>Statut<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">Tous</option>{Object.entries(REQUEST_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           {loading ? <p role="status">Chargement…</p> : filtered.length === 0 ? <p>Aucune demande.</p> : (
-            <ul>{filtered.map((request) => <li key={request.id}><button type="button" className={request.id === selectedId ? 'is-selected' : ''} onClick={() => selectRequest(request)}><strong>{request.name}</strong><span>{request.email}</span><em className={`is-${request.status}`}>{REQUEST_STATUS_LABELS[request.status]}</em></button></li>)}</ul>
+            <ul>{filtered.map((request) => <li key={request.id}><button type="button" disabled={Boolean(running)} className={request.id === selectedId ? 'is-selected' : ''} onClick={() => selectRequest(request)}><strong>{request.name}</strong><span>{request.email}</span><em className={`is-${request.status}`}>{trash ? (request.discarded_reason === 'spam' ? 'Spam' : 'Test') : REQUEST_STATUS_LABELS[request.status]}</em></button></li>)}</ul>
           )}
         </aside>
         <section className="admin-commercial__detail">
           {!selected ? <p>Sélectionnez une demande.</p> : <>
             <header className="admin-commercial__request-header"><div><h2>{selectedEnrollment?.user_id ? <Link to={learnerRecordPath(selectedEnrollment.user_id)}>{selected.name}</Link> : selected.name}</h2><p>{selected.email} · {REQUEST_TYPE_LABELS[selected.request_type]}</p>{!selectedEnrollment?.user_id && <small>Demande non reliée à un compte apprenant par identifiant exact.</small>}</div><span className={`admin-commercial__badge is-${selected.status}`}>{REQUEST_STATUS_LABELS[selected.status]}</span></header>
-            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small><AdminClientReply key={selected.id} request={selected} /></article>
+            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small>{!selected.discarded_at && <AdminClientReply key={selected.id} request={selected} />}</article>
 
+            {role === 'admin' && <CommercialRequestModeration key={selected.id} request={selected} busy={Boolean(running)}
+              linked={Boolean(selectedEnrollment || selectedQuotes.length || selectedCommunications.length || selectedFollowUps.length)} moderate={moderate} />}
+
+            {!selected.discarded_at && <>
             <details open><summary>Qualification et notes</summary>
               <form className="admin-commercial__form" onSubmit={saveQualification}>
                 <label>Type<select value={qualification?.requestType || ''} onChange={(e) => update(setQualification, 'requestType', e.target.value)}>{Object.entries(REQUEST_TYPE_LABELS).map(([v,l]) => <option key={v} value={v}>{l}</option>)}</select></label>
@@ -268,6 +309,7 @@ export default function AdminCommercial() {
               </form>
             </details>
 
+            </>}
             <details><summary>Historique complet</summary><ol className="admin-commercial__history">{selectedHistory.map((item) => <li key={item.id}><strong>{item.event_type}</strong><span>{new Date(item.created_at).toLocaleString('fr-FR')}</span>{item.previous_status && <small>{REQUEST_STATUS_LABELS[item.previous_status]} → {REQUEST_STATUS_LABELS[item.new_status]}</small>}</li>)}</ol></details>
           </>}
         </section>
