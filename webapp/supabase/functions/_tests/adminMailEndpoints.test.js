@@ -75,7 +75,7 @@ test('le lecteur borné arrête aussi les corps sans Content-Length',async()=>{
   await assert.rejects(input.readBoundedBody(request,100),(error)=>error.status===413);
 });
 
-function commercialCleanupFixture(role = 'admin', rpcError = null) {
+function commercialCleanupFixture(role = 'admin', rpcError = null, rpcResult = null) {
   const calls = [];
   const requestId = randomUUID();
   const actorId = randomUUID();
@@ -91,7 +91,7 @@ function commercialCleanupFixture(role = 'admin', rpcError = null) {
     },
     async rpc(name, params) {
       calls.push([name, params]);
-      return { error: rpcError };
+      return { data: rpcResult, error: rpcError };
     },
   };
   const dependencies = {
@@ -137,4 +137,27 @@ test('le conflit signalé par la base ressort dans l’interface sans envoi', as
   const response = await fixture.call('cancel_follow_up', { itemId: randomUUID() });
   assert.equal(response.status, 409);
   assert.equal((await response.json()).error, 'La relance a déjà été traitée.');
+});
+
+test('la suppression directe transmet le motif et le choix de blocage, sans envoyer de mail', async () => {
+  const { call, calls, actorId, requestId } = commercialCleanupFixture('admin', null, 'deleted');
+  const response = await call('remove_commercial_message', { reason: 'spam', blockEmail: true });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).result, 'deleted');
+  assert.equal(calls[0][0], 'remove_commercial_message');
+  assert.deepEqual({ ...calls[0][1] }, {
+    p_actor_id: actorId, p_request_id: requestId, p_communication_id: null, p_reason: 'spam', p_block_email: true,
+  });
+});
+
+test('l’archivage d’un mail renvoie son résultat et reste réservé à l’administrateur', async () => {
+  const itemId = randomUUID();
+  const staff = commercialCleanupFixture('employee');
+  assert.equal((await staff.call('remove_commercial_message', { itemId })).status, 403);
+  assert.equal(staff.calls.length, 0);
+  const admin = commercialCleanupFixture('admin', null, 'archived');
+  const response = await admin.call('remove_commercial_message', { itemId });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).result, 'archived');
+  assert.equal(admin.calls[0][1].p_communication_id, itemId);
 });

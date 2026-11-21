@@ -1,53 +1,63 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export default function CommercialRequestModeration({ request, busy, linked, canPurgeSpam, purgeSpam, moderate }) {
-  const [reason, setReason] = useState('');
+export default function CommercialRequestModeration({ request, busy, protectedRequest, remove, moderate }) {
+  const formId = useId();
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('spam');
   const [blockEmail, setBlockEmail] = useState(false);
+
+  function removePermanently(payload) {
+    if (window.confirm('Supprimer définitivement cette demande ? Les mails envoyés ou à vérifier restent dans l’historique.')) {
+      void remove(payload);
+    }
+  }
 
   if (request.discarded_at) {
     return <section className="admin-commercial__moderation" aria-label="Demande dans la corbeille">
       <p>{request.discarded_reason === 'spam' ? 'Spam' : 'Test'} · Dans la corbeille</p>
       <div className="admin-commercial__actions">
         <button type="button" className="btn" disabled={busy} onClick={() => moderate('restore')}>Restaurer la demande</button>
-        {canPurgeSpam && <button type="button" className="btn admin-commercial__danger" disabled={busy} onClick={() => {
-          if (window.confirm('Supprimer définitivement ce spam ? Les e-mails envoyés ou à vérifier resteront consultables.')) purgeSpam();
-        }}>Supprimer le spam bloqué</button>}
-        {!linked && !canPurgeSpam && <button type="button" className="btn admin-commercial__danger" disabled={busy} onClick={() => {
-          if (window.confirm('Supprimer définitivement cette demande ? Cette action est irréversible.')) moderate('delete');
-        }}>Supprimer définitivement</button>}
+        <button type="button" className="btn admin-commercial__danger" disabled={busy || protectedRequest}
+          onClick={() => removePermanently({})}>Supprimer définitivement</button>
       </div>
-      {linked && !canPurgeSpam && <p>Cette demande est liée à un dossier. Elle peut être conservée ici ou restaurée.</p>}
+      {protectedRequest && <p>Cette demande est liée à un dossier commercial.</p>}
     </section>;
   }
 
-  if (request.status === 'won') return null;
-  return <details className="admin-commercial__moderation">
-    <summary>Retirer cette demande</summary>
-    <form onSubmit={(event) => {
+  return <div className="admin-commercial__message-removal">
+    <button type="button" className="btn admin-commercial__danger" disabled={busy || request.status === 'won'}
+      aria-expanded={open} aria-controls={open ? formId : undefined}
+      title={request.status === 'won' ? 'Cette demande a été convertie en inscription.' : undefined}
+      onClick={() => setOpen((current) => !current)}>Supprimer</button>
+    {open && <form id={formId} className="admin-commercial__remove-form" onSubmit={(event) => {
       event.preventDefault();
-      if (reason) moderate(reason, reason === 'spam' && blockEmail);
+      void moderate(reason, reason === 'spam' && blockEmail);
     }}>
-      <label>Motif du retrait
+      <label>Motif
         <select value={reason} onChange={(event) => {
           setReason(event.target.value);
           setBlockEmail(false);
-        }} required>
-          <option value="">Choisir un motif</option>
-          <option value="test">Test</option>
+        }} disabled={busy}>
           <option value="spam">Spam</option>
+          <option value="test">Test</option>
         </select>
       </label>
       {reason === 'spam' && <label className="admin-commercial__check">
-        <input type="checkbox" checked={blockEmail} onChange={(event) => setBlockEmail(event.target.checked)} />
-        Bloquer {request.email} sur le formulaire de contact pendant 180 jours
+        <input type="checkbox" checked={blockEmail} disabled={busy} onChange={(event) => setBlockEmail(event.target.checked)} />
+        Bloquer {request.email} sur le formulaire pendant 180 jours
       </label>}
-      <button type="submit" className="btn" disabled={!reason || busy}>Mettre à la corbeille</button>
-    </form>
-  </details>;
+      <div className="admin-commercial__actions">
+        <button type="submit" className="btn" disabled={busy}>Mettre à la corbeille</button>
+        <button type="button" className="btn admin-commercial__danger" disabled={busy || protectedRequest}
+          onClick={() => removePermanently({ reason, blockEmail: reason === 'spam' && blockEmail })}>Supprimer définitivement</button>
+      </div>
+      {protectedRequest && <p>Cette demande est liée à un dossier commercial. Tu peux la mettre à la corbeille.</p>}
+    </form>}
+  </div>;
 }
 
-export function BlockedContactEmails({ revision, onUnblock }) {
+export function BlockedContactEmails({ revision }) {
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
@@ -76,7 +86,6 @@ export function BlockedContactEmails({ revision, onUnblock }) {
       if (issue || data?.email !== email) throw new Error('Déblocage non confirmé');
       setError('');
       setRows((previous) => previous?.filter((row) => row.email !== email));
-      onUnblock(email);
     } catch {
       setError('Le blocage n’a pas pu être levé.');
     } finally {
