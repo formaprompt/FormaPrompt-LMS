@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabaseClient';
 import { checkClientReply, sendClientReply, validateReplyFiles } from '../lib/clientReply';
 import './AdminClientReply.css';
 
-export default function AdminClientReply({ request }) {
+export default function AdminClientReply({ request, onRecorded }) {
   const { user,role }=useAuth();
   const [open,setOpen]=useState(false);
   const [form,setForm]=useState({subject:`Re : ${String(request.subject||'Votre demande de formation').replace(/[\r\n]/g,' ').slice(0,290)}`,message:''});
@@ -42,6 +42,7 @@ export default function AdminClientReply({ request }) {
     try{
       const response=await sendClientReply(supabase,request,form,files,replyId.current,result==='failed');
       applyStatus(['sent','failed','sending','uncertain'].includes(response?.status)?response.status:'uncertain');
+      onRecorded?.();
     }catch(failure){setResult('check');setError(failure.message);}
     finally{sending.current=false;setBusy(false);}
   }
@@ -51,6 +52,7 @@ export default function AdminClientReply({ request }) {
     try{
       const response=await checkClientReply(supabase,request.id,replyId.current);
       applyStatus(response?.status==='not_found'?'failed':response?.status||'uncertain');
+      onRecorded?.();
     }catch(failure){setError(failure.message);}
     finally{sending.current=false;setBusy(false);}
   }

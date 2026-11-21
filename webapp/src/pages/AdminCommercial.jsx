@@ -64,6 +64,15 @@ function enrollmentFrom(request, quote) {
   };
 }
 
+const FOLLOW_UP_LABELS = { scheduled: 'programmée', sent: 'envoyée', failed: 'en échec', cancelled: 'annulée' };
+
+const CLEANUP_MESSAGES = {
+  cancel_follow_up: 'Relance annulée.',
+  delete_test_follow_up: 'Relance de test supprimée.',
+  delete_test_communication: 'Communication de test supprimée.',
+  purge_blocked_spam: 'Spam supprimé. Son adresse reste bloquée.',
+};
+
 export default function AdminCommercial() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
@@ -90,6 +99,7 @@ export default function AdminCommercial() {
   const [loading, setLoading] = useState(true);
   const [trash, setTrash] = useState(false);
   const [moderationRevision, setModerationRevision] = useState(0);
+  const [activeBlockedEmails, setActiveBlockedEmails] = useState([]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -99,11 +109,16 @@ export default function AdminCommercial() {
       visibleRequests.order(trash ? 'discarded_at' : 'updated_at', { ascending: false }),
       supabase.from('commercial_quotes').select('*').order('created_at', { ascending: false }),
       supabase.from('commercial_request_history').select('*').order('created_at', { ascending: false }),
-      supabase.from('commercial_communications').select('*').order('prepared_at', { ascending: false }),
+      supabase.from('commercial_communications')
+        .select('id,contact_request_id,communication_type,direction,delivery_status,recipient_email,subject,prepared_at,sent_at,error_code,provider_message_id,idempotency_key')
+        .order('prepared_at', { ascending: false }),
       supabase.from('commercial_follow_ups').select('*').order('scheduled_for', { ascending: false }),
       supabase.from('purchases').select('id,user_id,course_id,payment_status,purchased_at').eq('payment_status', 'paid').order('purchased_at', { ascending: false }),
       supabase.from('profiles').select('id,email,role').eq('role', 'user'),
       supabase.from('training_enrollments').select('id,user_id,commercial_request_id'),
+      trash && role === 'admin'
+        ? supabase.from('contact_email_blocks').select('email,expires_at')
+        : { data: [] },
     ]);
     const firstError = results.find((result) => result.error)?.error;
     if (firstError) setFeedback({ type: 'error', message: 'Les demandes commerciales ne peuvent pas être chargées.' });
@@ -117,6 +132,8 @@ export default function AdminCommercial() {
     setRequests(requestRows); setQuotes(results[1].data || []);
     setHistory(results[2].data || []); setCommunications(results[3].data || []);
     setFollowUps(results[4].data || []); setPurchases(results[5].data || []); setProfiles(results[6].data || []); setTrainingEnrollments(results[7].data || []);
+    const now = Date.now();
+    setActiveBlockedEmails((results[8].data || []).filter((row) => Date.parse(row.expires_at) > now).map((row) => row.email));
     const nextSelectedId = requestRows.some((item) => item.id === selectedIdRef.current) ? selectedIdRef.current : requestRows[0]?.id || '';
     selectedIdRef.current = nextSelectedId;
     setSelectedId(nextSelectedId);
@@ -129,7 +146,7 @@ export default function AdminCommercial() {
       setStripePurchaseId('');
     }
     setLoading(false);
-  }, [trash]);
+  }, [trash, role]);
 
   useEffect(() => {
     if (!user || !['admin', 'employee'].includes(role)) { navigate('/dashboard'); return; }
@@ -144,6 +161,10 @@ export default function AdminCommercial() {
   const selectedFollowUps = followUps.filter((item) => item.contact_request_id === selectedId);
   const acceptedQuote = selectedQuotes.find((quote) => quote.status === 'accepted');
   const selectedEnrollment = trainingEnrollments.find((item) => item.id === selected?.converted_enrollment_id || item.commercial_request_id === selected?.id);
+  const canPurgeSpam = selected?.discarded_reason === 'spam' && selected.status !== 'won'
+    && !selectedEnrollment && !selected.converted_at && !selected.converted_enrollment_id && selectedQuotes.length === 0
+    && activeBlockedEmails.includes(selected.email.trim().toLowerCase());
+  const archivedMail = communications.filter((item) => item.contact_request_id === null);
   const matchingPurchases = purchases.filter((purchase) => {
     const profile = profiles.find((item) => item.id === purchase.user_id);
     return profile?.email?.toLowerCase() === selected?.email?.toLowerCase()
@@ -178,12 +199,12 @@ export default function AdminCommercial() {
     });
     if (error || data?.error) {
       const response = error?.context;
-      const detail = action === 'moderate_request' && typeof response?.json === 'function'
+      const detail = (action === 'moderate_request' || Object.hasOwn(CLEANUP_MESSAGES, action)) && typeof response?.json === 'function'
         ? await response.json().catch(() => null) : null;
       setFeedback({ type: 'error', message: data?.error || detail?.error || 'Action impossible.' });
       setRunning(''); return false;
     }
-    if (action === 'moderate_request') selectedIdRef.current = '';
+    if (action === 'moderate_request' || action === 'purge_blocked_spam') selectedIdRef.current = '';
     setFeedback({ type: 'success', message: successMessage });
     await loadData(); setRunning(''); return true;
   }
@@ -197,6 +218,14 @@ export default function AdminCommercial() {
     };
     const done = await invoke('moderate_request', { operation, blockEmail }, messages[operation]);
     if (done) setModerationRevision((value) => value + 1);
+  }
+
+  function cleanupActivity(action, itemId) {
+    return invoke(action, itemId ? { itemId } : {}, CLEANUP_MESSAGES[action]);
+  }
+
+  function deleteTest(action, itemId) {
+    if (window.confirm('Supprimer définitivement cette entrée de test ?')) void cleanupActivity(action, itemId);
   }
 
   function update(objectSetter, field, value) {
@@ -240,7 +269,17 @@ export default function AdminCommercial() {
       </header>
       {feedback && <div className={`admin-commercial__feedback is-${feedback.type}`} role={feedback.type === 'error' ? 'alert' : 'status'}>{feedback.message}</div>}
       <AdminEmailNotifications revision={moderationRevision} />
-      {role === 'admin' && <BlockedContactEmails revision={moderationRevision} />}
+      {role === 'admin' && <>
+        <BlockedContactEmails revision={moderationRevision}
+          onUnblock={(email) => setActiveBlockedEmails((emails) => emails.filter((blockedEmail) => blockedEmail !== email))} />
+        {archivedMail.length > 0 && <details className="admin-commercial__moderation">
+          <summary>Historique des e-mails des spams supprimés</summary>
+          <div className="admin-commercial__timeline">{archivedMail.map((item) => <article key={item.id}>
+            <strong>{item.subject}</strong>
+            <span>{item.delivery_status === 'sent' ? 'Envoyé' : 'Envoi à vérifier'} · {item.recipient_email} · {new Date(item.sent_at || item.prepared_at).toLocaleString('fr-FR')}</span>
+          </article>)}</div>
+        </details>}
+      </>}
       <div className="admin-commercial__layout">
         <aside className="admin-commercial__sidebar" aria-label="Demandes commerciales">
           {role === 'admin' && <div className="admin-commercial__actions admin-commercial__views" aria-label="Vue des demandes">
@@ -256,10 +295,11 @@ export default function AdminCommercial() {
         <section className="admin-commercial__detail">
           {!selected ? <p>Sélectionnez une demande.</p> : <>
             <header className="admin-commercial__request-header"><div><h2>{selectedEnrollment?.user_id ? <Link to={learnerRecordPath(selectedEnrollment.user_id)}>{selected.name}</Link> : selected.name}</h2><p>{selected.email} · {REQUEST_TYPE_LABELS[selected.request_type]}</p>{!selectedEnrollment?.user_id && <small>Demande non reliée à un compte apprenant par identifiant exact.</small>}</div><span className={`admin-commercial__badge is-${selected.status}`}>{REQUEST_STATUS_LABELS[selected.status]}</span></header>
-            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small>{!selected.discarded_at && <AdminClientReply key={selected.id} request={selected} />}</article>
+            <article className="admin-commercial__message"><strong>{selected.subject}</strong><p>{selected.message}</p><small>Reçue le {new Date(selected.created_at).toLocaleString('fr-FR')}</small>{!selected.discarded_at && <AdminClientReply key={selected.id} request={selected} onRecorded={loadData} />}</article>
 
             {role === 'admin' && <CommercialRequestModeration key={selected.id} request={selected} busy={Boolean(running)}
-              linked={Boolean(selectedEnrollment || selectedQuotes.length || selectedCommunications.length || selectedFollowUps.length)} moderate={moderate} />}
+              linked={Boolean(selectedEnrollment || selectedQuotes.length || selectedCommunications.length || selectedFollowUps.length)}
+              canPurgeSpam={canPurgeSpam} purgeSpam={() => cleanupActivity('purge_blocked_spam')} moderate={moderate} />}
 
             {!selected.discarded_at && <>
             <details open><summary>Qualification et notes</summary>
@@ -289,16 +329,44 @@ export default function AdminCommercial() {
               <div className="admin-commercial__cards">{selectedQuotes.map((quote) => <article key={quote.id}><header><strong>{quote.quote_number}</strong><span>{QUOTE_STATUS_LABELS[quote.status]}</span></header><p>{quote.course_title} · {formatMoney(quote.total_price_cents)}</p><div><Link to={`/admin/commercial/devis/${quote.id}`}>Ouvrir / imprimer</Link>{quote.status === 'draft' && <button onClick={() => invoke('send_quote', { quoteId: quote.id })} disabled={Boolean(running)}>Envoyer</button>}{quote.status === 'sent' && <><button onClick={() => invoke('set_quote_status', { quoteId: quote.id, status: 'accepted' })} disabled={Boolean(running)}>Accepter</button><button onClick={() => invoke('set_quote_status', { quoteId: quote.id, status: 'refused' })} disabled={Boolean(running)}>Refuser</button></>}</div></article>)}</div>
             </details>
 
+            </>}
             <details><summary>Communications et relances</summary>
-              <form className="admin-commercial__form" onSubmit={(event) => { event.preventDefault(); invoke('schedule_follow_up', followUpForm); }}>
+              {!selected.discarded_at && <form className="admin-commercial__form" onSubmit={(event) => { event.preventDefault(); invoke('schedule_follow_up', followUpForm); }}>
                 <label>Date prévue<input type="datetime-local" required value={followUpForm.scheduledFor} onChange={(e) => update(setFollowUpForm, 'scheduledFor', e.target.value)} /></label>
                 <label>Objet<input required maxLength="300" value={followUpForm.subject} onChange={(e) => update(setFollowUpForm, 'subject', e.target.value)} /></label>
                 <label className="is-wide">Message<textarea required rows="4" maxLength="10000" value={followUpForm.message} onChange={(e) => update(setFollowUpForm, 'message', e.target.value)} /></label>
                 <button className="btn" disabled={Boolean(running) || ['won','lost'].includes(selected.status)}>Programmer sans envoi automatique</button>
-              </form>
-              <div className="admin-commercial__timeline">{selectedFollowUps.map((item) => <article key={item.id}><strong>Relance {item.status}</strong><span>{new Date(item.scheduled_for).toLocaleString('fr-FR')}</span>{item.status === 'scheduled' && <button onClick={() => invoke('send_follow_up', { followUpId: item.id })} disabled={Boolean(running)}>Déclencher l’envoi</button>}</article>)}{selectedCommunications.map((item) => <article key={item.id}><strong>{item.communication_type} · {item.delivery_status}</strong><span>{item.subject} — {new Date(item.prepared_at).toLocaleString('fr-FR')}</span></article>)}</div>
+              </form>}
+              <div className="admin-commercial__timeline">
+                {selectedFollowUps.map((item) => {
+                  const hasCommunication = Boolean(item.communication_id || selectedCommunications.some((mail) => item.idempotency_key && mail.idempotency_key === item.idempotency_key));
+                  const pending = item.status === 'scheduled' && !item.sent_at && !hasCommunication;
+                  const removable = ['cancelled', 'failed'].includes(item.status) && !item.sent_at && !hasCommunication;
+                  return <article key={item.id}>
+                    <strong>Relance {FOLLOW_UP_LABELS[item.status] || item.status}</strong>
+                    <span>{item.subject} · {new Date(item.scheduled_for).toLocaleString('fr-FR')}</span>
+                    {pending && !selected.discarded_at && <button type="button" onClick={() => invoke('send_follow_up', { followUpId: item.id })} disabled={Boolean(running)}>Déclencher l’envoi</button>}
+                    {pending && role === 'admin' && <button type="button" onClick={() => cleanupActivity('cancel_follow_up', item.id)} disabled={Boolean(running)}>Annuler la relance</button>}
+                    {removable && role === 'admin' && <button type="button" className="admin-commercial__danger" onClick={() => deleteTest('delete_test_follow_up', item.id)} disabled={Boolean(running)}>Supprimer le test</button>}
+                  </article>;
+                })}
+                {selectedCommunications.map((item) => {
+                  const linkedToLiveFollowUp = selectedFollowUps.some((followUp) =>
+                    ((item.idempotency_key && followUp.idempotency_key === item.idempotency_key) || followUp.communication_id === item.id)
+                    && (['scheduled', 'sent'].includes(followUp.status) || followUp.sent_at));
+                  const removable = item.direction === 'outbound' && !item.sent_at && !item.provider_message_id && !linkedToLiveFollowUp
+                    && (['prepared', 'cancelled'].includes(item.delivery_status)
+                      || (item.delivery_status === 'failed' && item.error_code && item.error_code !== 'smtp_delivery_uncertain'));
+                  return <article key={item.id}>
+                    <strong>{item.communication_type} · {item.delivery_status}</strong>
+                    <span>{item.subject} — {new Date(item.sent_at || item.prepared_at).toLocaleString('fr-FR')}</span>
+                    {removable && role === 'admin' && <button type="button" className="admin-commercial__danger" onClick={() => deleteTest('delete_test_communication', item.id)} disabled={Boolean(running)}>Supprimer le test</button>}
+                  </article>;
+                })}
+              </div>
             </details>
 
+            {!selected.discarded_at && <>
             <details><summary>Conversion en inscription</summary>
               <section className="admin-commercial__conversion"><h3>Paiement direct Stripe</h3><p>Cette action vérifie l’achat et le droit actif existants, sans les recréer.</p><select value={stripePurchaseId} onChange={(e) => setStripePurchaseId(e.target.value)}><option value="">Sélectionner un achat payé</option>{matchingPurchases.map((purchase) => <option key={purchase.id} value={purchase.id}>{COMMERCIAL_COURSES[purchase.course_id]?.title} · {new Date(purchase.purchased_at).toLocaleDateString('fr-FR')}</option>)}</select><button className="btn" disabled={!stripePurchaseId || Boolean(running)} onClick={() => invoke('convert_stripe', { purchaseId: stripePurchaseId })}>Lier l’achat existant</button></section>
               <form className="admin-commercial__form" onSubmit={convertAdministrative}><h3 className="is-wide">Inscription administrative {acceptedQuote ? `— devis ${acceptedQuote.quote_number}` : 'sans devis accepté'}</h3>

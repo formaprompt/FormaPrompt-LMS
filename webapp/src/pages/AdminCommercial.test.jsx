@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-const api = vi.hoisted(() => ({ role: 'admin', invoke: vi.fn(), requests: [], blocked: [], unblock: vi.fn() }));
+const api = vi.hoisted(() => ({ role: 'admin', invoke: vi.fn(), requests: [], blocked: [], communications: [], followUps: [], unblock: vi.fn() }));
 vi.mock('../contexts/useAuth', () => ({ useAuth: () => ({ user: { id: 'admin-test' }, role: api.role }) }));
 vi.mock('../lib/supabaseClient', () => ({ supabase: {
   from: (table) => {
@@ -13,7 +13,9 @@ vi.mock('../lib/supabaseClient', () => ({ supabase: {
       delete: () => ({ eq: (...args) => ({ select: () => ({ maybeSingle: () => api.unblock(...args) }) }) }),
       then: (resolve) => {
         const rows = table === 'contact_requests' ? api.requests.filter((row) => Boolean(row.discarded_at) === discarded)
-          : table === 'contact_email_blocks' ? api.blocked : [];
+          : table === 'contact_email_blocks' ? api.blocked
+            : table === 'commercial_communications' ? api.communications
+              : table === 'commercial_follow_ups' ? api.followUps : [];
         return Promise.resolve({ data: rows, error: null }).then(resolve);
       },
     };
@@ -28,6 +30,8 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     api.role = 'admin';
     api.invoke.mockReset().mockResolvedValue({ data: {}, error: null });
     api.blocked = [];
+    api.communications = [];
+    api.followUps = [];
     api.unblock.mockReset().mockImplementation(async (_column, email) => ({ data: { email }, error: null }));
     api.requests = [
       { id: 'request-a', name: 'Client A', email: 'a@example.test', subject: 'Programme', message: 'Puis-je recevoir le programme ?', status: 'new', request_type: 'individual', created_at: '2026-10-31T09:00:00Z' },
@@ -126,5 +130,79 @@ describe('réponse client indépendante du devis dans le cycle commercial', () =
     fireEvent.click(await screen.findByRole('button', { name: 'Débloquer spam@example.test' }));
     expect(api.unblock).toHaveBeenCalledWith('email', 'spam@example.test');
     expect(await screen.findByText('Aucune adresse bloquée.')).toBeVisible();
+  });
+
+  it('annule la relance sans envoyer de mail et permet de retirer le test après confirmation', async () => {
+    const relance = { id: 'follow-1', contact_request_id: 'request-a', status: 'scheduled', subject: 'Relance de test', scheduled_for: '2026-12-01T09:00:00Z' };
+    api.followUps = [relance];
+    api.invoke.mockImplementation(async (_, { body }) => {
+      if (body.action === 'cancel_follow_up') relance.status = 'cancelled';
+      if (body.action === 'delete_test_follow_up') api.followUps = [];
+      return { data: {}, error: null };
+    });
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
+    fireEvent.click(await screen.findByText('Communications et relances'));
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler la relance' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'cancel_follow_up', requestId: 'request-a', itemId: 'follow-1' } });
+    const remove = await screen.findByRole('button', { name: 'Supprimer le test' });
+    expect(screen.getByText('Relance annulée', { exact: true })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Déclencher l’envoi' })).not.toBeInTheDocument();
+    fireEvent.click(remove);
+    expect(api.invoke.mock.calls.some(([, options]) => options.body.action === 'delete_test_follow_up')).toBe(false);
+    fireEvent.click(remove);
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(await screen.findByText('Relance de test supprimée.')).toBeVisible();
+    expect(api.invoke.mock.calls.some(([, options]) => options.body.action === 'send_follow_up')).toBe(false);
+  });
+
+  it('propose le retrait des tests quel que soit le type de communication et protège les envois', async () => {
+    const common = { contact_request_id: 'request-a', direction: 'outbound', prepared_at: '2026-11-20T09:00:00Z' };
+    api.communications = [
+      { ...common, id: 'sent', subject: 'Envoi confirmé du devis', communication_type: 'quote', delivery_status: 'sent' },
+      { ...common, id: 'ambiguous', subject: 'Relance à vérifier', communication_type: 'follow_up', delivery_status: 'failed', error_code: 'smtp_delivery_uncertain' },
+      { ...common, id: 'failed', subject: 'Devis de test', communication_type: 'quote', delivery_status: 'failed', error_code: 'smtp_rejected_550' },
+      { ...common, id: 'draft', subject: 'Réponse de test', communication_type: 'information', delivery_status: 'prepared' },
+    ];
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    api.invoke.mockImplementation(async (_, { body }) => {
+      if (body.action === 'delete_test_communication') api.communications = api.communications.filter((mail) => mail.id !== body.itemId);
+      return { data: {}, error: null };
+    });
+    render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
+    fireEvent.click(await screen.findByText('Communications et relances'));
+    const mail = (subject) => within(screen.getByText(new RegExp(subject)).closest('article'));
+    expect(mail('Envoi confirmé du devis').queryByRole('button', { name: 'Supprimer le test' })).not.toBeInTheDocument();
+    expect(mail('Relance à vérifier').queryByRole('button', { name: 'Supprimer le test' })).not.toBeInTheDocument();
+    expect(mail('Réponse de test').getByRole('button', { name: 'Supprimer le test' })).toBeEnabled();
+    fireEvent.click(mail('Devis de test').getByRole('button', { name: 'Supprimer le test' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'delete_test_communication', requestId: 'request-a', itemId: 'failed' } });
+    await waitFor(() => expect(screen.queryByText(/Devis de test/)).not.toBeInTheDocument());
+    expect(screen.getByText(/Envoi confirmé du devis/)).toBeVisible();
+  });
+
+  it('supprime un spam déjà bloqué et affiche son e-mail envoyé dans l’historique', async () => {
+    Object.assign(api.requests[0], { discarded_at: '2026-11-21T11:00:00Z', discarded_reason: 'spam' });
+    Object.assign(api.requests[1], { discarded_at: '2026-11-21T10:00:00Z', discarded_reason: 'spam' });
+    api.blocked = [{ email: 'a@example.test', expires_at: '2099-12-01T12:00:00Z' }];
+    const sent = { id: 'mail-a', contact_request_id: 'request-a', recipient_email: 'a@example.test', subject: 'Mail conservé', communication_type: 'information', delivery_status: 'sent', prepared_at: '2026-11-20T09:00:00Z' };
+    api.communications = [sent];
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    api.invoke.mockImplementation(async (_, { body }) => {
+      if (body.action === 'purge_blocked_spam') {
+        api.requests = api.requests.filter((row) => row.id !== body.requestId);
+        sent.contact_request_id = null;
+      }
+      return { data: {}, error: null };
+    });
+    render(<MemoryRouter><AdminCommercial /></MemoryRouter>);
+    await screen.findByText('Aucune demande.');
+    fireEvent.click(screen.getByRole('button', { name: 'Corbeille' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Supprimer le spam bloqué' }));
+    expect(api.invoke).toHaveBeenCalledWith('admin-commercial-cycle', { body: { action: 'purge_blocked_spam', requestId: 'request-a' } });
+    fireEvent.click(await screen.findByText('Historique des e-mails des spams supprimés'));
+    expect(screen.getByText('Mail conservé')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Client A/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Supprimer le spam bloqué' })).not.toBeInTheDocument();
   });
 });
