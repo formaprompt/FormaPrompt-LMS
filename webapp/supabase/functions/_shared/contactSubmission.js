@@ -23,7 +23,11 @@ export async function submitContact(input, { store, notify, defer = (task) => ta
   let existing = await store.find(row.id);
   if (!existing) {
     if (await store.recentCount(row.email) >= 5) throw new InputError('Plusieurs demandes ont déjà été reçues. Merci de patienter avant de réessayer.', 429);
-    try { await store.insert(row); }
+    try {
+      // A database trigger silently skips blocked addresses. Treat the form
+      // submission as accepted without delivering an administrator alert.
+      if (await store.insert(row) === false) return { accepted: true };
+    }
     catch (error) {
       if (error?.code !== '23505') throw error;
       existing = await store.find(row.id);
@@ -31,6 +35,7 @@ export async function submitContact(input, { store, notify, defer = (task) => ta
     }
   }
   if (existing && Object.keys(row).some((key) => existing[key] !== row[key])) throw new InputError('Cette référence correspond déjà à une autre demande.', 409);
+  if (existing?.discarded_at) return { accepted: true };
   const task = Promise.resolve().then(() => notify(row.id)).catch(() => {});
   defer(task);
   return { accepted: true };
@@ -39,7 +44,7 @@ export async function submitContact(input, { store, notify, defer = (task) => ta
 export function createContactStore(database, now = () => Date.now()) {
   return {
     async find(id) {
-      const { data, error } = await database.from('contact_requests').select('id,name,email,subject,message,request_type,funding_requested').eq('id',id).maybeSingle();
+      const { data, error } = await database.from('contact_requests').select('id,name,email,subject,message,request_type,funding_requested,discarded_at').eq('id',id).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -49,8 +54,9 @@ export function createContactStore(database, now = () => Date.now()) {
       return count || 0;
     },
     async insert(row) {
-      const { error } = await database.from('contact_requests').insert(row);
+      const { data, error } = await database.from('contact_requests').insert(row).select('id').maybeSingle();
       if (error) throw error;
+      return Boolean(data);
     },
   };
 }

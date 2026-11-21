@@ -32,6 +32,14 @@
 .admin-commercial__form .is-wide, .admin-commercial__form > button, .admin-commercial__form > h3 { grid-column: 1 / -1; }
 .admin-commercial__check { grid-template-columns: auto 1fr; align-items: center; }
 .admin-commercial__check input { width: auto; }
+.admin-commercial__moderation { background: #171b24; border: 1px solid #343b4b; border-radius: .8rem; padding: 1rem; }
+.admin-commercial__moderation form { display: grid; gap: .8rem; justify-items: start; overflow-wrap: anywhere; }
+.admin-commercial__actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.admin-commercial__views, .admin-commercial__blocklist { margin-bottom: 1rem; }
+.admin-commercial__views [aria-pressed="true"] { background: #14534a; color: #fff; }
+.admin-commercial__danger { color: #fff; background: #8b2525; }
+.admin-commercial__blocklist ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .75rem; }
+.admin-commercial__blocklist li { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; overflow-wrap: anywhere; }
 .admin-commercial__cards, .admin-commercial__timeline { display: grid; gap: .75rem; margin-top: 1rem; }
 .admin-commercial__cards article, .admin-commercial__timeline article, .admin-commercial__conversion { border: 1px solid #374151; border-radius: .55rem; padding: .85rem; }
 .admin-commercial__cards article div { display: flex; flex-wrap: wrap; gap: .6rem; }

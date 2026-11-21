@@ -3,7 +3,7 @@ export const geminiCases = [
     title: 'Croiser un PDF et une image',
     need: 'Préparer une fiche à partir de deux sources',
     feature: 'Discussion avec import d’un PDF fictif de deux pages et d’une capture de planning lisible.',
-    setting: 'Commencez avec Auto ou Flash disponible. Essayez Pro si le croisement reste difficile et si votre offre le permet. Si un niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. Conseil pédagogique à comparer sur vos sources.',
+    setting: 'Commencez avec Auto, ou Hydrogen si vous pouvez le sélectionner. Essayez Neon si le croisement reste difficile et si votre offre le permet. Si un niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. Conseil pédagogique à comparer sur vos sources.',
     prompt: [
       ['Contexte', 'Je prépare une visite fictive pour des adultes débutants. Je joins deux sources autorisées : « accueil.pdf », deux pages de consignes, et « planning.png », une capture des horaires. Ces fichiers ne contiennent aucune donnée personnelle.'],
       ['Rôle', 'Tu es un assistant de préparation pédagogique attentif à la fidélité aux documents.'],
@@ -16,7 +16,7 @@ export const geminiCases = [
     title: 'Structurer une note vocale',
     need: 'Retrouver les actions sans inventer des décisions',
     feature: 'Import d’un enregistrement personnel de deux minutes, compatible avec votre application. Cela se distingue de la dictée d’un prompt et de Live.',
-    setting: 'Auto ou Flash pour ce premier essai court ; un modèle plus avancé ne réparera pas un son inaudible. Si le niveau de raisonnement est affiché, commencez avec Faible ; sinon ce réglage n’est pas disponible dans votre mode.',
+    setting: 'Auto pour ce premier essai court ; un modèle plus avancé ne réparera pas un son inaudible. Si le niveau de raisonnement est affiché, commencez avec Faible ; sinon ce réglage n’est pas disponible dans votre mode.',
     prompt: [
       ['Contexte', 'Je joins ma propre note vocale fictive de deux minutes pour préparer des portes ouvertes. Elle mêle des idées, quelques décisions et des informations incomplètes. Aucun tiers n’est enregistré.'],
       ['Rôle', 'Tu es un assistant d’organisation qui distingue ce qui est dit de ce qu’il faudrait encore décider.'],
@@ -42,7 +42,7 @@ export const geminiCases = [
     title: 'Comprendre une courte vidéo',
     need: 'Décrire les étapes d’un pliage',
     feature: 'Import d’une vidéo personnelle de pliage papier de 60 à 90 secondes. Il s’agit d’analyse, pas de création ou de montage vidéo.',
-    setting: 'Auto ou Flash pour commencer ; Pro si disponible pour comparer une interprétation difficile. Si le niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. La vérification reste visuelle et pratique.',
+    setting: 'Auto ou Hydrogen pour commencer ; Neon si disponible pour comparer une interprétation difficile. Si le niveau de raisonnement est affiché, essayez Moyen ; sinon ce réglage n’est pas disponible dans votre mode. La vérification reste visuelle et pratique.',
     prompt: [
       ['Contexte', 'Je joins une vidéo personnelle et autorisée de 60 à 90 secondes montrant un pliage papier simple. Je veux préparer une fiche pour des adultes débutants.'],
       ['Rôle', 'Tu es un assistant de rédaction de procédures qui décrit une manipulation observable.'],
@@ -55,7 +55,7 @@ export const geminiCases = [
     title: 'Créer une image puis l’animer',
     need: 'Illustrer un atelier sans personnes réelles',
     feature: 'Génération d’image, puis création vidéo à partir de l’image validée si votre compte et votre région le permettent. Deux productions distinctes.',
-    setting: 'Outil Images (Nano Banana 2 selon l’aide actuelle), puis outil Vidéos (Gemini Omni). Les options Pro, quotas et formats dépendent de l’offre. Aucun effort textuel ne remplace ces outils.',
+    setting: 'Outil Images (Nano Banana 2 selon l’aide actuelle), puis outil Vidéos (Gemini Omni 1.2 Flash). Les options Pro, quotas et formats dépendent de l’offre. Aucun effort textuel ne remplace ces outils.',
     prompt: [
       ['Contexte', 'Je prépare un support pour un atelier fictif « Découvrir l’IA », destiné à des adultes débutants. Je veux expliquer les entrées texte, photo et voix sans représenter une personne réelle.'],
       ['Rôle', 'Tu es un illustrateur pédagogique qui privilégie une composition claire et des références dont les droits sont maîtrisés.'],

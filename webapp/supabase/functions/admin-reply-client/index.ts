@@ -29,9 +29,10 @@ Deno.serve(async (request) => {
     }
     const input=Object.fromEntries(['requestId','replyId','recipientEmail','subject','message'].map((key)=>[key,form.get(key)]));
     const requestId=requiredUuid(input.requestId);
-    const{data:contact,error}=await database.from('contact_requests').select('id,email').eq('id',requestId).maybeSingle();
+    const{data:contact,error}=await database.from('contact_requests').select('id,email,discarded_at').eq('id',requestId).maybeSingle();
     if(error)throw error;
     if(!contact)throw new InputError('Demande introuvable.',404);
+    if(contact.discarded_at)throw new InputError('Restaurez cette demande avant d’y répondre.',409);
     const reply=await validateClientReply(input,contact,form.getAll('attachments'));
     const result=await deliverClientReply(reply,actor.id,createClientReplyStore(database),{retry:form.get('retry')==='true'});
     return jsonResponse(result);

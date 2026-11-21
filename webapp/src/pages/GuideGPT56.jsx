@@ -147,7 +147,7 @@ export default function GuideGPT56() {
             <h1 id="gpt-title">GPT‑5.6 :<br /><span>un repère sur la génération précédente</span></h1>
             <p className="gpt-hero-lead">
               Ce guide conserve les exemples de choix entre Sol, Terra et Luna tels qu’ils étaient présentés en juillet 2026.
-              Pour choisir dans la famille actuelle, consultez le <Link to="/guide-gpt-6-codex">guide GPT‑6</Link>.
+              Pour choisir dans la famille actuelle, consultez le <Link to="/guide-gpt-6-codex">guide GPT‑6, 6.1 et 6.2</Link>.
             </p>
             <div className="gpt-equation" aria-label="Trois modèles multipliés par cinq niveaux d'effort">
               <div><strong>1</strong><span>Je choisis le moteur</span></div>
@@ -170,7 +170,7 @@ export default function GuideGPT56() {
               </div>
               <div className="gpt-surface-summary">
                 <Lightbulb size={24} />
-                <p><strong>À retenir :</strong> la famille GPT‑6 comprend Astra, Sol et Luna ; elle ne comprend pas Terra. Les noms et niveaux visibles varient selon le produit et le compte. <Link to="/guide-gpt-6-codex">Voir le guide GPT‑6</Link>.</p>
+                <p><strong>À retenir :</strong> GPT‑5.6 Terra, illustré sur cette page, est distinct de GPT‑6.1 Terra. Ce dernier peut apparaître dans Work ou Codex selon l’accès et les réglages de votre espace. <Link to="/guide-gpt-6-codex">Voir le guide GPT‑6, 6.1 et 6.2</Link>.</p>
               </div>
               <p className="gpt-current-note">Selon l’<a href="https://help.openai.com/en/articles/20001354-gpt-56-and-gpt-6-pro-in-chatgpt" target="_blank" rel="noreferrer">aide officielle OpenAI consultée le 24 septembre 2026</a>, GPT‑5.6 Sol peut alimenter Instant ainsi que plusieurs niveaux de raisonnement pour les forfaits éligibles ; GPT‑5.6 Luna est indiqué comme modèle par défaut pour Free et Go. Ces indications peuvent évoluer avec les déploiements.</p>
             </div>
@@ -295,7 +295,7 @@ export default function GuideGPT56() {
             <div>
               <h2 id="sources-title">Une précision importante</h2>
               <p>
-                Cette page documente les choix GPT‑5.6 présentés en juillet 2026. Elle ne décrit pas la disponibilité actuelle de ces modèles dans ChatGPT, Codex ou l’API. Pour un choix aujourd’hui, reportez-vous au guide GPT‑6 et vérifiez les options de votre compte.
+                Cette page documente les choix GPT‑5.6 présentés en juillet 2026. Elle ne décrit pas la disponibilité actuelle de ces modèles dans ChatGPT, Codex ou l’API. Pour un choix aujourd’hui, reportez-vous au <Link to="/guide-gpt-6-codex">guide GPT‑6, 6.1 et 6.2</Link> et vérifiez les options de votre compte.
               </p>
               <p className="gpt-source-links">
                 Sources de la version initiale, consultées le 11 juillet 2026 :{' '}

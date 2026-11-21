@@ -7,14 +7,24 @@ import { guideDownloads } from '../src/data/guideDownloads.js';
 
 const origin = process.env.GUIDES_PREVIEW_ORIGIN || 'http://127.0.0.1:4191';
 assert.equal(new URL(origin).hostname, '127.0.0.1');
+const dist = path.resolve('dist');
+const serveBuilt = route => {
+  const url = new URL(route.request().url());
+  if (url.origin !== origin || route.request().method() !== 'GET') return route.abort();
+  const asset = path.posix.extname(url.pathname) ? url.pathname : '/index.html';
+  const target = path.resolve(dist, '.' + asset);
+  assert.ok(target.startsWith(dist + path.sep));
+  return route.fulfill({ path: target });
+};
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 const report = [];
+await mkdir(path.resolve('../output/pdf'), { recursive: true });
 try {
   for (const [id, download] of Object.entries(guideDownloads)) {
     assert.match(download.href, /^\/assets\/guides\/pdf\/[a-z0-9-]+\.pdf$/);
-    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, serviceWorkers: 'block' });
     const page = await context.newPage();
-    await page.route('**/*', handler => new URL(handler.request().url()).origin === origin && handler.request().method() === 'GET' ? handler.continue() : handler.abort());
+    await page.route('**/*', serveBuilt);
     const article = `https://formaprompt.com/guides/${id}-guide-pratique`;
     await page.goto(`${origin}/guides/${id}-guide-pratique`, { waitUntil: 'networkidle' });
     await page.getByRole('heading', { level: 1 }).waitFor();
@@ -39,6 +49,8 @@ try {
     if (id === 'claude') {
       await page.addStyleTag({ content: '@media print { .claude-team-plans { break-before: page; } .claude-price-date + p { break-inside: avoid; } }' });
     }
+    await page.emulateMedia({ media: 'print' });
+    await page.locator('.advertising-consent').waitFor({ state: 'hidden' });
     await page.pdf({ path: target, format: 'A4', printBackground: true, displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate: '<div style="font-size:8px;width:100%;text-align:center;color:#475569">FormaPrompt · formaprompt.com · <span class="pageNumber"></span>/<span class="totalPages"></span></div>', margin: { top: '16mm', bottom: '16mm', left: '14mm', right: '14mm' } });
     const distTarget = path.resolve('dist', download.href.slice(1));
     await mkdir(path.dirname(distTarget), { recursive: true });

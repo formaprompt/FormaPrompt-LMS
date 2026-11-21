@@ -24,9 +24,18 @@ describe('Guide Gemini multimodal', () => {
       expect(panel).toHaveTextContent('Contrôle humain');
     });
     within(screen.getByRole('navigation', { name: 'Dans ce guide' })).getAllByRole('link').forEach(link => expect(container.querySelector(link.getAttribute('href'))).not.toBeNull());
-    expect(screen.getByRole('table', { name: /comptes personnels/i })).toHaveTextContent('219,99 €');
+    const plans = within(screen.getByRole('table', { name: /comptes personnels/i }));
+    expect(plans.getByRole('row', { name: /Google AI Plus .*400 Go/i })).toHaveTextContent('Gemini 4 Hydrogen');
+    expect(plans.getByRole('row', { name: /Google AI Plus \(2 To\)/i })).toHaveTextContent('À vérifier');
+    expect(plans.getByRole('row', { name: /Google AI Pro/i })).toHaveTextContent('Gemini 4 Hydrogen et Neon');
+    expect(plans.getByRole('row', { name: /Google AI Ultra 20×/i })).toHaveTextContent('219,99 €');
+    expect(plans.getByRole('row', { name: /Google AI Ultra 5×/i })).toHaveTextContent('Carbon');
+    expect(panels[0]).toHaveTextContent('Essayez Neon');
+    expect(panels[4]).toHaveTextContent('Gemini Omni 1.2 Flash');
+    expect(screen.getByText(/conserver environ deux mois/i)).toBeInTheDocument();
+    expect(screen.queryByText(/72 heures/i)).not.toBeInTheDocument();
     expect(screen.getByText(/L’import d’une vidéo pour le montage n’est pas disponible/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /télécharger le guide gemini en pdf/i })).toHaveAttribute('download');
+    expect(screen.getByRole('link', { name: /télécharger le guide gemini en pdf/i })).toHaveAttribute('href', '/assets/guides/pdf/guide-gemini-2026-11-01.pdf');
   });
   it('rouvre le même choix après fermeture native et copie le CROP complet', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);

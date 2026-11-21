@@ -64,10 +64,32 @@ Deno.serve(async (request) => {
     const body = await request.json().catch(() => ({}));
     const action = typeof body.action === 'string' ? body.action : '';
     const requestId = requiredId(body.requestId, 'Demande');
+
+    if (action === 'moderate_request') {
+      if (actor.role !== 'admin') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+      if (!['spam', 'test', 'restore', 'delete'].includes(body.operation)
+        || (body.blockEmail !== undefined && typeof body.blockEmail !== 'boolean')
+        || (body.blockEmail === true && body.operation !== 'spam')) {
+        return jsonResponse({ error: 'Action de modération invalide.' }, 400);
+      }
+      const { error } = await admin.rpc('moderate_commercial_request', {
+        p_actor_id: actor.id, p_request_id: requestId,
+        p_action: body.operation, p_block_email: body.blockEmail === true,
+      });
+      if (error) {
+        if (error.code === '42501') return jsonResponse({ error: 'Action réservée aux administrateurs.' }, 403);
+        if (error.code === 'FP404') return jsonResponse({ error: 'Demande introuvable.' }, 404);
+        if (error.code === 'FP409') return jsonResponse({ error: error.message }, 409);
+        throw error;
+      }
+      return jsonResponse({ moderated: true });
+    }
+
     const { data: commercialRequest, error: requestError } = await admin.from('contact_requests')
       .select('*').eq('id', requestId).maybeSingle();
     if (requestError) throw requestError;
     if (!commercialRequest) return jsonResponse({ error: 'Demande introuvable.' }, 404);
+    if (commercialRequest.discarded_at) return jsonResponse({ error: 'Restaurez cette demande avant de la traiter.' }, 409);
 
     const addHistory = async (eventType: string, details: Record<string, unknown> = {}, previousStatus?: string, newStatus?: string) => {
       const { error } = await admin.from('commercial_request_history').insert({

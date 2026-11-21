@@ -5,7 +5,7 @@ import './AdminEmailNotifications.css';
 
 const LABELS = {pending:'À envoyer',sending:'Envoi en cours ou à vérifier',sent:'Remise au serveur mail',failed:'Échec — non envoyé',uncertain:'Résultat à vérifier'};
 
-export default function AdminEmailNotifications() {
+export default function AdminEmailNotifications({ revision } = {}) {
   const { user, role } = useAuth();
   const userId = user?.id;
   const [rows,setRows] = useState([]);
@@ -26,7 +26,7 @@ export default function AdminEmailNotifications() {
     if (!userId || role !== 'admin') return;
     const timer = window.setTimeout(load,0);
     return () => window.clearTimeout(timer);
-  },[userId,role,load]);
+  },[userId,role,load,revision]);
 
   async function retry(row) {
     const uncertain = row.status === 'uncertain' || row.status === 'sending';

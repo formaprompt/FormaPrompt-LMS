@@ -76,6 +76,18 @@ test('répéter la soumission après une réponse réseau perdue ne duplique pas
   assert.equal(store.rows.size,1);
   await assert.rejects(submitContact({...contact,message:'Autre contenu avec la même clé'},opts),/autre demande/);
 });
+test('une soumission filtrée ou déjà mise à la corbeille ne déclenche pas d’alerte', async () => {
+  const notificationIds = [];
+  const notify = async (id) => { notificationIds.push(id); };
+  const store = contactStore();
+  await store.insert({ ...validateContactSubmission(contact), discarded_at: '2026-11-21T11:00:00Z' });
+  assert.deepEqual(await submitContact(contact, { store, notify }), { accepted: true });
+  store.rows.clear();
+  store.insert = async () => false;
+  assert.deepEqual(await submitContact(contact, { store, notify }), { accepted: true });
+  assert.equal(store.rows.size, 0);
+  assert.deepEqual(notificationIds, []);
+});
 test('validation, quota et honeypot précèdent les effets',async()=> {
   assert.throws(()=>validateContactSubmission({...contact,email:'x@example.test\r\nBcc:y@example.test'}));
   assert.throws(()=>validateContactSubmission({...contact,subject:'x'.repeat(201)}));
