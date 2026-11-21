@@ -81,10 +81,10 @@ describe('Nouveaux guides pratiques', () => {
     expect(family).toHaveTextContent('IA : le titulaire seulement.');
     const businessOffer = within(business).getByRole('row', { name: /microsoft 365 copilot business/i });
     expect(businessOffer).toHaveTextContent('21,84 € HT / mois');
-    expect(businessOffer).toHaveTextContent('Licence socle en supplément.');
+    expect(businessOffer).toHaveTextContent('Offre actuelle : licence socle en supplément.');
     expect(businessOffer).toHaveTextContent('Promo : première année annuelle');
     expect(screen.getByText(/offre affichée du/i)).toHaveTextContent('31 décembre 2026');
-    expect(screen.getByText(/prix publics microsoft france vérifiés/i)).toHaveTextContent('1er novembre 2026');
+    expect(screen.getByText(/prix publics microsoft france vérifiés/i)).toHaveTextContent('21 novembre 2026');
     expect(screen.getByRole('table', { name: /un mode change le traitement/i })).toBeInTheDocument();
   });
 
