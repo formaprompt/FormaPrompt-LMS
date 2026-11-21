@@ -28,7 +28,7 @@ const models = [
   },
   {
     name: 'Astra', family: 'GPT‑6', icon: Sparkles, color: 'orange', label: 'Pour les tâches les plus exigeantes',
-    summary: 'Le modèle le plus capable de cette sélection pour les analyses difficiles et les travaux qui demandent un jugement soutenu.',
+    summary: 'Le modèle de la génération GPT‑6 conçu pour les analyses difficiles et les travaux qui demandent un jugement soutenu.',
     examples: ['Analyser un dossier complexe', 'Étudier une architecture', 'Investiguer un incident difficile'],
     caution: 'Un modèle plus capable ne dispense pas de vérifier les sources et de valider les décisions importantes.',
   },
@@ -41,9 +41,9 @@ const situations = [
     reason: 'La demande est ciblée et facile à contrôler.', check: 'Comparez avec l’original : noms, dates et sens doivent être conservés.',
   },
   {
-    title: 'Préparer une activité de formation', detail: 'Objectifs, consignes et évaluation', model: 'GPT‑6.1 Terra', effort: 'Réglage par défaut',
+    title: 'Préparer une activité de formation', detail: 'Objectifs, consignes et évaluation', model: 'GPT‑6.2 Sol', effort: 'Réglage par défaut',
     example: 'Contexte : atelier fictif de 30 minutes pour adultes débutants sur Excel. Rôle : formateur en bureautique. Objectif : faire utiliser SOMME. Précisions : fournis un petit tableau fictif, les consignes, un corrigé et deux critères de réussite ; respecte les 30 minutes.',
-    reason: 'Terra est une piste pour rédiger et adapter un support. Il faut ensuite essayer l’activité.', check: 'Testez la formule, la durée et la correspondance entre consignes, corrigé et critères.',
+    reason: 'Sol 6.2 est un premier essai pour rédiger un support dont vous pouvez vérifier le résultat. Il faut ensuite essayer l’activité.', check: 'Testez la formule, la durée et la correspondance entre consignes, corrigé et critères.',
   },
   {
     title: 'Lire un graphique', detail: 'Données visibles et limites', model: 'GPT‑6.1 Terra', effort: 'Réglage par défaut',
@@ -56,7 +56,7 @@ const situations = [
     reason: 'Sol permet d’aborder un travail qui combine code, contenu et vérifications.', check: 'Essayez la page sur mobile et au clavier, puis vérifiez son contenu contre le programme.',
   },
   {
-    title: 'Analyser un dossier délicat', detail: 'Sources nombreuses et contradictions', model: 'GPT‑6 Astra', effort: 'Élevé, si nécessaire',
+    title: 'Analyser un dossier délicat', detail: 'Sources nombreuses et contradictions', model: 'GPT‑6.2 Astra', effort: 'Élevé, si nécessaire',
     example: 'Contexte : comparaison de trois documents de projet anonymisés. Rôle : analyste. Objectif : relever les contradictions. Précisions : cite le document et le passage pour chaque écart, sépare faits et hypothèses, indique les informations manquantes ; ne prends aucune décision à ma place.',
     reason: 'Astra est une piste lorsque les documents demandent des recoupements et des arbitrages difficiles.', check: 'Retrouvez chaque passage cité et faites valider les conséquences par la personne compétente.',
   },
@@ -69,17 +69,17 @@ export default function GuideGPT6() {
   return (
     <>
       <SEO
-        title="GPT-6 et GPT-6.1 : choisir Astra, Sol, Terra ou Luna – FormaPrompt"
-        description="Comparez GPT-6 Astra, GPT-6.1 Sol, GPT-6.1 Terra et GPT-6 Luna : usages, effort de raisonnement, exemples CROP et contrôles dans Work, Codex et l’API."
+        title="GPT-6, 6.1 et 6.2 : quel modèle choisir dans Work et Codex ? | FormaPrompt"
+        description="Quand choisir GPT-6.2 Sol ou Astra dans ChatGPT Work et Codex ? Exemples CROP, tarifs API et repères sur les versions GPT-6 et 6.1."
         url="https://formaprompt.com/guide-gpt-6-codex"
       />
       <div className="gpt-guide gpt6-guide">
         <section className="gpt-hero" aria-labelledby="gpt6-title">
           <div className="container gpt-hero-inner">
             <p className="gpt-eyebrow"><BrainCircuit size={18} aria-hidden="true" /> Guide pratique FormaPrompt</p>
-            <h1 id="gpt6-title">GPT‑6 et GPT‑6.1 :<br /><span>choisir Astra, Sol, Terra ou Luna</span></h1>
+            <h1 id="gpt6-title">GPT‑6, 6.1 et 6.2 :<br /><span>quel modèle choisir dans Work et Codex ?</span></h1>
             <p className="gpt-hero-lead">Une activité à rédiger, un graphique à lire ou un dossier à examiner : partez du travail à réaliser, puis comparez le résultat à vos critères.</p>
-            <p className="gpt6-update">Guide actualisé le <time dateTime="2026-11-01">1er novembre 2026</time></p>
+            <p className="gpt6-update">Guide actualisé le <time dateTime="2026-11-21">21 novembre 2026</time></p>
             <div className="gpt-equation" aria-label="Définir la tâche, choisir le modèle et ajuster l’effort">
               <div><strong>1</strong><span>Définir la tâche</span></div>
               <span className="gpt-plus" aria-hidden="true">+</span>
@@ -91,11 +91,25 @@ export default function GuideGPT6() {
           </div>
         </section>
 
+        <section className="gpt-section container" aria-labelledby="gpt62-models">
+          <div className="gpt-section-heading">
+            <span className="gpt-step">Mise à jour du 21 novembre 2026</span>
+            <h2 id="gpt62-models">GPT‑6.2 : où le trouver et par lequel commencer ?</h2>
+            <p>OpenAI a annoncé Sol et Astra le 17 novembre 2026. Ils sont proposés en aperçu dans ChatGPT Work et Codex sur ordinateur, selon le forfait et les paramètres de l’espace. Le Chat classique conserve ses choix de modèles. Les deux modèles sont également disponibles via l’API, avec une facturation distincte. <a href="https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex">Vérifier l’accès dans l’aide OpenAI</a>.</p>
+          </div>
+          <div className="gpt-surfaces-grid">
+            <article><h3>GPT‑6.2 Sol : le premier essai</h3><p>Pour un travail courant dont vous pouvez facilement vérifier le résultat. Par exemple, préparer un exercice Excel de 30 minutes avec consignes et corrigé. Testez les formules dans le classeur et vérifiez que la durée est réaliste.</p></article>
+            <article><h3>GPT‑6.2 Astra : quand les contraintes se croisent</h3><p>À essayer si le travail exige de rapprocher plusieurs sources ou si Sol laisse des écarts difficiles à résoudre. Par exemple, comparez un référentiel, un programme et des supports pour repérer les objectifs sans exercice associé. Vérifiez chaque écart dans les documents d’origine.</p></article>
+          </div>
+          <p><strong>API Standard :</strong> en contexte court, hors cache, Sol coûte 2 $ en entrée et 10 $ en sortie, Astra 8 $ et 40 $, par million de tokens. Ces tarifs ne sont ni le prix d’un abonnement ni le coût d’une tâche. <a href="https://openai.com/index/introducing-gpt-6-2-astra-sol/">Annonce et tarifs OpenAI</a>.</p>
+          <p><Link to="/blog/gpt-6-2-sol-vs-astra">Lire le comparatif Sol 6.2 vs Astra 6.2 et essayer les deux cas pratiques</Link>.</p>
+        </section>
+
         <section className="gpt-section container" aria-labelledby="gpt6-models">
           <div className="gpt-section-heading">
             <span className="gpt-step">Les modèles</span>
-            <h2 id="gpt6-models">Quatre choix selon le travail à réaliser</h2>
-            <p>Le catalogue officiel distingue <strong>GPT‑6 Astra, GPT‑6.1 Sol, GPT‑6.1 Terra et GPT‑6 Luna</strong>. Sol et Terra portent ici la version 6.1. Les exemples sont des pistes à tester sur vos propres tâches.</p>
+            <h2 id="gpt6-models">Les repères GPT‑6 et GPT‑6.1</h2>
+            <p>Si votre sélecteur affiche une génération précédente, voici les repères pour <strong>GPT‑6 Astra, GPT‑6.1 Sol, GPT‑6.1 Terra et GPT‑6 Luna</strong>. Les exemples sont des pistes à tester sur vos propres tâches.</p>
           </div>
           <div className="gpt-model-grid">
             {models.map((model) => {
@@ -129,7 +143,13 @@ export default function GuideGPT6() {
             <div className="gpt-effort-list">
               {reasoningLevels.map((level, index) => <article className="gpt-effort-row" key={level.label}><div className="gpt-effort-number">{index + 1}</div><div className="gpt-effort-name"><h3>{level.label}</h3><span>{level.alias}</span></div><p>{level.description}<span className="gpt6-effort-tradeoff">{level.tradeoff}</span></p><p className="gpt-effort-example"><strong>Exemple :</strong> {level.example}</p></article>)}
             </div>
-            <div className="gpt6-effort-context"><p>{reasoningNotes.chat}</p><p>{reasoningNotes.availability}</p><h3>Ultra et Ultrafast : deux réglages distincts</h3><p>{reasoningNotes.ultra}</p></div>
+            <div className="gpt6-effort-context"><p>{reasoningNotes.chat}</p><p>{reasoningNotes.availability}</p></div>
+            <aside className="gpt6-effort-context gpt-ultra-explainer" aria-labelledby="gpt-ultra-explainer-title">
+              <h3 id="gpt-ultra-explainer-title">Ultra ou Ultrafast ?</h3>
+              <p><strong>Ultra change la façon de travailler.</strong> Dans Work ou Codex, ce mode permet au modèle de répartir une tâche complexe entre plusieurs sous-agents, puis de réunir leurs résultats. Par exemple : analyser plusieurs parties d’un site en parallèle.</p>
+              <p><strong>Ultrafast change la vitesse.</strong> C’est un réglage séparé qui réduit l’attente pour le même modèle. Il ne relève pas l’effort de raisonnement et consomme le quota plus vite.</p>
+              <p><strong>Exemple avec Pro 100 :</strong> si Ultra apparaît en violet dans le sélecteur de Sol ou Astra 6.2, vous pouvez l’utiliser. Cela ne débloque pas Ultrafast, qui n’est pas inclus dans ce forfait.</p>
+            </aside>
             <details className="gpt6-advanced">
               <summary>Comprendre les réglages avancés</summary>
               <p>{reasoningNotes.api}</p>
@@ -182,8 +202,8 @@ export default function GuideGPT6() {
           <div>
             <p className="gpt-step">À conserver</p>
             <h2 id="gpt6-download-title"><Download size={26} aria-hidden="true" /> Télécharger le guide en PDF</h2>
-            <p>Conservez les quatre modèles, les tableaux d’abonnements, les repères de raisonnement et les cinq exemples CROP dans un document complet, avec les sources et les liens vers FormaPrompt.</p>
-            <a className="btn btn-primary gpt6-download-link" href="/assets/guides/pdf/guide-gpt-6-gpt-6-1-formaprompt.pdf" download="guide-gpt-6-gpt-6-1-formaprompt.pdf">
+            <p>Retrouvez les repères GPT‑6, 6.1 et 6.2, les tableaux d’abonnements et les exemples CROP, avec des liens vers les sources et le comparatif.</p>
+            <a className="btn btn-primary gpt6-download-link" href="/assets/guides/pdf/guide-gpt-6-gpt-6-1-formaprompt.pdf" download="guide-gpt-6-6-1-6-2-formaprompt.pdf">
               <Download size={20} aria-hidden="true" /> Télécharger le guide PDF <span>(PDF)</span>
             </a>
             <p className="tool-guide-download-note">Le PDF correspond aux informations datées de ce guide. Les modèles et les interfaces peuvent évoluer.</p>

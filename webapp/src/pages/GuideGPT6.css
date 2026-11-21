@@ -61,3 +61,6 @@
   .gpt6-guide .gpt6-price-table tr { border-bottom: 3px solid #b9d3ce; }
   .gpt6-guide .gpt6-price-mobile-label { display: block; margin-bottom: .35rem; color: #125c59; font-size: .8rem; font-weight: 750; }
 }
+
+.gpt6-guide .gpt-ultra-explainer { border: 1px solid #9c83d7; border-left-width: 4px; border-radius: .65rem; padding: 1rem 1.2rem; break-inside: avoid; }
+.gpt6-guide .gpt-ultra-explainer h3 { margin-top: 0; }
