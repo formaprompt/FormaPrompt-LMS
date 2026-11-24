@@ -1,0 +1,189 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VjOMNxiHaX4XGCuwVtxbvSlzMxzyai9+mJ0b0sDRCC0=' 'sha256-jb95mH2vf+lmD09Irt8xzVeXDuT3d8si07gRcXBYieA='; style-src 'sha256-QM0muIRsE3AdqWJNmBuEfDGkGDbrPUerQ0Qwj1vsFS4='; connect-src 'none'; img-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; child-src 'none'; frame-src 'none'; media-src 'none'; manifest-src 'none'; script-src-attr 'none'; style-src-attr 'none'"><meta name="referrer" content="no-referrer"><title>FormaPrompt Confidentialité | Bêta publique</title><meta name="description" content="Outil gratuit FormaPrompt pour repérer et masquer des données dans un texte fictif. Bêta pédagogique, avec relecture humaine indispensable."><style>:root{--green:#0e602b;--blue:#056c95;--ink:#203329;--muted:#526359;--line:#d9e4da;--paper:#f5f7f2}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 Aptos,system-ui,sans-serif}header,main,footer{max-width:1240px;margin:auto}header{padding:28px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line)}.brand{font-size:25px;font-weight:800;color:var(--green)}.brand span{color:var(--blue)}.brand small{display:block;font-size:10px;letter-spacing:2px;color:var(--muted)}.pill{font-size:13px;background:#e4eddf;padding:8px 14px;border-radius:30px}main{padding:38px 24px}.intro{max-width:820px}.eyebrow,.step{font-size:12px;font-weight:800;letter-spacing:1.8px;color:var(--green)}h1{font-size:clamp(32px,4vw,53px);line-height:1.14;letter-spacing:-1.5px;margin:14px 0 18px}em{font-style:normal;color:var(--blue)}.lead{font-size:19px;color:var(--muted);max-width:720px}.notice{background:#fff5e8;border-left:4px solid #ec7c04;padding:18px 22px;margin:28px 0;font-size:14px}.notice strong{display:block}.toolbar,.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.toolbar{margin-bottom:20px}.workspace{display:grid;grid-template-columns:1fr 1fr;gap:22px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 4px 20px #23452c05}h2{margin:8px 0 13px;font-size:25px;line-height:1.3}h3{font-size:16px;margin:0}p{margin:8px 0 16px}label{display:block;font-size:14px}textarea{display:block;width:100%;resize:vertical;min-height:230px;padding:16px;margin:10px 0;border:1px solid #a9bdb1;border-radius:10px;background:#fbfcfa;color:var(--ink);font:15px/1.7 Aptos,system-ui,sans-serif}button,.filebutton,select{border:1px solid #a9bdb1;background:white;border-radius:8px;padding:10px 16px;font:600 14px/1.4 Aptos,system-ui,sans-serif;color:var(--ink);cursor:pointer}.primary{background:var(--green);color:#fff;border-color:var(--green)}button:hover{filter:brightness(.95)}button:disabled{opacity:.45;cursor:not-allowed}.quiet{margin-left:auto}.filebutton input{display:block;font-size:11px;max-width:200px}.manual{margin-top:24px;border-top:1px solid var(--line);padding-top:20px}.manual p,small{color:var(--muted);font-size:13px}.check{display:flex;gap:10px;align-items:flex-start;margin:12px 0}.check input{margin-top:5px;accent-color:var(--green)}.hit{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.hit span{min-width:0}.hit small{display:block}.hits{max-height:310px;overflow:auto}.previewlabel{font-size:12px;font-weight:700;margin-top:25px}.preview{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7f2;padding:15px;border-radius:10px;max-height:220px;overflow:auto;font-size:14px}mark{background:#f9df94;padding:1px 3px}.result{margin-top:22px}.result textarea{min-height:140px}.review{font-weight:600}.learning{max-width:850px;margin:40px auto}.learning li{margin-bottom:7px}details{background:#eaf0e6;border-radius:10px;padding:18px;margin-top:20px}summary{cursor:pointer;font-weight:700}details p{font-size:14px;margin-top:16px}#status{min-height:28px;margin-top:12px;color:var(--green);font-weight:600}footer{padding:24px;text-align:center;border-top:1px solid var(--line);color:var(--muted)}:focus-visible{outline:3px solid #056c95;outline-offset:3px}@media(max-width:780px){.workspace{grid-template-columns:1fr}header{align-items:flex-start;gap:10px}.pill{font-size:10px}.card{padding:20px}main{padding:24px 16px}.quiet{margin-left:0}h1{letter-spacing:-.6px}}
+
+.hit.contextual{border-left:3px solid #a44c05}.hit span{white-space:pre-wrap;overflow-wrap:anywhere}.hit small{white-space:normal}
+</style></head><body><header><div class="brand">Forma<span>Prompt</span><small>BÊTA PUBLIQUE · V0.4.3</small></div><span class="pill">Traitement local • sans compte</span></header><main><section class="intro"><p class="eyebrow">LES BONS RÉFLEXES AVANT L’IA</p><h1>Un texte utile.<br><em>Moins de données exposées.</em></h1><p class="lead">Repérez et masquez des données dans un texte. Collez un exemple fictif ou importez un fichier .txt, puis relisez le résultat : le repérage peut laisser passer des informations sensibles.</p></section><aside class="notice"><strong>Un assistant de masquage, pas une garantie d’anonymat.</strong> Le repérage propose aussi le masquage de certains secrets et identifiants des rapports techniques. Il propose notamment les e-mails, téléphones français, IBAN, numéros de sécurité sociale, dates et périodes, références et adresses courantes. Certains noms, établissements et passages de santé sont signalés comme indices à vérifier, sans être masqués d’office. D’autres peuvent rester visibles. Pour cette bêta publique, utilisez uniquement des textes et fichiers fictifs, jamais de données personnelles ou de secrets réels.</aside><div class="toolbar"><button id="example">Essayer un exemple fictif</button><label class="filebutton">Importer un .txt<input id="file" type="file" accept=".txt,text/plain"></label><button id="clear" class="quiet">Tout effacer</button></div><section class="workspace"><article class="card"><div class="step">01 · PRÉPARER</div><h2>Votre texte</h2><label for="source">Collez votre texte ou sélectionnez un passage à masquer.</label><textarea id="source" maxlength="50000" spellcheck="false" autocomplete="off" placeholder="Collez ici un texte fictif pour commencer…"></textarea><div class="row"><small id="count">0 / 50 000 caractères</small><button class="primary" id="detect">Repérer les données</button></div><div class="manual"><h3>Ajouter un masquage manuel</h3><p>Sélectionnez du texte dans la zone ci-dessus, puis choisissez son type.</p><label for="type">Type de donnée</label><select id="type"><option value="PERSONNE">Personne</option><option value="ADRESSE">Adresse</option><option value="ORGANISATION">Organisation</option><option value="DONNEE">Autre donnée</option></select><label class="check"><input type="checkbox" id="all" checked> Toutes les occurrences identiques (respecte la casse)</label><button id="manual">Masquer la sélection</button></div></article><article class="card"><div class="step">02 · CONTRÔLER</div><h2>Choisissez quoi masquer</h2><p id="summary">Lancez le repérage ou ajoutez un passage manuellement.</p><div id="hits" class="hits"></div><div class="previewlabel">Aperçu des passages sélectionnés</div><div id="preview" class="preview">Votre texte apparaîtra ici.</div></article></section><section class="result card"><div><div class="step">03 · RELIRE ET UTILISER</div><h2>Votre texte masqué</h2><p>Les mêmes valeurs sélectionnées reçoivent le même repère. Cocher un nom proposé sélectionne aussi ses autres occurrences repérées. Relisez les informations qui restent visibles.</p></div><textarea id="result" readonly spellcheck="false" aria-label="Texte masqué"></textarea><label class="check review"><input id="review" type="checkbox"> J’ai relu le résultat et vérifié les données restantes, y compris les indices de contexte.</label><p><small>Cochez la case de relecture pour activer la copie et le téléchargement. Si la copie est bloquée, le résultat est sélectionné : utilisez Ctrl+C ou téléchargez le fichier .txt.</small></p><div class="row"><button id="copy" disabled class="primary">Copier le résultat</button><button id="download" disabled>Télécharger en .txt</button></div></section><div id="status" role="status" aria-live="polite"></div><section class="learning"><h2>En formation : comparez avant de faire confiance</h2><ol><li>Repérez les données vous-même dans l’exemple fictif.</li><li>Lancez l’outil et cherchez ce qu’il a oublié.</li><li>Vérifiez les indices non cochés et masquez manuellement ce qui manque.</li><li>Vérifiez si le contexte permet encore d’identifier quelqu’un.</li></ol><details><summary>Confidentialité et limites de la bêta</summary><p>Cette application ne contient aucun service d’envoi, stockage persistant, suivi statistique, modèle IA distant ni police externe. Votre texte est manipulé en mémoire dans cette page. L’import lit un fichier local et l’export crée un fichier local. Copier place le résultat dans le presse-papiers, dont la synchronisation dépend de vos appareils.</p><p>Tout effacer vide les champs et les détections de l’application, pas vos fichiers téléchargés ni votre presse-papiers. Fermez la page après usage. Les extensions de navigateur et le système restent hors du contrôle de cet outil.</p><p>Pas de PDF, Word, OCR ni métadonnées de documents. Des informations indirectes peuvent permettre une réidentification. Le masquage proposé ne constitue ni une certification RGPD ni une autorisation de transmettre le résultat.</p></details></section></main><footer>FormaPrompt · Apprendre, pratiquer, vérifier.<br><small>Bêta publique · Exemples fictifs uniquement · Relecture indispensable.</small></footer><script>(function(root){
+'use strict';
+const patterns=[['EMAIL',/(?<![\p{L}\p{M}\p{N}._%+-])[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]*[A-Z0-9])?)+(?![\p{L}\p{M}\p{N}-])/giu],['TELEPHONE',/(?<![\p{L}\p{M}\d])(?:\+33[ .\u00a0\u202f-]?(?:\(0\)[ .\u00a0\u202f-]?)?|0033[ .\u00a0\u202f-]?|0)[1-9](?:[ .\u00a0\u202f-]?\d{2}){4}(?![\p{L}\p{M}\p{N}])/gu]];
+// Heuristics only: candidates require human review; no legal or identity validation.
+const extraPatterns=[
+ ['ADRESSE',/(?<![\p{L}\d])\d{1,4}[ \t]+(?:rue|avenue|boulevard|place|chemin|route|allée|impasse|quai)[ \t]+[^,;\r\n]{2,85},[ \t]*(?:appartement|appt\.?|bâtiment|bât\.?|étage)[ \t]+[^,;\r\n]{1,24},[ \t]*\d{5}[ \t]+[\p{L}\p{M}][\p{L}\p{M}'’ \-]{1,50}(?=[.,;\r\n]|$)/gimu],
+ ['SANTE',/\ben arrêt pour[ \t]+([^.;\r\n]{2,120})/giu,1],
+ ['SALAIRE',/^[ \t-]*Salaire[^:\r\n]{0,36}:[ \t]*([^\r\n]+)/gimu,1],
+
+ ['IBAN',/(?<![\p{L}\p{N}])FR[ \u00a0\u202f]?\d{2}(?:[ \u00a0\u202f]?[A-Z0-9]){23}(?![\p{L}\p{N}])/giu],
+ ['NIR',/(?<!\d)[12][ .\u00a0\u202f-]?\d{2}[ .\u00a0\u202f-]?(?:0[1-9]|1[0-2])[ .\u00a0\u202f-]?(?:\d{2}|2[AB])[ .\u00a0\u202f-]?\d{3}[ .\u00a0\u202f-]?\d{3}[ .\u00a0\u202f-]?\d{2}(?!\d)/giu],
+ ['DATE',/(?<!\d)(?:0?[1-9]|[12]\d|3[01])([\/.\-])(?:0?[1-9]|1[0-2])\1(?:19|20)\d{2}(?!\d)/gu],
+ ['DATE',/(?<!\d)(?:19|20)\d{2}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\d|3[01])(?!\d)/gu],
+ ['DATE',/(?<![\p{L}\p{N}])(?:0?[1-9]|[12]\d|3[01])(?:er)?[ \u00a0\u202f]+(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)[ \u00a0\u202f]+(?:19|20)\d{2}(?!\d)/giu],
+ // Explicit same-month date ranges: optional year only in this contextual form.
+ ['DATE',/(?<![\p{L}\p{N}])du[ \u00a0\u202f]+(?:0?[1-9]|[12]\d|3[01])(?:er)?[ \u00a0\u202f]+au[ \u00a0\u202f]+(?:0?[1-9]|[12]\d|3[01])[ \u00a0\u202f]+(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)(?:[ \u00a0\u202f]+(?:19|20)\d{2})?(?![\p{L}\p{N}])/giu],
+ // Capture only the labelled reference, leaving the field label readable.
+ ['REFERENCE',/(?:\b(?:dossier|référence|reference|réf\.?|ref\.?)\s*(?:(?:n[°ºo]|numéro)\s*)?[:#=\-]?\s*)([A-Z0-9][A-Z0-9_\/-]{2,39})(?![\p{L}\p{N}_\/-])/giu,1],
+ // Street + optional following postcode/city. Street stays on one line.
+ ['ADRESSE',/(?<![\p{L}\p{N}])\d{1,4}[ \u00a0\u202f]*(?:(?:bis|ter)[ \u00a0\u202f]+)?(?:rue|avenue|av\.|boulevard|bd\.?|impasse|chemin|allée|place|route|quai|square|cours|passage)[ \u00a0\u202f]+[\p{L}\p{M}][\p{L}\p{M}\d '\u2019.\-]{1,90}?(?=(?:[,;\n\r]|$|[ \u00a0\u202f]+\d{5}\b))(?:[, \u00a0\u202f]*(?:\r?\n[ \u00a0\u202f]*)?\d{5}[ \u00a0\u202f]+[\p{L}\p{M}][\p{L}\p{M} '\u2019\-]{1,55})?/gimu],
+ // These contextual fields are NOT general person or health entity recognition.
+ ['PERSONNE',/(?:\b(?:nom(?:\s+et\s+prénom)?|prénom|patient(?:e)?|stagiaire|client(?:e)?)\s*:\s*)([\p{L}\p{M}][\p{L}\p{M}'\u2019\-]*(?:[ \u00a0\u202f]+[\p{L}\p{M}][\p{L}\p{M}'\u2019\-]*){0,4})/giu,1],
+ ['PERSONNE',/(?:\b(?:Mme|Mlle|Monsieur|Madame|[Dd]octeur|[Dd]octeure|Dre\.?|Dr\.?|M\.)[ \u00a0\u202f]+)([\p{Lu}][\p{L}\p{M}'\u2019\-]*(?:[ \u00a0\u202f]+[\p{Lu}][\p{L}\p{M}'\u2019\-]*){0,3})/gu,1],
+ ['PERSONNE',/(?:\b(?:fils|fille|mari|épouse|époux|conjoint|conjointe)(?:[ \u00a0\u202f]*[,:(][ \u00a0\u202f]*|[ \u00a0\u202f]+))([\p{Lu}][\p{L}\p{M}'\u2019\-]*(?:[ \u00a0\u202f]+[\p{Lu}][\p{L}\p{M}'\u2019\-]*){0,2})/gu,1],
+ // Only a facility designation followed by a capitalised name/location.
+ // A city alone or an unnamed hospital is not an organisation candidate.
+ ['PERSONNE',/\b(?:responsable|collègue|manager)[ \t]*,[ \t]*([\p{Lu}][\p{L}\p{M}'’-]*(?:[ \t]+[\p{Lu}][\p{L}\p{M}'’-]*){1,3})(?=[ \t]*,)/gu,1],
+ ['ORGANISATION',/(?<![\p{L}\p{N}])(?:CHU|CHR|CH|[Cc]entre[ \u00a0\u202f]+hospitalier(?:[ \u00a0\u202f]+universitaire)?|[Hh]ôpital|[Cc]linique)[ \u00a0\u202f]+(?:(?:de|du|des)[ \u00a0\u202f]+|d['\u2019])?([\p{Lu}][\p{L}\p{M}'\u2019\-]*(?:[ \u00a0\u202f]+(?:[\p{Lu}][\p{L}\p{M}'\u2019\-]*|(?:de|du|des|la|le|les)[ \u00a0\u202f]+[\p{Lu}][\p{L}\p{M}'\u2019\-]*)){0,4})(?![\p{L}\p{M}])/gu],
+ ['SANTE',/\bsouffre[ \u00a0\u202f]+d(?:e[ \u00a0\u202f]+|['\u2019])[^,;.\r\n]{2,100}/giu],
+ ['SANTE',/\b(?:(?:a|avait)[ \u00a0\u202f]+été[ \u00a0\u202f]+)?hospitalis[ée](?:e)?(?![\p{L}\p{M}])/giu],
+ ['SANTE',/(?:\b(?:diagnostic|pathologie|traitement|antécédents|allergies?)\s*:[ \t]*)([^\r\n;]{1,160})/giu,1]
+];
+// A facility becomes an indirect identifier here only when tied to care.
+function careContext(text,start){
+  const before=text.slice(Math.max(0,start-150),start).split(/[.!?;\r\n]/u).at(-1);
+  return /(?<![\p{L}\p{M}])(?:hospitalis[ée]s?e?s?|admis(?:e|es)?|consultation|consult[ée]s?e?s?|soign[ée]s?e?s?|suivi(?:e|es|s)?|prise en charge|prise? en charge|op[ée]r[ée]s?e?s?|examin[ée]s?e?s?)(?![\p{L}\p{M}])/iu.test(before);
+}
+// Contextual masking of copied incident reports. No requests, decoding of the
+// source text, or changes to the source: ranges always refer to the original string offsets.
+const technicalSecrets=[
+ ['SECRET',/^[ \t]*(?:(?:Proxy-)?Authorization[ \t]*:[ \t]*(?:(?:Bearer|Basic)[ \t]+)?)([^\r\n]+)/gimu,1],
+ ['SESSION',/^[ \t]*(?:(?:Set-)?Cookie[ \t]*:[ \t]*)([^\r\n]+)/gimu,1],
+ ['SECRET',/^[ \t]*(?:export[ \t]+)?(?:[A-Z0-9]+_)*(?:PASSWORD|PASSWD|PASS|PWD|SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|ENCRYPTION_KEY|PRESHARED_KEY|PRE_SHARED_KEY|SIGNING_KEY|DATABASE_URL|DB_URL|CONNECTION_STRING)[ \t]*=[ \t]*([^\r\n]+)/gimu,1],
+ ['SECRET',/^[ \t]*(?:(?:X-)?API-Key|X-Auth-Token)[ \t]*:[ \t]*([^\r\n]+)/gimu,1],
+];
+const ipv4Patterns=[
+ ['IP',/(?<![\w.])(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(?!\w|\.\d)/gu],
+];
+const technicalPatterns=[
+ ['EMAIL',/\bemail=([A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,})(?![\w.-])/giu,1],
+ ['HOTE',/(?:\bordinateur s['’]appelle|\b(?:identifié le serveur|serveur PostgreSQL est)|\bbase utilisée s['’]appelle)[ \t\r\n]+([\w-]+(?:\.[\w-]+)*)(?![\w-])/giu,1],
+ ['COMPTE',/\bcompte Windows est[ \t\r\n]+([\w.-]+\\[\w.-]+)/giu,1],
+ ['MATERIEL',/\bnuméro de série(?: du poste)?[ \t]+est[ \t]+([A-Z0-9][A-Z0-9-]{3,})(?![\w-])/giu,1],
+
+ ['EMAIL',/(?<=[?&])(?:email|e-mail)=([^&#\s]+)/giu,1],
+ ['REFERENCE',/(?<![\w-])(?:INC|CLI|USR|REQ|TICKET|EMP)-\d+(?:-\d+)*(?![\w-])/giu],
+ ['UUID',/\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b/giu],
+ ['MAC',/(?<![\w:])(?:[0-9a-f]{2}:){5}[0-9a-f]{2}(?![\w:])|(?<![\w-])(?:[0-9a-f]{2}-){5}[0-9a-f]{2}(?![\w-])/giu],
+ ['IP',/(?<![\w:])(?:[a-f\d]{0,4}:){2,7}[a-f\d]{0,4}(?![\w:])/giu],
+ ['HORODATAGE',/\b\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)\b/giu],
+ ['HORODATAGE',/\b\d{1,2}\/\d{1,2}\/\d{4}[ \t]+à[ \t]+\d\d:\d\d(?::\d\d)?(?:[ \t]+(?:CEST|CET|UTC))?/giu],
+ ['CHEMIN',/\b[A-Za-z]:\\[^\r\n<>"|]+/gu],
+ ['CHEMIN',/(?:^|[\s="'(])((?:\/(?:home|Users|var|srv|opt|mnt|tmp)\/)[^\s"')>,;]+)/gmu,1],
+ ['URL',/\b(?:https?|s3|postgres(?:ql)?|mysql|mongodb(?:\+srv)?):\/\/[^\s<>"')]+/giu],
+ ['HOTE',/^(?:[ \t]*(?:Nom du poste|Serveur frontal|Serveur de base de données|Host)[ \t]*:[ \t]*|[ \t]*(?:DB_HOST|SMTP_HOST)[ \t]*=[ \t]*)([^\s\r\n]+)/gimu,1],
+ ['HOTE',/^[ \t]*Base[ \t]*:[ \t]*([^\s\r\n]+)/gimu,1],
+ ['MATERIEL',/^[ \t]*Numéro de série[ \t]*:[ \t]*([^\r\n]+)/gimu,1],
+ ['COMPTE',/^[ \t]*(?:Session|Compte de service)[ \t]*:[ \t]*([^\s\r\n]+)/gimu,1],
+ ['COMPTE',/^[ \t]*(?:DB_USER|SMTP_USER)[ \t]*=[ \t]*([^\s\r\n]+)/gimu,1],
+ ['COMPTE',/\b(?:(?:user|username|login)=(?!\s)|identifiant[ \t]+(?!d(?:e\b|['’])|du\b|des\b|matériel\b))([\p{L}\d][\p{L}\d._@\\-]*)(?=[,;\s]|$)/giu,1],
+ ['CLIENT',/^[ \t]*Client[ \t]*:[ \t]*([^\r\n]+)/gimu,1],
+ ['CONTACT_TECH',/(?:^[ \t]*Technicien[ \t]*:[ \t]*|(?<!\p{L})(?:utilisatrice|utilisateur|diagnostic à)[ \t]+)((?:\p{Lu}[\p{L}\p{M}'’-]+[ \t]+){1,3}\p{Lu}[\p{L}\p{M}'’-]+)/gmu,1],
+];
+function validIPv6(value){
+ if(!value.includes('::')&&value.split(':').length!==8)return false;
+ try{new URL('http://['+value+']/');return true;}catch{return false;}
+}
+function incidentContext(text){
+ return /(?:RAPPORT D[’']INCIDENT|EXTRAIT (?:DES JOURNAUX|DE REQUÊTE HTTP)|^X-Forwarded-For\s*:|^DB_(?:HOST|USER)=|^[ \t]*(?:user(?:name)?=|(?:(?:Remote|Local|Public)[ \t]+IP|Adresse[ \t]+IPv[46])\s*:|(?:file|fichier|profil|document concerné|chemin)\s*:\s*(?:[A-Z]:\\|\/(?:home|Users|var|srv|opt|mnt|tmp)\/))|^Host:[ \t]*\S+|^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[^\r\n]*\b(?:INFO|WARN|ERROR|DEBUG)\b)/imu.test(text);
+}
+
+function detect(text){let hits=[];for(const [type,re,group] of [...technicalSecrets,...ipv4Patterns,...(incidentContext(text)?technicalPatterns:[]),...patterns,...extraPatterns]){for(const m of text.matchAll(re)){let value=group?m[group]:m[0], start=group?m.index+m[0].lastIndexOf(value):m.index;
+if(type==='EMAIL'&&/^email=/i.test(value)){value=value.slice(6);start+=6;}if(type==='IP'&&value.includes(':')&&!validIPv6(value))continue;if(type==='IP'&&!value.includes(':')&&/\b(?:version(?:[ \t]+(?:du|de)[ \t]+[\p{L}-]+)?|build|release)[ \t]*(?:[:=][ \t]*)?$/iu.test(text.slice(Math.max(0,m.index-70),m.index)))continue;if(type==='PERSONNE')value=value.split(/\s+(?:née?s?|né|est|a|habite|demeure|souffre)\b/u)[0];if(type==='REFERENCE'&&!/\d/.test(value))continue;if(type==='ORGANISATION'&&!careContext(text,start))continue;hits.push({start,end:start+value.length,type,enabled:!['PERSONNE','SANTE','ORGANISATION','SALAIRE'].includes(type),manual:false,review:['PERSONNE','SANTE','ORGANISATION','SALAIRE'].includes(type)});}}
+// Repeat full names already found by contextual rules; never infer from a single first name.
+const fullNames=[...new Set(hits.filter(h=>h.type==='PERSONNE').map(h=>text.slice(h.start,h.end)).filter(v=>v.trim().split(/[ \t\u00a0\u202f]+/u).length>=2))].sort((a,b)=>b.length-a.length);
+if(fullNames.length){
+  const alt=fullNames.map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+  const re=new RegExp('(?<![\\p{L}\\p{M}\\p{N}_@])(?:'+alt+')(?![\\p{L}\\p{M}\\p{N}_@])','gu');
+  for(const m of text.matchAll(re))hits.push({start:m.index,end:m.index+m[0].length,type:'PERSONNE',enabled:false,manual:false,review:true});
+}
+// Prefer the broader candidate when a phone-like sequence lies in an IBAN/NIR.
+const priority={SECRET:20,SESSION:20,HORODATAGE:12,URL:11,CHEMIN:11,MAC:10,IP:9,UUID:8,CLIENT:7,CONTACT_TECH:7,HOTE:6,EMAIL:5,COMPTE:4,IBAN:3,NIR:3,REFERENCE:3,ADRESSE:2,ORGANISATION:1,PERSONNE:1,SANTE:0};
+let selected=[];for(const h of hits.sort((a,b)=>(Number(b.enabled)-Number(a.enabled))||(priority[b.type]||0)-(priority[a.type]||0)||(b.end-b.start)-(a.end-a.start))){let overlap=selected.filter(x=>h.start<x.end&&x.start<h.end);if(h.type==='SANTE'&&overlap.length){let stop=Math.min(...overlap.map(x=>x.start));let prefix=text.slice(h.start,stop).trimEnd();if(prefix.length>=4)h.end=h.start+prefix.length;else continue;}if(!selected.some(x=>h.start<x.end&&x.start<h.end))selected.push(h);}return clean(selected);}
+function clean(hits){let end=-1;return hits.sort((a,b)=>a.start-b.start||b.end-a.end).filter(h=>{if(h.start<end)return false;end=h.end;return true;});}
+function valueKey(text,h){let raw=text.slice(h.start,h.end),normalized=raw;if(h.type==='TELEPHONE')normalized=raw.replace(/\D/g,'').replace(/^(?:0033|33)0?/,'0');else if(h.type==='ADRESSE')normalized=raw.normalize('NFC').toLocaleLowerCase('fr').replace(/[,\s\u00a0\u202f]+/g,' ').trim();else if(h.type==='EMAIL') { try{normalized=decodeURIComponent(raw).toLowerCase();}catch{} }else if(h.type==='IBAN'||h.type==='NIR')normalized=raw.replace(/[ .\s-]/g,'').toUpperCase();return h.type+'\0'+normalized;}
+function render(text,hits){let out='',last=0,counts={},labels=new Map();for(const h of clean(hits.filter(h=>h.enabled).map(h=>({...h})))){if(h.start<0||h.end>text.length)throw Error('Plage invalide');let key=valueKey(text,h);if(!labels.has(key)){counts[h.type]=(counts[h.type]||0)+1;labels.set(key,`[${h.type}_${counts[h.type]}]`);}out+=text.slice(last,h.start)+labels.get(key);last=h.end;}return out+text.slice(last);}
+function addManual(text,hits,start,end,type,all){if(!Number.isInteger(start)||!Number.isInteger(end)||start<0||end>text.length||start>=end)throw Error('Sélectionnez un passage valide.');if(!['PERSONNE','ADRESSE','ORGANISATION','DONNEE'].includes(type))throw Error('Type de donnée invalide.');let value=text.slice(start,end),ranges=[];if(all){let i=0;while((i=text.indexOf(value,i))!==-1){ranges.push({start:i,end:i+value.length});i+=value.length;}}else ranges=[{start,end}];let retained=hits.filter(h=>!ranges.some(r=>h.start<r.end&&r.start<h.end));return clean([...retained,...ranges.map(r=>({...r,type,enabled:true,manual:true}))]);}
+const api={detect,render,addManual,valueKey};if(typeof module!=='undefined')module.exports=api;root.FPMask=api;
+})(typeof window!=='undefined'?window:globalThis);
+</script><script>'use strict';
+const $=id=>document.getElementById(id), source=$('source');let hits=[],selection=[0,0],revision=0;
+const fictif=`EXEMPLE ENTIÈREMENT FICTIF
+
+Objet : Dossier d’inscription et demande de remboursement
+
+Bonjour Madame Exemple,
+
+Je vous écris au sujet de mon fils, Lucas Exemple, né le 14/03/2012 à Ville-Fictive.
+Son numéro de sécurité sociale est 1 12 03 59 999 999 00. Il fréquente le collège Jean-Fictif, 27 rue Imaginaire, 59000 Ville-Fictive. Nous habitons au 12 avenue Inventée, 62200 Ville-Fictive.
+
+Vous pouvez me joindre au 06 12 34 56 78 ou par e-mail à sophie.exemple@example.org. Mon mari, Pierre Exemple, est joignable au 03 21 45 67 89.
+
+Notre IBAN de remboursement est FR00 0000 0000 0000 0000 0000 000. Le numéro de dossier est DOSSIER-2026-004512.
+
+Lucas souffre d’asthme et suit un traitement quotidien. Il a été hospitalisé au CH de Ville-Fictive du 2 au 5 janvier 2026. Son médecin traitant est le Dr Camille Exemple.
+
+Merci de traiter cette demande avant le 30/11/2026.
+
+Cordialement,
+Sophie Exemple
+12 avenue Inventée
+62200 Ville-Fictive
+06 12 34 56 78`;
+const types={EMAIL:'E-mail',TELEPHONE:'Téléphone',IBAN:'IBAN',NIR:'N° de sécurité sociale',DATE:'Date',REFERENCE:'Référence de dossier',ADRESSE:'Adresse',PERSONNE:'Nom de personne',SANTE:'Information de santé',SALAIRE:'Rémunération',ORGANISATION:'Organisation',DONNEE:'Autre donnée',SECRET:'Secret ou jeton',SESSION:'Cookie ou ID de session',CLIENT:'Client',CONTACT_TECH:'Nom de personne (rapport)',COMPTE:'Compte utilisateur',IP:'Adresse IP',MAC:'Adresse MAC',UUID:'Identifiant UUID',HOTE:'Nom réseau ou appareil',CHEMIN:'Chemin de fichier',URL:'Adresse de service',HORODATAGE:'Horodatage',MATERIEL:'Numéro de série'};
+let reviewVersion=0;
+function say(t){$('status').textContent=t;}function resetReview(){reviewVersion++;$('review').checked=false;$('copy').disabled=$('download').disabled=true;}
+function update(){
+  resetReview();
+  $('count').textContent=`${source.value.length.toLocaleString('fr-FR')} / 50 000 caractères`;
+  const list=$('hits'), selected=hits.filter(h=>h.enabled);
+  list.replaceChildren();
+  for(const h of hits){
+    const label=document.createElement('label'),check=document.createElement('input'),span=document.createElement('span'),small=document.createElement('small');
+    label.className='hit'+(h.review?' contextual':'');
+    check.type='checkbox';check.checked=h.enabled;check.addEventListener('change',()=>{h.enabled=check.checked;
+      if(h.type==='PERSONNE'&&!h.manual){
+        const key=FPMask.valueKey(source.value,h);
+        for(const other of hits)if(other.type==='PERSONNE'&&!other.manual&&FPMask.valueKey(source.value,other)===key)other.enabled=check.checked;
+      }
+      update();list.children[hits.indexOf(h)]?.children[0]?.focus();});
+    span.textContent=source.value.slice(h.start,h.end);
+    small.textContent=(types[h.type]||h.type)+' · '+(h.manual?'ajout manuel':h.review?'indice à vérifier':'proposition automatique');
+    span.append(small);label.append(check,span);list.append(label);
+  }
+  const key=h=>FPMask.valueKey?FPMask.valueKey(source.value,h):h.type+'\0'+source.value.slice(h.start,h.end);
+  const distinct=new Set(selected.map(key)).size;
+  const pending=hits.filter(h=>h.review&&!h.enabled).length;
+  $('summary').textContent=hits.length
+    ? `${selected.length} passage(s) sélectionné(s) sur ${hits.length} · ${distinct} valeur(s) distincte(s) sélectionnée(s).${pending?' '+pending+' indice(s) à vérifier, non masqué(s).':''}`
+    : 'Aucune proposition. Cela ne signifie pas que votre texte ne contient pas de données personnelles.';
+  $('result').value=FPMask.render(source.value,hits);
+  $('preview').replaceChildren();
+  let cursor=0;
+  for(const h of selected){
+    $('preview').append(document.createTextNode(source.value.slice(cursor,h.start)));
+    const mark=document.createElement('mark');mark.textContent=source.value.slice(h.start,h.end);$('preview').append(mark);cursor=h.end;
+  }
+  $('preview').append(document.createTextNode(source.value.slice(cursor)));
+}
+source.addEventListener('input',()=>{revision++;hits=[];selection=[0,0];update();say('Texte modifié : les sélections ont été réinitialisées. Relancez le repérage.');});source.addEventListener('select',()=>{selection=[source.selectionStart,source.selectionEnd];});
+$('example').onclick=()=>{revision++;source.value=fictif;hits=[];selection=[0,0];update();say('Exemple fictif chargé. Repérez vous-même les données avant de lancer le repérage.');};
+$('detect').onclick=()=>{const manual=hits.filter(h=>h.manual);hits=FPMask.detect(source.value).filter(h=>!manual.some(m=>h.start<m.end&&m.start<h.end)).concat(manual).sort((a,b)=>a.start-b.start);update();say('Repérage terminé. Vérifiez les suggestions, les indices non cochés et ce que l’outil n’a pas repéré.');};
+$('manual').onclick=()=>{try{hits=FPMask.addManual(source.value,hits,...selection,$('type').value,$('all').checked);update();say('Passage ajouté. Les sélections qui se chevauchaient ont été remplacées.');}catch(e){say(e.message);}};
+$('clear').onclick=()=>{revision++;source.value='';hits=[];selection=[0,0];$('file').value='';update();say('Texte et détections effacés de la page. Le presse-papiers et vos téléchargements restent inchangés.');source.focus();};
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;const rev=++revision;try{if(!/\.txt$/i.test(f.name)||f.size>200000)throw Error('Choisissez un fichier .txt de 200 Ko maximum.');const text=await f.text();if(rev!==revision)return;if(text.length>50000||text.includes('\0'))throw Error('Le fichier doit contenir du texte, limité à 50 000 caractères.');source.value=text;hits=[];selection=[0,0];update();say('Texte importé localement. Vérifiez les accents puis lancez le repérage.');}catch(err){say(err.message);}finally{e.target.value='';}};
+$('review').onchange=()=>{reviewVersion++;$('copy').disabled=$('download').disabled=!$('review').checked||!$('result').value;};
+$('copy').onclick=async()=>{
+  const result=$('result'), value=result.value, version=reviewVersion;
+  const stillReviewed=()=>$('review').checked&&!$('copy').disabled&&result.value===value&&version===reviewVersion;
+  if(!value||!stillReviewed())return;
+  try{
+    if(navigator.clipboard?.writeText){
+      await navigator.clipboard.writeText(value);
+      if(stillReviewed())say('Résultat copié.');
+      return;
+    }
+  }catch{}
+  if(!stillReviewed())return;
+  result.focus();result.select();
+  let copied=false;
+  try{copied=document.execCommand?.('copy')===true;}catch{}
+  if(copied)say('Résultat copié.');
+  else say('Copie automatique indisponible. Le texte masqué est sélectionné : faites Ctrl+C, ou utilisez « Télécharger en .txt ».');
+};
+$('download').onclick=()=>{const url=URL.createObjectURL(new Blob([$ ('result').value],{type:'text/plain;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='texte-masque.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Téléchargement du texte masqué demandé.');};
+</script></body></html>
